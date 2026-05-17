@@ -1,15 +1,3 @@
-// src/data/cdr.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Cooldown Reduction data per perk.
-// Chỉnh sửa file này để thêm/sửa CDR của từng perk.
-//
-// Fields:
-//   runePct   — % giảm Rune CD per stack (additive same-source). 0.10 = 10%
-//   waPct     — % giảm Weapon Art CD per stack
-//   runeFilter — nếu có, chỉ áp dụng cho Rune có name nằm trong list này
-//   waFilter  — nếu có, chỉ áp dụng cho WA có name nằm trong list này
-// ─────────────────────────────────────────────────────────────────────────────
-
 export interface PerkCDREntry {
   runePct?: number
   waPct?: number
@@ -29,5 +17,27 @@ export const CDR_PERK_DATA: Record<string, PerkCDREntry> = {
   },
   "Channeled Weapon": {
     waMultiplier: (perkAmount) => 0.8 - 0.05 * perkAmount,
-  }
+  },
+  //Mage Rage
+  "Mage Rage": {
+    runePct: 0.1,
+  },
+  //Poison Acceleration
+  "Poison Acceleration": {
+    runePct: 0.2,
+    waPct: 0.2,
+  },
+  //Runic Winds
+  "Runic Winds": {
+    runePct: 0.1,
+  },
+  //Wave Rider
+  "Wave Rider": {
+    waPct: 0.5,
+  },
+  //Whirlwind
+  "Whirlwind": {
+    waPct: 0.3,
+    runePct: 0.3,
+  },
 }
