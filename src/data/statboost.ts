@@ -15,6 +15,24 @@ export function applyStatBoostPerks(
 ): StatMap {
   const s: StatMap = { ...stats }
 
+  //Roaring Heads
+  const roaringHeads = perks['Roaring Heads'] ?? 0
+  if (roaringHeads > 0) {
+    const bonus = 50 * roaringHeads
+    s['warding'] = (s['warding'] ?? 0) - bonus
+  }
+  
+  //Lucky
+  const lucky = perks['Lucky'] ?? 0
+  if (lucky > 0) {
+    const bonusWarding = 25 * lucky
+    const bonusProtection = 6 * lucky
+    const bonusTenacity = 0.1 * lucky
+    s['warding'] = (s['warding'] ?? 0) - bonusWarding
+    s['protection'] = (s['protection'] ?? 0) - bonusProtection
+    s['tenacity'] = (s['tenacity'] ?? 0) - bonusTenacity
+  }
+
   // ── Quick Witted ───────────────────────────────────────────────────────
   const quickWitted = perks['Quick Witted'] ?? 0
 

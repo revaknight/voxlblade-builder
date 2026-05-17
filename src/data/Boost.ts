@@ -7,7 +7,8 @@ export interface BoostDef {
 
 export const BOOST_DEFS: BoostDef[] = [
     //Blood Thirsty
-    { sourceName: 'Blood Thirsty',   multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed' }
+    { sourceName: 'Blood Thirsty',   multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed' },
+    { sourceName: 'Emotional',   multiplierPerPerk: 0.20, type: 'heal', condition: 'when you have both buffs and debuffs' },
 ]
 
 export const BOOST_DEF_MAP = new Map(BOOST_DEFS.map(d => [d.sourceName, d]))

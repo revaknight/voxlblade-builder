@@ -32,7 +32,7 @@ export const essences: MonkEssence[] = essencesRaw as MonkEssence[]
 
 import { BOOST_DEF_MAP } from '../data/Boost'
 import type { BoostEntry, BoostResult } from './types'
-export function calcBoosts(perks: Record<string, number>): BoostResult {
+export function calcBoosts(perks: Record<string, number>, emotionalState?: string): BoostResult {
 
   const dmgMap = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -41,6 +41,8 @@ export function calcBoosts(perks: Record<string, number>): BoostResult {
     if (perkAmount <= 0) continue
     const def = BOOST_DEF_MAP.get(perkName)
     if (!def) continue
+
+    if (perkName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
 
     const rawMult = 1 + def.multiplierPerPerk * perkAmount
     const entry: BoostEntry = {
@@ -803,10 +805,25 @@ export function calcCDR(
   perks: Record<string, number>,
   raceCooldownModifiers?: Record<string, number>,
   activeRuneName?: string,
-  activeRaceName?: string
+  activeRaceName?: string,
+  emotionalState?:'buffs' | 'debuffs' | 'both' 
 ): CDRResult {
+  
+
   const runeSteps: CDRStep[] = []
   const waSteps: CDRStep[] = []
+  
+ const emotionalAmt = perks["Emotional"] ?? 0
+  if (emotionalAmt > 0 && emotionalState === 'buffs') {
+    const totalPct = 0.5 * emotionalAmt
+    const displayPct = Math.round(totalPct * 100)
+    const multiplier = 1 / (1 + totalPct)
+    waSteps.push({
+      source: "Emotional (Only Buffs)",
+      pct: displayPct,
+      multiplier,
+    })
+  }
   let runeSetCD: number | undefined = undefined
 
   for (const [perkName, perkAmount] of Object.entries(perks)) {
@@ -1121,13 +1138,12 @@ export function calcBuild(state: BuildState): BuildResult {
   if (finalPerks["Buckler"] != null) {
     finalPerks["Parry"] = (finalPerks["Parry"] ?? 0) + finalPerks["Buckler"]
   }
-
-  const cdr = calcCDR(finalPerks, race?.cooldownModifiers, state.rune || undefined, state.race || undefined)
+  const cdr = calcCDR(finalPerks, race?.cooldownModifiers, state.rune || undefined, state.race || undefined, state.emotionalState)
 
   // Apply Stat Boost perks (summary only)
   const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
 
-  const boosts = calcBoosts(finalPerks)
+  const boosts = calcBoosts(finalPerks, state.emotionalState)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts }
 }
 

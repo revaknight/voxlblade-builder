@@ -1,5 +1,6 @@
 <!-- BuildSaves.svelte -->
 <script lang="ts">
+    import EmotionalTracker from './EmotionalTracker.svelte';
   import { build } from './lib/store'
   import type { BuildState } from './lib/types'
 
@@ -99,7 +100,7 @@ const KEY_MAP: Record<string, string> = {
   infusionHelmet:'ih', infusionChestplate:'ic', infusionLeggings:'il', infusionRing:'ir',
   weaponBlade:'wb', weaponHandle:'wh', monkGlove:'mg', monkEssence:'me',
   shrineActive:'sh', upgradeHelmet:'uh', upgradeChestplate:'uc',
-  upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', selectedWeaponArt:'wa', draconicColor:'dc'
+  upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', selectedWeaponArt:'wa', draconicColor:'dc',emotionalState: 'es'
 }
 const KEY_UNMAP = Object.fromEntries(Object.entries(KEY_MAP).map(([k,v])=>[v,k]))
 
@@ -115,7 +116,7 @@ const DEFAULTS: Record<string, any> = {
   ring:'', rune:'', infusionHelmet:'', infusionChestplate:'', infusionLeggings:'',
   infusionRing:'', weaponBlade:'', weaponHandle:'', monkGlove:'', monkEssence:'',
   shrineActive:false, upgradeHelmet:0, upgradeChestplate:0, upgradeLeggings:0,
-  upgradeRing:0, upgradeRune:0, selectedWeaponArt:'Lunge', draconicColor:''
+  upgradeRing:0, upgradeRune:0, selectedWeaponArt:'Lunge', draconicColor:'', emotionalState: 'buffs'
 }
 
 function compressToBase64(str: string): Promise<string> {

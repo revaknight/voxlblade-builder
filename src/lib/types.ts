@@ -202,6 +202,7 @@ export interface BuildState {
   upgradeRune: number
   selectedWeaponArt: string
   draconicColor: string
+  emotionalState: | 'buffs' | 'debuffs' | 'both'
 }
 
 export interface BoostEntry {

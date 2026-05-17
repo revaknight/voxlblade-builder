@@ -1,35 +1,22 @@
-<!-- EmotionalTracker.svelte -->
-<!--
-  USAGE trong App.svelte (bên trong perks-grid, sau perk-card của "Emotional"):
-  
-  import EmotionalTracker from './EmotionalTracker.svelte'
-  
-  Trong perks-grid block, thay đoạn:
-    {#each perkRows as [name, count]}
-      <div class="perk-card">...</div>
-    {/each}
-  
-  thành:
-    {#each perkRows as [name, count]}
-      {@const perk = getPerk(name)}
-      <div class="perk-card">
-        <div class="perk-row">
-          <span class="perk-name">{name} <span class="perk-val">+{Math.round(count * 100) / 100}</span></span>
-        </div>
-        {#if perk?.description}
-          <p class="perk-desc">{perk.description}</p>
-        {/if}
-        {#if name === 'Emotional'}
-          <EmotionalTracker />
-        {/if}
-      </div>
-    {/each}
--->
-
 <script lang="ts">
+  import { build } from './lib/store'
+
   type EmotionalState = 'debuff' | 'both' | 'buff'
 
-  let state: EmotionalState = 'buff'
+  const TO_STORE: Record<EmotionalState, 'debuffs' | 'both' | 'buffs'> = {
+    buff: 'buffs',
+    debuff: 'debuffs',
+    both: 'both',
+  }
+
+  const FROM_STORE: Record<string, EmotionalState> = {
+    buffs: 'buff',
+    debuffs: 'debuff',
+    both: 'both',
+  }
+
+  // Init from store
+  let state: EmotionalState = FROM_STORE[$build.emotionalState] ?? 'buff'
 
   const SLIDER_MAP: EmotionalState[] = ['debuff', 'both', 'buff']
 
@@ -70,11 +57,21 @@
   $: cur = STATE_DATA[state]
   $: sliderVal = SLIDER_MAP.indexOf(state)
 
-  function onSlider(e: Event) {
-    state = SLIDER_MAP[parseInt((e.target as HTMLInputElement).value)]
+  // Keep local state in sync if store changes externally (e.g. load build)
+  $: {
+    const fromStore = FROM_STORE[$build.emotionalState] ?? 'buff'
+    if (fromStore !== state) state = fromStore
   }
 
-  function pick(s: EmotionalState) { state = s }
+  function onSlider(e: Event) {
+    state = SLIDER_MAP[parseInt((e.target as HTMLInputElement).value)]
+    build.update(b => ({ ...b, emotionalState: TO_STORE[state] }))
+  }
+
+  function pick(s: EmotionalState) {
+    state = s
+    build.update(b => ({ ...b, emotionalState: TO_STORE[s] }))
+  }
 </script>
 
 <div class="et"
