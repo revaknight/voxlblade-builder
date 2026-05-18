@@ -2508,9 +2508,12 @@ function prettyKey(key: string, suffix: string) {
     <div class="cdr-block" style="margin-top:6px;">
       <div class="cdr-block-header"><span class="cdr-icon">⏱</span><span class="cdr-title">Weapon Art CDR</span></div>
       {#each cdr.waBreakdown as step}
-        <div class="cdr-step"><span class="cdr-source">{step.source}</span><span class="cdr-mult" class:cdr-mult--increase={step.pct > 0}>
-  {step.pct > 0 ? '+' : '-'}{Math.abs(step.pct)}%
-</span></div>
+        <div class="cdr-step">
+          <span class="cdr-source">{step.source}</span>
+          <span class="cdr-mult" class:cdr-mult--increase={step.multiplier > 1}>
+            {step.multiplier > 1 ? '+' : '-'}{Math.abs(step.pct)}%
+          </span>
+        </div>
       {/each}
       <div class="cdr-steps-calc">
   {#each cdr.waBreakdown as step, i}
