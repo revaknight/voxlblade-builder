@@ -1,4 +1,5 @@
 <script lang="ts">
+import { build } from './lib/store'
   // ── Props ─────────────────────────────────────────────────────────────────
   export let protection: number = 0
 
@@ -9,23 +10,16 @@
   const STORAGE_KEY = 'voxlbuilder_level'
   const HP_FILL_KEY = 'voxlbuilder_hpfill'
 
-  // ── Level ─────────────────────────────────────────────────────────────────
-  function loadLevel(): number {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return 80
-      const n = parseInt(raw)
-      return isNaN(n) ? 80 : Math.max(0, Math.min(n, 80))
-    } catch { return 80 }
-  }
+  let level = $build.level ?? 80
+  let fillPct = $build.hpFill ?? 100
 
-  let level    = loadLevel()
   let editing  = false
   let inputVal = String(level)
   let inputEl: HTMLInputElement
 
   function saveLevel(v: number) {
     level = v
+    build.update(s => ({ ...s, level: v }))
     try { localStorage.setItem(STORAGE_KEY, String(v)) } catch {}
   }
 
@@ -66,15 +60,15 @@
       return isNaN(n) ? 100 : Math.max(0, Math.min(100, n))
     } catch { return 100 }
   }
-
-  let fillPct  = loadFill()   // 0–100 percent of effectiveMaxHP
   let dragging = false
   let barEl: HTMLDivElement
 
   function saveFill(v: number) {
     fillPct = v
+    build.update(s => ({ ...s, hpFill: v }))
     try { localStorage.setItem(HP_FILL_KEY, String(v)) } catch {}
   }
+
 
   function calcFillFromMouse(e: MouseEvent): number {
     if (!barEl) return fillPct
@@ -105,6 +99,12 @@
     fillPct > 25 ? 'rgba(250,204,21,0.5)' : 'rgba(248,113,113,0.5)'
 
   $: thumbPos = fillFrac * 100   // % of bar width for thumb position
+    $: {
+    const storeLevel = $build.level ?? 80
+    if (storeLevel !== level) level = storeLevel
+    const storeFill = $build.hpFill ?? 100
+    if (storeFill !== fillPct) fillPct = storeFill
+  }
 </script>
 
 <svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />

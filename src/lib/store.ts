@@ -36,6 +36,8 @@ export const build = writable<BuildState>({
   selectedWeaponArt: "Lunge",
   draconicColor: "",
   emotionalState: 'buffs',
+  level: 80,
+  hpFill: 100,
 })
 
 export const result = derived(build, $b => calcBuild($b))
