@@ -49,6 +49,9 @@ import { build } from './lib/store'
   $: effectiveMaxHP = protRounded >= 0
     ? baseMaxHP
     : Math.max(HP_FLOOR, baseMaxHP + protRounded)
+  $: effectiveProt = protRounded >= 0
+    ? protRounded
+    : -(baseMaxHP - effectiveMaxHP)
   $: shieldCount = protRounded > 0 ? protRounded : 0
   $: shieldFrac  = shieldCount > 0 ? Math.min(1, shieldCount / baseMaxHP) : 0
   $: lostFrac = protRounded < 0 ? Math.min(1, Math.abs(protRounded) / baseMaxHP) : 0
@@ -143,11 +146,11 @@ import { build } from './lib/store'
         <span class="lb-hp-cur" style="color:{barColor}">{currentHP}</span>
         <span class="lb-hp-sep">/</span>
         <span class="lb-hp-max">{effectiveMaxHP}</span>
-        {#if protRounded !== 0}
+        {#if effectiveProt !== 0}
           <span class="lb-prot-badge"
-            class:lb-prot-badge--pos={protRounded > 0}
-            class:lb-prot-badge--neg={protRounded < 0}>
-            {protRounded > 0 ? `🛡 +${protRounded}` : `⚠ ${protRounded}`}
+            class:lb-prot-badge--pos={effectiveProt > 0}
+            class:lb-prot-badge--neg={effectiveProt < 0}>
+            {effectiveProt > 0 ? `🛡 +${effectiveProt}` : `⚠ ${effectiveProt}`}
           </span>
         {/if}
       </span>
