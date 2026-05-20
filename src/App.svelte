@@ -17,10 +17,67 @@
   import BuildSaves from './BuildSaves.svelte'
   import EmotionalTracker from './EmotionalTracker.svelte'
   import LevelBar from './LevelBar.svelte'
+  import DamageAnalyzer from './DamageAnalyzer.svelte'
+
+  let activeAppTab: 'overview' | 'analyze' = 'overview'
 
   function toggleUpgrade(key: 'upgradeHelmet'|'upgradeChestplate'|'upgradeLeggings'|'upgradeRing'|'upgradeRune') {
     build.update(s => ({...s, [key]: s[key] === UPGRADE_MAX ? 0 : UPGRADE_MAX}))
   }
+
+    import { tick, onMount } from 'svelte'
+
+  type AppTab = 'overview' | 'analyze'
+
+
+  let tabOverview: HTMLButtonElement
+  let tabAnalyze: HTMLButtonElement
+  let bubbleEl: HTMLDivElement
+
+  let bubbleX = 0
+  let bubbleW = 0
+
+  async function updateBubble(animated = true) {
+    await tick()
+
+    const target =
+      activeAppTab === 'overview'
+        ? tabOverview
+        : tabAnalyze
+
+    if (!target) return
+
+    const parentRect =
+      target.parentElement!.getBoundingClientRect()
+
+    const rect = target.getBoundingClientRect()
+
+    bubbleX = rect.left - parentRect.left
+    bubbleW = rect.width
+
+    if (animated) {
+      bubbleEl?.classList.add('is-moving')
+
+      setTimeout(() => {
+        bubbleEl?.classList.remove('is-moving')
+      }, 180)
+    }
+  }
+
+  async function switchTab(tab: AppTab) {
+    if (tab === activeAppTab) return
+
+    activeAppTab = tab
+    updateBubble(true)
+  }
+
+  onMount(() => {
+    updateBubble(false)
+
+    window.addEventListener('resize', () => {
+      updateBubble(false)
+    })
+  })
 
 // ── Modal state ────────────────────────────────────────────────────────────
   type ModalType = 'race' | 'guild' | 'armor-helmet' | 'armor-chestplate' | 'armor-leggings' | 'infusion-helmet' | 'infusion-chestplate' | 'infusion-leggings' | 'ring' | 'infusion-ring' | 'rune' | 'blade' | 'handle' | 'glove' | 'essence' | null
@@ -63,14 +120,6 @@
   function toggleInlineEnchant(slot: EnchantSlot) {
     inlineEnchantSlot = inlineEnchantSlot === slot ? null : slot
   }
-
-  $: boosts = $result.boosts
-  $: hasDmgBoosts = boosts.dmgEntries.length > 0
-  $: hasHealBoosts = boosts.healEntries.length > 0
-  $: hasBoosts = hasDmgBoosts || hasHealBoosts
-
-  let showBoostsPanel = true
-
   // ── Derived ────────────────────────────────────────────────────────────────
   $: guildData = getGuild($build.guild)
   $: isMonk = isMonkGuild($build.guild)
@@ -1604,1206 +1653,1161 @@ function prettyKey(key: string, suffix: string) {
 <!-- ═══════════════════════════════ MAIN APP ═══════════════════════════════ -->
 <div class="app">
   <header>
-    <h1>Voxl<span class="accent">Builder</span></h1>
+  <h1>Voxl<span class="accent">Builder</span></h1>
+  <div class="header-right">
     <span class="header-hint">Click any cell to edit · Click ✦ to enchant</span>
-  </header>
+  </div>
+</header>
 
-  <BuildSaves />
+  <BuildSaves />  
 
-  <div class="workspace">
+  <div class="app-tabs">
 
-    <!-- BUILD SUMMARY + INLINE ENCHANTS -->
-    <div class="panel summary-panel">
-      <div class="summary-title-row">
-        <h3 class="panel-title summary-title">Build Summary</h3>
-        <LevelBar protection={$result.stats.protection ?? 0} />
-      </div>
-      <div class="summary-layout">
-        <div class="summary-grid-wrap">
-          <div class="summary-grid">
+<div bind:this={bubbleEl} class="tab-bubble" class:tab-bubble--analyze={activeAppTab === 'analyze'} style="transform: translateX({bubbleX}px); width: {bubbleW}px;"></div>
+    <button bind:this={tabOverview} class="app-tab" class:app-tab--active={activeAppTab === 'overview'} on:click={() => switchTab('overview')}>Overview</button>
+    <button bind:this={tabAnalyze} class="app-tab app-tab--analyze" class:app-tab--active={activeAppTab === 'analyze'} on:click={() => switchTab('analyze')}>Analyze</button>
+  </div>
+  {#if activeAppTab === 'overview'}
+    <div class="workspace">
 
-            <!-- Weapon type row -->
-            <div class="sg-cell sg-weapon sg-span10 sg-clickable"
-              on:click={() => build.update(s => ({...s, shrineActive: !s.shrineActive}))}
-              role="button" tabindex="0"
-              on:keydown={e => e.key === 'Enter' && build.update(s => ({...s, shrineActive: !s.shrineActive}))}>
-              <div class="sg-weapon-inner">
-                <div class="sg-weapon-left">
-                  <span class="sg-label">{isMonk ? 'Monk Weapon Type' : 'Weapon Type'}</span>
-                  <span class="sg-value">{summaryWeaponLabel}</span>
-                  {#if summaryWeaponSub}<span class="sg-sub">{summaryWeaponSub}</span>{/if}
-                  {#if weaponResult?.attackSpeed != null && weaponResult.part1Name && weaponResult.part2Name}
-                    <span class="sg-badge">{weaponResult.attackSpeed}x spd</span>
-                  {/if}
-                </div>
-                <div class="shrine-inline">
-                  <div class="shrine-btn-inline" class:shrine-btn-inline--active={shrineActive}>
-                    <span class="shrine-icon-sm">⚖</span>
-                    <span class="shrine-label-sm">Shrine</span>
-                    <span class="shrine-state-sm">{shrineActive ? 'ON' : 'OFF'}</span>
+      <!-- BUILD SUMMARY + INLINE ENCHANTS -->
+      <div class="panel summary-panel">
+        <div class="summary-title-row">
+          <h3 class="panel-title summary-title">Build Summary</h3>
+          <LevelBar protection={$result.stats.protection ?? 0} />
+        </div>
+        <div class="summary-layout">
+          <div class="summary-grid-wrap">
+            <div class="summary-grid">
+
+              <!-- Weapon type row -->
+              <div class="sg-cell sg-weapon sg-span10 sg-clickable"
+                on:click={() => build.update(s => ({...s, shrineActive: !s.shrineActive}))}
+                role="button" tabindex="0"
+                on:keydown={e => e.key === 'Enter' && build.update(s => ({...s, shrineActive: !s.shrineActive}))}>
+                <div class="sg-weapon-inner">
+                  <div class="sg-weapon-left">
+                    <span class="sg-label">{isMonk ? 'Monk Weapon Type' : 'Weapon Type'}</span>
+                    <span class="sg-value">{summaryWeaponLabel}</span>
+                    {#if summaryWeaponSub}<span class="sg-sub">{summaryWeaponSub}</span>{/if}
+                    {#if weaponResult?.attackSpeed != null && weaponResult.part1Name && weaponResult.part2Name}
+                      <span class="sg-badge">{weaponResult.attackSpeed}x spd</span>
+                    {/if}
                   </div>
-                  {#if shrineActive}
-                    <span class="shrine-hint-sm">T1×3.0 · T2×1.7 · T3×1.4 · T4×1.1 · T5×1.0</span>
-                  {/if}
+                  <div class="shrine-inline">
+                    <div class="shrine-btn-inline" class:shrine-btn-inline--active={shrineActive}>
+                      <span class="shrine-icon-sm">⚖</span>
+                      <span class="shrine-label-sm">Shrine</span>
+                      <span class="shrine-state-sm">{shrineActive ? 'ON' : 'OFF'}</span>
+                    </div>
+                    {#if shrineActive}
+                      <span class="shrine-hint-sm">T1×3.0 · T2×1.7 · T3×1.4 · T4×1.1 · T5×1.0</span>
+                    {/if}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Row 1: Inf Helmet | Helmet | Blade/Glove | Handle/Essence -->
-            <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionHelmet}
-              role="button" tabindex="0"
-              on:click={() => openModal('infusion-helmet')}
-              on:keydown={e => e.key === 'Enter' && openModal('infusion-helmet')}>
-              <span class="sg-label">Inf. Helmet</span>
-              <span class="sg-value">{$build.infusionHelmet || 'No infused helmet'}</span>
-              {#if $build.infusionHelmet}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionHelmet: ''}))} title="Clear">✕</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.helmet}
-              role="button" tabindex="0"
-              on:click={() => openModal('armor-helmet')}
-              on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
-                <span class="sg-label">Helmet</span>
-                {#if $build.helmet}
+              <!-- Row 1: Inf Helmet | Helmet | Blade/Glove | Handle/Essence -->
+              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionHelmet}
+                role="button" tabindex="0"
+                on:click={() => openModal('infusion-helmet')}
+                on:keydown={e => e.key === 'Enter' && openModal('infusion-helmet')}>
+                <span class="sg-label">Inf. Helmet</span>
+                <span class="sg-value">{$build.infusionHelmet || 'No infused helmet'}</span>
+                {#if $build.infusionHelmet}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionHelmet: ''}))} title="Clear">✕</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.helmet}
+                role="button" tabindex="0"
+                on:click={() => openModal('armor-helmet')}
+                on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
+                  <span class="sg-label">Helmet</span>
+                  {#if $build.helmet}
+                  
+                      <button class="sg-upgrade-btn"
+                        class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
+                        on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
+                        title={$build.upgradeHelmet === 5 ? 'Reset to +0' : 'Max upgrade'}>
+                        {$build.upgradeHelmet === 5 ? '+5' : '+0'}
+                      </button>
+                  {/if}
+                <span class="sg-value">{$build.helmet || 'No helmet'}</span>
+                {#if $build.helmet && hasEnchants('helmet')}
+                  <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
+                {/if}
                 
-                    <button class="sg-upgrade-btn"
-                      class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
-                      on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
-                      title={$build.upgradeHelmet === 5 ? 'Reset to +0' : 'Max upgrade'}>
-                      {$build.upgradeHelmet === 5 ? '+5' : '+0'}
-                    </button>
+                {#if $build.helmet}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
+                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
+                    on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
                 {/if}
-              <span class="sg-value">{$build.helmet || 'No helmet'}</span>
-              {#if $build.helmet && hasEnchants('helmet')}
-                <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
-              {/if}
-              
-              {#if $build.helmet}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
-                <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
-                  on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-span3 sg-clickable"
-              class:sg-blade={!isMonk} class:sg-monk-glove={isMonk} class:sg-empty={sgPart1Empty}
-              role="button" tabindex="0"
-              on:click={() => openModal(isMonk ? 'glove' : 'blade')}
-              on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'glove' : 'blade')}>
-              <span class="sg-label">{part1Label}</span>
-              <span class="sg-value">{sgPart1Name}</span>
-              {#if weaponResult?.part1Type}<span class="sg-sub">{weaponResult.part1Type}</span>{/if}
-            </div>
-            <div class="sg-cell sg-span3 sg-clickable"
-              class:sg-handle={!isMonk} class:sg-monk-essence={isMonk} class:sg-empty={sgPart2Empty}
-              role="button" tabindex="0"
-              on:click={() => openModal(isMonk ? 'essence' : 'handle')}
-              on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'essence' : 'handle')}>
-              <span class="sg-label">{part2Label}</span>
-              <span class="sg-value">{sgPart2Name}</span>
-              {#if weaponResult?.part2Type}<span class="sg-sub">{weaponResult.part2Type}</span>{/if}
-            </div>
+              </div>
+              <div class="sg-cell sg-span3 sg-clickable"
+                class:sg-blade={!isMonk} class:sg-monk-glove={isMonk} class:sg-empty={sgPart1Empty}
+                role="button" tabindex="0"
+                on:click={() => openModal(isMonk ? 'glove' : 'blade')}
+                on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'glove' : 'blade')}>
+                <span class="sg-label">{part1Label}</span>
+                <span class="sg-value">{sgPart1Name}</span>
+                {#if weaponResult?.part1Type}<span class="sg-sub">{weaponResult.part1Type}</span>{/if}
+              </div>
+              <div class="sg-cell sg-span3 sg-clickable"
+                class:sg-handle={!isMonk} class:sg-monk-essence={isMonk} class:sg-empty={sgPart2Empty}
+                role="button" tabindex="0"
+                on:click={() => openModal(isMonk ? 'essence' : 'handle')}
+                on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'essence' : 'handle')}>
+                <span class="sg-label">{part2Label}</span>
+                <span class="sg-value">{sgPart2Name}</span>
+                {#if weaponResult?.part2Type}<span class="sg-sub">{weaponResult.part2Type}</span>{/if}
+              </div>
 
-            <!-- Row 2: Inf Chest | Chest | Inf Ring | Ring | Race -->
-            <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionChestplate}
-              role="button" tabindex="0"
-              on:click={() => openModal('infusion-chestplate')}
-              on:keydown={e => e.key === 'Enter' && openModal('infusion-chestplate')}>
-              <span class="sg-label">Inf. Chestplate</span>
-              <span class="sg-value">{$build.infusionChestplate || 'No infused chestplate'}</span>
-              {#if $build.infusionChestplate}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionChestplate: ''}))} title="Clear">✕</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.chestplate}
-              role="button" tabindex="0"
-              on:click={() => openModal('armor-chestplate')}
-              on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
-              <span class="sg-label">Chestplate</span>
-              {#if $build.chestplate}
-                <button class="sg-upgrade-btn"
-                  class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
-                  on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
-                  title={$build.upgradeChestplate === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                  {$build.upgradeChestplate === 5 ? '+5' : '+0'}
-                </button>
-              {/if}
-              <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
-              {#if $build.chestplate && hasEnchants('chestplate')}
-                <span class="sg-ench">{$build.enchantments.chestplate.filter(Boolean).join(' · ')}</span>
-              {/if}
-              {#if $build.chestplate}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
-                <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
-                  on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
-              role="button" tabindex="0"
-              on:click={() => openModal('infusion-ring')}
-              on:keydown={e => e.key === 'Enter' && openModal('infusion-ring')}>
-              <span class="sg-label">Inf. Ring</span>
-              <span class="sg-value">{$build.infusionRing || 'No infused ring'}</span>
-              {#if $build.infusionRing}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionRing: ''}))} title="Clear">✕</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
-              role="button" tabindex="0"
-              on:click={() => openModal('ring')}
-              on:keydown={e => e.key === 'Enter' && openModal('ring')}>
-              <span class="sg-label">Ring</span>  
-              {#if $build.ring}            
-                <button class="sg-upgrade-btn"
-                  class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
-                  on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
-                  title={$build.upgradeRing === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                  {$build.upgradeRing === 5 ? '+5' : '+0'}
-                </button>
-              {/if}
-              <span class="sg-value">{$build.ring || 'No ring'}</span>
-              {#if $build.ring && hasEnchants('ring')}
-                <span class="sg-ench">{$build.enchantments.ring.filter(Boolean).join(' · ')}</span>
-              {/if}
-              {#if $build.ring}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
-                <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
-                  on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
-              {/if}
-            </div>
-            <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
-              <span class="sg-label">Race</span>
-              <span class="sg-value">{$build.race || '—'}</span>
-              {#if $build.race}
-                {@const race = races.find(r => r.name === $build.race)}
-                {#if race?.passive}
-                  <span class="sg-sub">{race.passive.length > 40 ? race.passive.slice(0,40)+'…' : race.passive}</span>
+              <!-- Row 2: Inf Chest | Chest | Inf Ring | Ring | Race -->
+              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionChestplate}
+                role="button" tabindex="0"
+                on:click={() => openModal('infusion-chestplate')}
+                on:keydown={e => e.key === 'Enter' && openModal('infusion-chestplate')}>
+                <span class="sg-label">Inf. Chestplate</span>
+                <span class="sg-value">{$build.infusionChestplate || 'No infused chestplate'}</span>
+                {#if $build.infusionChestplate}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionChestplate: ''}))} title="Clear">✕</button>
                 {/if}
-              {/if}
-            </button>
-
-            <!-- Row 3: Inf Legs | Legs | — | Rune | Guild -->
-            <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionLeggings}
-              role="button" tabindex="0"
-              on:click={() => openModal('infusion-leggings')}
-              on:keydown={e => e.key === 'Enter' && openModal('infusion-leggings')}>
-              <span class="sg-label">Inf. Leggings</span>
-              <span class="sg-value">{$build.infusionLeggings || 'No infused leggings'}</span>
-              {#if $build.infusionLeggings}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionLeggings: ''}))} title="Clear">✕</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.leggings}
-              role="button" tabindex="0"
-              on:click={() => openModal('armor-leggings')}
-              on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
-              <span class="sg-label">Leggings</span>
-              {#if $build.leggings}
+              </div>
+              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.chestplate}
+                role="button" tabindex="0"
+                on:click={() => openModal('armor-chestplate')}
+                on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
+                <span class="sg-label">Chestplate</span>
+                {#if $build.chestplate}
                   <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
-                    title={$build.upgradeLeggings === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                    {$build.upgradeLeggings === 5 ? '+5' : '+0'}
+                    class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
+                    title={$build.upgradeChestplate === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
+                    {$build.upgradeChestplate === 5 ? '+5' : '+0'}
                   </button>
-              {/if}
-              <span class="sg-value">{$build.leggings || 'No leggings'}</span>
-              {#if $build.leggings && hasEnchants('leggings')}
-                <span class="sg-ench">{$build.enchantments.leggings.filter(Boolean).join(' · ')}</span>
-              {/if}
-              {#if $build.leggings}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
-                <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
-                  on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-infusion sg-span2" style="opacity:0.3">
-              <span class="sg-label">Inf. Rune</span>
-              <span class="sg-value">Coming soon</span>
-            </div>
-            <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.rune}
-              role="button" tabindex="0"
-              on:click={() => openModal('rune')}
-              on:keydown={e => e.key === 'Enter' && openModal('rune')}>
-              <span class="sg-label">Rune</span>
-              {#if $build.rune}
-                <button class="sg-upgrade-btn"
-                  class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
-                  on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
-                  title={$build.upgradeRune === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                  {$build.upgradeRune === 5 ? '+5' : '+0'}
-                </button>
                 {/if}
-              <span class="sg-value">{$build.rune || 'No rune'}</span>
-              {#if $build.rune && hasEnchants('rune')}
-                <span class="sg-ench">{$build.enchantments.rune.filter(Boolean).join(' · ')}</span>
-              {/if}
-              {#if $build.rune}
-               {@const rune = runes.find(r => r.name === $build.rune)}
-                {#if rune}
-                  {#if hasRuneCDR}
-                    <span class="sg-cd-row">
-                      <span class="sg-sub">CD:</span>
-                      <span class="sg-cd-base">{rune.cooldown}s</span>
-                      <span class="sg-cd-arrow">→</span>
-                      <span class="sg-cd-final">{formatCD(rune.cooldown, cdr)}</span>
-                    </span>
-                  {:else}
-                    <span class="sg-sub">CD: {rune.cooldown}s</span>
+                <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
+                {#if $build.chestplate && hasEnchants('chestplate')}
+                  <span class="sg-ench">{$build.enchantments.chestplate.filter(Boolean).join(' · ')}</span>
+                {/if}
+                {#if $build.chestplate}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
+                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
+                    on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
+                role="button" tabindex="0"
+                on:click={() => openModal('infusion-ring')}
+                on:keydown={e => e.key === 'Enter' && openModal('infusion-ring')}>
+                <span class="sg-label">Inf. Ring</span>
+                <span class="sg-value">{$build.infusionRing || 'No infused ring'}</span>
+                {#if $build.infusionRing}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionRing: ''}))} title="Clear">✕</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
+                role="button" tabindex="0"
+                on:click={() => openModal('ring')}
+                on:keydown={e => e.key === 'Enter' && openModal('ring')}>
+                <span class="sg-label">Ring</span>  
+                {#if $build.ring}            
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
+                    title={$build.upgradeRing === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
+                    {$build.upgradeRing === 5 ? '+5' : '+0'}
+                  </button>
+                {/if}
+                <span class="sg-value">{$build.ring || 'No ring'}</span>
+                {#if $build.ring && hasEnchants('ring')}
+                  <span class="sg-ench">{$build.enchantments.ring.filter(Boolean).join(' · ')}</span>
+                {/if}
+                {#if $build.ring}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
+                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
+                    on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
+                {/if}
+              </div>
+              <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
+                <span class="sg-label">Race</span>
+                <span class="sg-value">{$build.race || '—'}</span>
+                {#if $build.race}
+                  {@const race = races.find(r => r.name === $build.race)}
+                  {#if race?.passive}
+                    <span class="sg-sub">{race.passive.length > 40 ? race.passive.slice(0,40)+'…' : race.passive}</span>
                   {/if}
                 {/if}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
-                <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
-                  on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
-              {/if}
-            </div>
-            <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
-              role="button" tabindex="0"
-              on:click={() => openModal('guild')}
-              on:keydown={e => e.key === 'Enter' && openModal('guild')}>
-              <span class="sg-label">Guild</span>
-              <span class="sg-value">{$build.guild || '—'}</span>
-              {#if $build.guild}<span class="sg-sub">Rank {$build.guildRank}</span>{/if}
-              {#if $build.guild}
-                <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, guild: '', guildRank: 1}))} title="Clear">✕</button>
-              {/if}
-            </div>
-          </div>
-                    
-                    <!-- Draconic Rune row — chỉ hiện khi guild = Draconic -->
-          {#if isDraconic && isDragonBlooded}
-            <div class="sg-cell sg-span10 sg-draconic-row">
-              <div class="sg-draconic-header">
-                <span class="sg-label" style="color:#a855f7">Draconic Rune</span>
-                <span class="sg-draconic-hint">Select your dragon color</span>
-              </div>
-              <div class="sg-draconic-colors">
-                {#each DRACO_COLORS as dc}
-                  <button class="draco-color-btn"
-                    class:draco-color-btn--active={$build.draconicColor === dc.id}
-                    style="--dc:{dc.color}"
-                    on:click={() => build.update(s => ({...s, draconicColor: s.draconicColor === dc.id ? '' : dc.id}))}>
-                    {dc.label}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {/if}
+              </button>
 
-          <!-- ── INLINE ENCHANT PANEL ── -->
-          <!-- Dùng biến reactive iep* thay vì {@const} để tránh stale closure -->
-          {#if iepSlot}
-            <div class="inline-enchant-panel">
-              <div class="iep-header">
-                <span class="iep-title">Enchant: {iepSlot.charAt(0).toUpperCase() + iepSlot.slice(1)}</span>
-                <div class="iep-cat-row">
-                  <button class="iep-cat-btn" class:iep-cat-btn--active={iepCat === 'unAscended'}
-                    on:click={() => { if (iepCat !== 'unAscended') toggleEnchantCat(iepSlot) }}>
-                    Unascended
-                  </button>
-                  <button class="iep-cat-btn iep-cat-btn--asc" class:iep-cat-btn--active={iepCat === 'Ascended'}
-                    on:click={() => { if (iepCat !== 'Ascended') toggleEnchantCat(iepSlot) }}>
-                    Ascended
-                  </button>
-                  {#if iepHasEnchants}
-                    <button class="iep-clear-btn" on:click={() => clearEnchants(iepSlot)}>
-                      Clear all
+              <!-- Row 3: Inf Legs | Legs | — | Rune | Guild -->
+              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionLeggings}
+                role="button" tabindex="0"
+                on:click={() => openModal('infusion-leggings')}
+                on:keydown={e => e.key === 'Enter' && openModal('infusion-leggings')}>
+                <span class="sg-label">Inf. Leggings</span>
+                <span class="sg-value">{$build.infusionLeggings || 'No infused leggings'}</span>
+                {#if $build.infusionLeggings}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionLeggings: ''}))} title="Clear">✕</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.leggings}
+                role="button" tabindex="0"
+                on:click={() => openModal('armor-leggings')}
+                on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
+                <span class="sg-label">Leggings</span>
+                {#if $build.leggings}
+                    <button class="sg-upgrade-btn"
+                      class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
+                      title={$build.upgradeLeggings === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
+                      {$build.upgradeLeggings === 5 ? '+5' : '+0'}
                     </button>
-                    <button class="iep-apply-all-btn" on:click={() => applyEnchantToAll(iepSlot)}
-                      title="Apply this enchantment setup to all slots">
-                      Apply to all
-                    </button>
+                {/if}
+                <span class="sg-value">{$build.leggings || 'No leggings'}</span>
+                {#if $build.leggings && hasEnchants('leggings')}
+                  <span class="sg-ench">{$build.enchantments.leggings.filter(Boolean).join(' · ')}</span>
+                {/if}
+                {#if $build.leggings}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
+                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
+                    on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-infusion sg-span2" style="opacity:0.3">
+                <span class="sg-label">Inf. Rune</span>
+                <span class="sg-value">Coming soon</span>
+              </div>
+              <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.rune}
+                role="button" tabindex="0"
+                on:click={() => openModal('rune')}
+                on:keydown={e => e.key === 'Enter' && openModal('rune')}>
+                <span class="sg-label">Rune</span>
+                {#if $build.rune}
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
+                    title={$build.upgradeRune === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
+                    {$build.upgradeRune === 5 ? '+5' : '+0'}
+                  </button>
                   {/if}
-                  <button class="iep-close-btn" on:click={() => inlineEnchantSlot = null}>✕</button>
+                <span class="sg-value">{$build.rune || 'No rune'}</span>
+                {#if $build.rune && hasEnchants('rune')}
+                  <span class="sg-ench">{$build.enchantments.rune.filter(Boolean).join(' · ')}</span>
+                {/if}
+                {#if $build.rune}
+                {@const rune = runes.find(r => r.name === $build.rune)}
+                  {#if rune}
+                    {#if hasRuneCDR}
+                      <span class="sg-cd-row">
+                        <span class="sg-sub">CD:</span>
+                        <span class="sg-cd-base">{rune.cooldown}s</span>
+                        <span class="sg-cd-arrow">→</span>
+                        <span class="sg-cd-final">{formatCD(rune.cooldown, cdr)}</span>
+                      </span>
+                    {:else}
+                      <span class="sg-sub">CD: {rune.cooldown}s</span>
+                    {/if}
+                  {/if}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
+                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
+                    on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
+                {/if}
+              </div>
+              <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
+                role="button" tabindex="0"
+                on:click={() => openModal('guild')}
+                on:keydown={e => e.key === 'Enter' && openModal('guild')}>
+                <span class="sg-label">Guild</span>
+                <span class="sg-value">{$build.guild || '—'}</span>
+                {#if $build.guild}<span class="sg-sub">Rank {$build.guildRank}</span>{/if}
+                {#if $build.guild}
+                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, guild: '', guildRank: 1}))} title="Clear">✕</button>
+                {/if}
+              </div>
+            </div>
+                      
+                      <!-- Draconic Rune row — chỉ hiện khi guild = Draconic -->
+            {#if isDraconic && isDragonBlooded}
+              <div class="sg-cell sg-span10 sg-draconic-row">
+                <div class="sg-draconic-header">
+                  <span class="sg-label" style="color:#a855f7">Draconic Rune</span>
+                  <span class="sg-draconic-hint">Select your dragon color</span>
+                </div>
+                <div class="sg-draconic-colors">
+                  {#each DRACO_COLORS as dc}
+                    <button class="draco-color-btn"
+                      class:draco-color-btn--active={$build.draconicColor === dc.id}
+                      style="--dc:{dc.color}"
+                      on:click={() => build.update(s => ({...s, draconicColor: s.draconicColor === dc.id ? '' : dc.id}))}>
+                      {dc.label}
+                    </button>
+                  {/each}
                 </div>
               </div>
-              <div class="iep-slots">
-                <!-- Slot 0 luôn hiện -->
-                <div class="iep-slot">
-                  <span class="iep-slot-num">1</span>
-                  <EnchantSelect
-                    value={iepS0}
-                    options={iepOpts0}
-                    on:change={e => setEnchantment(iepSlot, 0, e.detail)}
-                  />
-                  {#if iepS0}
-                    <button class="iep-slot-clear" title="Clear slot 1"
-                      on:click={() => setEnchantment(iepSlot, 0, '')}>✕</button>
-                  {/if}
+            {/if}
+
+            <!-- ── INLINE ENCHANT PANEL ── -->
+            <!-- Dùng biến reactive iep* thay vì {@const} để tránh stale closure -->
+            {#if iepSlot}
+              <div class="inline-enchant-panel">
+                <div class="iep-header">
+                  <span class="iep-title">Enchant: {iepSlot.charAt(0).toUpperCase() + iepSlot.slice(1)}</span>
+                  <div class="iep-cat-row">
+                    <button class="iep-cat-btn" class:iep-cat-btn--active={iepCat === 'unAscended'}
+                      on:click={() => { if (iepCat !== 'unAscended') toggleEnchantCat(iepSlot) }}>
+                      Unascended
+                    </button>
+                    <button class="iep-cat-btn iep-cat-btn--asc" class:iep-cat-btn--active={iepCat === 'Ascended'}
+                      on:click={() => { if (iepCat !== 'Ascended') toggleEnchantCat(iepSlot) }}>
+                      Ascended
+                    </button>
+                    {#if iepHasEnchants}
+                      <button class="iep-clear-btn" on:click={() => clearEnchants(iepSlot)}>
+                        Clear all
+                      </button>
+                      <button class="iep-apply-all-btn" on:click={() => applyEnchantToAll(iepSlot)}
+                        title="Apply this enchantment setup to all slots">
+                        Apply to all
+                      </button>
+                    {/if}
+                    <button class="iep-close-btn" on:click={() => inlineEnchantSlot = null}>✕</button>
+                  </div>
                 </div>
-                <!-- Slot 1: chỉ khi s0 có giá trị và không exclusive -->
-                {#if iepS0 && !iepExcl}
-                  {#if iepS1}
-                    <button class="iep-swap-btn" title="Swap slot 1 ↔ slot 2"
-                      on:click={() => swapEnchantments(iepSlot, 0, 1)}>⇅</button>
-                  {/if}
+                <div class="iep-slots">
+                  <!-- Slot 0 luôn hiện -->
                   <div class="iep-slot">
-                    <span class="iep-slot-num">2</span>
+                    <span class="iep-slot-num">1</span>
                     <EnchantSelect
-                      value={iepS1}
-                      options={iepOpts1}
-                      on:change={e => setEnchantment(iepSlot, 1, e.detail)}
+                      value={iepS0}
+                      options={iepOpts0}
+                      on:change={e => setEnchantment(iepSlot, 0, e.detail)}
                     />
+                    {#if iepS0}
+                      <button class="iep-slot-clear" title="Clear slot 1"
+                        on:click={() => setEnchantment(iepSlot, 0, '')}>✕</button>
+                    {/if}
+                  </div>
+                  <!-- Slot 1: chỉ khi s0 có giá trị và không exclusive -->
+                  {#if iepS0 && !iepExcl}
                     {#if iepS1}
-                      <button class="iep-slot-clear" title="Clear slot 2"
-                        on:click={() => setEnchantment(iepSlot, 1, '')}>✕</button>
+                      <button class="iep-swap-btn" title="Swap slot 1 ↔ slot 2"
+                        on:click={() => swapEnchantments(iepSlot, 0, 1)}>⇅</button>
                     {/if}
-                  </div>
-                {/if}
-                <!-- Slot 2: chỉ khi s1 có giá trị và không exclusive -->
-                {#if iepS1 && !iepExcl}
-                  {#if iepS2}
-                    <button class="iep-swap-btn" title="Swap slot 2 ↔ slot 3"
-                      on:click={() => swapEnchantments(iepSlot, 1, 2)}>⇅</button>
+                    <div class="iep-slot">
+                      <span class="iep-slot-num">2</span>
+                      <EnchantSelect
+                        value={iepS1}
+                        options={iepOpts1}
+                        on:change={e => setEnchantment(iepSlot, 1, e.detail)}
+                      />
+                      {#if iepS1}
+                        <button class="iep-slot-clear" title="Clear slot 2"
+                          on:click={() => setEnchantment(iepSlot, 1, '')}>✕</button>
+                      {/if}
+                    </div>
                   {/if}
-                  <div class="iep-slot">
-                    <span class="iep-slot-num">3</span>
-                    <EnchantSelect
-                      value={iepS2}
-                      options={iepOpts2}
-                      on:change={e => setEnchantment(iepSlot, 2, e.detail)}
-                    />
+                  <!-- Slot 2: chỉ khi s1 có giá trị và không exclusive -->
+                  {#if iepS1 && !iepExcl}
                     {#if iepS2}
-                      <button class="iep-slot-clear" title="Clear slot 3"
-                        on:click={() => setEnchantment(iepSlot, 2, '')}>✕</button>
+                      <button class="iep-swap-btn" title="Swap slot 2 ↔ slot 3"
+                        on:click={() => swapEnchantments(iepSlot, 1, 2)}>⇅</button>
                     {/if}
-                  </div>
+                    <div class="iep-slot">
+                      <span class="iep-slot-num">3</span>
+                      <EnchantSelect
+                        value={iepS2}
+                        options={iepOpts2}
+                        on:change={e => setEnchantment(iepSlot, 2, e.detail)}
+                      />
+                      {#if iepS2}
+                        <button class="iep-slot-clear" title="Clear slot 3"
+                          on:click={() => setEnchantment(iepSlot, 2, '')}>✕</button>
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+                {#if iepExcl && iepS0}
+                  <p class="iep-excl-note">⚠ Exclusive enchantment — only one slot available</p>
                 {/if}
               </div>
-              {#if iepExcl && iepS0}
-                <p class="iep-excl-note">⚠ Exclusive enchantment — only one slot available</p>
-              {/if}
-            </div>
-          {/if}
-        </div>
-        
-<!-- ── WEAPON ART PANEL ── -->
-<div class="wa-panel">
-  <div class="wa-panel-header">
-    <span class="wa-panel-title">Weapon Art</span>
-  </div>
-
-  <div class="wa-selected" class:wa-selected--invalid={!waAvailable}>
-    <div class="wa-selected-top">
-      <span class="wa-name">{selectedWA.name}</span>
-      {#if hasWACDR}
-  <span class="wa-cd-badge wa-cd-badge--reduced">
-    <span class="wa-cd-old">{selectedWA.cooldown}s</span>
-    <span class="wa-cd-arrow">→</span>
-    {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
-  </span>
-{:else}
-  <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
-{/if}
-      {#if !waAvailable}
-        <span class="wa-req-badge">⚠ Req. not met</span>
-      {/if}
+            {/if}
+          </div>
+          
+  <!-- ── WEAPON ART PANEL ── -->
+  <div class="wa-panel">
+    <div class="wa-panel-header">
+      <span class="wa-panel-title">Weapon Art</span>
     </div>
-  </div>
 
-  {#if availableWeaponArts.length > 1}
-    <div class="wa-available-list">
-      <span class="wa-avail-label">Available ({availableWeaponArts.length})</span>
-      <div class="wa-chips">
-        {#each availableWeaponArts as wa}
-          <button class="wa-chip" class:wa-chip--active={$build.selectedWeaponArt === wa.name}
-            on:click={() => build.update(s => ({...s, selectedWeaponArt: wa.name}))}>
-            {wa.name}
-          </button>
-        {/each}
-      </div>
-    </div>
+    <div class="wa-selected" class:wa-selected--invalid={!waAvailable}>
+      <div class="wa-selected-top">
+        <span class="wa-name">{selectedWA.name}</span>
+        {#if hasWACDR}
+    <span class="wa-cd-badge wa-cd-badge--reduced">
+      <span class="wa-cd-old">{selectedWA.cooldown}s</span>
+      <span class="wa-cd-arrow">→</span>
+      {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
+    </span>
+  {:else}
+    <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
   {/if}
-</div>
-
-        <div class="summary-stats">
-          <div class="ss-header">Stats</div>
-          {#if statRows.length === 0}
-            <p class="empty ss-empty">No stats yet.</p>
-          {:else}
-            <div class="ss-section">
-              {#each statRows as [k, v]}
-                <div class="ss-row">
-                  <span class="ss-key">{formatLabel(k)}</span>
-                  <span class="ss-val" class:neg={v < 0}>{formatStat(k, v)}</span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
-
-    <!-- Perks & Effects + Combat Multipliers — shared panel with tabs -->
-    {#if perkRows.length > 0 || hasBoosts}
-      <div class="panel perks-panel">
-        <div class="perks-tabs-header">
-          <button class="perks-tab" class:perks-tab--active={activePerksTab === 'perks'}
-            on:click={() => activePerksTab = 'perks'}>
-            Perks &amp; Effects
-            <span class="perk-count-badge">{perkRows.length}</span>
-          </button>
-          {#if hasBoosts}
-            <button class="perks-tab perks-tab--boosts" class:perks-tab--active={activePerksTab === 'boosts'}
-              on:click={() => activePerksTab = 'boosts'}>
-              Combat Multipliers
-              {#if hasDmgBoosts}
-                <span class="tab-boost-badge tab-boost-badge--dmg">⚔×{boosts.dmgFinalMultiplier.toFixed(2)}</span>
-              {/if}
-              {#if hasHealBoosts}
-                <span class="tab-boost-badge tab-boost-badge--heal">✦×{boosts.healFinalMultiplier.toFixed(2)}</span>
-              {/if}
-            </button>
-          {/if}
-          <button class="perks-collapse-btn" on:click={() => showPerksPanel = !showPerksPanel}>
-            {showPerksPanel ? '▲' : '▼'}
-          </button>
-        </div>
-
-        {#if showPerksPanel}
-          {#if activePerksTab === 'perks'}
-            <div class="perks-grid">
-              {#each perkRows as [name, count]}
-                {@const perk = getPerk(name)}
-                <div class="perk-card">
-                  <div class="perk-row">
-                    <span class="perk-name">{name} <span class="perk-val">+{Math.round(count * 100) / 100}</span></span>
-                  </div>
-                  {#if perk?.description}
-                    <p class="perk-desc">{perk.description}</p>
-                  {/if}
-                  {#if name === 'Emotional'}
-                    <EmotionalTracker />
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          {:else if activePerksTab === 'boosts'}
-            <div class="boosts-layout">
-
-              {#if hasDmgBoosts}
-                <div class="boost-group">
-                  <div class="boost-group-header">
-                    <span class="boost-group-label boost-group-label--dmg">Damage Boost</span>
-                    <span class="boost-group-final boost-group-final--dmg">×{boosts.dmgFinalMultiplier.toFixed(3)}</span>
-                  </div>
-                  <div class="boost-chain">
-                    {#each boosts.dmgEntries as entry, i}
-                      {#if i > 0}<span class="boost-chain-op">×</span>{/if}
-                      <div class="boost-chip boost-chip--dmg" title={entry.condition ?? 'Universal'}>
-                        <span class="boost-chip-name">{entry.sourceName}</span>
-                        <span class="boost-chip-val">×{entry.rawMultiplier.toFixed(2)}</span>
-                        {#if entry.condition}
-                          <span class="boost-chip-cond">{entry.condition}</span>
-                        {/if}
-                      </div>
-                    {/each}
-                    <span class="boost-chain-op">=</span>
-                    <span class="boost-chain-result boost-chain-result--dmg">×{boosts.dmgFinalMultiplier.toFixed(3)}</span>
-                  </div>
-                </div>
-              {/if}
-
-              {#if hasHealBoosts}
-                <div class="boost-group">
-                  <div class="boost-group-header">
-                    <span class="boost-group-label boost-group-label--heal">✦ Heal Boost</span>
-                    <span class="boost-group-final boost-group-final--heal">×{boosts.healFinalMultiplier.toFixed(3)}</span>
-                  </div>
-                  <div class="boost-chain">
-                    {#each boosts.healEntries as entry, i}
-                      {#if i > 0}<span class="boost-chain-op">×</span>{/if}
-                      <div class="boost-chip boost-chip--heal" title={entry.condition ?? 'Universal'}>
-                        <span class="boost-chip-name">{entry.sourceName}</span>
-                        <span class="boost-chip-val">×{entry.rawMultiplier.toFixed(2)}</span>
-                        {#if entry.condition}
-                          <span class="boost-chip-cond">{entry.condition}</span>
-                        {/if}
-                      </div>
-                    {/each}
-                    <span class="boost-chain-op">=</span>
-                    <span class="boost-chain-result boost-chain-result--heal">×{boosts.healFinalMultiplier.toFixed(3)}</span>
-                  </div>
-                </div>
-              {/if}
-
-            </div>
-          {/if}
+        {#if !waAvailable}
+          <span class="wa-req-badge">⚠ Req. not met</span>
         {/if}
       </div>
-    {/if}
+    </div>
 
-        <!-- ── DRACONIC RUNE PANEL ── -->
-    {#if isDraconic}
-      <div class="panel draconic-panel">
-        <div class="draconic-panel-header">
-          <span class="draconic-panel-title">
-            Draconic Rune
-            {#if dracoColor && isDragonBlooded}
-              <span class="draco-color-badge" style="background:{dracoColor.color}20;border-color:{dracoColor.color}60;color:{dracoColor.color}">
-                {dracoColor.label} · {dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1)} Type
-              </span>
-            {/if}
-            {#if !isDragonBlooded}
-              <span class="draco-warning">⚠ Not Dragon Blooded — abilities deal half damage (Physical type)</span>
-            {/if}
-          </span>
+    {#if availableWeaponArts.length > 1}
+      <div class="wa-available-list">
+        <span class="wa-avail-label">Available ({availableWeaponArts.length})</span>
+        <div class="wa-chips">
+          {#each availableWeaponArts as wa}
+            <button class="wa-chip" class:wa-chip--active={$build.selectedWeaponArt === wa.name}
+              on:click={() => build.update(s => ({...s, selectedWeaponArt: wa.name}))}>
+              {wa.name}
+            </button>
+          {/each}
         </div>
+      </div>
+    {/if}
+  </div>
 
-        <div class="draconic-abilities">
+          <div class="summary-stats">
+            <div class="ss-header">Stats</div>
+            {#if statRows.length === 0}
+              <p class="empty ss-empty">No stats yet.</p>
+            {:else}
+              <div class="ss-section">
+                {#each statRows as [k, v]}
+                  <div class="ss-row">
+                    <span class="ss-key">{formatLabel(k)}</span>
+                    <span class="ss-val" class:neg={v < 0}>{formatStat(k, v)}</span>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
 
-          <!-- Dragon Claw -->
-          <div class="draconic-ability-card">
-            <div class="dab-header">
-              <span class="dab-name">Dragon Claw</span>
-              <div class="dab-cds">
-                {#if draconicHasCDR}
-                  <span class="dab-cd-old">{draconicBaseCDs.claw}s</span>
-                  <span class="dab-cd-arrow">→</span>
-                  <span class="dab-cd">{draconicFinalCDs.claw}s</span>
-                {:else}
-                  <span class="dab-cd">CD: {draconicBaseCDs.claw}s</span>
-                {/if}
+      <!-- Perks & Effects + Combat Multipliers — shared panel with tabs -->
+      {#if perkRows.length > 0}
+        <div class="panel perks-panel">
+          <div class="perks-tabs-header">
+            <button class="perks-tab" class:perks-tab--active={activePerksTab === 'perks'}
+              on:click={() => activePerksTab = 'perks'}>
+              Perks &amp; Effects
+              <span class="perk-count-badge">{perkRows.length}</span>
+            </button>
+            <button class="perks-collapse-btn" on:click={() => showPerksPanel = !showPerksPanel}>
+              {showPerksPanel ? '▲' : '▼'}
+            </button>
+          </div>
+
+          {#if showPerksPanel}
+            {#if activePerksTab === 'perks'}
+              <div class="perks-grid">
+                {#each perkRows as [name, count]}
+                  {@const perk = getPerk(name)}
+                  <div class="perk-card">
+                    <div class="perk-row">
+                      <span class="perk-name">{name} <span class="perk-val">+{Math.round(count * 100) / 100}</span></span>
+                    </div>
+                    {#if perk?.description}
+                      <p class="perk-desc">{perk.description}</p>
+                    {/if}
+                    {#if name === 'Emotional'}
+                      <EmotionalTracker />
+                    {/if}
+                  </div>
+                {/each}
               </div>
-            </div>
-            <div class="dab-stats">
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Damage</span>
-                <span class="dab-stat-v">{dragonClawDmg(draconicPerkAmt)}</span>
-                {#if !isDragonBlooded}<span class="dab-half">(→ {dragonClawDmg(draconicPerkAmt)/2})</span>{/if}
+              <div class="boosts-layout">
+
               </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Dmg Type</span>
-                <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
-                  {dracoColor && isDragonBlooded ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0×
+            {/if}
+          {/if}
+        </div>
+      {/if}
+
+          <!-- ── DRACONIC RUNE PANEL ── -->
+      {#if isDraconic}
+        <div class="panel draconic-panel">
+          <div class="draconic-panel-header">
+            <span class="draconic-panel-title">
+              Draconic Rune
+              {#if dracoColor && isDragonBlooded}
+                <span class="draco-color-badge" style="background:{dracoColor.color}20;border-color:{dracoColor.color}60;color:{dracoColor.color}">
+                  {dracoColor.label} · {dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1)} Type
                 </span>
+              {/if}
+              {#if !isDragonBlooded}
+                <span class="draco-warning">⚠ Not Dragon Blooded — abilities deal half damage (Physical type)</span>
+              {/if}
+            </span>
+          </div>
+
+          <div class="draconic-abilities">
+
+            <!-- Dragon Claw -->
+            <div class="draconic-ability-card">
+              <div class="dab-header">
+                <span class="dab-name">Dragon Claw</span>
+                <div class="dab-cds">
+                  {#if draconicHasCDR}
+                    <span class="dab-cd-old">{draconicBaseCDs.claw}s</span>
+                    <span class="dab-cd-arrow">→</span>
+                    <span class="dab-cd">{draconicFinalCDs.claw}s</span>
+                  {:else}
+                    <span class="dab-cd">CD: {draconicBaseCDs.claw}s</span>
+                  {/if}
+                </div>
               </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Scaling</span>
-                <span class="dab-stat-v">1.0 (same type)</span>
+              <div class="dab-stats">
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Damage</span>
+                  <span class="dab-stat-v">{dragonClawDmg(draconicPerkAmt)}</span>
+                  {#if !isDragonBlooded}<span class="dab-half">(→ {dragonClawDmg(draconicPerkAmt)/2})</span>{/if}
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Dmg Type</span>
+                  <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
+                    {dracoColor && isDragonBlooded ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0×
+                  </span>
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Scaling</span>
+                  <span class="dab-stat-v">1.0 (same type)</span>
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Poise Dmg</span>
+                  <span class="dab-stat-v">60</span>
+                </div>
+                {#if $build.draconicColor === 'holy'}
+                  <div class="dab-stat-row">
+                    <span class="dab-stat-k">Heal (Holy)</span>
+                    <span class="dab-stat-v">{dragonClawHealHoly(draconicPerkAmt)}</span>
+                  </div>
+                  {/if}
+                  {#if $build.draconicColor === 'water'}
+                  <div class="dab-stat-row">
+                    <span class="dab-stat-k">Heal (Water)</span>
+                    <span class="dab-stat-v">{dragonClawHealWater(draconicPerkAmt)}</span>
+                  </div>
+                  <div class="dab-notes">Cleanses</div>
+                  {/if}
+                </div>
+                <div class="dab-notes">Guardbreaks</div>
               </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Poise Dmg</span>
-                <span class="dab-stat-v">60</span>
+
+            <!-- Dragon Infusion -->
+            <div class="draconic-ability-card draconic-ability-card--infusion">
+              <div class="dab-header">
+                <span class="dab-name">Dragon Infusion</span>
+                <div class="dab-cds">
+                  {#if draconicHasCDR}
+                    <span class="dab-cd-old">{draconicBaseCDs.infusion}s</span>
+                    <span class="dab-cd-arrow">→</span>
+                    <span class="dab-cd">{draconicFinalCDs.infusion}s</span>
+                  {:else}
+                    <span class="dab-cd">CD: {draconicBaseCDs.infusion}s</span>
+                  {/if}
+                  <span class="dab-duration">20s duration</span>
+                </div>
               </div>
-              {#if $build.draconicColor === 'holy'}
+              <div class="dab-stats">
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Effect</span>
+                  <span class="dab-stat-v">Draconic Infusion buff</span>
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Total bonus</span>
+                  <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
+                    {isDragonBlooded
+                      ? `+${Math.round(draconicPerkAmt * 0.1 * 100) / 100} ${dracoColor ? dracoColor.stat : 'draco'} dmg type`
+                      : `+${parseFloat((draconicPerkAmt * 0.075).toFixed(3))} physical dmg type`}
+                  </span>
+                </div>
+              </div>
+              <div class="dab-notes">Does not apply to attacks without proc coefficient</div>
+            </div>
+
+            <!-- Dragon Bubble -->
+            <div class="draconic-ability-card">
+              <div class="dab-header">
+                <span class="dab-name">Dragon Bubble</span>
+                <div class="dab-cds">
+                  {#if draconicHasCDR}
+                    <span class="dab-cd-old">{draconicBaseCDs.bubble}s</span>
+                    <span class="dab-cd-arrow">→</span>
+                    <span class="dab-cd">{draconicFinalCDs.bubble}s</span>
+                  {:else}
+                    <span class="dab-cd">CD: {draconicBaseCDs.bubble}s</span>
+                  {/if}
+                </div>
+              </div>
+              <div class="dab-stats">
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Damage</span>
+                  <span class="dab-stat-v">{dragonBubbleDmg(draconicPerkAmt)}</span>
+                  {#if !isDragonBlooded}<span class="dab-half">(→ {dragonBubbleDmg(draconicPerkAmt)/2})</span>{/if}
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Dmg Type</span>
+                  <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
+                    {dracoColor && isDragonBlooded ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0×
+                  </span>
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Scaling</span>
+                  <span class="dab-stat-v">1.0 (same type)</span>
+                </div>
+                <div class="dab-stat-row">
+                  <span class="dab-stat-k">Poise Dmg</span>
+                  <span class="dab-stat-v">45</span>
+                </div>
+                {#if $build.draconicColor === 'holy'}
                 <div class="dab-stat-row">
                   <span class="dab-stat-k">Heal (Holy)</span>
-                  <span class="dab-stat-v">{dragonClawHealHoly(draconicPerkAmt)}</span>
+                  <span class="dab-stat-v">{dragonBubbleHealHoly(draconicPerkAmt)}</span>
                 </div>
                 {/if}
                 {#if $build.draconicColor === 'water'}
                 <div class="dab-stat-row">
                   <span class="dab-stat-k">Heal (Water)</span>
-                  <span class="dab-stat-v">{dragonClawHealWater(draconicPerkAmt)}</span>
+                  <span class="dab-stat-v">{dragonBubbleHealWater(draconicPerkAmt)}</span>
                 </div>
                 <div class="dab-notes">Cleanses</div>
                 {/if}
               </div>
-              <div class="dab-notes">Guardbreaks</div>
+              <div class="dab-notes">Goes through walls · Detonates on contact</div>
             </div>
-
-          <!-- Dragon Infusion -->
-          <div class="draconic-ability-card draconic-ability-card--infusion">
-            <div class="dab-header">
-              <span class="dab-name">Dragon Infusion</span>
-              <div class="dab-cds">
-                {#if draconicHasCDR}
-                  <span class="dab-cd-old">{draconicBaseCDs.infusion}s</span>
-                  <span class="dab-cd-arrow">→</span>
-                  <span class="dab-cd">{draconicFinalCDs.infusion}s</span>
-                {:else}
-                  <span class="dab-cd">CD: {draconicBaseCDs.infusion}s</span>
-                {/if}
-                <span class="dab-duration">20s duration</span>
-              </div>
-            </div>
-            <div class="dab-stats">
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Effect</span>
-                <span class="dab-stat-v">Draconic Infusion buff</span>
-              </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Total bonus</span>
-                <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
-                  {isDragonBlooded
-                    ? `+${Math.round(draconicPerkAmt * 0.1 * 100) / 100} ${dracoColor ? dracoColor.stat : 'draco'} dmg type`
-                    : `+${parseFloat((draconicPerkAmt * 0.075).toFixed(3))} physical dmg type`}
-                </span>
-              </div>
-            </div>
-            <div class="dab-notes">Does not apply to attacks without proc coefficient</div>
-          </div>
-
-          <!-- Dragon Bubble -->
-          <div class="draconic-ability-card">
-            <div class="dab-header">
-              <span class="dab-name">Dragon Bubble</span>
-              <div class="dab-cds">
-                {#if draconicHasCDR}
-                  <span class="dab-cd-old">{draconicBaseCDs.bubble}s</span>
-                  <span class="dab-cd-arrow">→</span>
-                  <span class="dab-cd">{draconicFinalCDs.bubble}s</span>
-                {:else}
-                  <span class="dab-cd">CD: {draconicBaseCDs.bubble}s</span>
-                {/if}
-              </div>
-            </div>
-            <div class="dab-stats">
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Damage</span>
-                <span class="dab-stat-v">{dragonBubbleDmg(draconicPerkAmt)}</span>
-                {#if !isDragonBlooded}<span class="dab-half">(→ {dragonBubbleDmg(draconicPerkAmt)/2})</span>{/if}
-              </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Dmg Type</span>
-                <span class="dab-stat-v" style={dracoColor && isDragonBlooded ? `color:${dracoColor.color}` : ''}>
-                  {dracoColor && isDragonBlooded ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0×
-                </span>
-              </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Scaling</span>
-                <span class="dab-stat-v">1.0 (same type)</span>
-              </div>
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Poise Dmg</span>
-                <span class="dab-stat-v">45</span>
-              </div>
-              {#if $build.draconicColor === 'holy'}
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Heal (Holy)</span>
-                <span class="dab-stat-v">{dragonBubbleHealHoly(draconicPerkAmt)}</span>
-              </div>
-              {/if}
-              {#if $build.draconicColor === 'water'}
-              <div class="dab-stat-row">
-                <span class="dab-stat-k">Heal (Water)</span>
-                <span class="dab-stat-v">{dragonBubbleHealWater(draconicPerkAmt)}</span>
-              </div>
-              <div class="dab-notes">Cleanses</div>
-              {/if}
-            </div>
-            <div class="dab-notes">Goes through walls · Detonates on contact</div>
           </div>
         </div>
-      </div>
-    {/if}
+      {/if}
 
-    <!-- Combined details panel with tabs: Selection Details | Weapon -->
-    <div class="panel details-panel">
-      <div class="details-tabs-header">
-        <button class="details-tab" class:details-tab--active={activeDetailsTab === 'selection'}
-          on:click={() => activeDetailsTab = 'selection'}>
-          Selection Details
-        </button>
-        {#if weaponResult}
-          <button class="details-tab" class:details-tab--active={activeDetailsTab === 'weapon'}
-            on:click={() => activeDetailsTab = 'weapon'}>
-            {isMonk ? 'Monk Weapon' : 'Weapon'}
-            {#if weaponResult.finalWeaponType}
-              <span class="tab-weapon-badge" class:tab-weapon-badge--monk={isMonk}>{weaponResult.finalWeaponType}</span>
-            {/if}
+      <!-- Combined details panel with tabs: Selection Details | Weapon -->
+      <div class="panel details-panel">
+        <div class="details-tabs-header">
+          <button class="details-tab" class:details-tab--active={activeDetailsTab === 'selection'}
+            on:click={() => activeDetailsTab = 'selection'}>
+            Selection Details
           </button>
-        {/if}
-        <button class="details-collapse-btn" on:click={() => showDetailsPanel = !showDetailsPanel}>
-          {showDetailsPanel ? '▲' : '▼'}
-        </button>
-      </div>
-
-      {#if showDetailsPanel}
-        {#if activeDetailsTab === 'selection'}
-          {#if !hasDetails}
-            <p class="empty" style="padding:12px 0">Click cells above to select items and see details.</p>
-          {:else}
-            <div class="detail-layout">
-              {#if identityCards.length > 0}
-                <div class="identity-col">
-                  {#each identityCards as card}
-                    <div class="detail-card">
-                      <div class="detail-head">
-                        <span class="detail-type">{card.title}</span>
-                        <span class="detail-name">{card.label}</span>
-                      </div>
-                      {#if card.description}<p class="detail-desc">{card.description}</p>{/if}
-                      {#if Object.keys(card.stats).length}
-                        <div class="stat-list">
-                          {#each Object.entries(card.stats).filter(([,v]) => v !== 0) as [k,v]}
-                            <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
-                          {/each}
-                        </div>
-                      {/if}
-                      {#if card.perks.length}
-                        <div class="perk-list">
-                          {#each card.perks as p}
-                            <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
+          {#if weaponResult}
+            <button class="details-tab" class:details-tab--active={activeDetailsTab === 'weapon'}
+              on:click={() => activeDetailsTab = 'weapon'}>
+              {isMonk ? 'Monk Weapon' : 'Weapon'}
+              {#if weaponResult.finalWeaponType}
+                <span class="tab-weapon-badge" class:tab-weapon-badge--monk={isMonk}>{weaponResult.finalWeaponType}</span>
               {/if}
-
-              {#if slotGroups.length > 0}
-                <div class="gear-grid">
-                  {#each slotGroups as group}
-                    <div class="slot-col">
-                      {#if group.main}
-                        <div class="detail-card">
-                          <div class="detail-head">
-                            <span class="detail-type">{group.main.title}</span>
-                            <span class="detail-name">{group.main.label}</span>
-                            {#if group.main.enchants && group.main.enchants.length > 0}
-                              <div class="detail-enchant-tags">
-                                {#each group.main.enchants as enc}
-                                  <span class="enchant-tag">{enc.name}</span>
-                                {/each}
-                              </div>
-                            {/if}
-                          </div>
-                          {#if group.main.description}<p class="detail-desc">{group.main.description}</p>{/if}
-                          {#if group.main.extras?.length}{#each group.main.extras as ex}<p class="detail-extra">{ex}</p>{/each}{/if}
-                          {#if group.main.title === 'Rune' && hasRuneCDR}
-                            <div class="cdr-block">
-                              <div class="cdr-block-header"><span class="cdr-icon">⏱</span><span class="cdr-title">Rune CDR Breakdown</span></div>
-                              {#if cdr.runeSetCD != null}<div class="cdr-step"><span class="cdr-source">Gladiatorial Rage</span><span class="cdr-mult">Sets CD = {cdr.runeSetCD}s</span></div>{/if}
-                              {#each cdr.runeBreakdown as step}
-                                <div class="cdr-step">
-                                  <span class="cdr-source">{step.source}</span>
-                                  <span class="cdr-mult" class:cdr-mult--increase={step.multiplier > 1}>
-                                    {step.multiplier > 1 ? '+' : '-'}{Math.abs(step.pct)}%
-                                  </span>
-                                </div>
-                              {/each}
-                              {#each runes.filter(r => r.name === $build.rune).slice(0,1) as rune}
-                                <!-- SAU (Rune CDR block) -->
-<div class="cdr-steps-calc">
-  {#if cdr.runeSetCD != null}
-    <div class="cdr-calc-row">
-      <span class="cdr-cd-old">{rune.cooldown}s</span>
-      <span class="cdr-arrow">→</span>
-      <span class="cdr-cd-new">{cdr.runeSetCD}s</span>
-    </div>
-    {#each cdr.runeBreakdown as step, i}
-  {@const prevCD = i === 0 ? cdr.runeSetCD : cdr.runeSetCD * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-  {@const nextCD = cdr.runeSetCD * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-  {@const isLast = i === cdr.runeBreakdown.length - 1}
-  <div class="cdr-calc-row">
-    <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-    <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-    <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-    <span class="cdr-arrow">=</span>
-    <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-  </div>
-  {#if isLast}
-    <div class="cdr-calc-row cdr-calc-row--floor">
-      <span class="cdr-floor-label">floor</span>
-      <span class="cdr-arrow">→</span>
-      <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
-    </div>
-  {/if}
-{/each}
-    {:else}
-    {#each cdr.runeBreakdown as step, i}
-      {@const prevCD = i === 0 ? rune.cooldown : rune.cooldown * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-      {@const nextCD = rune.cooldown * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-      {@const isLast = i === cdr.runeBreakdown.length - 1}
-      <div class="cdr-calc-row">
-        <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-        <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-        <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-        <span class="cdr-arrow">=</span>
-        <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-      </div>
-      {#if isLast}
-        <div class="cdr-calc-row cdr-calc-row--floor">
-          <span class="cdr-floor-label">floor</span>
-          <span class="cdr-arrow">→</span>
-          <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
-        </div>
-      {/if}
-    {/each}
-                          {/if}
-                        </div>
-                              {/each}
-                            </div>
-                          {/if}
-                          {#if Object.keys(group.main.stats).length}
-                            <div class="stat-list">
-                              {#each Object.entries(group.main.stats).filter(([,v]) => v !== 0) as [k,v]}
-                                <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
-                              {/each}
-                            </div>
-                          {/if}
-                          {#if group.main.perks.length}
-                            <div class="perk-list">
-                              {#each group.main.perks as p}
-                                <div class="perk-row" class:perk-row--enchant={p.fromEnchant}>
-                                  <span>{p.name} <span class="perk-val" class:perk-val--enchant={p.fromEnchant}>+{p.amount}</span></span>
-                                </div>
-                              {/each}
-                            </div>
-                          {/if}
-                          {#if group.main.enchants}
-                            {#each group.main.enchants as enc}{#if enc.notes}<p class="detail-extra">{enc.notes}</p>{/if}{/each}
-                          {/if}
-                        </div>
-                      {/if}
-
-                      {#if group.infusion}
-                        <div class="inf-bridge">
-                          <span class="inf-bridge-line"></span>
-                          <span class="inf-bridge-icon">inf</span>
-                          <span class="inf-bridge-line"></span>
-                        </div>
-                        <div class="detail-card detail-card--infusion">
-                          <div class="detail-head">
-                            <span class="detail-type detail-type--infusion">{group.infusion.title}</span>
-                            <span class="detail-name">{group.infusion.label}</span>
-                          </div>
-                          {#if Object.keys(group.infusion.stats).length}
-                            <div class="stat-list">
-                              {#each Object.entries(group.infusion.stats).filter(([,v]) => v !== 0) as [k,v]}
-                                <div class="stat-row stat-row--infusion"><span>{formatLabel(k)}</span><span class="stat-val stat-val--infusion" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
-                              {/each}
-                            </div>
-                          {/if}
-                          {#if group.infusion.perks.length}
-                            <div class="perk-list">
-                              {#each group.infusion.perks as p}
-                                <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
-                              {/each}
-                            </div>
-                          {/if}
-                          <div class="infusion-note">Stats x0.5 · Perks full</div>
-                        </div>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            </div>
+            </button>
           {/if}
+          <button class="details-collapse-btn" on:click={() => showDetailsPanel = !showDetailsPanel}>
+            {showDetailsPanel ? '▲' : '▼'}
+          </button>
+        </div>
 
-        {:else if activeDetailsTab === 'weapon' && weaponResult}
-        <!-- WA Detail card -->
-<div class="detail-card wa-detail-card" class:wa-selected--invalid={!waAvailable} style="margin-bottom:10px;">
-  <div class="detail-head">
-    <span class="detail-type" style="color:var(--accent3)">Weapon Art</span>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span class="detail-name">{selectedWA.name}</span>
-      {#if hasWACDR}
-  <span class="wa-cd-badge wa-cd-badge--reduced">
-    <span class="wa-cd-old">{selectedWA.cooldown}s</span>
-    <span class="wa-cd-arrow">→</span>
-    {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
-  </span>
-{:else}
-  <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
-{/if}
-      {#if !waAvailable}<span class="wa-req-badge">⚠ Req. not met</span>{/if}
-    </div>
-  </div>
-  <p class="wa-desc">{selectedWA.description}</p>
-  {#if selectedWA.baseDamage}
-    <div class="wa-stat-row"><span class="wa-stat-key">Damage</span><span class="wa-stat-val">{selectedWA.baseDamage}</span></div>
-  {/if}
-  {#if selectedWA.damageType}
-    <div class="wa-stat-row">
-      <span class="wa-stat-key">Type</span>
-      {#if selectedWA.damageType === 'Same as weapon' && weaponResult}
-        <div class="damage-type-grid" style="flex:1">
-          {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
-            <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
-          {/each}
-        </div>
-      {:else}
-        <span class="wa-stat-val">{selectedWA.damageType}</span>
-      {/if}
-    </div>
-  {/if}
-  {#if selectedWA.scaling}
-    <div class="wa-stat-row">
-      <span class="wa-stat-key">Scaling</span>
-      {#if selectedWA.scaling === 'Same as weapon' && weaponResult}
-        <div class="scaling-grid" style="flex:1">
-          {#each Object.entries(weaponResult.scalings) as [k, v]}
-            <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{v}</span></div>
-          {/each}
-        </div>
-      {:else}
-        <span class="wa-stat-val">{selectedWA.scaling}</span>
-      {/if}
-    </div>
-  {/if}
-  {#if selectedWA.extras?.length}
-    {#each selectedWA.extras as ex}
-      <div class="wa-stat-row wa-stat-row--extra"><span class="wa-stat-val wa-stat-val--extra">{ex}</span></div>
-    {/each}
-  {/if}
-  {#if !waAvailable && waUnmetReqs.length > 0}
-    <div class="wa-req-block">
-      <span class="wa-req-title">Requirements not met:</span>
-      {#each waUnmetReqs as item}<div class="wa-req-item">{item}</div>{/each}
-    </div>
-  {/if}
-  {#if hasWACDR}
-    <div class="cdr-block" style="margin-top:6px;">
-      <div class="cdr-block-header"><span class="cdr-icon">⏱</span><span class="cdr-title">Weapon Art CDR</span></div>
-      {#each cdr.waBreakdown as step}
-        <div class="cdr-step">
-          <span class="cdr-source">{step.source}</span>
-          <span class="cdr-mult" class:cdr-mult--increase={step.multiplier > 1}>
-            {step.multiplier > 1 ? '+' : '-'}{Math.abs(step.pct)}%
-          </span>
-        </div>
-      {/each}
-      <div class="cdr-steps-calc">
-  {#each cdr.waBreakdown as step, i}
-  {@const prevCD = i === 0 ? selectedWA.cooldown : selectedWA.cooldown * cdr.waBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-  {@const nextCD = selectedWA.cooldown * cdr.waBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-  {@const isLast = i === cdr.waBreakdown.length - 1}
-  <div class="cdr-calc-row">
-    <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-    <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-    <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-    <span class="cdr-arrow">=</span>
-    <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-  </div>
-  {#if isLast}
-    <div class="cdr-calc-row cdr-calc-row--floor">
-      <span class="cdr-floor-label">floor</span>
-      <span class="cdr-arrow">→</span>
-      <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
-    </div>
-  {/if}
-{/each}
-</div>
-    </div>
-  {/if}
-</div>
-          <div class="weapon-result-layout">
-            <!-- Part 1 -->
-            {#if weaponResult.part1Name}
-              {@const part1Data = isMonk ? getGlove(weaponResult.part1Name) : getBlade(weaponResult.part1Name)}
-              <div class="detail-card weapon-card" class:weapon-card--blade={!isMonk} class:weapon-card--glove={isMonk}>
-                <div class="detail-head">
-                  <span class="detail-type" class:weapon-type-label={!isMonk} class:monk-type-label={isMonk}>
-                    {weaponResult.part1TypeLabel} · {weaponResult.part1Type}
-                  </span>
-                  <span class="detail-name">{weaponResult.part1Name}</span>
-                  <div class="weapon-tier-badge" class:monk-tier-badge={isMonk}>T{part1Data?.tier}</div>
-                </div>
-                {#if part1Data?.attackSpeed != null}
-                  <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part1Data.attackSpeed}x</span></div>
-                {/if}
-                {#if Object.keys(part1DamageTypes).length}
-                  <div class="weapon-section-label">Damage Types</div>
-                  <div class="damage-type-grid">
-                    {#each Object.entries(part1DamageTypes) as [k, v]}
-                      <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if Object.keys(weaponResult.part1RawScalings).length}
-                  <div class="weapon-section-label">Scalings</div>
-                  <div class="scaling-grid">
-                    {#each Object.entries(weaponResult.part1RawScalings) as [k, rawVal]}
-                      {@const finalVal = weaponResult.part1FinalScalings[k] ?? rawVal}
-                      {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
-                      <div class="scaling-pill" class:scaling-pill--boosted={boosted}>
-                        <span class="sc-name">{formatScalingLabel(k)}</span>
-                        {#if boosted}<span class="sc-val-old">{rawVal}</span><span class="sc-val sc-val--new">{finalVal}</span>
-                        {:else}<span class="sc-val">{rawVal}</span>{/if}
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if part1Data && Object.keys(part1Data.stats).length}
-  <div class="stat-list">
-  {#each Object.entries(part1Data.stats).filter(([k,v]) => v !== 0 && !k.endsWith('Type') && !k.endsWith('Scaling')) as [k, rawVal]}
-    {@const shrineFinal = (weaponResult.part1FinalStats as Record<string,number>)[k] ?? rawVal}
-    {@const shrineRaw = (weaponResult.part1RawStats as Record<string,number>)[k] ?? rawVal}
-    {@const boosted = shrineFinal !== (rawVal as number)}
-  <div class="stat-row" class:stat-row--boosted={boosted}>
-    <span>{formatLabel(k)}</span>
-    <div class="stat-val-group">
-      {#if boosted}
-        <span class="stat-val stat-val-ghost" class:neg={(rawVal as number) < 0}>{formatStat(k, shrineRaw as number)}</span>
-        <span class="stat-val stat-val--new" class:neg={shrineFinal < 0}>{formatStat(k, shrineFinal as number)}</span>
-      {:else}
-        <span class="stat-val" class:neg={shrineFinal < 0}>{formatStat(k, shrineFinal as number)}</span>
-      {/if}
-    </div>
-  </div>
-{/each}
-  </div>
-{/if}
-                {#if (part1Data as any)?.perks?.length}
-                <div class="perk-list">
-                  {#each ((part1Data as any)?.perks ?? []) as p, pi}
-                    {@const bonusAmt = (isMonk && pi === 0) ? p.amount + monkGlovePerkBonus : p.amount}
-                    <div class="perk-row">
-                      <span>{p.name} <span class="perk-val">+{bonusAmt}</span></span>
-                      {#if isMonk && pi === 0 && monkGlovePerkBonus > 0}
-                        <span class="monk-perk-bonus">(+{monkGlovePerkBonus} Monk)</span>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-              </div>
+        {#if showDetailsPanel}
+          {#if activeDetailsTab === 'selection'}
+            {#if !hasDetails}
+              <p class="empty" style="padding:12px 0">Click cells above to select items and see details.</p>
             {:else}
-              <div class="detail-card weapon-card weapon-card--empty"><p class="empty">No {part1Label.toLowerCase()} selected.</p></div>
-            {/if}
-
-            <div class="weapon-combine">
-              <div class="weapon-combine-line"></div>
-              <div class="weapon-combine-icon" class:monk-combine-icon={isMonk}>+</div>
-              <div class="weapon-combine-line"></div>
-            </div>
-
-            <!-- Part 2 -->
-            {#if weaponResult.part2Name}
-              {@const part2Data = isMonk ? getEssence(weaponResult.part2Name) : getHandle(weaponResult.part2Name)}
-              <div class="detail-card weapon-card" class:weapon-card--handle={!isMonk} class:weapon-card--essence={isMonk}>
-                <div class="detail-head">
-                  <span class="detail-type" class:weapon-type-label--handle={!isMonk} class:monk-type-label--essence={isMonk}>
-                    {weaponResult.part2TypeLabel} · {weaponResult.part2Type}
-                  </span>
-                  <span class="detail-name">{weaponResult.part2Name}</span>
-                  <div class="weapon-tier-badge" class:weapon-tier-badge--handle={!isMonk} class:monk-tier-badge--essence={isMonk}>T{part2Data?.tier}</div>
-                </div>
-                {#if part2Data?.attackSpeed != null}
-                  <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part2Data.attackSpeed}x</span></div>
-                {/if}
-                {#if Object.keys(part2DamageTypes).length}
-                  <div class="weapon-section-label">Damage Types</div>
-                  <div class="damage-type-grid">
-                    {#each Object.entries(part2DamageTypes) as [k, v]}
-                      <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if Object.keys(weaponResult.part2RawScalings).length}
-                  <div class="weapon-section-label">Scalings</div>
-                  <div class="scaling-grid">
-                    {#each Object.entries(weaponResult.part2RawScalings) as [k, rawVal]}
-                      {@const finalVal = weaponResult.part2FinalScalings[k] ?? rawVal}
-                      {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
-                      <div class="scaling-pill" class:scaling-pill--boosted={boosted}>
-                        <span class="sc-name">{formatScalingLabel(k)}</span>
-                        {#if boosted}<span class="sc-val-old">{rawVal}</span><span class="sc-val sc-val--new">{finalVal}</span>
-                        {:else}<span class="sc-val">{rawVal}</span>{/if}
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if part2Data && Object.keys(part2Data.stats).length}
-                  <div class="stat-list">
-                    {#each Object.entries(part2Data.stats).filter(([k,v]) => v !== 0 && !k.endsWith('Type') && !k.endsWith('Scaling')) as [k, rawVal]}
-                      {@const finalVal = (weaponResult.part2FinalStats as Record<string,number>)[k] ?? rawVal}
-                      {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
-                      <div class="stat-row" class:stat-row--boosted={boosted}>
-                        <span>{formatLabel(k)}</span>
-                        <div class="stat-val-group">
-                          {#if boosted}
-                            <span class="stat-val stat-val-ghost" class:neg={rawVal < 0}>{formatStat(k, rawVal as number)}</span>
-                            <span class="stat-val stat-val--new" class:neg={finalVal < 0}>{formatStat(k, finalVal as number)}</span>
-                          {:else}
-                            <span class="stat-val" class:neg={rawVal < 0}>{formatStat(k, rawVal as number)}</span>
-                          {/if}
+              <div class="detail-layout">
+                {#if identityCards.length > 0}
+                  <div class="identity-col">
+                    {#each identityCards as card}
+                      <div class="detail-card">
+                        <div class="detail-head">
+                          <span class="detail-type">{card.title}</span>
+                          <span class="detail-name">{card.label}</span>
                         </div>
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if (part2Data as any)?.perks?.length}
-                  <div class="perk-list">
-                    {#each ((part2Data as any)?.perks ?? []) as p}
-                      <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-            {:else}
-              <div class="detail-card weapon-card weapon-card--empty"><p class="empty">No {part2Label.toLowerCase()} selected.</p></div>
-            {/if}
-
-            {#if weaponResult.part1Name && weaponResult.part2Name}
-              <div class="weapon-combine weapon-combine--arrow">
-                <div class="weapon-combine-line"></div>
-                <div class="weapon-combine-icon">→</div>
-                <div class="weapon-combine-line"></div>
-              </div>
-              <div class="weapon-combined-card" class:weapon-combined-card--monk={isMonk}>
-                <div class="weapon-combined-header">
-                  <div class="weapon-combined-left">
-                    <span class="weapon-combined-title" class:monk-combined-title={isMonk}>{isMonk ? 'Combined Fists' : 'Combined Weapon'}</span>
-                    {#if weaponResult.finalWeaponType}
-                      <span class="weapon-type-badge" class:monk-type-badge={isMonk}>{weaponResult.finalWeaponType}</span>
-                    {:else}
-                      <span class="weapon-type-badge weapon-type-badge--none">None</span>
-                    {/if}
-                    {#if weaponResult.weaponModifier}<span class="weapon-modifier-badge">{isMonk ? '' : 'via '}{weaponResult.weaponModifier}</span>{/if}
-                    {#if weaponResult.hybridActive}<span class="weapon-modifier-badge weapon-modifier-badge--hybrid">Hybrid</span>{/if}
-                  </div>
-                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                    <span class="weapon-combined-speed">{weaponResult.attackSpeed}x Attack Speed</span>
-                    {#if $build.race === 'KITSUNE'}
-                      <span class="weapon-speed-race-bonus">+0.1 from Kitsune</span>
-                    {/if}
-                  </div>
-                </div>
-                {#if Object.keys(weaponDamageTypesWithBonus).length}
-                  <div class="weapon-section-label">Damage Types</div>
-                  <div class="damage-type-grid">
-                    {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
-                      {@const base = weaponResult.damageTypes[k] ?? 0}
-                      {@const bonus = weaponEnchantDmgBonus[k] ?? 0}
-                      <div class="damage-type-pill" class:damage-type-pill--boosted={bonus > 0}>
-                        <span class="dt-name">{formatDmgTypeLabel(k)}</span>
-                        {#if bonus > 0}
-                          <span class="dt-val-old">{base}x</span>
-                          <span class="dt-val dt-val--boosted">{v}x</span>
-                        {:else}
-                          <span class="dt-val">{v}x</span>
+                        {#if card.description}<p class="detail-desc">{card.description}</p>{/if}
+                        {#if Object.keys(card.stats).length}
+                          <div class="stat-list">
+                            {#each Object.entries(card.stats).filter(([,v]) => v !== 0) as [k,v]}
+                              <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
+                            {/each}
+                          </div>
+                        {/if}
+                        {#if card.perks.length}
+                          <div class="perk-list">
+                            {#each card.perks as p}
+                              <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
+                            {/each}
+                          </div>
                         {/if}
                       </div>
                     {/each}
                   </div>
                 {/if}
-                                {#if Object.keys(weaponResult.scalings).length}
-                  <div class="weapon-section-label">Scalings</div>
-                  <div class="scaling-grid">
-                    {#each Object.entries(weaponResult.scalings) as [k, v]}
-                      <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{v}</span></div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if Object.keys(weaponResult.stats).length}
-                  <div class="weapon-section-label">Stats</div>
-                  <div class="stat-list">
-                    {#each Object.entries(weaponResult.stats).filter(([,v]) => v !== 0) as [k,v]}
-                      <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
-                    {/each}
-                  </div>
-                {/if}
-                {#if Object.keys(weaponResult.perks).length}
-                  <div class="weapon-section-label">Perks</div>
-                  <div class="perk-list">
-                    {#each Object.entries(weaponResult.perks) as [name, amount]}
-                      <div class="perk-row"><span>{name} <span class="perk-val">+{amount}</span></span></div>
+
+                {#if slotGroups.length > 0}
+                  <div class="gear-grid">
+                    {#each slotGroups as group}
+                      <div class="slot-col">
+                        {#if group.main}
+                          <div class="detail-card">
+                            <div class="detail-head">
+                              <span class="detail-type">{group.main.title}</span>
+                              <span class="detail-name">{group.main.label}</span>
+                              {#if group.main.enchants && group.main.enchants.length > 0}
+                                <div class="detail-enchant-tags">
+                                  {#each group.main.enchants as enc}
+                                    <span class="enchant-tag">{enc.name}</span>
+                                  {/each}
+                                </div>
+                              {/if}
+                            </div>
+                            {#if group.main.description}<p class="detail-desc">{group.main.description}</p>{/if}
+                            {#if group.main.extras?.length}{#each group.main.extras as ex}<p class="detail-extra">{ex}</p>{/each}{/if}
+                            {#if group.main.title === 'Rune' && hasRuneCDR}
+                              <div class="cdr-block">
+                                <div class="cdr-block-header"><span class="cdr-icon">⏱</span><span class="cdr-title">Rune CDR Breakdown</span></div>
+                                {#if cdr.runeSetCD != null}<div class="cdr-step"><span class="cdr-source">Gladiatorial Rage</span><span class="cdr-mult">Sets CD = {cdr.runeSetCD}s</span></div>{/if}
+                                {#each cdr.runeBreakdown as step}
+                                  <div class="cdr-step">
+                                    <span class="cdr-source">{step.source}</span>
+                                    <span class="cdr-mult" class:cdr-mult--increase={step.multiplier > 1}>
+                                      {step.multiplier > 1 ? '+' : '-'}{Math.abs(step.pct)}%
+                                    </span>
+                                  </div>
+                                {/each}
+                                {#each runes.filter(r => r.name === $build.rune).slice(0,1) as rune}
+                                  <!-- SAU (Rune CDR block) -->
+  <div class="cdr-steps-calc">
+    {#if cdr.runeSetCD != null}
+      <div class="cdr-calc-row">
+        <span class="cdr-cd-old">{rune.cooldown}s</span>
+        <span class="cdr-arrow">→</span>
+        <span class="cdr-cd-new">{cdr.runeSetCD}s</span>
+      </div>
+      {#each cdr.runeBreakdown as step, i}
+    {@const prevCD = i === 0 ? cdr.runeSetCD : cdr.runeSetCD * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
+    {@const nextCD = cdr.runeSetCD * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
+    {@const isLast = i === cdr.runeBreakdown.length - 1}
+    <div class="cdr-calc-row">
+      <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
+      <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
+      <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
+      <span class="cdr-arrow">=</span>
+      <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
+    </div>
+    {#if isLast}
+      <div class="cdr-calc-row cdr-calc-row--floor">
+        <span class="cdr-floor-label">floor</span>
+        <span class="cdr-arrow">→</span>
+        <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
+      </div>
+    {/if}
+  {/each}
+      {:else}
+      {#each cdr.runeBreakdown as step, i}
+        {@const prevCD = i === 0 ? rune.cooldown : rune.cooldown * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
+        {@const nextCD = rune.cooldown * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
+        {@const isLast = i === cdr.runeBreakdown.length - 1}
+        <div class="cdr-calc-row">
+          <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
+          <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
+          <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
+          <span class="cdr-arrow">=</span>
+          <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
+        </div>
+        {#if isLast}
+          <div class="cdr-calc-row cdr-calc-row--floor">
+            <span class="cdr-floor-label">floor</span>
+            <span class="cdr-arrow">→</span>
+            <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
+          </div>
+        {/if}
+      {/each}
+                            {/if}
+                          </div>
+                                {/each}
+                              </div>
+                            {/if}
+                            {#if Object.keys(group.main.stats).length}
+                              <div class="stat-list">
+                                {#each Object.entries(group.main.stats).filter(([,v]) => v !== 0) as [k,v]}
+                                  <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
+                                {/each}
+                              </div>
+                            {/if}
+                            {#if group.main.perks.length}
+                              <div class="perk-list">
+                                {#each group.main.perks as p}
+                                  <div class="perk-row" class:perk-row--enchant={p.fromEnchant}>
+                                    <span>{p.name} <span class="perk-val" class:perk-val--enchant={p.fromEnchant}>+{p.amount}</span></span>
+                                  </div>
+                                {/each}
+                              </div>
+                            {/if}
+                            {#if group.main.enchants}
+                              {#each group.main.enchants as enc}{#if enc.notes}<p class="detail-extra">{enc.notes}</p>{/if}{/each}
+                            {/if}
+                          </div>
+                        {/if}
+
+                        {#if group.infusion}
+                          <div class="inf-bridge">
+                            <span class="inf-bridge-line"></span>
+                            <span class="inf-bridge-icon">inf</span>
+                            <span class="inf-bridge-line"></span>
+                          </div>
+                          <div class="detail-card detail-card--infusion">
+                            <div class="detail-head">
+                              <span class="detail-type detail-type--infusion">{group.infusion.title}</span>
+                              <span class="detail-name">{group.infusion.label}</span>
+                            </div>
+                            {#if Object.keys(group.infusion.stats).length}
+                              <div class="stat-list">
+                                {#each Object.entries(group.infusion.stats).filter(([,v]) => v !== 0) as [k,v]}
+                                  <div class="stat-row stat-row--infusion"><span>{formatLabel(k)}</span><span class="stat-val stat-val--infusion" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
+                                {/each}
+                              </div>
+                            {/if}
+                            {#if group.infusion.perks.length}
+                              <div class="perk-list">
+                                {#each group.infusion.perks as p}
+                                  <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
+                                {/each}
+                              </div>
+                            {/if}
+                            <div class="infusion-note">Stats x0.5 · Perks full</div>
+                          </div>
+                        {/if}
+                      </div>
                     {/each}
                   </div>
                 {/if}
               </div>
             {/if}
-          </div>
-        {/if}
-      {/if}
-    </div>
 
+          {:else if activeDetailsTab === 'weapon' && weaponResult}
+          <!-- WA Detail card -->
+  <div class="detail-card wa-detail-card" class:wa-selected--invalid={!waAvailable} style="margin-bottom:10px;">
+    <div class="detail-head">
+      <span class="detail-type" style="color:var(--accent3)">Weapon Art</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="detail-name">{selectedWA.name}</span>
+        {#if hasWACDR}
+    <span class="wa-cd-badge wa-cd-badge--reduced">
+      <span class="wa-cd-old">{selectedWA.cooldown}s</span>
+      <span class="wa-cd-arrow">→</span>
+      {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
+    </span>
+  {:else}
+    <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
+  {/if}
+        {#if !waAvailable}<span class="wa-req-badge">⚠ Req. not met</span>{/if}
+      </div>
+    </div>
+    <p class="wa-desc">{selectedWA.description}</p>
+    {#if selectedWA.baseDamage}
+      <div class="wa-stat-row"><span class="wa-stat-key">Damage</span><span class="wa-stat-val">{selectedWA.baseDamage}</span></div>
+    {/if}
+    {#if selectedWA.damageType}
+      <div class="wa-stat-row">
+        <span class="wa-stat-key">Type</span>
+        {#if selectedWA.damageType === 'Same as weapon' && weaponResult}
+          <div class="damage-type-grid" style="flex:1">
+            {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
+              <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
+            {/each}
+          </div>
+        {:else}
+          <span class="wa-stat-val">{selectedWA.damageType}</span>
+        {/if}
+      </div>
+    {/if}
+    {#if selectedWA.scaling}
+      <div class="wa-stat-row">
+        <span class="wa-stat-key">Scaling</span>
+        {#if selectedWA.scaling === 'Same as weapon' && weaponResult}
+          <div class="scaling-grid" style="flex:1">
+            {#each Object.entries(weaponResult.scalings) as [k, v]}
+              <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{v}</span></div>
+            {/each}
+          </div>
+        {:else}
+          <span class="wa-stat-val">{selectedWA.scaling}</span>
+        {/if}
+      </div>
+    {/if}
+    {#if selectedWA.extras?.length}
+      {#each selectedWA.extras as ex}
+        <div class="wa-stat-row wa-stat-row--extra"><span class="wa-stat-val wa-stat-val--extra">{ex}</span></div>
+      {/each}
+    {/if}
+    {#if !waAvailable && waUnmetReqs.length > 0}
+      <div class="wa-req-block">
+        <span class="wa-req-title">Requirements not met:</span>
+        {#each waUnmetReqs as item}<div class="wa-req-item">{item}</div>{/each}
+      </div>
+    {/if}
+    {#if hasWACDR}
+      <div class="cdr-block" style="margin-top:6px;">
+        <div class="cdr-block-header"><span class="cdr-icon">⏱</span><span class="cdr-title">Weapon Art CDR</span></div>
+        {#each cdr.waBreakdown as step}
+          <div class="cdr-step">
+            <span class="cdr-source">{step.source}</span>
+            <span class="cdr-mult" class:cdr-mult--increase={step.multiplier > 1}>
+              {step.multiplier > 1 ? '+' : '-'}{Math.abs(step.pct)}%
+            </span>
+          </div>
+        {/each}
+        <div class="cdr-steps-calc">
+    {#each cdr.waBreakdown as step, i}
+    {@const prevCD = i === 0 ? selectedWA.cooldown : selectedWA.cooldown * cdr.waBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
+    {@const nextCD = selectedWA.cooldown * cdr.waBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
+    {@const isLast = i === cdr.waBreakdown.length - 1}
+    <div class="cdr-calc-row">
+      <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
+      <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
+      <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
+      <span class="cdr-arrow">=</span>
+      <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
+    </div>
+    {#if isLast}
+      <div class="cdr-calc-row cdr-calc-row--floor">
+        <span class="cdr-floor-label">floor</span>
+        <span class="cdr-arrow">→</span>
+        <span class="cdr-cd-new">{Math.floor(nextCD)}s</span>
+      </div>
+    {/if}
+  {/each}
   </div>
+      </div>
+    {/if}
+  </div>
+            <div class="weapon-result-layout">
+              <!-- Part 1 -->
+              {#if weaponResult.part1Name}
+                {@const part1Data = isMonk ? getGlove(weaponResult.part1Name) : getBlade(weaponResult.part1Name)}
+                <div class="detail-card weapon-card" class:weapon-card--blade={!isMonk} class:weapon-card--glove={isMonk}>
+                  <div class="detail-head">
+                    <span class="detail-type" class:weapon-type-label={!isMonk} class:monk-type-label={isMonk}>
+                      {weaponResult.part1TypeLabel} · {weaponResult.part1Type}
+                    </span>
+                    <span class="detail-name">{weaponResult.part1Name}</span>
+                    <div class="weapon-tier-badge" class:monk-tier-badge={isMonk}>T{part1Data?.tier}</div>
+                  </div>
+                  {#if part1Data?.attackSpeed != null}
+                    <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part1Data.attackSpeed}x</span></div>
+                  {/if}
+                  {#if Object.keys(part1DamageTypes).length}
+                    <div class="weapon-section-label">Damage Types</div>
+                    <div class="damage-type-grid">
+                      {#each Object.entries(part1DamageTypes) as [k, v]}
+                        <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if Object.keys(weaponResult.part1RawScalings).length}
+                    <div class="weapon-section-label">Scalings</div>
+                    <div class="scaling-grid">
+                      {#each Object.entries(weaponResult.part1RawScalings) as [k, rawVal]}
+                        {@const finalVal = weaponResult.part1FinalScalings[k] ?? rawVal}
+                        {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
+                        <div class="scaling-pill" class:scaling-pill--boosted={boosted}>
+                          <span class="sc-name">{formatScalingLabel(k)}</span>
+                          {#if boosted}<span class="sc-val-old">{rawVal}</span><span class="sc-val sc-val--new">{finalVal}</span>
+                          {:else}<span class="sc-val">{rawVal}</span>{/if}
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if part1Data && Object.keys(part1Data.stats).length}
+    <div class="stat-list">
+    {#each Object.entries(part1Data.stats).filter(([k,v]) => v !== 0 && !k.endsWith('Type') && !k.endsWith('Scaling')) as [k, rawVal]}
+      {@const shrineFinal = (weaponResult.part1FinalStats as Record<string,number>)[k] ?? rawVal}
+      {@const shrineRaw = (weaponResult.part1RawStats as Record<string,number>)[k] ?? rawVal}
+      {@const boosted = shrineFinal !== (rawVal as number)}
+    <div class="stat-row" class:stat-row--boosted={boosted}>
+      <span>{formatLabel(k)}</span>
+      <div class="stat-val-group">
+        {#if boosted}
+          <span class="stat-val stat-val-ghost" class:neg={(rawVal as number) < 0}>{formatStat(k, shrineRaw as number)}</span>
+          <span class="stat-val stat-val--new" class:neg={shrineFinal < 0}>{formatStat(k, shrineFinal as number)}</span>
+        {:else}
+          <span class="stat-val" class:neg={shrineFinal < 0}>{formatStat(k, shrineFinal as number)}</span>
+        {/if}
+      </div>
+    </div>
+  {/each}
+    </div>
+  {/if}
+                  {#if (part1Data as any)?.perks?.length}
+                  <div class="perk-list">
+                    {#each ((part1Data as any)?.perks ?? []) as p, pi}
+                      {@const bonusAmt = (isMonk && pi === 0) ? p.amount + monkGlovePerkBonus : p.amount}
+                      <div class="perk-row">
+                        <span>{p.name} <span class="perk-val">+{bonusAmt}</span></span>
+                        {#if isMonk && pi === 0 && monkGlovePerkBonus > 0}
+                          <span class="monk-perk-bonus">(+{monkGlovePerkBonus} Monk)</span>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+                </div>
+              {:else}
+                <div class="detail-card weapon-card weapon-card--empty"><p class="empty">No {part1Label.toLowerCase()} selected.</p></div>
+              {/if}
+
+              <div class="weapon-combine">
+                <div class="weapon-combine-line"></div>
+                <div class="weapon-combine-icon" class:monk-combine-icon={isMonk}>+</div>
+                <div class="weapon-combine-line"></div>
+              </div>
+
+              <!-- Part 2 -->
+              {#if weaponResult.part2Name}
+                {@const part2Data = isMonk ? getEssence(weaponResult.part2Name) : getHandle(weaponResult.part2Name)}
+                <div class="detail-card weapon-card" class:weapon-card--handle={!isMonk} class:weapon-card--essence={isMonk}>
+                  <div class="detail-head">
+                    <span class="detail-type" class:weapon-type-label--handle={!isMonk} class:monk-type-label--essence={isMonk}>
+                      {weaponResult.part2TypeLabel} · {weaponResult.part2Type}
+                    </span>
+                    <span class="detail-name">{weaponResult.part2Name}</span>
+                    <div class="weapon-tier-badge" class:weapon-tier-badge--handle={!isMonk} class:monk-tier-badge--essence={isMonk}>T{part2Data?.tier}</div>
+                  </div>
+                  {#if part2Data?.attackSpeed != null}
+                    <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part2Data.attackSpeed}x</span></div>
+                  {/if}
+                  {#if Object.keys(part2DamageTypes).length}
+                    <div class="weapon-section-label">Damage Types</div>
+                    <div class="damage-type-grid">
+                      {#each Object.entries(part2DamageTypes) as [k, v]}
+                        <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if Object.keys(weaponResult.part2RawScalings).length}
+                    <div class="weapon-section-label">Scalings</div>
+                    <div class="scaling-grid">
+                      {#each Object.entries(weaponResult.part2RawScalings) as [k, rawVal]}
+                        {@const finalVal = weaponResult.part2FinalScalings[k] ?? rawVal}
+                        {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
+                        <div class="scaling-pill" class:scaling-pill--boosted={boosted}>
+                          <span class="sc-name">{formatScalingLabel(k)}</span>
+                          {#if boosted}<span class="sc-val-old">{rawVal}</span><span class="sc-val sc-val--new">{finalVal}</span>
+                          {:else}<span class="sc-val">{rawVal}</span>{/if}
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if part2Data && Object.keys(part2Data.stats).length}
+                    <div class="stat-list">
+                      {#each Object.entries(part2Data.stats).filter(([k,v]) => v !== 0 && !k.endsWith('Type') && !k.endsWith('Scaling')) as [k, rawVal]}
+                        {@const finalVal = (weaponResult.part2FinalStats as Record<string,number>)[k] ?? rawVal}
+                        {@const boosted = weaponResult.shrineActive && finalVal !== rawVal}
+                        <div class="stat-row" class:stat-row--boosted={boosted}>
+                          <span>{formatLabel(k)}</span>
+                          <div class="stat-val-group">
+                            {#if boosted}
+                              <span class="stat-val stat-val-ghost" class:neg={rawVal < 0}>{formatStat(k, rawVal as number)}</span>
+                              <span class="stat-val stat-val--new" class:neg={finalVal < 0}>{formatStat(k, finalVal as number)}</span>
+                            {:else}
+                              <span class="stat-val" class:neg={rawVal < 0}>{formatStat(k, rawVal as number)}</span>
+                            {/if}
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if (part2Data as any)?.perks?.length}
+                    <div class="perk-list">
+                      {#each ((part2Data as any)?.perks ?? []) as p}
+                        <div class="perk-row"><span>{p.name} <span class="perk-val">+{p.amount}</span></span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {:else}
+                <div class="detail-card weapon-card weapon-card--empty"><p class="empty">No {part2Label.toLowerCase()} selected.</p></div>
+              {/if}
+
+              {#if weaponResult.part1Name && weaponResult.part2Name}
+                <div class="weapon-combine weapon-combine--arrow">
+                  <div class="weapon-combine-line"></div>
+                  <div class="weapon-combine-icon">→</div>
+                  <div class="weapon-combine-line"></div>
+                </div>
+                <div class="weapon-combined-card" class:weapon-combined-card--monk={isMonk}>
+                  <div class="weapon-combined-header">
+                    <div class="weapon-combined-left">
+                      <span class="weapon-combined-title" class:monk-combined-title={isMonk}>{isMonk ? 'Combined Fists' : 'Combined Weapon'}</span>
+                      {#if weaponResult.finalWeaponType}
+                        <span class="weapon-type-badge" class:monk-type-badge={isMonk}>{weaponResult.finalWeaponType}</span>
+                      {:else}
+                        <span class="weapon-type-badge weapon-type-badge--none">None</span>
+                      {/if}
+                      {#if weaponResult.weaponModifier}<span class="weapon-modifier-badge">{isMonk ? '' : 'via '}{weaponResult.weaponModifier}</span>{/if}
+                      {#if weaponResult.hybridActive}<span class="weapon-modifier-badge weapon-modifier-badge--hybrid">Hybrid</span>{/if}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                      <span class="weapon-combined-speed">{weaponResult.attackSpeed}x Attack Speed</span>
+                      {#if $build.race === 'KITSUNE'}
+                        <span class="weapon-speed-race-bonus">+0.1 from Kitsune</span>
+                      {/if}
+                    </div>
+                  </div>
+                  {#if Object.keys(weaponDamageTypesWithBonus).length}
+                    <div class="weapon-section-label">Damage Types</div>
+                    <div class="damage-type-grid">
+                      {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
+                        {@const base = weaponResult.damageTypes[k] ?? 0}
+                        {@const bonus = weaponEnchantDmgBonus[k] ?? 0}
+                        <div class="damage-type-pill" class:damage-type-pill--boosted={bonus > 0}>
+                          <span class="dt-name">{formatDmgTypeLabel(k)}</span>
+                          {#if bonus > 0}
+                            <span class="dt-val-old">{base}x</span>
+                            <span class="dt-val dt-val--boosted">{v}x</span>
+                          {:else}
+                            <span class="dt-val">{v}x</span>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                                  {#if Object.keys(weaponResult.scalings).length}
+                    <div class="weapon-section-label">Scalings</div>
+                    <div class="scaling-grid">
+                      {#each Object.entries(weaponResult.scalings) as [k, v]}
+                        <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{v}</span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if Object.keys(weaponResult.stats).length}
+                    <div class="weapon-section-label">Stats</div>
+                    <div class="stat-list">
+                      {#each Object.entries(weaponResult.stats).filter(([,v]) => v !== 0) as [k,v]}
+                        <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                  {#if Object.keys(weaponResult.perks).length}
+                    <div class="weapon-section-label">Perks</div>
+                    <div class="perk-list">
+                      {#each Object.entries(weaponResult.perks) as [name, amount]}
+                        <div class="perk-row"><span>{name} <span class="perk-val">+{amount}</span></span></div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
+        {/if}
+      </div>
+
+    </div>
+  {:else}
+  <div class="analyze-wrap">
+      <DamageAnalyzer />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -3048,7 +3052,6 @@ function prettyKey(key: string, suffix: string) {
   .ss-key { color:var(--ink-muted); }
   .ss-val { font-weight:700; color:var(--accent); white-space:nowrap; }
   .ss-val.neg { color:var(--neg); }
-
   /* ── INLINE ENCHANT PANEL ── */
   .inline-enchant-panel {
     margin-top:10px;
@@ -3116,11 +3119,6 @@ function prettyKey(key: string, suffix: string) {
   border-bottom-color: var(--accent2); 
   background: rgba(245,158,11,.04); 
 }
-.perks-tab--boosts.perks-tab--active { 
-  color: var(--weapon-blade); 
-  border-bottom-color: var(--weapon-blade); 
-  background: rgba(251,146,60,.04); 
-}
 
 .perks-collapse-btn {
   margin-left: auto; padding: 0 14px; background: none; border: none;
@@ -3131,44 +3129,10 @@ function prettyKey(key: string, suffix: string) {
 
 .perks-panel > div:not(.perks-tabs-header) { padding: 14px 18px; }
 
-.tab-boost-badge {
-  font-size: .6rem; font-weight: 800;
-  padding: 1px 6px; border-radius: 999px;
-}
-.tab-boost-badge--dmg {
-  background: rgba(251,146,60,.12);
-  border: 1px solid rgba(251,146,60,.25);
-  color: var(--weapon-blade);
-}
-.tab-boost-badge--heal {
-  background: rgba(74,222,128,.12);
-  border: 1px solid rgba(74,222,128,.25);
-  color: var(--accent);
-}
 
 /* boosts layout (giữ nguyên các class cũ) */
 .boosts-layout { display: flex; flex-direction: column; gap: 14px; }
-.boost-group { display: flex; flex-direction: column; gap: 8px; }
-.boost-group-header { display: flex; align-items: center; justify-content: space-between; }
-.boost-group-label { font-size: .62rem; text-transform: uppercase; letter-spacing: .16em; font-weight: 700; }
-.boost-group-label--dmg { color: var(--weapon-blade); }
-.boost-group-label--heal { color: var(--accent); }
-.boost-group-final { font-size: .9rem; font-weight: 800; }
-.boost-group-final--dmg { color: var(--weapon-blade); }
-.boost-group-final--heal { color: var(--accent); }
-.boost-chain { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
-.boost-chain-op { font-size: .75rem; color: var(--ink-muted); opacity: .5; font-weight: 700; }
-.boost-chip { display: flex; flex-direction: column; align-items: center; padding: 5px 10px; border-radius: 8px; border: 1px solid transparent; cursor: default; }
-.boost-chip--dmg { background: rgba(251,146,60,.08); border-color: rgba(251,146,60,.2); }
-.boost-chip--heal { background: rgba(74,222,128,.08); border-color: rgba(74,222,128,.2); }
-.boost-chip-name { font-size: .68rem; font-weight: 700; color: var(--ink); }
-.boost-chip-val { font-size: .82rem; font-weight: 800; }
-.boost-chip--dmg .boost-chip-val { color: var(--weapon-blade); }
-.boost-chip--heal .boost-chip-val { color: var(--accent); }
-.boost-chip-cond { font-size: .58rem; color: var(--ink-muted); opacity: .6; font-style: italic; text-align: center; max-width: 80px; }
-.boost-chain-result { font-size: 1rem; font-weight: 900; padding: 4px 10px; border-radius: 8px; }
-.boost-chain-result--dmg { color: var(--weapon-blade); background: rgba(251,146,60,.1); }
-.boost-chain-result--heal { color: var(--accent); background: rgba(74,222,128,.1); }
+
   .perk-count-badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.25); color:var(--accent2); font-size:.6rem; font-weight:800; margin-left:6px; vertical-align:middle; }
 
   .perks-panel { border-color:rgba(245,158,11,.13); background:linear-gradient(160deg,var(--surface) 60%,rgba(245,158,11,.03) 100%); }
@@ -3302,6 +3266,8 @@ function prettyKey(key: string, suffix: string) {
   .cdr-cd-new { font-size:.95rem; font-weight:800; color:#34d399; }
 
   .empty { color:var(--ink-muted); font-style:italic; font-size:.85rem; }
+
+  
 
   @media (max-width:1020px) {
     .summary-layout { grid-template-columns:1fr; }
@@ -3758,75 +3724,6 @@ function prettyKey(key: string, suffix: string) {
   border: 1px dashed var(--border);
 }
 .dym-empty strong { color: var(--ink); font-style: normal; }
-/* ── BOOSTS PANEL ── */
-
-
-.boosts-layout { display: flex; flex-direction: column; gap: 14px; }
-
-.boost-group { display: flex; flex-direction: column; gap: 8px; }
-.boost-group-header {
-  display: flex; align-items: center;
-  justify-content: space-between;
-}
-.boost-group-label {
-  font-size: .62rem; text-transform: uppercase;
-  letter-spacing: .16em; font-weight: 700;
-}
-.boost-group-label--dmg { color: var(--weapon-blade); }
-.boost-group-label--heal { color: var(--accent); }
-.boost-group-final {
-  font-size: .9rem; font-weight: 800;
-}
-.boost-group-final--dmg { color: var(--weapon-blade); }
-.boost-group-final--heal { color: var(--accent); }
-
-.boost-chain {
-  display: flex; align-items: center;
-  flex-wrap: wrap; gap: 5px;
-}
-.boost-chain-op {
-  font-size: .75rem; color: var(--ink-muted);
-  opacity: .5; font-weight: 700;
-}
-.boost-chip {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 5px 10px; border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: default;
-}
-.boost-chip--dmg {
-  background: rgba(251,146,60,.08);
-  border-color: rgba(251,146,60,.2);
-}
-.boost-chip--heal {
-  background: rgba(74,222,128,.08);
-  border-color: rgba(74,222,128,.2);
-}
-.boost-chip-name {
-  font-size: .68rem; font-weight: 700; color: var(--ink);
-}
-.boost-chip-val {
-  font-size: .82rem; font-weight: 800;
-}
-.boost-chip--dmg .boost-chip-val { color: var(--weapon-blade); }
-.boost-chip--heal .boost-chip-val { color: var(--accent); }
-.boost-chip-cond {
-  font-size: .58rem; color: var(--ink-muted);
-  opacity: .6; font-style: italic; text-align: center;
-  max-width: 80px;
-}
-.boost-chain-result {
-  font-size: 1rem; font-weight: 900;
-  padding: 4px 10px; border-radius: 8px;
-}
-.boost-chain-result--dmg {
-  color: var(--weapon-blade);
-  background: rgba(251,146,60,.1);
-}
-.boost-chain-result--heal {
-  color: var(--accent);
-  background: rgba(74,222,128,.1);
-}
 .cdr-mult--increase { color: var(--neg); }
 .summary-title-row {
   display: flex;
@@ -3834,5 +3731,120 @@ function prettyKey(key: string, suffix: string) {
   gap: 12px;
   margin-bottom: 14px;
 }
-.summary-title-row .panel-title { margin-bottom: 0; }
+
+.app-tabs {
+  position: relative;
+  display: flex;
+
+  padding: 4px;
+
+  border-radius: 12px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  width: fit-content;
+
+  overflow: hidden;
+}
+.tab-bubble {
+  position: absolute;
+
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+
+  border-radius: 8px;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  border: 1px solid rgba(74,222,128,0.28);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(74,222,128,0.16),
+      rgba(74,222,128,0.08)
+    );
+
+  box-shadow:
+    0 0 14px rgba(74,222,128,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+.tab-bubble--analyze {
+  border-color: rgba(226,178,3,0.32);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(226,178,3,0.16),
+      rgba(226,178,3,0.08)
+    );
+
+  box-shadow:
+    0 0 14px rgba(226,178,3,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+@keyframes bubbleSquish {
+  0% {
+    scale: 1 1;
+  }
+
+  50% {
+    scale: 0.82 1.08;
+  }
+
+  100% {
+    scale: 1 1;
+  }
+}
+.app-tab {
+  position: relative;
+  z-index: 1;
+
+  border: none;
+  background: transparent;
+
+  padding: 8px 20px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  color: var(--ink-muted);
+
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+
+  transition:
+    color .18s ease,
+    transform .18s ease;
+}
+
+.app-tab:hover {
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.app-tab--active {
+  color: var(--accent);
+}
+
+.app-tab--analyze.app-tab--active {
+  color: #e2b203;
+}
+
 </style>

@@ -282,7 +282,11 @@ function copyCode() {
 </script>
 
 <button class="saves-toggle" on:click={() => open = !open}>
-  <span>💾</span>
+  <svg class="saves-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="5" y="2" width="6" height="5" rx="1" fill="currentColor" opacity="0.5"/>
+    <rect x="4" y="9" width="8" height="4" rx="1" fill="currentColor" opacity="0.6"/>
+  </svg>
   <span class="lbl">Builds</span>
   <span class="cnt">{slots.filter(Boolean).length}/{MAX_SLOTS}</span>
   <span class="arr">{open ? '▲' : '▼'}</span>
@@ -453,4 +457,8 @@ function copyCode() {
 .import-ok{font-size:.7rem;color:var(--accent);}
 .export-label{font-size:.62rem;color:var(--ink-muted);white-space:nowrap;flex-shrink:0;}
 .btn-share--active{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.6);}
+.saves-icon {
+  color: currentColor;
+  flex-shrink: 0;
+}
 </style>

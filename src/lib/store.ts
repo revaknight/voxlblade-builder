@@ -27,7 +27,6 @@ export const build = writable<BuildState>({
   monkGlove: "Basic Gloves",
   monkEssence: "Basic Essence",
   shrineActive: true,
-  // Upgrade levels (0 = +0, 5 = max)
   upgradeHelmet: 0,
   upgradeChestplate: 0,
   upgradeLeggings: 0,

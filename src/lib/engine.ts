@@ -32,15 +32,24 @@ export const essences: MonkEssence[] = essencesRaw as MonkEssence[]
 
 import { BOOST_DEF_MAP } from '../data/Boost'
 import type { BoostEntry, BoostResult } from './types'
-export function calcBoosts(perks: Record<string, number>, emotionalState?: string): BoostResult {
+export function calcBoosts(perks: Record<string, number>, emotionalState?: string, level: number = 80): BoostResult {
 
   const dmgMap = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
 
+  // Level damage entry — always included
+  const lvlMult = Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 10000) / 10000
+  dmgMap.set('Level Damage', {
+    sourceName: 'Level Damage',
+    rawMultiplier: lvlMult,
+    condition: `LV0 → ×1.0 · LV80 → ×2.0`,
+    type: 'dmg',
+  })
+
   for (const [perkName, perkAmount] of Object.entries(perks)) {
     if (perkAmount <= 0) continue
     const def = BOOST_DEF_MAP.get(perkName)
-    if (!def) continue
+    if (!def || def.isLevel) continue
 
     if (perkName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
 
@@ -900,6 +909,135 @@ export function applyCD(baseCooldown: number, cdrMultiplier: number): number {
   return Math.floor(baseCooldown * cdrMultiplier)
 }
 
+// ─── Crit System ─────────────────────────────────────────────────────────────
+
+export interface CritResult {
+  /** Natural crit chance % (from Dex + natural-crit perks) */
+  naturalCritChance: number
+  /** Final crit damage multiplier % (base 150 + naturalCritChance) */
+  critDamageMultiplier: number
+  /** Breakdown of natural crit sources */
+  naturalBreakdown: Array<{ source: string; amount: number }>
+  /** Extra crit chance from non-natural sources (separate roll) */
+  extraCritChance: number
+  /** Breakdown of extra crit sources */
+  extraBreakdown: Array<{ source: string; amount: number }>
+  /** Combined effective crit chance (combined via independent rolls) */
+  effectiveCritChance: number
+}
+
+/**
+ * Perks that add to Natural Crit Chance.
+ * Each entry: [perkName, dexterityEquivalent per perk amount]
+ * where dexterityEquivalent is multiplied by perkAmount then divided by 10 for %.
+ *
+ * - Flowing Crits: Air Boost → crit (same 10:1 ratio)
+ * - Seismic Momentum: Earth Boost → crit (same 10:1)
+ * - Spell Slinger: Magic Boost → crit (same 10:1)
+ * - Sharp Crits: Physical Boost → crit (same 10:1)
+ * - Perfection: each stack = +10% flat crit (approximated per perk amount)
+ */
+
+export function calcCrit(
+  stats: StatMap,
+  perks: Record<string, number>
+): CritResult {
+  const naturalBreakdown: Array<{ source: string; amount: number }> = []
+  const extraBreakdown: Array<{ source: string; amount: number }> = []
+
+  // ── Natural crit sources ──────────────────────────────────────────────
+  // Dexterity Boost → 10:1 ratio
+  const dexBoost = stats.dexterityBoost ?? 0
+  if (dexBoost > 0) {
+    const pct = Math.round((dexBoost / 10) * 100) / 100
+    naturalBreakdown.push({ source: 'Dexterity Boost', amount: pct })
+  }
+
+  // Flowing Crits: Air Boost → crit at same 10:1 ratio, per perk
+  const flowingCrits = perks['Flowing Crits'] ?? 0
+  if (flowingCrits > 0) {
+    const airBoost = stats.airBoost ?? 0
+    if (airBoost > 0) {
+      const pct = Math.round((airBoost / 10) * flowingCrits * 100) / 100
+      naturalBreakdown.push({ source: 'Flowing Crits (Air)', amount: pct })
+    }
+  }
+
+  // Seismic Momentum: Earth Boost → crit, replaces Dex entirely (already counted separately)
+  const seismicMomentum = perks['Seismic Momentum'] ?? 0
+  if (seismicMomentum > 0) {
+    const earthBoost = stats.earthBoost ?? 0
+    if (earthBoost > 0) {
+      const pct = Math.round((earthBoost / 10) * seismicMomentum * 100) / 100
+      naturalBreakdown.push({ source: 'Seismic Momentum (Earth)', amount: pct })
+    }
+  }
+
+  // Spell Slinger: Magic Boost → crit
+  const spellSlinger = perks['Spell Slinger'] ?? 0
+  if (spellSlinger > 0) {
+    const magicBoost = stats.magicBoost ?? 0
+    if (magicBoost > 0) {
+      const pct = Math.round((magicBoost / 10) * spellSlinger * 100) / 100
+      naturalBreakdown.push({ source: 'Spell Slinger (Magic)', amount: pct })
+    }
+  }
+
+  // Sharp Crits: Physical Boost → crit
+  const sharpCrits = perks['Sharp Crits'] ?? 0
+  if (sharpCrits > 0) {
+    const physBoost = stats.physicalBoost ?? 0
+    if (physBoost > 0) {
+      const pct = Math.round((physBoost / 10) * sharpCrits * 100) / 100
+      naturalBreakdown.push({ source: 'Sharp Crits (Physical)', amount: pct })
+    }
+  }
+
+  // Perfection: each perk amount ≈ +10% natural crit
+  const perfection = perks['Perfection'] ?? 0
+  if (perfection > 0) {
+    const pct = perfection * 10
+    naturalBreakdown.push({ source: 'Perfection', amount: pct })
+  }
+
+  const naturalCritChance = Math.round(
+    naturalBreakdown.reduce((a, b) => a + b.amount, 0) * 100
+  ) / 100
+
+  // ── Crit Damage = 150% base + naturalCritChance ───────────────────────
+  const critDamageMultiplier = Math.round((150 + naturalCritChance) * 100) / 100
+
+  // ── Extra (non-natural) crit sources — separate independent roll ──────
+  // Carrying Winds: Air Boost → extra crit (per perk, same 10:1 ratio)
+  const carryingWinds = perks['Carrying Winds'] ?? 0
+  if (carryingWinds > 0) {
+    const airBoost = stats.airBoost ?? 0
+    if (airBoost > 0) {
+      const pct = Math.round((airBoost / 10) * carryingWinds * 100) / 100
+      extraBreakdown.push({ source: 'Carrying Winds (Air)', amount: pct })
+    }
+  }
+
+  const extraCritChance = Math.round(
+    extraBreakdown.reduce((a, b) => a + b.amount, 0) * 100
+  ) / 100
+
+  // Combined = 1 - (1 - nat/100) * (1 - extra/100), expressed as %
+  const nat = Math.min(naturalCritChance, 100) / 100
+  const ext = Math.min(extraCritChance, 100) / 100
+  const effectiveCritChance = Math.round((1 - (1 - nat) * (1 - ext)) * 10000) / 100
+
+  return { naturalCritChance, critDamageMultiplier, naturalBreakdown, extraCritChance, extraBreakdown, effectiveCritChance }
+}
+
+// ─── Level Damage Multiplier ──────────────────────────────────────────────────
+
+/** LV0 → ×1.0, LV80 → ×2.0, linear */
+export function calcLevelDamageMultiplier(level: number): number {
+  const clamped = Math.max(0, Math.min(80, level))
+  return Math.round((1 + clamped / 80) * 1000) / 1000
+}
+
 // ─── Main calculator ──────────────────────────────────────────────────────────
 
 export interface BuildResult {
@@ -907,6 +1045,7 @@ export interface BuildResult {
   perks: Record<string, number>
   cdr: CDRResult
   boosts: BoostResult
+  crit: CritResult
 }
 
 export function calcBuild(state: BuildState): BuildResult {
@@ -1154,8 +1293,9 @@ export function calcBuild(state: BuildState): BuildResult {
   // Apply Stat Boost perks (summary only)
   const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
 
-  const boosts = calcBoosts(finalPerks, state.emotionalState)
-  return { stats: boostedStats, perks: finalPerks, cdr, boosts }
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80)
+  const crit = calcCrit(boostedStats, finalPerks)
+  return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 
 // ─── Formatting ───────────────────────────────────────────────────────────────
