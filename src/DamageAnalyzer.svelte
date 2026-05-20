@@ -144,12 +144,14 @@
         <div class="da-stat-label">Crit Damage Multiplier</div>
         <div class="da-stat-val" style="color:#a78bfa">{crit.critDamageMultiplier.toFixed(1)}%</div>
         <div class="da-sources">
-          {#each critDmgSources as s}
-            <div class="da-source-row">
-              <span class="da-source-name">{s.source}</span>
-              <span class="da-source-val" style="color:#a78bfa">{s.source === 'Base' ? '' : '+'}{s.amount.toFixed(s.source === 'Base' ? 0 : 2)}%</span>
-            </div>
-          {/each}
+        {#each critDmgSources as s}
+          <div class="da-source-row">
+            <span class="da-source-name">{s.source}</span>
+            <span class="da-source-val" style="color:{s.amount < 0 ? '#f87171' : '#a78bfa'}">
+              {s.source === 'Base' ? '' : s.amount >= 0 ? '+' : ''}{s.amount.toFixed(s.source === 'Base' ? 0 : 2)}%
+            </span>
+          </div>
+        {/each}
         </div>
       </div>
 

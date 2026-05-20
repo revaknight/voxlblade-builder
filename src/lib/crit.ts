@@ -106,7 +106,10 @@ export function calcCrit(
   }
   const naturalCritChance = round(naturalBreakdown.reduce((a, b) => a + b.amount, 0))
 
-  const critDamageMultiplier = round(150 + naturalCritChance)
+const venomEater = perks['Venom Eater'] ?? 0
+const venomEaterBonus = venomEater > 0 ? (-30 + venomEater * 10) : 0
+const critDamageMultiplier = round(150 + venomEaterBonus + naturalCritChance)
+  
 
   const extraBreakdown: Array<{ source: string; amount: number }> = []
   for (const src of EXTRA_CRIT_SOURCES) {
@@ -126,10 +129,11 @@ export function calcCrit(
   ]
 
   // Crit damage breakdown: base 150% + naturalCrit (per source)
-  const critDmgBreakdown: Array<{ source: string; amount: number }> = [
-    { source: 'Base', amount: 150 },
-    ...naturalBreakdown.map(s => ({ source: s.source, amount: s.amount })),
-  ]
+const critDmgBreakdown: Array<{ source: string; amount: number }> = [
+  { source: 'Base', amount: 150 },
+  ...naturalBreakdown.map(s => ({ source: s.source, amount: s.amount })),
+  ...(venomEater > 0 ? [{ source: 'Venom Eater', amount: venomEaterBonus }] : []),
+]
 
   return {
     naturalCritChance,
