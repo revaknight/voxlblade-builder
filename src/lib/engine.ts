@@ -34,7 +34,7 @@ export const essences: MonkEssence[] = essencesRaw as MonkEssence[]
 
 import { BOOST_DEF_MAP } from '../data/Boost'
 import type { BoostEntry, BoostResult } from './types'
-export function calcBoosts(perks: Record<string, number>, emotionalState?: string, level: number = 80): BoostResult {
+export function calcBoosts(perks: Record<string, number>, emotionalState?: string, level: number = 80, naturalCritChance: number = 0): BoostResult {
 
   const dmgMap = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -66,6 +66,18 @@ export function calcBoosts(perks: Record<string, number>, emotionalState?: strin
     if (def.type === 'dmg') dmgMap.set(perkName, entry)
     else healMap.set(perkName, entry)
   }
+const primalStacks = perks['Primal'] ?? 0
+
+if (primalStacks > 0 && naturalCritChance > 0) {
+  const primalMult = 1 + (naturalCritChance * primalStacks) / 100
+
+  dmgMap.set('Primal', {
+    sourceName: 'Primal',
+    rawMultiplier: Math.round(primalMult * 10000) / 10000,
+    condition: `${naturalCritChance.toFixed(1)}% nat. crit × ${primalStacks} stack`,
+    type: 'dmg',
+  })
+}
 
   const dmgEntries = [...dmgMap.values()]
   const healEntries = [...healMap.values()]
@@ -1172,8 +1184,9 @@ export function calcBuild(state: BuildState): BuildResult {
   // Apply Stat Boost perks (summary only)
   const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
 
-  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80)
   const crit = calcCrit(boostedStats, finalPerks)
+  
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 

@@ -175,6 +175,7 @@ const CRIT_DMG_SOURCES: Array<{
 
 export interface CritResult {
   naturalCritChance: number
+  effectiveNaturalCrit: number
   critDamageMultiplier: number
   naturalBreakdown: Array<{ source: string; amount: number }>
   extraCritChance: number
@@ -202,6 +203,12 @@ export function calcCrit(
     if (amount !== 0) naturalBreakdown.push({ source: src.label, amount })
   }
   const naturalCritChance = round(naturalBreakdown.reduce((a, b) => a + b.amount, 0))
+  const primalStacks = perks['Primal'] ?? 0
+
+  const effectiveNaturalCrit =
+    primalStacks > 0
+      ? round(naturalCritChance / 4)
+      : naturalCritChance
 
   const extraBreakdown: Array<{ source: string; amount: number }> = []
   for (const src of EXTRA_CRIT_SOURCES) {
@@ -211,7 +218,7 @@ export function calcCrit(
   const extraCritChance = round(extraBreakdown.reduce((a, b) => a + b.amount, 0))
 
 const chances = [
-  Math.min(naturalCritChance, 100) / 100,
+  Math.min(effectiveNaturalCrit, 100) / 100,
   ...extraBreakdown.map(src => Math.min(src.amount, 100) / 100),
 ]
 
@@ -229,8 +236,16 @@ const critFormula =
     .map(v => `(1 - ${(v * 100).toFixed(2)}%)`)
     .join(' * ')
 
+  const displayedNaturalBreakdown =
+    primalStacks > 0
+      ? naturalBreakdown.map(s => ({
+          ...s,
+          amount: round(s.amount / 4),
+        }))
+      : naturalBreakdown
+
   const allCritBreakdown: Array<{ source: string; amount: number; isExtra: boolean }> = [
-    ...naturalBreakdown.map(s => ({ ...s, isExtra: false })),
+    ...displayedNaturalBreakdown.map(s => ({ ...s, isExtra: false })),
     ...extraBreakdown.map(s => ({ ...s, isExtra: true })),
   ]
 
@@ -249,6 +264,7 @@ const critFormula =
 
   return {
     naturalCritChance,
+    effectiveNaturalCrit,
     critDamageMultiplier,
     naturalBreakdown,
     extraCritChance,
