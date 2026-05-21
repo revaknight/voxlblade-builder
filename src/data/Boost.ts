@@ -11,6 +11,7 @@ export const BOOST_DEFS: BoostDef[] = [
   {sourceName: 'Blood Thirsty', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed',},
   {sourceName:'Perfection',multiplierPerPerk: 0.10, type: 'dmg', condition: 'at max potency',},
   {sourceName:'Venom Eater',multiplierPerPerk: 0.10, type: 'dmg', condition: 'On Poison proc hit',},
+  { sourceName: 'Golden Crits', multiplierPerPerk: 0.50, type: 'dmg', condition: '40% chance on crit' },
   
 
   // level damage (handled specially in calcBoosts — perkAmount unused)

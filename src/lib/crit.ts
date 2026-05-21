@@ -160,6 +160,15 @@ const CRIT_DMG_SOURCES: Array<{
       return round(stacks * 25)
     },
   },
+    {
+    // Critical Master
+    label: 'Critical Master',
+    calc: (_stats, perks) => {
+      const stacks = perks['Critical Master'] ?? 0
+      if (stacks <= 0) return 0
+      return round(stacks * 5)
+    },
+  },
 ]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
