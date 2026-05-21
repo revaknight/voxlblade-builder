@@ -184,6 +184,8 @@ export interface CritResult {
   effectiveCritChance: number
   critFormula: string
   critDmgBreakdown: Array<{ source: string; amount: number }>
+  primalActive: boolean
+  primalStacks: number
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,9 +260,24 @@ const critFormula =
     if (amount !== 0) critDmgBreakdown.push({ source: src.label, amount })
   }
 
-  const critDamageMultiplier = round(
+  const rawCritDamageMultiplier = round(
     critDmgBreakdown.reduce((a, b) => a + b.amount, 0)
   )
+
+  const critDamageMultiplier =
+    primalStacks > 0
+      ? round(150 + (rawCritDamageMultiplier - 150) / 4)
+      : rawCritDamageMultiplier
+
+  // Display breakdown: when Primal active, show each bonus entry /4
+  const displayedCritDmgBreakdown: Array<{ source: string; amount: number }> =
+    primalStacks > 0
+      ? critDmgBreakdown.map(s =>
+          s.source === 'Base'
+            ? s
+            : { ...s, amount: round(s.amount / 4) }
+        )
+      : critDmgBreakdown
 
   return {
     naturalCritChance,
@@ -272,6 +289,8 @@ const critFormula =
     allCritBreakdown,
     effectiveCritChance,
     critFormula,
-    critDmgBreakdown,
+    critDmgBreakdown: displayedCritDmgBreakdown,
+    primalActive: primalStacks > 0,
+    primalStacks,
   }
 }
