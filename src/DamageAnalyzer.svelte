@@ -55,9 +55,9 @@
   $: defMult = Math.max(0, 1 - enemyDefense / 100)
 
   // ── Per-hit calculations ───────────────────────────────────────────────────
-  $: rawHit       = baseDamage * typeBoostMult * combatMult * defMult
-  $: critHit      = rawHit * (crit.critDamageMultiplier / 100)
-  $: avgHit       = rawHit * (1 - crit.effectiveCritChance / 100) + critHit * (crit.effectiveCritChance / 100)
+  $: rawHit  = baseDamage * typeBoostMult * activeFinalMult * defMult
+  $: critHit = rawHit * (crit.critDamageMultiplier / 100)
+  $: avgHit  = rawHit * (1 - crit.effectiveCritChance / 100) + critHit * (crit.effectiveCritChance / 100)
 
   // ── Multi-hit ─────────────────────────────────────────────────────────────
   $: totalNormal  = rawHit  * hits
@@ -99,12 +99,23 @@
     return `×${n.toFixed(4)}`
   }
 
-  let showBreakdown = true
-
   // ── Crit source breakdown ──────────────────────────────────────────────────
   $: natSources = crit.naturalBreakdown
   $: allCritSources = crit.allCritBreakdown
   $: critDmgSources = crit.critDmgBreakdown
+
+  // ── Toggle state cho boost entries ────────────────────────────────────────
+let disabledBoosts = new Set<string>()
+
+function toggleBoost(name: string) {
+  if (disabledBoosts.has(name)) disabledBoosts.delete(name)
+  else disabledBoosts.add(name)
+  disabledBoosts = new Set(disabledBoosts) // trigger reactivity
+}
+
+$: activeEntries = boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName))
+$: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
+$: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
 </script>
 
 <div class="da-root">
@@ -158,41 +169,53 @@
     </div>
   </div>
 
-  <!-- ══════════════════ COMBAT MULTIPLIERS ══════════════════ -->
-  <div class="da-section">
-    <div class="da-section-title">⚔ Combat Multipliers</div>
-    <div class="da-boost-row">
-      {#each boosts.dmgEntries as entry}
-        <div class="da-boost-chip"
-          class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
-          title={entry.condition ?? ''}>
-          <span class="da-bc-name">
-            {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
-          </span>
-          <span class="da-bc-val">×{entry.rawMultiplier.toFixed(3)}</span>
-          {#if entry.condition}
-            <span class="da-bc-cond">{entry.condition}</span>
-          {/if}
+<!-- ══════════════════ COMBAT MULTIPLIERS ══════════════════ -->
+<div class="da-section">
+  <div class="da-section-title">⚔ Combat Multipliers</div>
+  <div class="da-boost-row">
+    {#each boosts.dmgEntries as entry}
+      {@const disabled = disabledBoosts.has(entry.sourceName)}
+      <button
+        class="da-boost-chip"
+        class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
+        class:da-boost-chip--off={disabled}
+        title={entry.condition ?? ''}
+        on:click={() => toggleBoost(entry.sourceName)}
+      >
+        <span class="da-bc-name">
+          {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
+        </span>
+        <span class="da-bc-val">{disabled ? '—' : `×${entry.rawMultiplier.toFixed(3)}`}</span>
+        {#if entry.condition}
+          <span class="da-bc-cond">{entry.condition}</span>
+        {/if}
+        <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
+      </button>
+      <span class="da-chain-op">×</span>
+    {/each}
+    <span class="da-chain-result"
+      class:da-chain-result--dimmed={disabledBoosts.size > 0}>
+      = ×{activeFinalMultRounded.toFixed(4)}
+      {#if disabledBoosts.size > 0}
+        <span class="da-chain-orig">/{boosts.dmgFinalMultiplier.toFixed(4)}</span>
+      {/if}
+    </span>
+  </div>
+
+  {#if boosts.healEntries.length > 0}
+    <div class="da-boost-row" style="margin-top:8px">
+      <span class="da-heal-label">✦ Heal</span>
+      {#each boosts.healEntries as entry}
+        <div class="da-boost-chip da-boost-chip--heal" title={entry.condition ?? ''}>
+          <span class="da-bc-name">{entry.sourceName}</span>
+          <span class="da-bc-val" style="color:#4ade80">×{entry.rawMultiplier.toFixed(3)}</span>
         </div>
         <span class="da-chain-op">×</span>
       {/each}
-      <span class="da-chain-result">= ×{boosts.dmgFinalMultiplier.toFixed(4)}</span>
+      <span class="da-chain-result" style="color:#4ade80">= ×{boosts.healFinalMultiplier.toFixed(4)}</span>
     </div>
-
-    {#if boosts.healEntries.length > 0}
-      <div class="da-boost-row" style="margin-top:8px">
-        <span class="da-heal-label">✦ Heal</span>
-        {#each boosts.healEntries as entry}
-          <div class="da-boost-chip da-boost-chip--heal" title={entry.condition ?? ''}>
-            <span class="da-bc-name">{entry.sourceName}</span>
-            <span class="da-bc-val" style="color:#4ade80">×{entry.rawMultiplier.toFixed(3)}</span>
-          </div>
-          <span class="da-chain-op">×</span>
-        {/each}
-        <span class="da-chain-result" style="color:#4ade80">= ×{boosts.healFinalMultiplier.toFixed(4)}</span>
-      </div>
-    {/if}
-  </div>
+  {/if}
+</div>
 
 
 </div>
@@ -323,5 +346,40 @@
   .da-chain-op { font-size: .8rem; color: var(--ink-muted, #8a8d85); opacity: .5; font-weight: 700; }
   .da-chain-result { font-size: 1rem; font-weight: 900; color: #fb923c; background: rgba(251,146,60,.1); padding: 4px 10px; border-radius: 8px; }
   .da-heal-label { font-size: .62rem; font-weight: 700; color: #4ade80; text-transform: uppercase; letter-spacing: .1em; padding: 4px 8px; background: rgba(74,222,128,.08); border-radius: 6px; border: 1px solid rgba(74,222,128,.2); flex-shrink: 0; }
+.da-boost-chip--off {
+  opacity: 0.4;
+  filter: grayscale(0.7);
+  border-style: dashed;
+}
+.da-boost-chip--off .da-bc-val {
+  color: var(--ink-muted, #8a8d85);
+  text-decoration: line-through;
+}
 
+.da-bc-toggle {
+  font-size: .48rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+  background: rgba(74,222,128,.15);
+  color: #4ade80;
+}
+.da-boost-chip--off .da-bc-toggle {
+  background: rgba(248,113,113,.12);
+  color: #f87171;
+}
+
+.da-chain-result--dimmed {
+  color: #fb923c;
+  background: rgba(251,146,60,.18);
+}
+.da-chain-orig {
+  font-size: .65rem;
+  opacity: .4;
+  font-weight: 500;
+  margin-left: 4px;
+  text-decoration: line-through;
+}
 </style>
