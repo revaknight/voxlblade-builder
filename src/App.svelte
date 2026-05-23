@@ -447,6 +447,13 @@ $: weaponDamageTypesWithBonus = (() => {
   }
   return result
 })()
+
+// Highest damage type key from weapon (for WAs like Laser, Mines, etc.)
+$: highestDamageType = (() => {
+  const entries = Object.entries(weaponDamageTypesWithBonus)
+  if (entries.length === 0) return null
+  return entries.reduce((a, b) => b[1] > a[1] ? b : a)
+})()
   // ── Weapon result ──────────────────────────────────────────────────────────
  $: weaponResult = isMonk
   ? (($build.monkGlove || $build.monkEssence) ? calcMonkWeapon($build.monkGlove, $build.monkEssence, shrineActive, $build.guildRank) : null)
@@ -2515,6 +2522,17 @@ function prettyKey(key: string, suffix: string) {
               <div class="damage-type-pill"><span class="dt-name">{formatDmgTypeLabel(k)}</span><span class="dt-val">{v}x</span></div>
             {/each}
           </div>
+        {:else if selectedWA.damageType.includes('Highest damage type') && highestDamageType && weaponResult}
+          {@const [hdKey] = highestDamageType}
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+            <div class="damage-type-grid">
+              <div class="damage-type-pill damage-type-pill--highest">
+                <span class="dt-name">{formatDmgTypeLabel(hdKey)}</span>
+                <span class="dt-val">1.0x</span>
+              </div>
+            </div>
+            <span class="wa-highest-hint">(highest of: {Object.entries(weaponDamageTypesWithBonus).map(([k,v]) => `${k} ${v}x`).join(', ')})</span>
+          </div>
         {:else}
           <span class="wa-stat-val">{selectedWA.damageType}</span>
         {/if}
@@ -3411,6 +3429,20 @@ function prettyKey(key: string, suffix: string) {
   color: var(--accent2);
   font-style: italic;
   font-weight: 400;
+}
+.damage-type-pill--highest {
+  border-color: rgba(251,191,36,.4);
+  background: rgba(251,191,36,.12);
+}
+.damage-type-pill--highest .dt-val {
+  color: var(--weapon-combined);
+  font-weight: 800;
+}
+.wa-highest-hint {
+  font-size: .62rem;
+  color: var(--ink-muted);
+  opacity: .55;
+  font-style: italic;
 }
 
 .wa-req-block {
