@@ -178,6 +178,15 @@ const CRIT_DMG_SOURCES: Array<{
     },
   },
     {
+    // Spark
+    label: 'Spark(to burning enemies)',
+    calc: (_stats, perks) => {
+      const stacks = perks['Spark'] ?? 0
+      if (stacks <= 0) return 0
+      return round(stacks * 50)
+    },
+  },
+    {
     // Critical Master
     label: 'Critical Master',
     calc: (_stats, perks) => {
