@@ -18,6 +18,7 @@
   import EmotionalTracker from './EmotionalTracker.svelte'
   import LevelBar from './LevelBar.svelte'
   import DamageAnalyzer from './DamageAnalyzer.svelte'
+  import TagFilter from './TagFilter.svelte'
 
   let activeAppTab: 'overview' | 'analyze' = 'overview'
 
@@ -376,13 +377,17 @@
   })()
 
   $: searchedRaces = races.filter(r => matchSearchReactive(r.name, [], modalSearch))
-  $: searchedGuilds = guilds.filter(g => matchSearchReactive(g.name, g.ranks.flatMap(r => (r.perks ?? []).map((p: any) => p.name)), modalSearch))
-  $: searchedRings = rings.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch))
-  $: searchedRunes = runes.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch))
-  $: searchedBlades = filteredBlades.filter(b => matchSearchReactive(b.name, getPerkNames(b), modalSearch))
-  $: searchedHandles = filteredHandles.filter(h => matchSearchReactive(h.name, getPerkNames(h), modalSearch))
-  $: searchedGloves = filteredGloves.filter(g => matchSearchReactive(g.name, getPerkNames(g), modalSearch))
-  $: searchedEssences = filteredEssences.filter(e => matchSearchReactive(e.name, getPerkNames(e), modalSearch))
+$: searchedGuilds = guilds.filter(g => {
+  if (!matchSearchReactive(g.name, g.ranks.flatMap(r => (r.perks ?? []).map((p: any) => p.name)), modalSearch)) return false
+  if (selectedTags.size === 0) return true
+  return g.ranks.some(r => (r.perks ?? []).some((p: any) => perkMatchesTags(p.name)))
+})
+  $: searchedRings = rings.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName))
+  $: searchedRunes = runes.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName))
+  $: searchedBlades = filteredBlades.filter(b => matchSearchReactive(b.name, getPerkNames(b), modalSearch) && anyPerkMatchesTags(getPerkNames(b)))
+  $: searchedHandles = filteredHandles.filter(h => matchSearchReactive(h.name, getPerkNames(h), modalSearch) && anyPerkMatchesTags(getPerkNames(h)))
+  $: searchedGloves = filteredGloves.filter(g => matchSearchReactive(g.name, getPerkNames(g), modalSearch) && anyPerkMatchesTags(getPerkNames(g)))
+  $: searchedEssences = filteredEssences.filter(e => matchSearchReactive(e.name, getPerkNames(e), modalSearch) && anyPerkMatchesTags(getPerkNames(e)))
 
   function matchSearchReactive(name: string, perkNames: string[], query: string): boolean {
     if (!query.trim()) return true
@@ -400,7 +405,7 @@
     if (!slotName) return []
     return armors.filter(a => {
       const part = getArmorPart(a.name, slotName as any)
-      return part && matchSearchReactive(a.name, part.perkName ? [part.perkName] : [], modalSearch)
+      return part && matchSearchReactive(a.name, part.perkName ? [part.perkName] : [], modalSearch) && perkMatchesTags(part.perkName)
     })
   })()
   let bladeFilterTier = ''
@@ -410,6 +415,32 @@
   let gloveFilterTier = ''
   let gloveFilterType = ''
   let essenceFilterTier = ''
+
+  // ── Perk tag filter ─────────────────────────────────────────────────────
+  let selectedTags: Set<string> = new Set()
+
+  function toggleTag(tag: string) {
+    if (selectedTags.has(tag)) selectedTags.delete(tag)
+    else selectedTags.add(tag)
+    selectedTags = new Set(selectedTags)
+  }
+
+  function clearTags() {
+    selectedTags = new Set()
+  }
+
+  function perkMatchesTags(perkName: string | undefined): boolean {
+    if (selectedTags.size === 0) return true
+    if (!perkName) return false
+    const perk = getPerk(perkName)
+    if (!perk) return false
+    return [...selectedTags].every(t => perk.tags.includes(t))
+  }
+
+  function anyPerkMatchesTags(perkNames: string[]): boolean {
+    if (selectedTags.size === 0) return true
+    return perkNames.some(n => perkMatchesTags(n))
+  }
 
   $: filteredBlades = blades.filter(b =>
     (!bladeFilterTier || b.tier === Number(bladeFilterTier)) &&
@@ -929,6 +960,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list">
           <button class="modal-item" class:modal-item--active={$build.guild === ''}
             on:click={() => { build.update(s => ({...s, guild: '', guildRank: 1})); closeModal() }}>
@@ -1001,6 +1037,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build[storeKey] === ''}
             on:click={() => { build.update(s => ({...s, [storeKey]: ''})); closeModal() }}>
@@ -1058,6 +1099,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build[infKey] === ''}
             on:click={() => { build.update(s => ({...s, [infKey]: ''})); closeModal() }}>
@@ -1112,6 +1158,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build.ring === ''}
             on:click={() => { build.update(s => ({...s, ring: ''})); closeModal() }}>
@@ -1164,6 +1215,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build.infusionRing === ''}
             on:click={() => { build.update(s => ({...s, infusionRing: ''})); closeModal() }}>
@@ -1215,6 +1271,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build.rune === ''}
             on:click={() => { build.update(s => ({...s, rune: ''})); closeModal() }}>
@@ -1268,6 +1329,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-filters">
           <select bind:value={bladeFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1383,6 +1449,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-filters">
           <select bind:value={handleFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1481,6 +1552,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-filters">
           <select bind:value={gloveFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1574,6 +1650,11 @@ function prettyKey(key: string, suffix: string) {
             </div>
           {/if}
         </div>
+        <TagFilter
+          {selectedTags}
+          on:toggle={(e) => toggleTag(e.detail)}
+          on:clear={clearTags}
+        />
         <div class="modal-filters">
           <select bind:value={essenceFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
