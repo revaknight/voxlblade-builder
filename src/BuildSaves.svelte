@@ -40,6 +40,18 @@
     editingIndex = i
     editingName = slots[i]?.name ?? `Build ${i + 1}`
   }
+  $: if (!open) currentExportCode = ''
+
+  let currentExportCode = ''
+
+  async function exportCurrent() {
+    currentExportCode = '...'
+    try {
+      currentExportCode = await encodeState($build)
+    } catch {
+      currentExportCode = ''
+    }
+  }
 
   function confirmEdit(i: number) {
     if (slots[i] && editingIndex === i) {
@@ -347,22 +359,32 @@ function copyCode() {
       {/each}
     </div>
     <div class="share-section">
-      {#if exportingSlot !== null && shareCode}
-        <div class="share-row">
-          <span class="export-label">Slot {exportingSlot + 1} code:</span>
-          <input class="share-code" value={shareCode} readonly
-            on:click={e => (e.target as HTMLInputElement).select()} />
-          <button class="btn btn-copy" on:click={copyCode}>Copy</button>
-        </div>
+    <div class="share-row">
+      <span class="export-label">Current build:</span>
+      <button class="btn btn-share" class:btn-share--active={currentExportCode === '...'} on:click={exportCurrent}>⬆ Export</button>
+      {#if currentExportCode && currentExportCode !== '...'}
+        <input class="share-code" value={currentExportCode} readonly
+          on:click={e => (e.target as HTMLInputElement).select()} />
+        <button class="btn btn-copy" on:click={() => navigator.clipboard.writeText(currentExportCode)}>Copy</button>
       {/if}
-
-      <div class="import-row">
-        <input class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
-        <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
-      </div>
-      {#if importError}<span class="import-err">{importError}</span>{/if}
-      {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
     </div>
+
+    {#if exportingSlot !== null && shareCode}
+      <div class="share-row">
+        <span class="export-label">Slot {exportingSlot + 1} code:</span>
+        <input class="share-code" value={shareCode} readonly
+          on:click={e => (e.target as HTMLInputElement).select()} />
+        <button class="btn btn-copy" on:click={copyCode}>Copy</button>
+      </div>
+    {/if}
+
+    <div class="import-row">
+      <input class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
+      <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
+    </div>
+    {#if importError}<span class="import-err">{importError}</span>{/if}
+    {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
+  </div>
   </div>
 {/if}
 

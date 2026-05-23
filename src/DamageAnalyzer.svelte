@@ -116,6 +116,7 @@ function toggleBoost(name: string) {
 }
 
 $: activeEntries = boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName))
+$: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
 $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
 $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
 </script>
@@ -196,9 +197,9 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
       <span class="da-chain-op">×</span>
     {/each}
     <span class="da-chain-result"
-      class:da-chain-result--dimmed={disabledBoosts.size > 0}>
+      class:da-chain-result--dimmed={hasDisabledVisible}>
       = ×{activeFinalMultRounded.toFixed(4)}
-      {#if disabledBoosts.size > 0}
+      {#if hasDisabledVisible}
         <span class="da-chain-orig">/{boosts.dmgFinalMultiplier.toFixed(4)}</span>
       {/if}
     </span>
