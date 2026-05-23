@@ -380,6 +380,7 @@ function copyCode() {
 
     <div class="import-row">
       <input class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
+      <button class="btn btn-paste" on:click={async () => { try { importCode = await navigator.clipboard.readText() } catch {} }} title="Paste from clipboard">📋 Paste</button>
       <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
     </div>
     {#if importError}<span class="import-err">{importError}</span>{/if}
@@ -483,4 +484,11 @@ function copyCode() {
   color: currentColor;
   flex-shrink: 0;
 }
+.btn-paste {
+  background: rgba(251,191,36,.08);
+  border-color: rgba(251,191,36,.22);
+  color: var(--accent2);
+  flex-shrink: 0;
+}
+.btn-paste:hover { background: rgba(251,191,36,.18); }
 </style>
