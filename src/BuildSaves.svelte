@@ -1,6 +1,6 @@
 <!-- BuildSaves.svelte -->
 <script lang="ts">
-    import EmotionalTracker from './EmotionalTracker.svelte';
+  import EmotionalTracker from './EmotionalTracker.svelte';
   import { build } from './lib/store'
   import type { BuildState } from './lib/types'
 

@@ -3,10 +3,12 @@
   import { createEventDispatcher } from 'svelte'
 
   export let selectedTags: Set<string>
+  export let hideTags: string[] = [] 
 
   const dispatch = createEventDispatcher()
 
   const TAG_GROUPS: Array<{ label: string; color: string; tags: string[] }> = [
+    
     {
       label: 'Combat',
       color: '#fb923c',
@@ -30,7 +32,7 @@
     {
       label: 'Special',
       color: '#a78bfa',
-      tags: ["Summoner","Spirit (Monk)","Stance Change","Self-Damage","Self-Debuff","Stat Boost"],
+      tags: ["Summoner","Stance Change","Self-Damage","Self-Debuff","Stat Boost"],
     },
   ]
 
@@ -89,7 +91,7 @@
         <div class="tf-group">
           <span class="tf-group-label" style="color:{group.color}">{group.label}</span>
           <div class="tf-chips">
-            {#each group.tags as tag}
+            {#each group.tags.filter(t => !hideTags.includes(t)) as tag}
               {@const active = selectedTags.has(tag)}
               <button
                 class="tf-chip"

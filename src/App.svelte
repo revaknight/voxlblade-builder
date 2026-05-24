@@ -976,6 +976,7 @@ function prettyKey(key: string, suffix: string) {
         </div>
         <TagFilter
           {selectedTags}
+          hideTags={['Stance Change']}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
@@ -1053,6 +1054,7 @@ function prettyKey(key: string, suffix: string) {
         </div>
         <TagFilter
           {selectedTags}
+          hideTags={['Stance Change']}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
@@ -1115,6 +1117,7 @@ function prettyKey(key: string, suffix: string) {
         </div>
         <TagFilter
           {selectedTags}
+          hideTags={['Stance Change']}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
@@ -1287,6 +1290,7 @@ function prettyKey(key: string, suffix: string) {
         </div>
         <TagFilter
           {selectedTags}
+          hideTags={['Stance Change']}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
@@ -1568,6 +1572,7 @@ function prettyKey(key: string, suffix: string) {
         </div>
         <TagFilter
           {selectedTags}
+          hideTags={['Stance Change']}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
