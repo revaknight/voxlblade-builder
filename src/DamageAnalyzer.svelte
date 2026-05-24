@@ -123,53 +123,64 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
 
 <div class="da-root">
 
-  <!-- ══════════════════ TOP: CRIT STATS ══════════════════ -->
-  <div class="da-section">
-    <div class="da-section-title">⚡ Crit Statistics</div>
-    <div class="da-crit-grid">
+  <!-- ══════════════════ TOP ROW: CRIT + APEN ══════════════════ -->
+  <div class="da-top-row">
 
-      <div class="da-stat-card da-stat-card--crit">
-        <div class="da-stat-label">Crit Chance</div>
-        <div class="da-stat-val" style="color:#e2b203">{crit.effectiveCritChance.toFixed(1)}%</div>
-        {#if allCritSources.length > 0}
+    <!-- Crit column -->
+    <div class="da-section da-section--crit">
+      <div class="da-section-title">⚡ Crit Statistics</div>
+      <div class="da-crit-grid">
+
+        <div class="da-stat-card da-stat-card--crit">
+          <div class="da-stat-label">Crit Chance</div>
+          <div class="da-stat-val" style="color:#e2b203">{crit.effectiveCritChance.toFixed(1)}%</div>
+          {#if allCritSources.length > 0}
+            <div class="da-sources">
+              {#each allCritSources as s}
+                <div class="da-source-row">
+                  <span class="da-source-name">{s.source}</span>
+                  <span class="da-source-val" style="color:{s.isExtra ? '#f59e0b' : '#e2b203'}">
+                    +{s.amount.toFixed(2)}%
+                  </span>
+                </div>
+              {/each}
+              {#if crit.critFormula}
+                <div class="da-source-formula">{crit.critFormula}</div>
+              {/if}
+            </div>
+          {:else}
+            <div class="da-empty-hint">No crit sources</div>
+          {/if}
+        </div>
+
+        <div class="da-stat-card da-stat-card--critdmg">
+          <div class="da-stat-label">Crit Damage Multiplier</div>
+          <div class="da-stat-val" style="color:#a78bfa">{crit.critDamageMultiplier.toFixed(1)}%</div>
           <div class="da-sources">
-            {#each allCritSources as s}
+            {#each critDmgSources as s}
               <div class="da-source-row">
-                <span class="da-source-name">
-                  {s.source}
-                </span>
-                <span class="da-source-val" style="color:{s.isExtra ? '#f59e0b' : '#e2b203'}">
-                  +{s.amount.toFixed(2)}%
+                <span class="da-source-name">{s.source}</span>
+                <span class="da-source-val" style="color:{s.amount < 0 ? '#f87171' : '#a78bfa'}">
+                  {s.source === 'Base' ? '' : s.amount >= 0 ? '+' : ''}{s.amount.toFixed(s.source === 'Base' ? 0 : 2)}%
                 </span>
               </div>
             {/each}
-            {#if crit.critFormula}
-              <div class="da-source-formula">
-                {crit.critFormula}
-              </div>
-            {/if}
           </div>
-        {:else}
-          <div class="da-empty-hint">No crit sources</div>
-        {/if}
-      </div>
+        </div>
 
-      <div class="da-stat-card da-stat-card--critdmg">
-        <div class="da-stat-label">Crit Damage Multiplier</div>
-        <div class="da-stat-val" style="color:#a78bfa">{crit.critDamageMultiplier.toFixed(1)}%</div>
-        <div class="da-sources">
-        {#each critDmgSources as s}
-          <div class="da-source-row">
-            <span class="da-source-name">{s.source}</span>
-            <span class="da-source-val" style="color:{s.amount < 0 ? '#f87171' : '#a78bfa'}">
-              {s.source === 'Base' ? '' : s.amount >= 0 ? '+' : ''}{s.amount.toFixed(s.source === 'Base' ? 0 : 2)}%
-            </span>
-          </div>
-        {/each}
+      </div>
+    </div>
+
+    <!-- Armor Pen column -->
+    {#if (stats as Record<string, number>).armorPenetration}
+      <div class="da-section da-section--apen">
+        <div class="da-section-title">🛡 Armor Penetration</div>
+        <div class="da-apen-inner">
+          <span class="da-apen-val">{(stats as Record<string, number>).armorPenetration}</span>
         </div>
       </div>
+    {/if}
 
-    </div>
   </div>
 
 <!-- ══════════════════ COMBAT MULTIPLIERS ══════════════════ -->
@@ -384,5 +395,38 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
   font-weight: 500;
   margin-left: 4px;
   text-decoration: line-through;
+}
+
+/* ── Top row: 2 columns ── */
+.da-top-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 560px) {
+  .da-top-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.da-section--apen {
+  border-color: rgba(229,229,229,.18);
+  background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(229,229,229,.03) 100%);
+  min-width: 130px;
+  height: 100%;
+  text-align: center;
+}
+.da-apen-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.da-apen-val {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #e5e5e5;
+  font-family: 'Courier New', monospace;
+  line-height: 1;
 }
 </style>

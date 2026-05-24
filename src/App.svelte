@@ -125,7 +125,20 @@
   $: guildData = getGuild($build.guild)
   $: isMonk = isMonkGuild($build.guild)
 
-  $: statRows = Object.entries($result.stats).filter(([,v]) => v !== 0).sort(([a],[b]) => a.localeCompare(b))
+  $: raceArmorPen = (() => {
+    const race = races.find(r => r.name === $build.race)
+    return (race?.statModifiers as Record<string,number> | undefined)?.armorPenetration ?? 0
+  })()
+  $: statRows = Object.entries($result.stats).filter(([k, v]) => {
+    if (k === 'armorPenetration') {
+      const displayVal = (v as number) - raceArmorPen
+      return displayVal !== 0
+    }
+    return v !== 0
+  }).map(([k, v]) => {
+    if (k === 'armorPenetration') return [k, (v as number) - raceArmorPen] as [string, number]
+    return [k, v] as [string, number]
+  }).sort(([a],[b]) => a.localeCompare(b))
   $: perkRows = Object.entries($result.perks).filter(([,v]) => v > 0).sort(([a],[b]) => a.localeCompare(b))
   $: cdr = $result.cdr
   $: isDraconic = $build.guild === 'Draconic'
