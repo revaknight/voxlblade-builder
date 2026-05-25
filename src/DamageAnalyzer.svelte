@@ -663,8 +663,10 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
   color: #fb923c;
 }
 .da-wbd-col--hits {
-  color: var(--ink-muted, #8a8d85);
-  font-size: .72rem;
+  color: rgba(232, 228, 218, 0.82);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .03em;
 }
 .da-wbd-col--m2 {
   color: #fbbf24;
