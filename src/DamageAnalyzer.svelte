@@ -1,6 +1,8 @@
 <!-- DamageAnalyzer.svelte -->
 <script lang="ts">
   import { build, result } from './lib/store'
+  import { calcWeapon, calcMonkWeapon, isMonkGuild } from './lib/engine'
+  import BaseDamageCalc from './BaseDamageCalc.svelte'
 
   // ── Reactive từ store ──────────────────────────────────────────────────────
   $: crit      = $result.crit
@@ -8,92 +10,147 @@
   $: stats     = $result.stats
   $: perks     = $result.perks
 
-  // ── Damage calculator state ────────────────────────────────────────────────
-  let baseDamage: number = 100
-  let enemyDefense: number = 0       // % reduction
-  let damageType: string = 'physical'
-  let hits: number = 1
+  // ── Weapon Base Damage table ───────────────────────────────────────────────
+  // Format: null = N/A, number = single hit, array = combo hits
+  type HitSeq = (number | { n: number; count: number })[]
 
-  const DMG_TYPES = [
-    { id: 'physical', label: 'Physical', color: '#fb923c' },
-    { id: 'magic',    label: 'Magic',    color: '#818cf8' },
-    { id: 'fire',     label: 'Fire',     color: '#f97316' },
-    { id: 'water',    label: 'Water',    color: '#38bdf8' },
-    { id: 'earth',    label: 'Earth',    color: '#a3e635' },
-    { id: 'air',      label: 'Air',      color: '#e2e8f0' },
-    { id: 'hex',      label: 'Hex',      color: '#e879f9' },
-    { id: 'holy',     label: 'Holy',     color: '#facc15' },
-    { id: 'true',     label: 'True',     color: '#f87171' },
-    { id: 'summon',   label: 'Summon',   color: '#c084fc' },
+  interface WeaponBaseDmg {
+    type: string
+    m1: HitSeq | null   // null = N/A
+    m2: HitSeq | null
+  }
+
+  // Helper: parse "4.5, 4.5, 1.5x4" → HitSeq
+  // Each entry is either a flat number or {n, count} for nxCount notation
+  const WEAPON_BASE_DMG: WeaponBaseDmg[] = [
+    { type: 'Fists',                m1: [5.5, 5.5, {n:2.7,count:3}],   m2: [15.5] },
+    { type: 'Chain Fists',          m1: [{n:3.5,count:2},{n:3.5,count:2},{n:3.5,count:2}], m2: [{n:3,count:7}] },
+    { type: '1-Handed Sword',       m1: [6, 6, 6],                      m2: [9] },
+    { type: '2-Handed Sword',       m1: [5.5, 5.5, 5.5],               m2: [12] },
+    { type: 'Rapier',               m1: [4.5, 4.5, {n:1.5,count:4}],   m2: [7.5] },
+    { type: 'Dual Swords',          m1: [{n:3,count:2},{n:3,count:2},6],m2: [8] },
+    { type: 'Greatsword',           m1: [9, 4, 9],                      m2: [11] },
+    { type: 'Unbalanced Sword',     m1: [7.5, 12],                      m2: [16] },
+    { type: 'Dual Unbalanced Swords', m1: [12, 12],                     m2: [{n:8,count:2},12] },
+    { type: 'Dagger',               m1: [4.5, 4.5, 4.5],               m2: [5.5] },
+    { type: 'Dual Wielding Daggers',m1: [4, {n:1.4,count:5},{n:1.4,count:5}], m2: [11] },
+    { type: 'Spear',                m1: [6, 6, 6],                      m2: [10] },
+    { type: 'Great Spear',          m1: [9, 14],                        m2: [{n:5,count:3}] },
+    { type: 'Mallet',               m1: [6, 6, 6],                      m2: [18] },
+    { type: 'Dual Mallets',         m1: [5, {n:1,count:5}, 5.5],        m2: [18.5] },
+    { type: 'War Hammer',           m1: [6, 6, 14],                     m2: [{n:8,count:2}] },
+    { type: 'Dual Kamas',           m1: [4, 4, {n:3,count:3}],          m2: [5.5] },
+    { type: 'Scythe',               m1: [7.5, 7.5, 7.5],               m2: [{n:5,count:3}] },
+    { type: 'Lance',                m1: [6, 6, 6],                      m2: [6.8, 14] },
+    { type: 'Chainsaw',             m1: [{n:4,count:2},{n:4,count:2},{n:4,count:2}], m2: [{n:1.7,count:10}] },
+    { type: 'Shield',               m1: [5, 5, 10],                     m2: [5] },
+    // Monk WA types
+    { type: 'Artillery Mage',       m1: [5.5, 5.5],                     m2: [8.5] },
+    { type: 'Stratos Winds',        m1: [5, 5],                         m2: [8] },
+    { type: 'Storm Caster',         m1: [5, 5],                         m2: [{n:2.75,count:5}] },
+    { type: 'Virulent Core',        m1: [4.5, 4.5],                     m2: [13.9] },
+    { type: 'Cosmic Ray',           m1: null,                           m2: [18.5] },
+    { type: 'Mine',                 m1: null,                           m2: [5, 10, 15] },
+    { type: 'Side Gun',             m1: null,                           m2: [7] },
+    { type: 'Shotgun',              m1: null,                           m2: [{n:4.5,count:3}] },
+    { type: 'Fists + Gun',          m1: [4, 4],                         m2: [{n:1.6,count:8}] },
+    { type: 'Rifle',                m1: [5, 5, 18],                     m2: [17] },
   ]
 
-  const TYPE_BOOST_KEY: Record<string, string> = {
-    physical: 'physicalBoost',
-    magic:    'magicBoost',
-    fire:     'fireBoost',
-    water:    'waterBoost',
-    earth:    'earthBoost',
-    air:      'airBoost',
-    hex:      'hexBoost',
-    holy:     'holyBoost',
-    true:     '',
-    summon:   'summonBoost',
+  // Render a HitSeq as string like "6, 6, 1.5×4"
+  function fmtSeq(seq: HitSeq): string {
+    return seq.map(h => {
+      if (typeof h === 'number') return String(h)
+      return `${h.n}\u00d7${h.count}`
+    }).join(', ')
   }
 
-  $: typeBoostPct = (() => {
-    const key = TYPE_BOOST_KEY[damageType]
-    if (!key) return 0
-    return (stats as Record<string, number>)[key] ?? 0
-  })()
+  // Current weapon type from build
+  $: _isMonk = isMonkGuild($build.guild)
+  $: _weaponResult = _isMonk
+    ? (($build.monkGlove || $build.monkEssence) ? calcMonkWeapon($build.monkGlove, $build.monkEssence, $build.shrineActive, $build.guildRank) : null)
+    : (($build.weaponBlade || $build.weaponHandle) ? calcWeapon($build.weaponBlade, $build.weaponHandle, $build.shrineActive) : null)
+  $: _baseWeaponType = _weaponResult?.finalWeaponType ?? ''
 
-  $: typeBoostMult = 1 + typeBoostPct / 100
+  // Count Blaster Ring across ALL slots (ring main + all infusion slots)
+  $: _blasterCount = [$build.ring, $build.infusionRing, $build.infusionHelmet, $build.infusionChestplate, $build.infusionLeggings]
+    .filter(s => s === 'Blaster Ring').length
 
-  // Combat multiplier (dmg)
-  $: combatMult = boosts.dmgFinalMultiplier
+  // Perk: Locked And Loaded (from weapon perks in result)
+  $: _hasLockedAndLoaded = ($result.perks['Locked And Loaded'] ?? 0) > 0
 
-  // Defense reduction
-  $: defMult = Math.max(0, 1 - enemyDefense / 100)
+  // 1-Handed weapon types for Blaster Ring Shotgun rule
+  const ONE_HANDED_TYPES = new Set([
+    'Dagger','1-Handed Sword','Unbalanced Sword','Mallet','Rapier',
+    'Dual Swords','Dual Wielding Daggers','Dual Unbalanced Swords','Dual Mallets','Dual Kamas',
+    'Shield','Lance','Chainsaw',
+  ])
 
-  // ── Per-hit calculations ───────────────────────────────────────────────────
-  $: rawHit  = baseDamage * typeBoostMult * activeFinalMult * defMult
-  $: critHit = rawHit * (crit.critDamageMultiplier / 100)
-  $: avgHit  = rawHit * (1 - crit.effectiveCritChance / 100) + critHit * (crit.effectiveCritChance / 100)
-
-  // ── Multi-hit ─────────────────────────────────────────────────────────────
-  $: totalNormal  = rawHit  * hits
-  $: totalCrit    = critHit * hits
-  $: totalAvg     = avgHit  * hits
-
-  // ── Breakdown rows ─────────────────────────────────────────────────────────
-  interface Step { label: string; mult: number; running: number; color?: string }
-  $: breakdown = (() => {
-    const steps: Step[] = []
-    let running = baseDamage
-    steps.push({ label: 'Base Damage', mult: 1, running, color: '#e8e4da' })
-
-    if (typeBoostMult !== 1) {
-      running *= typeBoostMult
-      steps.push({ label: `${DMG_TYPES.find(d=>d.id===damageType)?.label} Boost (+${typeBoostPct}%)`, mult: typeBoostMult, running, color: DMG_TYPES.find(d=>d.id===damageType)?.color })
-    }
-
-    for (const entry of boosts.dmgEntries) {
-      running *= entry.rawMultiplier
-      steps.push({ label: entry.sourceName + (entry.condition ? ` (${entry.condition})` : ''), mult: entry.rawMultiplier, running, color: entry.sourceName === 'Level Damage' ? '#fbbf24' : '#fb923c' })
-    }
-
-    if (defMult !== 1) {
-      running *= defMult
-      steps.push({ label: `Enemy Defense (${enemyDefense}% reduction)`, mult: defMult, running, color: '#f87171' })
-    }
-
-    return steps
-  })()
-
-  function fmt(n: number): string {
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M'
-    if (n >= 1_000)     return (n / 1_000).toFixed(2) + 'K'
-    return n.toFixed(2)
+  // Resolve gun overlay based on full rules:
+  // Locked And Loaded + Fists          → Dual Guns (M1+M2 both from gun)
+  // Locked And Loaded + other weapon   → Side Gun (M2 only, replaces weapon M2)
+  // 2x Blaster Ring + Fists            → Rifle
+  // 2x Blaster Ring + 1-handed weapon  → Shotgun (M2 only)
+  interface GunOverlay {
+    type: string        // gun weapon type name
+    m2Only: boolean     // true = only M2 from gun, false = gun replaces both M1+M2
   }
+
+  $: _gunOverlay = ((): GunOverlay | null => {
+    const wt = _baseWeaponType
+    const isFists = wt === 'Fists' || wt === 'Chain Fists'
+
+    // 2x Blaster Ring has priority over Locked And Loaded
+    if (_blasterCount >= 2) {
+      if (isFists) return { type: 'Rifle', m2Only: false }
+      if (wt) return { type: 'Shotgun', m2Only: true }
+    }
+
+    // Locked And Loaded (perk, no Blaster Ring requirement)
+    if (_hasLockedAndLoaded) {
+      if (isFists) return { type: 'Fists + Gun', m2Only: false }
+      if (wt) return { type: 'Side Gun', m2Only: true }
+    }
+
+    return null
+  })()
+
+  // Build merged display row
+  $: _displayRows = (() => {
+    type MergedRow = WeaponBaseDmg & { gunLabel?: string; m2Only?: boolean }
+    const rows: MergedRow[] = []
+
+    if (_baseWeaponType) {
+      const base = WEAPON_BASE_DMG.find(w => w.type === _baseWeaponType)
+      if (base) {
+        if (_gunOverlay) {
+          const gun = WEAPON_BASE_DMG.find(w => w.type === _gunOverlay.type)
+          if (_gunOverlay.m2Only) {
+            // Keep weapon M1, replace M2 with gun M2
+            rows.push({ type: _baseWeaponType, m1: base.m1, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: true })
+          } else {
+            // Full gun: both M1 and M2 from gun data
+            rows.push({ type: _baseWeaponType, m1: gun?.m1 ?? null, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: false })
+          }
+        } else {
+          rows.push({ ...base })
+        }
+      }
+    } else if (_gunOverlay) {
+      const gun = WEAPON_BASE_DMG.find(w => w.type === _gunOverlay.type)
+      if (gun) rows.push({ ...gun, gunLabel: _gunOverlay.type })
+    }
+
+    return rows
+  })()
+
+  $: _currentLabel = _gunOverlay && _baseWeaponType
+    ? `${_baseWeaponType} + ${_gunOverlay.type}`
+    : _gunOverlay?.type ?? _baseWeaponType
+
+  // Show all or just current
+  let showAllWeapons = false
+
 
   function fmtMult(n: number): string {
     return `×${n.toFixed(4)}`
@@ -231,7 +288,62 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
   {/if}
 </div>
 
+<!-- ══════════════════ WEAPON BASE DAMAGE ══════════════════ -->
+<div class="da-section da-section--wbd">
+  <div class="da-section-title-row">
+    <span class="da-section-title">⚔ Weapon Base Damage</span>
+    <div class="da-wbd-controls">
+      {#if _currentLabel}
+        <span class="da-wbd-current-badge">{_currentLabel}</span>
+      {/if}
+      <button class="da-wbd-toggle" on:click={() => showAllWeapons = !showAllWeapons}>
+        {showAllWeapons ? 'Show current only' : 'Show all weapons'}
+      </button>
+    </div>
+  </div>
 
+  {#if !_currentLabel && !showAllWeapons}
+    <p class="da-empty-hint">No weapon selected. <button class="da-wbd-link" on:click={() => showAllWeapons = true}>Show all weapon types</button></p>
+  {:else}
+    {@const rows = showAllWeapons ? WEAPON_BASE_DMG.map(r => ({...r})) : _displayRows}
+    <div class="da-wbd-table">
+      <div class="da-wbd-head">
+        <div class="da-wbd-col da-wbd-col--type">Weapon</div>
+        <div class="da-wbd-col da-wbd-col--hits">M1 Combo</div>
+        <div class="da-wbd-col da-wbd-col--hits">M2</div>
+      </div>
+      {#each rows as row}
+        {@const isActive = !showAllWeapons}
+        {@const gunLabel = (row as any).gunLabel as string | undefined}
+        {@const m2Only = (row as any).m2Only as boolean | undefined}
+        <div class="da-wbd-row" class:da-wbd-row--active={isActive && !gunLabel}
+          class:da-wbd-row--gun-merged={isActive && !!gunLabel}>
+          <div class="da-wbd-col da-wbd-col--type">
+            {#if isActive}<span class="da-wbd-dot" class:da-wbd-dot--gun={!!gunLabel}></span>{/if}
+            <span>{row.type}</span>
+            {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
+          </div>
+          <div class="da-wbd-col da-wbd-col--hits">
+            {#if row.m1}{fmtSeq(row.m1)}{:else}<span class="da-wbd-na">N/A</span>{/if}
+            {#if gunLabel && !m2Only}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
+          </div>
+          <div class="da-wbd-col da-wbd-col--hits da-wbd-col--m2">
+            {#if row.m2}{fmtSeq(row.m2)}{:else}<span class="da-wbd-na">N/A</span>{/if}
+            {#if gunLabel}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
+          </div>
+        </div>
+      {/each}
+    </div>
+    <p class="da-wbd-note">× = repeated hits (e.g. 1.5×4 = 4 hits of 1.5). M1 = light attack combo, M2 = heavy attack.</p>
+  {/if}
+</div>
+<BaseDamageCalc
+  {boosts}
+  {crit}
+  {stats}
+  {disabledBoosts}
+  {activeFinalMult}
+/>
 </div>
 
 <style>
@@ -428,5 +540,185 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
   color: #e5e5e5;
   font-family: 'Courier New', monospace;
   line-height: 1;
+}
+
+/* ── Weapon Base Damage ── */
+.da-section--wbd {
+  border-color: rgba(251,146,60,.15);
+}
+.da-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.06));
+  padding-bottom: 8px;
+}
+.da-section-title-row .da-section-title {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.da-wbd-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.da-wbd-current-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(251,146,60,.14);
+  border: 1px solid rgba(251,146,60,.3);
+  color: #fb923c;
+}
+.da-wbd-toggle {
+  font-size: .62rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: var(--surface2, #1a1d1b);
+  color: var(--ink-muted, #8a8d85);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.da-wbd-toggle:hover {
+  border-color: rgba(251,146,60,.35);
+  color: #fb923c;
+}
+.da-wbd-link {
+  background: none;
+  border: none;
+  color: #fb923c;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* Table */
+.da-wbd-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Courier New', monospace;
+}
+.da-wbd-head {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: .58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-muted, #8a8d85);
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+}
+.da-wbd-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface2, #1a1d1b);
+  font-size: .75rem;
+  transition: background .1s;
+  border: 1px solid transparent;
+  align-items: center;
+}
+.da-wbd-row:hover {
+  background: var(--surface3, #212420);
+}
+.da-wbd-row--active {
+  background: rgba(251,146,60,.08);
+  border-color: rgba(251,146,60,.25);
+}
+.da-wbd-row--gun-merged {
+  background: linear-gradient(135deg, rgba(251,146,60,.06), rgba(56,189,248,.06));
+  border-color: rgba(56,189,248,.25);
+}
+.da-wbd-col {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+.da-wbd-col--type {
+  font-weight: 700;
+  color: var(--ink, #e8e4da);
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+  font-size: .78rem;
+  gap: 6px;
+}
+.da-wbd-row--active .da-wbd-col--type {
+  color: #fb923c;
+}
+.da-wbd-row--gun-merged .da-wbd-col--type {
+  color: #fb923c;
+}
+.da-wbd-col--hits {
+  color: var(--ink-muted, #8a8d85);
+  font-size: .72rem;
+}
+.da-wbd-col--m2 {
+  color: #fbbf24;
+}
+.da-wbd-na {
+  color: var(--ink-muted, #8a8d85);
+  opacity: .3;
+  font-style: italic;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+  font-size: .65rem;
+}
+.da-wbd-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fb923c;
+  flex-shrink: 0;
+  box-shadow: 0 0 5px rgba(251,146,60,.6);
+}
+.da-wbd-dot--gun {
+  background: linear-gradient(135deg, #fb923c, #38bdf8);
+  box-shadow: 0 0 5px rgba(56,189,248,.5);
+}
+.da-wbd-gun-badge {
+  font-size: .6rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(56,189,248,.1);
+  border: 1px solid rgba(56,189,248,.25);
+  color: #38bdf8;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+  flex-shrink: 0;
+}
+.da-wbd-m2-src {
+  font-size: .58rem;
+  color: #38bdf8;
+  opacity: .6;
+  font-style: italic;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+  flex-shrink: 0;
+}
+.da-wbd-note {
+  font-size: .62rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .45;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .da-wbd-head,
+  .da-wbd-row {
+    grid-template-columns: 140px 1fr 1fr;
+  }
 }
 </style>
