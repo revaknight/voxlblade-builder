@@ -67,10 +67,6 @@
 
   // Current weapon type from build
   $: _isMonk = isMonkGuild($build.guild)
-  $: _weaponResult = _isMonk
-    ? (($build.monkGlove || $build.monkEssence) ? calcMonkWeapon($build.monkGlove, $build.monkEssence, $build.shrineActive, $build.guildRank) : null)
-    : (($build.weaponBlade || $build.weaponHandle) ? calcWeapon($build.weaponBlade, $build.weaponHandle, $build.shrineActive) : null)
-  $: _baseWeaponType = _weaponResult?.finalWeaponType ?? ''
 
   // Count Blaster Ring across ALL slots (ring main + all infusion slots)
   $: _blasterCount = [$build.ring, $build.infusionRing, $build.infusionHelmet, $build.infusionChestplate, $build.infusionLeggings]
@@ -96,20 +92,31 @@
     m2Only: boolean     // true = only M2 from gun, false = gun replaces both M1+M2
   }
 
-  $: _gunOverlay = ((): GunOverlay | null => {
+$: _weaponResult = _isMonk
+    ? (($build.monkGlove || $build.monkEssence) ? calcMonkWeapon($build.monkGlove, $build.monkEssence, $build.shrineActive, $build.guildRank) : null)
+    : (($build.weaponBlade || $build.weaponHandle) ? calcWeapon($build.weaponBlade, $build.weaponHandle, $build.shrineActive) : null)
+$: _baseWeaponType = _weaponResult?.finalWeaponType ?? ''
+$: _weaponPerks = _weaponResult?.perks ?? {}
+
+$: _gunOverlay = ((): GunOverlay | null => {
     const wt = _baseWeaponType
     const isFists = wt === 'Fists' || wt === 'Chain Fists'
 
-    // 2x Blaster Ring has priority over Locked And Loaded
     if (_blasterCount >= 2) {
       if (isFists) return { type: 'Rifle', m2Only: false }
       if (wt) return { type: 'Shotgun', m2Only: true }
     }
 
-    // Locked And Loaded (perk, no Blaster Ring requirement)
     if (_hasLockedAndLoaded) {
       if (isFists) return { type: 'Fists + Gun', m2Only: false }
       if (wt) return { type: 'Side Gun', m2Only: true }
+    }
+
+    if ((_weaponPerks['Cosmic Ray'] ?? 0) > 0) {
+      return { type: 'Cosmic Ray', m2Only: true }
+    }
+    if ((_weaponPerks['Mine'] ?? 0) > 0) {
+      return { type: 'Mine', m2Only: true }
     }
 
     return null

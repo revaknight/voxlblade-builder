@@ -436,7 +436,18 @@ export function resolveWeaponType(
 ): { base: string; final: string; modifier: string } {
   const base = getWeaponType(handleType, bladeType)
   if (!base) return { base: "", final: "", modifier: "" }
-
+    if ((perks["Artillery Mage"] ?? 0) > 0 && bladeType === "Hammer Head") {
+      return { base, final: "Artillery Mage", modifier: "Artillery Mage" }
+    }
+    if ((perks["Stratos Winds"] ?? 0) > 0 && bladeType === "Hammer Head") {
+      return { base, final: "Stratos Winds", modifier: "Stratos Winds" }
+    }
+    if ((perks["Storm Caster"] ?? 0) > 0 && bladeType === "Hammer Head") {
+      return { base, final: "Storm Caster", modifier: "Storm Caster" }
+    }
+    if ((perks["Virulent Core"] ?? 0) > 0 && bladeType === "Hammer Head") {
+      return { base, final: "Virulent Core", modifier: "Virulent Core" }
+    }
   if ((perks["Dual Wielding"] ?? 0) > 0) {
     if (bladeType === "Small Blade")  return { base, final: "Dual Wielding Daggers", modifier: "Dual Wielding" }
     if (bladeType === "Medium Blade") return { base, final: "Dual Swords",           modifier: "Dual Wielding" }
@@ -461,6 +472,7 @@ export function resolveWeaponType(
     if (base === "Dagger") return { base, final: "Dual Kamas", modifier: "Kama Blades" }
     if (base === "Spear")  return { base, final: "Scythe",     modifier: "Kama Blades" }
   }
+
 
   return { base, final: base, modifier: "" }
 }
