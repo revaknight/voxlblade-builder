@@ -57,7 +57,6 @@
     { type: 'Rifle',                m1: [5, 5, 18],                     m2: [17] },
   ]
 
-  // Render a HitSeq as string like "6, 6, 1.5×4"
   function fmtSeq(seq: HitSeq): string {
     return seq.map(h => {
       if (typeof h === 'number') return String(h)
@@ -65,31 +64,52 @@
     }).join(', ')
   }
 
-  // Current weapon type from build
+  // Per-hit damage breakdown with type multipliers applied
+  type HitBreakdown = Array<{ label: string; val: number; color: string }>
+
+  const DMG_TYPE_COLORS: Record<string, string> = {
+    physical: '#fb923c', magic: '#818cf8', fire: '#f97316',
+    water: '#38bdf8', earth: '#a3e635', air: '#e2e8f0',
+    hex: '#e879f9', holy: '#facc15', true: '#f87171', summon: '#c084fc',
+  }
+
+  function fmtNum(n: number): string {
+    const r = Math.round(n * 100) / 100
+    return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/\.?0+$/, '')
+  }
+
+  function seqWithTypes(
+    seq: HitSeq,
+    dmgTypes: Record<string, number>
+  ): Array<{ base: number; count: number; types: HitBreakdown }> {
+    const typeEntries = Object.entries(dmgTypes)
+    return seq.map(h => {
+      const base = typeof h === 'number' ? h : h.n
+      const count = typeof h === 'number' ? 1 : h.count
+      const types: HitBreakdown = typeEntries.map(([k, mult]) => ({
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        val: Math.round(base * mult * 100) / 100,
+        color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+      }))
+      return { base, count, types }
+    })
+  }
+
   $: _isMonk = isMonkGuild($build.guild)
 
-  // Count Blaster Ring across ALL slots (ring main + all infusion slots)
   $: _blasterCount = [$build.ring, $build.infusionRing, $build.infusionHelmet, $build.infusionChestplate, $build.infusionLeggings]
     .filter(s => s === 'Blaster Ring').length
 
-  // Perk: Locked And Loaded (from weapon perks in result)
   $: _hasLockedAndLoaded = ($result.perks['Locked And Loaded'] ?? 0) > 0
 
-  // 1-Handed weapon types for Blaster Ring Shotgun rule
   const ONE_HANDED_TYPES = new Set([
     'Dagger','1-Handed Sword','Unbalanced Sword','Mallet','Rapier',
     'Dual Swords','Dual Wielding Daggers','Dual Unbalanced Swords','Dual Mallets','Dual Kamas',
     'Shield','Lance','Chainsaw',
   ])
-
-  // Resolve gun overlay based on full rules:
-  // Locked And Loaded + Fists          → Dual Guns (M1+M2 both from gun)
-  // Locked And Loaded + other weapon   → Side Gun (M2 only, replaces weapon M2)
-  // 2x Blaster Ring + Fists            → Rifle
-  // 2x Blaster Ring + 1-handed weapon  → Shotgun (M2 only)
   interface GunOverlay {
-    type: string        // gun weapon type name
-    m2Only: boolean     // true = only M2 from gun, false = gun replaces both M1+M2
+    type: string
+    m2Only: boolean
   }
 
 $: _weaponResult = _isMonk
@@ -154,6 +174,16 @@ $: _gunOverlay = ((): GunOverlay | null => {
   $: _currentLabel = _gunOverlay && _baseWeaponType
     ? `${_baseWeaponType} + ${_gunOverlay.type}`
     : _gunOverlay?.type ?? _baseWeaponType
+
+  // ── Weapon damage types (base + Stone Weapon enchant bonus) ───────────────
+  $: _weaponDmgTypes = (() => {
+    const base: Record<string, number> = { ...(_weaponResult?.damageTypes ?? {}) }
+    const stoneWeapon = ($result.perks['Stone Weapon'] ?? 0)
+    if (stoneWeapon > 0) {
+      base['earth'] = Math.round(((base['earth'] ?? 0) + stoneWeapon * 0.3) * 100) / 100
+    }
+    return base
+  })()
 
   // Show all or just current
   let showAllWeapons = false
@@ -323,6 +353,9 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
         {@const isActive = !showAllWeapons}
         {@const gunLabel = (row as any).gunLabel as string | undefined}
         {@const m2Only = (row as any).m2Only as boolean | undefined}
+        {@const hasDmgTypes = isActive && Object.keys(_weaponDmgTypes).length > 0}
+        {@const m1Typed = hasDmgTypes && row.m1 ? seqWithTypes(row.m1, _weaponDmgTypes) : null}
+        {@const m2Typed = hasDmgTypes && row.m2 ? seqWithTypes(row.m2, _weaponDmgTypes) : null}
         <div class="da-wbd-row" class:da-wbd-row--active={isActive && !gunLabel}
           class:da-wbd-row--gun-merged={isActive && !!gunLabel}>
           <div class="da-wbd-col da-wbd-col--type">
@@ -331,17 +364,77 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
             {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
           </div>
           <div class="da-wbd-col da-wbd-col--hits">
-            {#if row.m1}{fmtSeq(row.m1)}{:else}<span class="da-wbd-na">N/A</span>{/if}
+            {#if m1Typed}
+              <div class="da-hits-row">
+                {#each m1Typed as hit, hi}
+                  {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+                  <div class="da-hit-card">
+                    {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
+                    {#each hit.types as t, ti}
+                      {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                      <div class="da-hit-chunk" style="--tc:{t.color}">
+                        <span class="da-hit-num">{fmtNum(t.val)}</span>
+                        <span class="da-hit-type">{t.label}</span>
+                      </div>
+                    {/each}
+                  </div>
+                {/each}
+              </div>
+            {:else if row.m1}
+              {fmtSeq(row.m1)}
+            {:else}
+              <span class="da-wbd-na">N/A</span>
+            {/if}
             {#if gunLabel && !m2Only}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
           </div>
           <div class="da-wbd-col da-wbd-col--hits da-wbd-col--m2">
-            {#if row.m2}{fmtSeq(row.m2)}{:else}<span class="da-wbd-na">N/A</span>{/if}
+            {#if m2Typed}
+              <div class="da-hits-row">
+                {#each m2Typed as hit, hi}
+                  {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+                  <div class="da-hit-card">
+                    {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
+                    {#each hit.types as t, ti}
+                      {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                      <div class="da-hit-chunk" style="--tc:{t.color}">
+                        <span class="da-hit-num">{fmtNum(t.val)}</span>
+                        <span class="da-hit-type">{t.label}</span>
+                      </div>
+                    {/each}
+                  </div>
+                {/each}
+              </div>
+            {:else if row.m2}
+              {fmtSeq(row.m2)}
+            {:else}
+              <span class="da-wbd-na">N/A</span>
+            {/if}
             {#if gunLabel}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
           </div>
         </div>
       {/each}
     </div>
     <p class="da-wbd-note">× = repeated hits (e.g. 1.5×4 = 4 hits of 1.5). M1 = light attack combo, M2 = heavy attack.</p>
+    {#if !showAllWeapons && Object.keys(_weaponDmgTypes).length > 0}
+      <div class="da-wbd-dmgtypes">
+        <span class="da-wbd-dmg-label">Dmg Type</span>
+        <div class="da-wbd-dmg-pills">
+          {#each Object.entries(_weaponDmgTypes) as [k, v]}
+            {@const baseV = _weaponResult?.damageTypes[k] ?? 0}
+            {@const isBoosted = v !== baseV}
+            <div class="da-wbd-dmg-pill" class:da-wbd-dmg-pill--boosted={isBoosted}>
+              <span class="da-wbd-dmg-name">{k.charAt(0).toUpperCase() + k.slice(1)} Type</span>
+              {#if isBoosted}
+                <span class="da-wbd-dmg-old">{baseV}x</span>
+                <span class="da-wbd-dmg-val da-wbd-dmg-val--boosted">{v}x</span>
+              {:else}
+                <span class="da-wbd-dmg-val">{v}x</span>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 <BaseDamageCalc
@@ -722,6 +815,136 @@ $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
   opacity: .45;
   font-style: italic;
   margin-top: 2px;
+}
+
+/* ── Typed hits — pill card design ── */
+.da-hits-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.da-hit-divider {
+  font-size: .65rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .3;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.da-hit-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 7px;
+  padding: 3px 7px 3px 6px;
+  position: relative;
+}
+
+.da-hit-repeat {
+  font-size: .6rem;
+  font-weight: 800;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .55;
+  letter-spacing: .04em;
+  margin-right: 1px;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+}
+
+.da-hit-plus {
+  font-size: .6rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .3;
+  margin: 0 1px;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+}
+
+.da-hit-chunk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  gap: 1px;
+}
+
+.da-hit-num {
+  font-size: .88rem;
+  font-weight: 800;
+  color: var(--tc, #e8e4da);
+  font-family: 'Courier New', monospace;
+  letter-spacing: -.01em;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--tc, #e8e4da) 50%, transparent);
+}
+
+.da-hit-type {
+  font-size: .5rem;
+  font-weight: 700;
+  color: var(--tc, #e8e4da);
+  opacity: .6;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+}
+
+/* ── Damage type row ── */
+.da-wbd-dmgtypes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(251,146,60,.04);
+  border: 1px solid rgba(251,146,60,.1);
+  margin-top: 2px;
+}
+.da-wbd-dmg-label {
+  font-size: .55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .6;
+  flex-shrink: 0;
+}
+.da-wbd-dmg-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.da-wbd-dmg-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(251,146,60,.1);
+  border: 1px solid rgba(251,146,60,.22);
+  font-size: .7rem;
+}
+.da-wbd-dmg-pill--boosted {
+  background: rgba(251,191,36,.1);
+  border-color: rgba(251,191,36,.3);
+}
+.da-wbd-dmg-name {
+  color: var(--ink-muted, #8a8d85);
+}
+.da-wbd-dmg-val {
+  font-weight: 700;
+  color: #fb923c;
+}
+.da-wbd-dmg-val--boosted {
+  color: #fbbf24;
+  font-weight: 800;
+}
+.da-wbd-dmg-old {
+  font-size: .6rem;
+  opacity: .35;
+  text-decoration: line-through;
+  color: var(--ink-muted, #8a8d85);
 }
 
 @media (max-width: 640px) {
