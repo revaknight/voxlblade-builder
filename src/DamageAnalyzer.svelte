@@ -44,7 +44,7 @@
     { type: 'Lance',                m1: [6, 6, 6],                      m2: [6.8, 14] },
     { type: 'Chainsaw',             m1: [{n:4,count:2},{n:4,count:2},{n:4,count:2}], m2: [{n:1.7,count:10}] },
     { type: 'Shield',               m1: [5, 5, 10],                     m2: [5] },
-    // Monk WA types
+
     { type: 'Artillery Mage',       m1: [5.5, 5.5],                     m2: [8.5] },
     { type: 'Stratos Winds',        m1: [5, 5],                         m2: [8] },
     { type: 'Storm Caster',         m1: [5, 5],                         m2: [{n:2.75,count:5}] },
@@ -53,7 +53,7 @@
     { type: 'Mine',                 m1: null,                           m2: [5, 10, 15] },
     { type: 'Side Gun',             m1: null,                           m2: [7] },
     { type: 'Shotgun',              m1: null,                           m2: [{n:4.5,count:3}] },
-    { type: 'Fists + Gun',          m1: [4, 4],                         m2: [{n:1.6,count:8}] },
+    { type: 'Dual Guns',          m1: [4, 4],                         m2: [{n:1.6,count:8}] },
     { type: 'Rifle',                m1: [5, 5, 18],                     m2: [17] },
   ]
 
@@ -129,7 +129,7 @@ $: _gunOverlay = ((): GunOverlay | null => {
     }
 
     if (_hasLockedAndLoaded) {
-      if (isFists) return { type: 'Fists + Gun', m2Only: false }
+      if (isFists) return { type: 'Dual Guns', m2Only: false }
       if (wt) return { type: 'Side Gun', m2Only: true }
     }
 
@@ -184,6 +184,31 @@ $: _gunOverlay = ((): GunOverlay | null => {
       base['earth'] = Math.round(((base['earth'] ?? 0) + stoneWeapon * 0.3) * 100) / 100
     }
     return base
+  })()
+
+  // Gun weapons use only the highest damage type at full total value
+  $: _gunDmgTypes = (() => {
+    if (!_gunOverlay) return _weaponDmgTypes
+
+    const entries = Object.entries(_weaponDmgTypes)
+
+    if (entries.length === 0) {
+      return _weaponDmgTypes
+    }
+
+    const [highestKey] = entries.reduce((a, b) =>
+      b[1] > a[1] ? b : a
+    )
+
+    // total combined value
+    const total =
+      Math.round(
+        entries.reduce((s, [, v]) => s + v, 0) * 100
+      ) / 100
+
+    return {
+      [highestKey]: total
+    }
   })()
 
   // Show all or just current
@@ -432,9 +457,11 @@ $: _scalingMult = (() => {
         {@const isActive = !showAllWeapons}
         {@const gunLabel = (row as any).gunLabel as string | undefined}
         {@const m2Only = (row as any).m2Only as boolean | undefined}
-        {@const hasDmgTypes = isActive && Object.keys(_weaponDmgTypes).length > 0}
-        {@const m1Typed = hasDmgTypes && row.m1 ? seqWithTypes(row.m1, _weaponDmgTypes, _scalingMult) : null}
-        {@const m2Typed = hasDmgTypes && row.m2 ? seqWithTypes(row.m2, _weaponDmgTypes, _scalingMult) : null}
+        {@const hasDmgTypes =isActive && Object.keys(_weaponDmgTypes).length > 0}
+        {@const m1DmgTypes =(isActive && gunLabel && !m2Only)? _gunDmgTypes: _weaponDmgTypes}
+        {@const m2DmgTypes =(isActive && gunLabel)? _gunDmgTypes: _weaponDmgTypes}
+        {@const m1Typed =hasDmgTypes && row.m1? seqWithTypes(row.m1, m1DmgTypes, _scalingMult): null}
+        {@const m2Typed =hasDmgTypes && row.m2? seqWithTypes(row.m2, m2DmgTypes, _scalingMult): null}
         <div class="da-wbd-row" class:da-wbd-row--active={isActive && !gunLabel}
           class:da-wbd-row--gun-merged={isActive && !!gunLabel}>
           <div class="da-wbd-col da-wbd-col--type">
@@ -502,26 +529,6 @@ $: _scalingMult = (() => {
       {/each}
     </div>
     <p class="da-wbd-note">× = repeated hits (e.g. 1.5×4 = 4 hits of 1.5). M1 = light attack combo, M2 = heavy attack.</p>
-    {#if !showAllWeapons && Object.keys(_weaponDmgTypes).length > 0}
-      <div class="da-wbd-dmgtypes">
-        <span class="da-wbd-dmg-label">Dmg Type</span>
-        <div class="da-wbd-dmg-pills">
-          {#each Object.entries(_weaponDmgTypes) as [k, v]}
-            {@const baseV = _weaponResult?.damageTypes[k] ?? 0}
-            {@const isBoosted = v !== baseV}
-            <div class="da-wbd-dmg-pill" class:da-wbd-dmg-pill--boosted={isBoosted}>
-              <span class="da-wbd-dmg-name">{k.charAt(0).toUpperCase() + k.slice(1)} Type</span>
-              {#if isBoosted}
-                <span class="da-wbd-dmg-old">{baseV}x</span>
-                <span class="da-wbd-dmg-val da-wbd-dmg-val--boosted">{v}x</span>
-              {:else}
-                <span class="da-wbd-dmg-val">{v}x</span>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-    {/if}
   {/if}
 </div>
 <!-- ══════════════════ DAMAGE SCALING ══════════════════ -->
@@ -1083,65 +1090,6 @@ $: _scalingMult = (() => {
   letter-spacing: .1em;
   font-family: var(--font-body, 'Trebuchet MS', sans-serif);
 }
-
-/* ── Damage type row ── */
-.da-wbd-dmgtypes {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: rgba(251,146,60,.04);
-  border: 1px solid rgba(251,146,60,.1);
-  margin-top: 2px;
-}
-.da-wbd-dmg-label {
-  font-size: .55rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .6;
-  flex-shrink: 0;
-}
-.da-wbd-dmg-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.da-wbd-dmg-pill {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(251,146,60,.1);
-  border: 1px solid rgba(251,146,60,.22);
-  font-size: .7rem;
-}
-.da-wbd-dmg-pill--boosted {
-  background: rgba(251,191,36,.1);
-  border-color: rgba(251,191,36,.3);
-}
-.da-wbd-dmg-name {
-  color: var(--ink-muted, #8a8d85);
-}
-.da-wbd-dmg-val {
-  font-weight: 700;
-  color: #fb923c;
-}
-.da-wbd-dmg-val--boosted {
-  color: #fbbf24;
-  font-weight: 800;
-}
-.da-wbd-dmg-old {
-  font-size: .6rem;
-  opacity: .35;
-  text-decoration: line-through;
-  color: var(--ink-muted, #8a8d85);
-}
-
 @media (max-width: 640px) {
   .da-wbd-head,
   .da-wbd-row {
