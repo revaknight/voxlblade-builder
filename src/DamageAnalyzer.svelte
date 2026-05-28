@@ -189,26 +189,26 @@ $: _gunOverlay = ((): GunOverlay | null => {
   // Gun weapons use only the highest damage type at full total value
   $: _gunDmgTypes = (() => {
     if (!_gunOverlay) return _weaponDmgTypes
-
     const entries = Object.entries(_weaponDmgTypes)
-
-    if (entries.length === 0) {
-      return _weaponDmgTypes
-    }
-
-    const [highestKey] = entries.reduce((a, b) =>
-      b[1] > a[1] ? b : a
-    )
-
-    // total combined value
-    const total =
-      Math.round(
-        entries.reduce((s, [, v]) => s + v, 0) * 100
-      ) / 100
-
-    return {
-      [highestKey]: total
-    }
+    if (entries.length === 0) return _weaponDmgTypes
+    
+    const PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy']
+    
+    const [highestKey] = entries.reduce((a, b) => {
+      if (b[1] > a[1]) return b
+      if (b[1] === a[1]) {
+        // tiebreak: lower index = higher priority
+        const pa = PRIORITY.indexOf(a[0])
+        const pb = PRIORITY.indexOf(b[0])
+        const ia = pa === -1 ? 999 : pa
+        const ib = pb === -1 ? 999 : pb
+        return ib < ia ? b : a
+      }
+      return a
+    })
+    
+    const total = Math.round(entries.reduce((s, [, v]) => s + v, 0) * 100) / 100
+    return { [highestKey]: total }
   })()
 
   // Show all or just current
