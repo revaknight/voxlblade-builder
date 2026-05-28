@@ -2995,7 +2995,7 @@ function prettyKey(key: string, suffix: string) {
                   {#if Object.keys(weaponResult.stats).length}
                     <div class="weapon-section-label">Stats</div>
                     <div class="stat-list">
-                      {#each Object.entries(weaponResult.stats).filter(([,v]) => v !== 0) as [k,v]}
+                      {#each Object.entries(weaponResult.stats).filter(([k,v]) => v !== 0 && !k.endsWith('Type') && !k.endsWith('Scaling')) as [k,v]}
                         <div class="stat-row"><span>{formatLabel(k)}</span><span class="stat-val" class:neg={v < 0}>{formatStat(k, v as number)}</span></div>
                       {/each}
                     </div>

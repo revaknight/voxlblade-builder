@@ -111,6 +111,7 @@
   interface GunOverlay {
     type: string
     m2Only: boolean
+    m2NoLock?: boolean  // M2 uses full weapon dmg types instead of gun-locked type
   }
 
 $: _weaponResult = _isMonk
@@ -124,7 +125,7 @@ $: _gunOverlay = ((): GunOverlay | null => {
     const isFists = wt === 'Fists' || wt === 'Chain Fists'
 
     if (_blasterCount >= 2) {
-      if (isFists) return { type: 'Rifle', m2Only: false }
+      if (isFists) return { type: 'Rifle', m2Only: false, m2NoLock: true }
       if (wt) return { type: 'Shotgun', m2Only: true }
     }
 
@@ -145,7 +146,7 @@ $: _gunOverlay = ((): GunOverlay | null => {
 
   // Build merged display row
   $: _displayRows = (() => {
-    type MergedRow = WeaponBaseDmg & { gunLabel?: string; m2Only?: boolean }
+    type MergedRow = WeaponBaseDmg & { gunLabel?: string; m2Only?: boolean; m2NoLock?: boolean }
     const rows: MergedRow[] = []
 
     if (_baseWeaponType) {
@@ -155,10 +156,10 @@ $: _gunOverlay = ((): GunOverlay | null => {
           const gun = WEAPON_BASE_DMG.find(w => w.type === _gunOverlay.type)
           if (_gunOverlay.m2Only) {
             // Keep weapon M1, replace M2 with gun M2
-            rows.push({ type: _baseWeaponType, m1: base.m1, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: true })
+            rows.push({ type: _baseWeaponType, m1: base.m1, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: true, m2NoLock: _gunOverlay.m2NoLock })
           } else {
             // Full gun: both M1 and M2 from gun data
-            rows.push({ type: _baseWeaponType, m1: gun?.m1 ?? null, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: false })
+            rows.push({ type: _baseWeaponType, m1: gun?.m1 ?? null, m2: gun?.m2 ?? null, gunLabel: _gunOverlay.type, m2Only: false, m2NoLock: _gunOverlay.m2NoLock })
           }
         } else {
           rows.push({ ...base })
@@ -166,7 +167,7 @@ $: _gunOverlay = ((): GunOverlay | null => {
       }
     } else if (_gunOverlay) {
       const gun = WEAPON_BASE_DMG.find(w => w.type === _gunOverlay.type)
-      if (gun) rows.push({ ...gun, gunLabel: _gunOverlay.type })
+      if (gun) rows.push({ ...gun, gunLabel: _gunOverlay.type, m2NoLock: _gunOverlay.m2NoLock })
     }
 
     return rows
@@ -459,7 +460,7 @@ $: _scalingMult = (() => {
         {@const m2Only = (row as any).m2Only as boolean | undefined}
         {@const hasDmgTypes =isActive && Object.keys(_weaponDmgTypes).length > 0}
         {@const m1DmgTypes =(isActive && gunLabel && !m2Only)? _gunDmgTypes: _weaponDmgTypes}
-        {@const m2DmgTypes =(isActive && gunLabel)? _gunDmgTypes: _weaponDmgTypes}
+        {@const m2DmgTypes =(isActive && gunLabel && !(row as any).m2NoLock)? _gunDmgTypes: _weaponDmgTypes}
         {@const m1Typed =hasDmgTypes && row.m1? seqWithTypes(row.m1, m1DmgTypes, _scalingMult): null}
         {@const m2Typed =hasDmgTypes && row.m2? seqWithTypes(row.m2, m2DmgTypes, _scalingMult): null}
         <div class="da-wbd-row" class:da-wbd-row--active={isActive && !gunLabel}
