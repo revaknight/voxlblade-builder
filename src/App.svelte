@@ -233,8 +233,10 @@
     })
   }
 
-  function applyEnchantToAll(slot: EnchantSlot) {
+function applyEnchantToAll(slot: EnchantSlot) {
   const current = $build.enchantments[slot]
+  const currentCat = enchantCats[slot]
+  
   build.update(s => {
     const updated = { ...s.enchantments }
     const allSlots: EnchantSlot[] = ['helmet', 'chestplate', 'leggings', 'ring', 'rune']
@@ -245,6 +247,13 @@
     }
     return { ...s, enchantments: updated }
   })
+  const allSlots: EnchantSlot[] = ['helmet', 'chestplate', 'leggings', 'ring', 'rune']
+  for (const s2 of allSlots) {
+    if (s2 !== slot) {
+      enchantCats[s2] = currentCat
+    }
+  }
+  enchantCats = { ...enchantCats }
 }
 
   // ── Inline enchant reactive values ─────────────────────────────────────────
