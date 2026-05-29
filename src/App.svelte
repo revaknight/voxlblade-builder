@@ -426,29 +426,45 @@ $: searchedRings = (void selectedTags,void statFilter,
 $: searchedRunes = (void selectedTags,void statFilter,
   runes.filter(r =>matchSearchReactive(r.name,r.perkName ? [r.perkName] : [],modalSearch)&& perkMatchesTags(r.perkName)&& itemMatchesStatFilter(r.stats as Record<string, number>,statFilter)))
 
-$: searchedBlades = (void weaponStatFilter, filteredBlades.filter(b =>
-  matchSearchReactive(b.name, getPerkNames(b), modalSearch) &&
-  anyPerkMatchesTags(getPerkNames(b)) &&
-  weaponMatchesFilter(b)
-))
+$: searchedBlades = (
+  void weaponStatFilter,
+  void selectedTags,
+  filteredBlades.filter(b =>
+    matchSearchReactive(b.name, getPerkNames(b), modalSearch) &&
+    anyPerkMatchesTags(getPerkNames(b)) &&
+    weaponMatchesFilter(b)
+  )
+)
 
-$: searchedHandles = (void weaponStatFilter, filteredHandles.filter(h =>
-  matchSearchReactive(h.name, getPerkNames(h), modalSearch) &&
-  anyPerkMatchesTags(getPerkNames(h)) &&
-  weaponMatchesFilter(h)
-))
+$: searchedHandles = (  void weaponStatFilter,
+  void selectedTags,
+  filteredHandles.filter(h =>
+    matchSearchReactive(h.name, getPerkNames(h), modalSearch) &&
+    anyPerkMatchesTags(getPerkNames(h)) &&
+    weaponMatchesFilter(h)
+  )
+)
 
-$: searchedGloves = (void weaponStatFilter, filteredGloves.filter(g =>
-  matchSearchReactive(g.name, getPerkNames(g), modalSearch) &&
-  anyPerkMatchesTags(getPerkNames(g)) &&
-  weaponMatchesFilter(g)
-))
 
-$: searchedEssences = (void weaponStatFilter, filteredEssences.filter(e =>
-  matchSearchReactive(e.name, getPerkNames(e), modalSearch) &&
-  anyPerkMatchesTags(getPerkNames(e)) &&
-  weaponMatchesFilter(e)
-))
+$: searchedGloves = (  void weaponStatFilter,
+  void selectedTags,
+  filteredGloves.filter(g =>
+    matchSearchReactive(g.name, getPerkNames(g), modalSearch) &&
+    anyPerkMatchesTags(getPerkNames(g)) &&
+    weaponMatchesFilter(g)
+  )
+)
+
+
+$: searchedEssences = (  void weaponStatFilter,
+  void selectedTags,
+  filteredEssences.filter(e =>
+    matchSearchReactive(e.name, getPerkNames(e), modalSearch) &&
+    anyPerkMatchesTags(getPerkNames(e)) &&
+    weaponMatchesFilter(e)
+  )
+)
+
   
   function matchSearchReactive(name: string, perkNames: string[], query: string): boolean {
     if (!query.trim()) return true
@@ -3108,7 +3124,8 @@ function prettyKey(key: string, suffix: string) {
     background:var(--surface); border:1px solid var(--border-strong);
     border-radius:var(--radius); padding:24px; width:min(680px,100%);
     overflow-y:auto; position:relative;
-    animation: slideUp .18s ease;
+    animation: slideUp .18s ease;  max-height: 90vh;
+    overflow-y: auto;
     scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent;
   }
   @keyframes slideUp { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
