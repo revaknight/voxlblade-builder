@@ -3,6 +3,7 @@
   import { build, result } from './lib/store'
   import { calcWeapon, calcMonkWeapon, isMonkGuild } from './lib/engine'
   import BaseDamageCalc from './BaseDamageCalc.svelte'
+  import { WEAPON_ARTS } from './data/weaponArts'
 
   // ── Reactive từ store ──────────────────────────────────────────────────────
   $: crit      = $result.crit
@@ -313,6 +314,80 @@ $: _scalingMult = (() => {
   }
   return Math.round((1 + totalEffectivePct / 100) * 10000) / 10000
 })()
+$: selectedWA = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt) ?? WEAPON_ARTS[0]
+// ── Weapon Art base damage ─────────────────────────────────────────────
+function parseWAHits(baseDamage: string | undefined): Array<{n: number; count: number}> | null {
+  if (!baseDamage) return null
+  // Range damage like "15 (Base) – 175 (Fully Charged)" can't reduce to discrete hits
+  if (/\d+[^+]*[–—]\s*\d+/.test(baseDamage)) return null
+  const result: Array<{n: number; count: number}> = []
+  for (const part of baseDamage.split(/\s*\+\s*/)) {
+    if (/healing/i.test(part)) continue
+    const mx = part.match(/([\d.]+)\s*[×x]\s*(\d+)/i)
+    if (mx) { result.push({ n: parseFloat(mx[1]), count: parseInt(mx[2]) }); continue }
+    const nx = part.match(/^([\d.]+)/)
+    if (nx) result.push({ n: parseFloat(nx[1]), count: 1 })
+  }
+  return result.length > 0 ? result : null
+}
+
+$: _waDmgTypes = (() => {
+  const dt = selectedWA.damageType
+  if (!dt || dt === 'Same as weapon') return _weaponDmgTypes
+  if (dt.includes('Highest damage type')) return _gunDmgTypes
+  const types: Record<string, number> = {}
+  const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(dt)) !== null) types[m[2].toLowerCase()] = parseFloat(m[1])
+  return Object.keys(types).length > 0 ? types : _weaponDmgTypes
+})()
+
+$: _waScalingMult = (() => {
+  const sc = selectedWA.scaling
+  if (!sc || sc === 'Same as weapon') return _scalingMult
+  if (sc === 'None') return 1
+  const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
+  let totalPct = 0; let m: RegExpExecArray | null
+  while ((m = re.exec(sc)) !== null) {
+    const typeName = /dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()
+    totalPct += parseFloat(m[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
+  }
+  return Math.round((1 + totalPct / 100) * 10000) / 10000
+})()
+
+$: _waHitsSeq = parseWAHits(selectedWA.baseDamage)
+$: _waTyped = (() => {
+  if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
+  const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
+  return seqWithTypes(seq, _waDmgTypes, _waScalingMult)
+})()
+$: _waScalingDiffers = _waScalingMult !== _scalingMult
+$: _showWACol = !showAllWeapons && (!!_waHitsSeq || !!selectedWA.baseDamage)
+
+// ── Range damage parser (e.g. "15 (Base) – 175 (Fully Charged)") ──────────
+function parseRangeDamage(s: string): { min: number; minLabel: string; max: number; maxLabel: string } | null {
+  const m = s.match(/([\d.]+)\s*(?:\(([^)]+)\))?\s*[–—]\s*([\d.]+)\s*(?:\(([^)]+)\))?/)
+  if (!m) return null
+  return { min: parseFloat(m[1]), minLabel: m[2] ?? '', max: parseFloat(m[3]), maxLabel: m[4] ?? '' }
+}
+
+$: _waRangeDamage = (() => {
+  if (_waHitsSeq !== null || !selectedWA.baseDamage) return null
+  return parseRangeDamage(selectedWA.baseDamage)
+})()
+
+interface RangeEnd { label: string; val: number; color: string }
+$: _waRangeTyped = (() => {
+  if (!_waRangeDamage || Object.keys(_waDmgTypes).length === 0) return null
+  const { min, minLabel, max, maxLabel } = _waRangeDamage
+  const toEnds = (base: number): RangeEnd[] =>
+    Object.entries(_waDmgTypes).map(([k, mult]) => ({
+      label: k.charAt(0).toUpperCase() + k.slice(1),
+      val: Math.round(base * mult * _waScalingMult * 100) / 100,
+      color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+    }))
+  return { minEnds: toEnds(min), minLabel, maxEnds: toEnds(max), maxLabel }
+})()
 </script>
 
 <div class="da-root">
@@ -428,7 +503,7 @@ $: _scalingMult = (() => {
 <!-- ══════════════════ WEAPON BASE DAMAGE ══════════════════ -->
 <div class="da-section da-section--wbd">
   <div class="da-section-title-row">
-    <span class="da-section-title">⚔ Weapon Base Damage</span>
+    <span class="da-section-title">Base Damage</span>
     <div class="da-wbd-controls">
       {#if _currentLabel}
         <span class="da-wbd-current-badge">{_currentLabel}</span>
@@ -448,88 +523,177 @@ $: _scalingMult = (() => {
     <p class="da-empty-hint">No weapon selected. <button class="da-wbd-link" on:click={() => showAllWeapons = true}>Show all weapon types</button></p>
   {:else}
     {@const rows = showAllWeapons ? WEAPON_BASE_DMG.map(r => ({...r})) : _displayRows}
-    <div class="da-wbd-table">
-      <div class="da-wbd-head">
-        <div class="da-wbd-col da-wbd-col--type">Weapon</div>
-        <div class="da-wbd-col da-wbd-col--hits">M1 Combo</div>
-        <div class="da-wbd-col da-wbd-col--hits">M2</div>
+<div class="da-wbd-cards">
+  {#each rows as row}
+    {@const isActive = !showAllWeapons}
+    {@const gunLabel = (row as any).gunLabel as string | undefined}
+    {@const m2Only = (row as any).m2Only as boolean | undefined}
+    {@const hasDmgTypes = isActive && Object.keys(_weaponDmgTypes).length > 0}
+    {@const m1DmgTypes = (isActive && gunLabel && !m2Only) ? _gunDmgTypes : _weaponDmgTypes}
+    {@const m2DmgTypes = (isActive && gunLabel && !(row as any).m2NoLock) ? _gunDmgTypes : _weaponDmgTypes}
+    {@const m1Typed = hasDmgTypes && row.m1 ? seqWithTypes(row.m1, m1DmgTypes, _scalingMult) : null}
+    {@const m2Typed = hasDmgTypes && row.m2 ? seqWithTypes(row.m2, m2DmgTypes, _scalingMult) : null}
+    <div class="da-wbd-card" class:da-wbd-card--active={isActive} class:da-wbd-card--gun={isActive && !!gunLabel}>
+
+      <div class="da-wbd-card-head">
+        {#if isActive}<span class="da-wbd-dot" class:da-wbd-dot--gun={!!gunLabel}></span>{/if}
+        <span class="da-wbd-card-name">{row.type}</span>
+        {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
       </div>
-      {#each rows as row}
-        {@const isActive = !showAllWeapons}
-        {@const gunLabel = (row as any).gunLabel as string | undefined}
-        {@const m2Only = (row as any).m2Only as boolean | undefined}
-        {@const hasDmgTypes =isActive && Object.keys(_weaponDmgTypes).length > 0}
-        {@const m1DmgTypes =(isActive && gunLabel && !m2Only)? _gunDmgTypes: _weaponDmgTypes}
-        {@const m2DmgTypes =(isActive && gunLabel && !(row as any).m2NoLock)? _gunDmgTypes: _weaponDmgTypes}
-        {@const m1Typed =hasDmgTypes && row.m1? seqWithTypes(row.m1, m1DmgTypes, _scalingMult): null}
-        {@const m2Typed =hasDmgTypes && row.m2? seqWithTypes(row.m2, m2DmgTypes, _scalingMult): null}
-        <div class="da-wbd-row" class:da-wbd-row--active={isActive && !gunLabel}
-          class:da-wbd-row--gun-merged={isActive && !!gunLabel}>
-          <div class="da-wbd-col da-wbd-col--type">
-            {#if isActive}<span class="da-wbd-dot" class:da-wbd-dot--gun={!!gunLabel}></span>{/if}
-            <span>{row.type}</span>
-            {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
-          </div>
-          <div class="da-wbd-col da-wbd-col--hits">
-            {#if m1Typed}
-              <div class="da-hits-row">
-                {#each m1Typed as hit, hi}
-                  {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-                  <div class="da-hit-card">
-                    {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
-                    {#each hit.types as t, ti}
-                      {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                      <div class="da-hit-chunk" style="--tc:{t.color}">
-                        {#if _scalingMult !== 1}
-                          <span class="da-hit-raw">{fmtNum(Math.round(t.val / _scalingMult * 100) / 100)}</span>
-                          <span class="da-hit-arrow">→</span>
-                        {/if}
-                        <span class="da-hit-num">{fmtNum(t.val)}</span>
-                        <span class="da-hit-type">{t.label}</span>
-                      </div>
-                    {/each}
+      <div class="da-wbd-card-divider"></div>
+
+      <div class="da-wbd-section">
+        <div class="da-wbd-row-label da-wbd-row-label--m1">
+          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m1">M1</span>
+          <span class="da-wbd-lbl-text">Combo</span>
+        </div>
+        <div class="da-hits-row">
+          {#if m1Typed}
+            {#each m1Typed as hit, hi}
+              {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+              <div class="da-hit-card">
+                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
+                {#each hit.types as t, ti}
+                  {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                  <div class="da-hit-chunk" style="--tc:{t.color}">
+                    {#if _scalingMult !== 1}
+                      <span class="da-hit-raw">{fmtNum(Math.round(t.val / _scalingMult * 100) / 100)}</span>
+                      <span class="da-hit-arrow">→</span>
+                    {/if}
+                    <span class="da-hit-num">{fmtNum(t.val)}</span>
+                    <span class="da-hit-type">{t.label}</span>
                   </div>
                 {/each}
               </div>
-            {:else if row.m1}
-              {fmtSeq(row.m1)}
-            {:else}
-              <span class="da-wbd-na">N/A</span>
-            {/if}
-            {#if gunLabel && !m2Only}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
-          </div>
-          <div class="da-wbd-col da-wbd-col--hits da-wbd-col--m2">
-            {#if m2Typed}
-              <div class="da-hits-row">
-                {#each m2Typed as hit, hi}
-                  {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-                  <div class="da-hit-card">
-                    {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
-                    {#each hit.types as t, ti}
-                      {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                      <div class="da-hit-chunk" style="--tc:{t.color}">
-                        {#if _scalingMult !== 1}
-                          <span class="da-hit-raw">{fmtNum(Math.round(t.val / _scalingMult * 100) / 100)}</span>
-                          <span class="da-hit-arrow">→</span>
-                        {/if}
-                        <span class="da-hit-num">{fmtNum(t.val)}</span>
-                        <span class="da-hit-type">{t.label}</span>
-                      </div>
-                    {/each}
+            {/each}
+          {:else if row.m1}
+            {fmtSeq(row.m1)}
+          {:else}
+            <span class="da-wbd-na">N/A</span>
+          {/if}
+        </div>
+      </div>
+
+      <div class="da-wbd-section">
+        <div class="da-wbd-row-label da-wbd-row-label--m2">
+          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m2">M2</span>
+          <span class="da-wbd-lbl-text">Heavy</span>
+        </div>
+        <div class="da-hits-row">
+          {#if m2Typed}
+            {#each m2Typed as hit, hi}
+              {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+              <div class="da-hit-card">
+                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
+                {#each hit.types as t, ti}
+                  {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                  <div class="da-hit-chunk" style="--tc:{t.color}">
+                    {#if _scalingMult !== 1}
+                      <span class="da-hit-raw">{fmtNum(Math.round(t.val / _scalingMult * 100) / 100)}</span>
+                      <span class="da-hit-arrow">→</span>
+                    {/if}
+                    <span class="da-hit-num">{fmtNum(t.val)}</span>
+                    <span class="da-hit-type">{t.label}</span>
                   </div>
                 {/each}
               </div>
-            {:else if row.m2}
-              {fmtSeq(row.m2)}
-            {:else}
-              <span class="da-wbd-na">N/A</span>
+            {/each}
+          {:else if row.m2}
+            {fmtSeq(row.m2)}
+          {:else}
+            <span class="da-wbd-na">N/A</span>
+          {/if}
+          {#if gunLabel && !m2Only}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
+        </div>
+      </div>
+
+      {#if _showWACol && isActive}
+        <div class="da-wbd-section">
+          <div class="da-wbd-row-label da-wbd-row-label--wa">
+            <span class="da-wbd-lbl-badge da-wbd-lbl-badge--wa">WA</span>
+            <span class="da-wbd-lbl-text da-wbd-lbl-text--wa">{selectedWA.name}</span>
+            {#if _waScalingDiffers && _waScalingMult !== 1}
+              <span class="da-wbd-scaling-badge" style="background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.3);color:var(--accent3)">×{_waScalingMult.toFixed(4)}</span>
             {/if}
-            {#if gunLabel}<span class="da-wbd-m2-src">from {gunLabel}</span>{/if}
+          </div>
+          <div class="da-hits-row">
+            {#if _waTyped}
+              {#each _waTyped as hit, hi}
+                {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+                <div class="da-hit-card">
+                  {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
+                  {#each hit.types as t, ti}
+                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                    <div class="da-hit-chunk" style="--tc:{t.color}">
+                      {#if _waScalingMult !== 1}
+                        <span class="da-hit-raw">{fmtNum(Math.round(t.val / _waScalingMult * 100) / 100)}</span>
+                        <span class="da-hit-arrow">→</span>
+                      {/if}
+                      <span class="da-hit-num">{fmtNum(t.val)}</span>
+                      <span class="da-hit-type">{t.label}</span>
+                    </div>
+                  {/each}
+                </div>
+              {/each}
+            {:else if _waHitsSeq}
+              {_waHitsSeq.map(h => h.count > 1 ? `${h.n}×${h.count}` : String(h.n)).join(', ')}
+            {:else if _waRangeTyped}
+              <div class="da-range-row">
+                <div class="da-range-end">
+                  {#each _waRangeTyped.minEnds as t, ti}
+                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                    <div class="da-hit-chunk" style="--tc:{t.color}">
+                      <span class="da-hit-num">{fmtNum(t.val)}</span>
+                      <span class="da-hit-type">{t.label}</span>
+                    </div>
+                  {/each}
+                  {#if _waRangeTyped.minLabel}
+                    <span class="da-range-label">({_waRangeTyped.minLabel})</span>
+                  {/if}
+                </div>
+                <span class="da-range-arrow">→</span>
+                <div class="da-range-end">
+                  {#each _waRangeTyped.maxEnds as t, ti}
+                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                    <div class="da-hit-chunk" style="--tc:{t.color}">
+                      <span class="da-hit-num">{fmtNum(t.val)}</span>
+                      <span class="da-hit-type">{t.label}</span>
+                    </div>
+                  {/each}
+                  {#if _waRangeTyped.maxLabel}
+                    <span class="da-range-label da-range-label--max">({_waRangeTyped.maxLabel})</span>
+                  {/if}
+                </div>
+                {#if selectedWA.scaling && selectedWA.scaling !== 'Same as weapon'}
+                  <span class="da-range-scl">{selectedWA.scaling === 'None' ? 'No Scaling' : `Scaling: ${selectedWA.scaling}`}</span>
+                {/if}
+              </div>
+            {:else if selectedWA.baseDamage}
+              <div class="da-range-row">
+                <span class="da-wbd-range">{selectedWA.baseDamage}</span>
+                {#if Object.keys(_waDmgTypes).length > 0}
+                  {#each Object.entries(_waDmgTypes) as [k, v]}
+                    <div class="da-hit-chunk da-hit-chunk--sm" style="--tc:{DMG_TYPE_COLORS[k] ?? '#e8e4da'}">
+                      <span class="da-hit-num">{v}×</span>
+                      <span class="da-hit-type">{k.charAt(0).toUpperCase() + k.slice(1)}</span>
+                    </div>
+                  {/each}
+                {/if}
+                {#if selectedWA.scaling && selectedWA.scaling !== 'Same as weapon'}
+                  <span class="da-range-scl">{selectedWA.scaling === 'None' ? 'No Scaling' : `Scaling: ${selectedWA.scaling}`}</span>
+                {/if}
+              </div>
+            {:else}
+              <span class="da-wbd-na">—</span>
+            {/if}
           </div>
         </div>
-      {/each}
+      {/if}
+
     </div>
-    <p class="da-wbd-note">× = repeated hits (e.g. 1.5×4 = 4 hits of 1.5). M1 = light attack combo, M2 = heavy attack.</p>
+  {/each}
+</div>
+<p class="da-wbd-note">M1 = light attack combo · M2 = heavy attack · × = repeated hits</p>
   {/if}
 </div>
 <!-- ══════════════════ DAMAGE SCALING ══════════════════ -->
@@ -875,76 +1039,7 @@ $: _scalingMult = (() => {
 }
 
 /* Table */
-.da-wbd-table {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-family: 'Courier New', monospace;
-}
-.da-wbd-head {
-  display: grid;
-  grid-template-columns: 200px 1fr 1fr;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: .58rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--ink-muted, #8a8d85);
-  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
-}
-.da-wbd-row {
-  display: grid;
-  grid-template-columns: 200px 1fr 1fr;
-  gap: 4px;
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: var(--surface2, #1a1d1b);
-  font-size: .75rem;
-  transition: background .1s;
-  border: 1px solid transparent;
-  align-items: center;
-}
-.da-wbd-row:hover {
-  background: var(--surface3, #212420);
-}
-.da-wbd-row--active {
-  background: rgba(251,146,60,.08);
-  border-color: rgba(251,146,60,.25);
-}
-.da-wbd-row--gun-merged {
-  background: linear-gradient(135deg, rgba(251,146,60,.06), rgba(56,189,248,.06));
-  border-color: rgba(56,189,248,.25);
-}
-.da-wbd-col {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  flex-wrap: wrap;
-}
-.da-wbd-col--type {
-  font-weight: 700;
-  color: var(--ink, #e8e4da);
-  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
-  font-size: .78rem;
-  gap: 6px;
-}
-.da-wbd-row--active .da-wbd-col--type {
-  color: #fb923c;
-}
-.da-wbd-row--gun-merged .da-wbd-col--type {
-  color: #fb923c;
-}
-.da-wbd-col--hits {
-  color: rgba(232, 228, 218, 0.82);
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .03em;
-}
-.da-wbd-col--m2 {
-  color: #fbbf24;
-}
+
 .da-wbd-na {
   color: var(--ink-muted, #8a8d85);
   opacity: .3;
@@ -1090,12 +1185,6 @@ $: _scalingMult = (() => {
   text-transform: uppercase;
   letter-spacing: .1em;
   font-family: var(--font-body, 'Trebuchet MS', sans-serif);
-}
-@media (max-width: 640px) {
-  .da-wbd-head,
-  .da-wbd-row {
-    grid-template-columns: 140px 1fr 1fr;
-  }
 }
 /* ── Damage Scaling section ── */
 .da-section--scaling {
@@ -1260,5 +1349,135 @@ $: _scalingMult = (() => {
     grid-template-columns: 100px 60px 16px 75px 16px 80px;
     font-size: .7rem;
   }
+}
+
+.da-wbd-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.da-wbd-card {
+  background: var(--surface2, #1a1d1b);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background .12s, border-color .12s;
+}
+
+.da-wbd-card--active {
+  border-color: rgba(251,146,60,.25);
+  background: linear-gradient(160deg, rgba(251,146,60,.05) 0%, var(--surface2, #1a1d1b) 60%);
+  box-shadow: 0 0 0 1px rgba(251,146,60,.08) inset;
+}
+
+.da-wbd-card--gun {
+  border-color: rgba(56,189,248,.2);
+  background: linear-gradient(
+    160deg,
+    rgba(251,146,60,.04),
+    rgba(56,189,248,.04)
+  );
+}
+
+.da-wbd-section + .da-wbd-section {
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,.05);
+}
+
+/* Row label — badge + text side by side */
+.da-wbd-row-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+.da-wbd-lbl-badge {
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.da-wbd-lbl-badge--m1 {
+  background: rgba(251,146,60,.18);
+  border: 1px solid rgba(251,146,60,.35);
+  color: #fb923c;
+}
+.da-wbd-lbl-badge--m2 {
+  background: rgba(251,191,36,.14);
+  border: 1px solid rgba(251,191,36,.3);
+  color: #fbbf24;
+}
+.da-wbd-lbl-badge--wa {
+  background: rgba(167,139,250,.16);
+  border: 1px solid rgba(167,139,250,.35);
+  color: var(--accent3);
+}
+.da-wbd-lbl-text {
+  font-size: .6rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  opacity: .55;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.da-wbd-lbl-text--wa {
+  color: var(--accent3);
+  opacity: .75;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: .72rem;
+}
+
+/* Range damage display */
+.da-range-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.da-range-end {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.da-range-arrow {
+  font-size: .75rem;
+  color: var(--ink-muted);
+  opacity: .4;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.da-range-label {
+  font-size: .6rem;
+  color: var(--ink-muted);
+  opacity: .5;
+  font-style: italic;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.da-range-label--max {
+  color: var(--accent3);
+  opacity: .7;
+}
+.da-hit-chunk--sm .da-hit-num { font-size: .78rem; }
+.da-hit-chunk--sm .da-hit-type { font-size: .48rem; }
+.da-range-scl {
+  font-size: .62rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  padding: 2px 8px;
+  background: rgba(255,255,255,.03);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.07);
 }
 </style>
