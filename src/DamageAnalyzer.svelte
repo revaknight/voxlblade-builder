@@ -552,7 +552,6 @@ $: _waRangeTyped = (() => {
             {#each m1Typed as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
               <div class="da-hit-card">
-                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
                 {#each hit.types as t, ti}
                   {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                   <div class="da-hit-chunk" style="--tc:{t.color}">
@@ -564,6 +563,8 @@ $: _waRangeTyped = (() => {
                     <span class="da-hit-type">{t.label}</span>
                   </div>
                 {/each}
+                
+                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
               </div>
             {/each}
           {:else if row.m1}
@@ -584,7 +585,6 @@ $: _waRangeTyped = (() => {
             {#each m2Typed as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
               <div class="da-hit-card">
-                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
                 {#each hit.types as t, ti}
                   {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                   <div class="da-hit-chunk" style="--tc:{t.color}">
@@ -596,6 +596,8 @@ $: _waRangeTyped = (() => {
                     <span class="da-hit-type">{t.label}</span>
                   </div>
                 {/each}
+                
+                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
               </div>
             {/each}
           {:else if row.m2}
@@ -621,7 +623,6 @@ $: _waRangeTyped = (() => {
               {#each _waTyped as hit, hi}
                 {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
                 <div class="da-hit-card">
-                  {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
                   {#each hit.types as t, ti}
                     {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                     <div class="da-hit-chunk" style="--tc:{t.color}">
@@ -633,6 +634,8 @@ $: _waRangeTyped = (() => {
                       <span class="da-hit-type">{t.label}</span>
                     </div>
                   {/each}
+                  
+                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
                 </div>
               {/each}
             {:else if _waHitsSeq}
