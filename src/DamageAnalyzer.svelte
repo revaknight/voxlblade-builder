@@ -316,20 +316,28 @@ $: _scalingMult = (() => {
 })()
 $: selectedWA = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt) ?? WEAPON_ARTS[0]
 // ── Weapon Art base damage ─────────────────────────────────────────────
-function parseWAHits(baseDamage: string | undefined): Array<{n: number; count: number}> | null {
-  if (!baseDamage) return null
-  // Range damage like "15 (Base) – 175 (Fully Charged)" can't reduce to discrete hits
-  if (/\d+[^+]*[–—]\s*\d+/.test(baseDamage)) return null
-  const result: Array<{n: number; count: number}> = []
+function parseWAHitsAll(baseDamage: string | undefined): {
+  dmg: Array<{n: number; count: number}>
+  heal: Array<{n: number; count: number}>
+} {
+  const empty = { dmg: [], heal: [] }
+  if (!baseDamage) return empty
+  if (/\d+[^+]*[–—]\s*\d+/.test(baseDamage)) return empty
+  const dmg: Array<{n: number; count: number}> = []
+  const heal: Array<{n: number; count: number}> = []
   for (const part of baseDamage.split(/\s*\+\s*/)) {
-    if (/healing/i.test(part)) continue
+    const isHeal = /healing/i.test(part)
     const mx = part.match(/([\d.]+)\s*[×x]\s*(\d+)/i)
-    if (mx) { result.push({ n: parseFloat(mx[1]), count: parseInt(mx[2]) }); continue }
+    if (mx) { ;(isHeal ? heal : dmg).push({ n: parseFloat(mx[1]), count: parseInt(mx[2]) }); continue }
     const nx = part.match(/^([\d.]+)/)
-    if (nx) result.push({ n: parseFloat(nx[1]), count: 1 })
+    if (nx) (isHeal ? heal : dmg).push({ n: parseFloat(nx[1]), count: 1 })
   }
-  return result.length > 0 ? result : null
+  return { dmg, heal }
 }
+
+$: _waAllHits = parseWAHitsAll(selectedWA.baseDamage)
+$: _waHitsSeq = _waAllHits.dmg.length > 0 ? _waAllHits.dmg : null
+$: _waHealSeq = _waAllHits.heal.length > 0 ? _waAllHits.heal : null
 
 $: _waDmgTypes = (() => {
   const dt = selectedWA.damageType
@@ -355,7 +363,6 @@ $: _waScalingMult = (() => {
   return Math.round((1 + totalPct / 100) * 10000) / 10000
 })()
 
-$: _waHitsSeq = parseWAHits(selectedWA.baseDamage)
 $: _waTyped = (() => {
   if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
   const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
@@ -619,26 +626,36 @@ $: _waRangeTyped = (() => {
             {/if}
           </div>
           <div class="da-hits-row">
-            {#if _waTyped}
-              {#each _waTyped as hit, hi}
-                {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-                <div class="da-hit-card">
-                  {#each hit.types as t, ti}
-                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                    <div class="da-hit-chunk" style="--tc:{t.color}">
-                      {#if _waScalingMult !== 1}
-                        <span class="da-hit-raw">{fmtNum(Math.round(t.val / _waScalingMult * 100) / 100)}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
-                      <span class="da-hit-num">{fmtNum(t.val)}</span>
-                      <span class="da-hit-type">{t.label}</span>
-                    </div>
-                  {/each}
-                  
-                {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}</span>{/if}
-                </div>
-              {/each}
-            {:else if _waHitsSeq}
+          {#if _waTyped}
+            {#each _waTyped as hit, hi}
+              {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+              <div class="da-hit-card">
+                {#each hit.types as t, ti}
+                  {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                  <div class="da-hit-chunk" style="--tc:{t.color}">
+                    {#if _waScalingMult !== 1}
+                      <span class="da-hit-raw">
+                        {fmtNum(Math.round(t.val / _waScalingMult * 100) / 100)}
+                      </span>
+                      <span class="da-hit-arrow">→</span>
+                    {/if}
+
+                    <span class="da-hit-num">{fmtNum(t.val)}</span>
+                    <span class="da-hit-type">{t.label}</span>
+                  </div>
+                {/each}
+
+                {#if hit.count > 1}
+                  <span class="da-hit-repeat">×{hit.count}</span>
+                {/if}
+              </div>
+            {/each}
+
+          {:else if _waHitsSeq}
+
+            {_waHitsSeq.map(h =>
+              h.count > 1 ? `${h.n}×${h.count}` : String(h.n)
+            ).join(', ')}
               {_waHitsSeq.map(h => h.count > 1 ? `${h.n}×${h.count}` : String(h.n)).join(', ')}
             {:else if _waRangeTyped}
               <div class="da-range-row">
@@ -671,7 +688,7 @@ $: _waRangeTyped = (() => {
                   <span class="da-range-scl">{selectedWA.scaling === 'None' ? 'No Scaling' : `Scaling: ${selectedWA.scaling}`}</span>
                 {/if}
               </div>
-            {:else if selectedWA.baseDamage}
+            {:else if selectedWA.baseDamage && _waAllHits.dmg.length > 0}
               <div class="da-range-row">
                 <span class="da-wbd-range">{selectedWA.baseDamage}</span>
                 {#if Object.keys(_waDmgTypes).length > 0}
@@ -689,6 +706,21 @@ $: _waRangeTyped = (() => {
             {:else}
               <span class="da-wbd-na">—</span>
             {/if}
+            {#if _waHealSeq}
+  <div class="da-heal-hits-row">
+    <span class="da-heal-badge">✦ Heal</span>
+    {#each _waHealSeq as h, hi}
+      {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
+      <div class="da-hit-card da-hit-card--heal">
+        <div class="da-hit-chunk" style="--tc:#4ade80">
+          <span class="da-hit-num">{h.n}</span>
+          <span class="da-hit-type">Heal</span>
+        </div>
+        {#if h.count > 1}<span class="da-hit-repeat">×{h.count}</span>{/if}
+      </div>
+    {/each}
+  </div>
+{/if}
           </div>
         </div>
       {/if}
@@ -1482,5 +1514,28 @@ $: _waRangeTyped = (() => {
   background: rgba(255,255,255,.03);
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.07);
+}
+.da-heal-hits-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(74,222,128,.15);
+}
+.da-heal-badge {
+  font-size: .58rem;
+  font-weight: 800;
+  color: #4ade80;
+  padding: 1px 6px;
+  background: rgba(74,222,128,.1);
+  border: 1px solid rgba(74,222,128,.2);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.da-hit-card--heal {
+  border-color: rgba(74,222,128,.2);
+  background: rgba(74,222,128,.06);
 }
 </style>

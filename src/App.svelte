@@ -1026,7 +1026,18 @@ function prettyKey(key: string, suffix: string) {
   return base.charAt(0).toUpperCase() + base.slice(1)
 }
 
-
+$: waScalingParsed = (() => {
+  const sc = selectedWA.scaling
+  if (!sc || sc === 'Same as weapon' || sc === 'None') return null
+  const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Dex(?:terity)?|Summon)/gi
+  const pills: Array<{ label: string; val: number }> = []
+  let m: RegExpExecArray | null
+  while ((m = re.exec(sc)) !== null) {
+    const label = /dex/i.test(m[2]) ? 'Dexterity Scaling' : m[2].charAt(0).toUpperCase() + m[2].slice(1).toLowerCase() + ' Scaling'
+    pills.push({ label, val: parseFloat(m[1]) })
+  }
+  return pills.length > 0 ? pills : null
+})()
 </script>
 
 <svelte:window on:keydown={onKeydown} />
@@ -2758,8 +2769,21 @@ function prettyKey(key: string, suffix: string) {
     </div>
     <p class="wa-desc">{selectedWA.description}</p>
     {#if selectedWA.baseDamage}
-      <div class="wa-stat-row"><span class="wa-stat-key">Damage</span><span class="wa-stat-val">{selectedWA.baseDamage}</span></div>
+  {@const hasHeal = /healing/i.test(selectedWA.baseDamage)}
+  {@const hasDmg = /\d/.test(selectedWA.baseDamage.replace(/\d+\s*(healing)/gi, ''))}
+  <div class="wa-stat-row">
+    <span class="wa-stat-key">
+      {hasHeal && !hasDmg ? 'Heal' : hasHeal ? 'Dmg / Heal' : 'Damage'}
+    </span>
+    {#if hasHeal && !hasDmg}
+      <span class="wa-stat-val" style="color:#4ade80;background:rgba(74,222,128,.1);padding:2px 8px;border-radius:999px;border:1px solid rgba(74,222,128,.2)">
+        {selectedWA.baseDamage}
+      </span>
+    {:else}
+      <span class="wa-stat-val">{selectedWA.baseDamage}</span>
     {/if}
+  </div>
+{/if}
     {#if selectedWA.damageType}
       <div class="wa-stat-row">
         <span class="wa-stat-key">Type</span>
@@ -2803,9 +2827,15 @@ function prettyKey(key: string, suffix: string) {
               <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{fmtScaling(v)}</span></div>
             {/each}
           </div>
-        {:else}
-          <span class="wa-stat-val">{selectedWA.scaling}</span>
-        {/if}
+          {:else if waScalingParsed}
+            <div class="scaling-grid" style="flex:1">
+              {#each waScalingParsed as pill}
+                <div class="scaling-pill"><span class="sc-name">{pill.label}</span><span class="sc-val">{pill.val}</span></div>
+              {/each}
+            </div>
+          {:else}
+            <span class="wa-stat-val">{selectedWA.scaling}</span>
+          {/if}
       </div>
     {/if}
     {#if selectedWA.extras?.length}
