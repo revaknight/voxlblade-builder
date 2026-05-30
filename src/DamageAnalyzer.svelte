@@ -312,7 +312,32 @@ $: scalingBreakdown = (() => {
   const multiplier = Math.round((1 + totalEffectivePct / 100) * 10000) / 10000
   return { rows, totalEffectivePct, multiplier }
 })()
+// WA-specific scaling breakdown (only when WA has its own scaling formula)
+$: waScalingBreakdown = (() => {
+  const sc = selectedWA.scaling
+  if (!sc || sc === 'Same as weapon' || sc === 'None') return null
+  const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Dex(?:terity)?|Summon)/gi
+  const parsed: Record<string, number> = {}
+  let m: RegExpExecArray | null
+  while ((m = re.exec(sc)) !== null)
+    parsed[/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()] = parseFloat(m[1])
+  const rows: ScalingRow[] = []
+  for (const [key, scalingVal] of Object.entries(parsed)) {
+    const boostKey = SCALING_TO_BOOST[key]
+    if (!boostKey) continue
+    const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
+    rows.push({ key, scalingVal, boostKey, boostPct,
+      contribution: Math.round(scalingVal * boostPct * 100) / 100,
+      color: SCALING_COLORS[key] ?? '#e8e4da' })
+  }
+  if (!rows.length) return null
+  const totalEffectivePct = Math.round(rows.reduce((a,r) => a+r.contribution, 0) * 100) / 100
+  return { rows, totalEffectivePct,
+    multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000 }
+})()
 
+$: waScalingSameAsWeapon = selectedWA.scaling === 'Same as weapon'
+$: waScalingIsHealOnly = !_waHitsSeq && !!_waHealSeq
 // ── Scaling multiplier for base damage display ─────────────────────────────
 const SCALING_TO_BOOST_KEY: Record<string, string> = {
   physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',
@@ -818,7 +843,6 @@ function applyWeaponCharge(dmg:number){
             {/if}
             {#if _waHealSeq}
               <div class="da-heal-hits-row">
-                <span class="da-heal-badge">✦ Heal</span>
                 {#each _waHealSeq as h, hi}
                   {@const scaledHeal = Math.round(h.n * _waScalingMult * 100) / 100}
                   {#if hi > 0}
@@ -827,13 +851,11 @@ function applyWeaponCharge(dmg:number){
                   <div class="da-hit-card da-hit-card--heal">
                     <div class="da-hit-chunk" style="--tc:#4ade80">
                       {#if _waScalingMult !== 1}
-                        <span class="da-hit-num da-hit-num--raw">
-                          {fmtNum(h.n)}
-                        </span>
+                        <span class="da-hit-raw">{fmtNum(h.n)}</span>
                         <span class="da-hit-arrow">→</span>
                       {/if}
                       <span class="da-hit-num">{fmtNum(scaledHeal)}</span>
-                      <span class="da-hit-type">Heal</span>
+                      <span class="da-heal-badge">✦ Heal</span>
                     </div>
                     {#if h.count > 1}
                       <span class="da-hit-repeat">×{h.count}</span>
@@ -910,14 +932,92 @@ function applyWeaponCharge(dmg:number){
   </div>
 
   <!-- Multiplier result -->
+  <!-- Multiplier result -->
   <div class="ds-result-row">
-    <span class="ds-result-label">Scaling Multiplier</span>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+      <span class="ds-result-label">Scaling Multiplier</span>
+      <span class="ds-applies-to">{waScalingSameAsWeapon ? 'M1 · M2 · Weapon Art' : 'M1 · M2'}</span>
+    </div>
     <span class="ds-result-eq">1 + {scalingBreakdown.totalEffectivePct}% =</span>
     <span class="ds-result-val">×{scalingBreakdown.multiplier.toFixed(4)}</span>
   </div>
 
   {#if scalingBreakdown.rows.some(r => r.boostPct === 0)}
     <p class="ds-warn">⚠ Some scalings have no matching boost stat — those contribute 0%</p>
+  {/if}
+
+  <!-- WA-specific scaling subsection (only when WA has its own formula) -->
+  {#if waScalingBreakdown}
+    <div class="ds-wa-subsection">
+      <div class="ds-wa-header">
+        <span class="ds-sub-badge">WA</span>
+        <span class="ds-wa-name">{selectedWA.name}</span>
+      </div>
+      <div class="ds-table">
+        <div class="ds-head">
+          <div class="ds-col ds-col--type">Scaling</div>
+          <div class="ds-col ds-col--val">Scaling Val</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost">Your Boost</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--contrib">Contribution</div>
+        </div>
+        {#each waScalingBreakdown.rows as row}
+          <div class="ds-row">
+            <div class="ds-col ds-col--type">
+              <span class="ds-dot" style="background:{row.color}"></span>
+              <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+            </div>
+            <div class="ds-col ds-col--val">
+              <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+            </div>
+            <div class="ds-col ds-col--op">×</div>
+            <div class="ds-col ds-col--boost">
+              {#if row.boostPct !== 0}
+                <span class="ds-boost">{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
+              {:else}
+                <span class="ds-boost ds-boost--zero">+0%</span>
+              {/if}
+            </div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0}
+                style={row.contribution > 0 ? `color:${row.color}` : ''}>
+                +{row.contribution}%
+              </span>
+            </div>
+          </div>
+        {/each}
+        <div class="ds-row ds-row--total">
+          <div class="ds-col ds-col--type ds-total-label">Total</div>
+          <div class="ds-col ds-col--val"></div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost"></div>
+          <div class="ds-col ds-col--op">=</div>
+          <div class="ds-col ds-col--contrib">
+            <span class="ds-total-pct">+{waScalingBreakdown.totalEffectivePct}%</span>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+      <div class="ds-result-row"
+        style={waScalingIsHealOnly ? 'border-color:rgba(74,222,128,.2);background:rgba(74,222,128,.06)' : ''}>
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+          <span class="ds-result-label" style={waScalingIsHealOnly ? 'color:#4ade80' : ''}>
+            {waScalingIsHealOnly ? 'Heal Multiplier' : 'Scaling Multiplier'}
+          </span>
+          <span class="ds-applies-to">Weapon Art</span>
+        </div>
+        <span class="ds-result-eq">1 + {waScalingBreakdown.totalEffectivePct}% =</span>
+        <span class="ds-result-val"
+          style={waScalingIsHealOnly ? 'color:#4ade80;text-shadow:0 0 12px rgba(74,222,128,.4)' : ''}>
+          ×{waScalingBreakdown.multiplier.toFixed(4)}
+        </span>
+      </div>
+      {#if waScalingBreakdown.rows.some(r => r.boostPct === 0)}
+        <p class="ds-warn">⚠ Some WA scalings have no matching boost stat — those contribute 0%</p>
+      {/if}
   {/if}
 </div>
 {:else if _weaponResult && Object.keys(_weaponResult.scalings).length > 0}

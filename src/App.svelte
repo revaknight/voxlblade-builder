@@ -1506,7 +1506,7 @@ $: waScalingParsed = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={bladeFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1627,7 +1627,7 @@ $: waScalingParsed = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={handleFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1732,7 +1732,7 @@ $: waScalingParsed = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={gloveFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1831,7 +1831,7 @@ $: waScalingParsed = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={essenceFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>

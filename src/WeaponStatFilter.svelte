@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte'
 
   const dispatch = createEventDispatcher<{ change: Map<string, 'include' | 'exclude'> }>()
+  export let value: Map<string, 'include' | 'exclude'> = new Map()
 
   const DMG_TYPE_GROUP = {
     label: 'Damage Type',
@@ -66,7 +67,7 @@
   const GROUPS = [DMG_TYPE_GROUP, SCALING_GROUP, BOOST_GROUP]
 
   // ── State ───────────────────────────────────────────────────────────────────
-  let active: Map<string, 'include' | 'exclude'> = new Map()
+  let active: Map<string, 'include' | 'exclude'> = new Map(value)
   let expanded = false
 
   $: activeCount = active.size
