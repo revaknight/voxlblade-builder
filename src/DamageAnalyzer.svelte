@@ -423,6 +423,36 @@ $: _waScalingMult = (() => {
 $: _waTyped = (() => {
   if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
   const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
+
+  // Per-hit damage type override (e.g. Grand Quake: hit 0 = Physical, hit 1 = Earth)
+  if (selectedWA.hitDamageTypes && selectedWA.hitDamageTypes.length > 0) {
+    return seq.map((h, i) => {
+      const base = typeof h === 'number' ? h : h.n
+      const count = typeof h === 'number' ? 1 : h.count
+      const dtStr = selectedWA.hitDamageTypes![Math.min(i, selectedWA.hitDamageTypes!.length - 1)]
+
+      if (dtStr === 'Same as weapon') {
+        const types = Object.entries(_weaponDmgTypes).map(([k, mult]) => ({
+          label: k.charAt(0).toUpperCase() + k.slice(1),
+          val: Math.round(base * mult * _waScalingMult * 100) / 100,
+          color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+        }))
+        return { base, count, types }
+      }
+
+      const dtParsed: Record<string, number> = {}
+      const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
+      let m: RegExpExecArray | null
+      while ((m = re.exec(dtStr)) !== null) dtParsed[m[2].toLowerCase()] = parseFloat(m[1])
+      const types = Object.entries(dtParsed).map(([k, mult]) => ({
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        val: Math.round(base * mult * _waScalingMult * 100) / 100,
+        color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+      }))
+      return { base, count, types }
+    })
+  }
+
   return seqWithTypes(seq, _waDmgTypes, _waScalingMult)
 })()
 $: _waScalingDiffers = _waScalingMult !== _scalingMult
@@ -641,11 +671,11 @@ function applyWeaponCharge(dmg:number){
                     <span class="da-hit-num">{fmtNum(t.val)}</span>
                     <span class="da-hit-type">{t.label}</span>
                   </div>
+                  {#if hit.count > 1}
+                    <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
+                  {/if}
                 {/each}
               </div>
-                {#if hit.count > 1}
-              <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
-            {/if}
           </div>
             {/each}
           {:else if row.m1}
@@ -1206,7 +1236,6 @@ function applyWeaponCharge(dmg:number){
 .da-top-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 12px;
   align-items: start;
 }
 @media (max-width: 560px) {

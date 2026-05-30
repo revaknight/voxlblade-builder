@@ -27,6 +27,7 @@ export interface WeaponArt {
   cooldown: number
   baseDamage?: string
   damageType?: string
+  hitDamageTypes?: string[]   // per-hit override: index matches hit order in baseDamage
   scaling?: string
   extras?: string[]
   requirements: WeaponArtRequirement
@@ -111,10 +112,11 @@ export const WEAPON_ARTS: WeaponArt[] = [
     name: "Impale",
     description: "Stab through the opponent in a critical spot and then throw them aside.",
     cooldown: 12,
-    baseDamage: "10.5 × 2 Hits",
-    damageType: "Same as weapon",
+    baseDamage: "10.5 + 21",
+    damageType: "1.0 True + Same as weapon",
+    hitDamageTypes: ["1.0 True", "Same as weapon"],
     scaling: "Same as weapon",
-    extras: ["Poise Damage: 100 × 2"],
+    extras: ["Poise Damage: 100 per hit"],
     requirements: { weaponType: ["1-Handed Sword", "Spear"] },
   },
   {
@@ -407,7 +409,8 @@ export const WEAPON_ARTS: WeaponArt[] = [
     description: "Slam your sword into the floor and create a super powerful earthquake!",
     cooldown: 30,
     baseDamage: "12.5 + 2.5 × 30 Hits",
-    damageType: "1.0 Earth",
+    damageType: "1.0 Physical + 1.0 Earth",
+    hitDamageTypes: ["1.0 Physical", "1.0 Earth"],
     scaling: "Same as weapon",
     requirements: { earthScaling: 0.8 },
   },
