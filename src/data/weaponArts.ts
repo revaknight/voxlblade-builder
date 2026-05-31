@@ -33,6 +33,7 @@ export interface WeaponArt {
   extras?: string[]
   requirements: WeaponArtRequirement
   isMonk?: boolean
+  avgTotalHits?: number
 }
 
 export const WEAPON_ARTS: WeaponArt[] = [
@@ -456,6 +457,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     "~360 avg total (68% range: 326–394)",
     "Formula: (starCount/7) × (9 + 6×4.5) ≈ starCount × 5.14",
   ],
+  avgTotalHits: 70,
   requirements: { bothParts: ["Starlight Greatblade", "Starlight Handle"] },
 },
 ]

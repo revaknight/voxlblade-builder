@@ -523,6 +523,19 @@ $: _waTyped = (() => {
 
   return seqWithTypes(seq, _waDmgTypes, _waScalingMult)
 })()
+$: _waAvgTotal = (() => {
+  if (!selectedWA.avgTotalHits || !_waTyped || _waTyped.length === 0) return null
+  const starsPerType = selectedWA.avgTotalHits / _waTyped.length
+  const baseTotal = _waTyped.reduce((sum, hit) => {
+    const hitTypeSum = hit.types.reduce((s, t) => s + t.val, 0)
+    return sum + hitTypeSum * starsPerType * hit.count
+  }, 0)
+  return {
+    starsPerType: Math.round(starsPerType * 100) / 100,
+    total: selectedWA.avgTotalHits,
+    baseTotal: Math.round(baseTotal * 100) / 100,
+  }
+})()
 $: _waScalingDiffers = _waScalingMult !== _scalingMult
 $: _showWACol = !showAllWeapons && (!!_waHitsSeq || !!selectedWA.baseDamage)
 
@@ -843,24 +856,19 @@ function applyWeaponCharge(dmg:number){
                 {#each hit.types as t, ti}
                   {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                   <div class="da-hit-chunk" style="--tc:{t.color}">
-
-  {#if t.scalingMult !== 1}
-    <span class="da-hit-raw">
-      {fmtNum(t.rawVal)}
-    </span>
-
-    <span class="da-hit-arrow">→</span>
-  {/if}
-
-  <span class="da-hit-num">
-    {fmtNum(t.val)}
-  </span>
-
-  <span class="da-hit-type">
-    {t.label}
-  </span>
-
-</div>
+                  {#if t.scalingMult !== 1}
+                    <span class="da-hit-raw">
+                      {fmtNum(t.rawVal)}
+                    </span>
+                    <span class="da-hit-arrow">→</span>
+                  {/if}
+                  <span class="da-hit-num">
+                    {fmtNum(t.val)}
+                  </span>
+                  <span class="da-hit-type">
+                    {t.label}
+                  </span>
+                </div>
                 {/each}
 
                 {#if hit.count > 1}
@@ -968,6 +976,15 @@ function applyWeaponCharge(dmg:number){
                     {/if}
                   </div>
                 {/each}
+              </div>
+            {/if}
+            {#if _waAvgTotal}
+              <div class="wa-avg-total-box">
+                <div class="wa-atb-left">
+                  <span class="wa-atb-label">Avg Total</span>
+                  <span class="wa-atb-hint">~{_waAvgTotal.total} stars · {_waAvgTotal.starsPerType}/type</span>
+                </div>
+                <span class="wa-atb-base">{fmtNum(_waAvgTotal.baseTotal)}</span>
               </div>
             {/if}
           </div>
@@ -2006,5 +2023,42 @@ function applyWeaponCharge(dmg:number){
   font-weight: 700;
   font-family: 'Courier New', monospace;
   letter-spacing: .02em;
+}
+.wa-avg-total-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: rgba(167,139,250,.08);
+  border: 1px solid rgba(167,139,250,.2);
+  flex-wrap: wrap;
+}
+.wa-atb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wa-atb-label {
+  font-size: .6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--accent3);
+  opacity: .8;
+}
+.wa-atb-hint {
+  font-size: .58rem;
+  color: var(--ink-muted);
+  opacity: .5;
+}
+.wa-atb-base {
+  font-family: 'Courier New', monospace;
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--accent3);
+  text-shadow: 0 0 10px rgba(167,139,250,.35);
 }
 </style>

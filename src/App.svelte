@@ -1035,6 +1035,25 @@ $: waScalingParsed = (() => {
   }
   return pills.length > 0 ? pills : null
 })()
+
+$: _appWaAvgTotal = (() => {
+  if (!selectedWA.avgTotalHits || !selectedWA.baseDamage) return null
+  const parts = selectedWA.baseDamage.split('+')
+  const hitVals: number[] = []
+  for (const part of parts) {
+    if (/healing/i.test(part)) continue
+    const nx = part.trim().match(/^([\d.]+)/)
+    if (nx) hitVals.push(parseFloat(nx[1]))
+  }
+  if (hitVals.length === 0) return null
+  const starsPerType = selectedWA.avgTotalHits / hitVals.length
+  const rawTotal = hitVals.reduce((s, v) => s + v, 0) * starsPerType
+  return {
+    total: selectedWA.avgTotalHits,
+    starsPerType: Math.round(starsPerType * 100) / 100,
+    rawTotal: Math.round(rawTotal * 100) / 100,
+  }
+})()
 </script>
 
 <svelte:window on:keydown={onKeydown} />
@@ -2294,14 +2313,14 @@ $: waScalingParsed = (() => {
       <div class="wa-selected-top">
         <span class="wa-name">{selectedWA.name}</span>
         {#if hasWACDR}
-    <span class="wa-cd-badge wa-cd-badge--reduced">
-      <span class="wa-cd-old">{selectedWA.cooldown}s</span>
-      <span class="wa-cd-arrow">→</span>
-      {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
-    </span>
-  {:else}
-    <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
-  {/if}
+          <span class="wa-cd-badge wa-cd-badge--reduced">
+            <span class="wa-cd-old">{selectedWA.cooldown}s</span>
+            <span class="wa-cd-arrow">→</span>
+            {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
+          </span>
+        {:else}
+          <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
+        {/if}
         {#if !waAvailable}
           <span class="wa-req-badge">⚠ Req. not met</span>
         {/if}
@@ -2741,14 +2760,14 @@ $: waScalingParsed = (() => {
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span class="detail-name">{selectedWA.name}</span>
         {#if hasWACDR}
-    <span class="wa-cd-badge wa-cd-badge--reduced">
-      <span class="wa-cd-old">{selectedWA.cooldown}s</span>
-      <span class="wa-cd-arrow">→</span>
-      {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
-    </span>
-  {:else}
-    <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
-  {/if}
+          <span class="wa-cd-badge wa-cd-badge--reduced">
+            <span class="wa-cd-old">{selectedWA.cooldown}s</span>
+            <span class="wa-cd-arrow">→</span>
+            {Math.floor(selectedWA.cooldown * cdr.waCDR)}s
+          </span>
+        {:else}
+          <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
+        {/if}
         {#if !waAvailable}<span class="wa-req-badge">⚠ Req. not met</span>{/if}
       </div>
     </div>
@@ -2937,6 +2956,15 @@ $: waScalingParsed = (() => {
   </div>
       </div>
     {/if}
+    {#if _appWaAvgTotal}
+  <div class="wa-avg-total-box">
+    <div class="wa-atb-left">
+      <span class="wa-atb-label">Avg Total</span>
+      <span class="wa-atb-hint">~{_appWaAvgTotal.total} stars · {_appWaAvgTotal.starsPerType}/type · base only</span>
+    </div>
+    <span class="wa-atb-base">{_appWaAvgTotal.rawTotal}</span>
+  </div>
+{/if}
   </div>
             <div class="weapon-result-layout">
               <!-- Part 1 -->
@@ -4243,5 +4271,42 @@ $: waScalingParsed = (() => {
   white-space:normal;
   overflow-wrap:anywhere;
   line-height:1.15;
+}
+.wa-avg-total-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: rgba(167,139,250,.08);
+  border: 1px solid rgba(167,139,250,.2);
+  flex-wrap: wrap;
+}
+.wa-atb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wa-atb-label {
+  font-size: .6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--accent3);
+  opacity: .8;
+}
+.wa-atb-hint {
+  font-size: .58rem;
+  color: var(--ink-muted);
+  opacity: .5;
+}
+.wa-atb-base {
+  font-family: 'Courier New', monospace;
+  font-size: .95rem;
+  font-weight: 800;
+  color: var(--accent3);
+  text-shadow: 0 0 10px rgba(167,139,250,.35);
 }
 </style>
