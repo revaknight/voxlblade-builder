@@ -2763,6 +2763,7 @@ $: waScalingParsed = (() => {
             {@const dmgParts = selectedWA.baseDamage.split('+')}
             {#each selectedWA.hitDamageTypes as dtStr, i}
               {@const currentDmg = (dmgParts[i] || '').trim()}
+              {@const hitSc = selectedWA.hitScalings?.[i]} 
               <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); ">
                 <span class="wa-stat-val" style="font-family: monospace; font-size: 0.8rem; font-weight: 600; min-width: 100px; flex-shrink:0;">
                   {currentDmg}
@@ -2785,6 +2786,26 @@ $: waScalingParsed = (() => {
                     {/each}
                   {/if}
                 </div>
+                {#if hitSc === 'Same as weapon' && weaponResult}
+                  <div class="scaling-grid">
+                    {#each Object.entries(weaponResult.scalings) as [k, v]}
+                      <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{fmtScaling(v)}</span></div>
+                    {/each}
+                  </div>
+                {:else if hitSc}
+                  <div class="scaling-grid">
+                    {#each (() => {
+                      const pills = []
+                      const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
+                      let m
+                      while ((m = re.exec(hitSc)) !== null)
+                        pills.push({ label: (/dex/i.test(m[2]) ? 'Dexterity' : m[2]) + ' Scaling', val: m[1] })
+                      return pills
+                    })() as pill}
+                      <div class="scaling-pill"><span class="sc-name">{pill.label}</span><span class="sc-val">{pill.val}</span></div>
+                    {/each}
+                  </div>
+                {/if}
               </div>
             {/each}
 
@@ -2858,15 +2879,17 @@ $: waScalingParsed = (() => {
               <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{fmtScaling(v)}</span></div>
             {/each}
           </div>
-          {:else if waScalingParsed}
-            <div class="scaling-grid" style="flex:1">
-              {#each waScalingParsed as pill}
-                <div class="scaling-pill"><span class="sc-name">{pill.label}</span><span class="sc-val">{pill.val}</span></div>
-              {/each}
-            </div>
-          {:else}
-            <span class="wa-stat-val">{selectedWA.scaling}</span>
-          {/if}
+        {:else if selectedWA.hitScalings && selectedWA.hitScalings.length > 0}
+      <span class="wa-stat-val" style="font-size:.74rem;color:var(--ink-muted);font-style:italic;">Per-hit (see above)</span>
+        {:else if waScalingParsed}
+          <div class="scaling-grid" style="flex:1">
+            {#each waScalingParsed as pill}
+              <div class="scaling-pill"><span class="sc-name">{pill.label}</span><span class="sc-val">{pill.val}</span></div>
+            {/each}
+          </div>
+        {:else}
+          <span class="wa-stat-val">{selectedWA.scaling}</span>
+        {/if}
       </div>
     {/if}
     {#if selectedWA.extras?.length}

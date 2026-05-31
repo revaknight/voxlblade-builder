@@ -25,6 +25,13 @@ interface WeaponChargeConfig {
     charge:number
   ) => number
 }
+type DamageDisplayType = {
+  label: string
+  rawVal: number
+  val: number
+  scalingMult: number
+  color: string
+}
 
 interface WeaponBaseDmg {
   type: string
@@ -84,7 +91,13 @@ interface WeaponBaseDmg {
   }
 
   // Per-hit damage breakdown with type multipliers applied
-  type HitBreakdown = Array<{ label: string; val: number; color: string }>
+  type HitBreakdown = Array<{
+    label: string
+    rawVal: number
+    val: number
+    scalingMult: number
+    color: string
+  }>
 
   const DMG_TYPE_COLORS: Record<string, string> = {
     physical: '#fb923c', magic: '#818cf8', fire: '#f97316',
@@ -98,22 +111,25 @@ interface WeaponBaseDmg {
   }
 
   function seqWithTypes(
-    seq: HitSeq,
-    dmgTypes: Record<string, number>,
-    scalingMult: number = 1
-  ): Array<{ base: number; count: number; types: HitBreakdown }> {
-    const typeEntries = Object.entries(dmgTypes)
-    return seq.map(h => {
-      const base = typeof h === 'number' ? h : h.n
-      const count = typeof h === 'number' ? 1 : h.count
-      const types: HitBreakdown = typeEntries.map(([k, mult]) => ({
+  seq: HitSeq,
+  dmgTypes: Record<string, number>,
+  scalingMult: number = 1
+): Array<{ base: number; count: number; types: HitBreakdown }> {
+  const typeEntries = Object.entries(dmgTypes)
+  return seq.map(h => {
+    const base = typeof h === 'number' ? h : h.n
+    const count = typeof h === 'number'? 1 : h.count
+    const types: HitBreakdown =
+      typeEntries.map(([k, mult]) => ({
         label: k.charAt(0).toUpperCase() + k.slice(1),
+        rawVal: Math.round(base * 100) / 100,
         val: Math.round(base * mult * scalingMult * 100) / 100,
+        scalingMult,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
       }))
-      return { base, count, types }
-    })
-  }
+    return {base,count,types}
+  })
+}
 
   $: _isMonk = isMonkGuild($build.guild)
 
@@ -289,6 +305,7 @@ const SCALING_COLORS: Record<string, string> = {
 
 interface ScalingRow {
   key: string
+  label?: string 
   scalingVal: number
   boostKey: string
   boostPct: number
@@ -314,6 +331,40 @@ $: scalingBreakdown = (() => {
 })()
 // WA-specific scaling breakdown (only when WA has its own scaling formula)
 $: waScalingBreakdown = (() => {
+  if (selectedWA.hitScalings?.length) {
+    const rows: ScalingRow[] = []
+    for (let i=0;i<selectedWA.hitScalings.length;i++) {
+      const scaling = selectedWA.hitScalings[i]
+      if (!scaling || scaling === 'Same as weapon') continue
+      const dmgLabel = selectedWA.hitDamageTypes?.[i] ?.match(/[A-Za-z]+/)?.[0] ?? `Hit ${i+1}`
+      const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Dex(?:terity)?|Summon)/gi
+      let m
+      while ((m = re.exec(scaling)) !== null) {
+        const key = /dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()
+        const boostKey = SCALING_TO_BOOST[key]
+        if (!boostKey) continue
+        const scalingVal = parseFloat(m[1])
+        const boostPct = (stats as Record<string,number>)[boostKey] ?? 0
+        rows.push({ 
+          key,
+          label:`${dmgLabel} · ${key} ×${scalingVal}`,
+          scalingVal,
+          boostKey,
+          boostPct,
+          contribution:Math.round(scalingVal *boostPct *100) / 100,
+          color:SCALING_COLORS[key]?? '#e8e4da'
+        })
+      }
+    }
+    if (!rows.length) return null
+    return {
+      rows,
+      totalEffectivePct:0,
+      multiplier:0,
+      isPerHit:true
+    }
+  }
+
   const sc = selectedWA.scaling
   if (!sc || sc === 'Same as weapon' || sc === 'None') return null
   const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Dex(?:terity)?|Summon)/gi
@@ -333,9 +384,9 @@ $: waScalingBreakdown = (() => {
   if (!rows.length) return null
   const totalEffectivePct = Math.round(rows.reduce((a,r) => a+r.contribution, 0) * 100) / 100
   return { rows, totalEffectivePct,
-    multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000 }
+    multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000,
+    isPerHit: false }
 })()
-
 $: waScalingSameAsWeapon = selectedWA.scaling === 'Same as weapon'
 $: waScalingIsHealOnly = !_waHitsSeq && !!_waHealSeq
 // ── Scaling multiplier for base damage display ─────────────────────────────
@@ -424,17 +475,32 @@ $: _waTyped = (() => {
   if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
   const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
 
-  // Per-hit damage type override (e.g. Grand Quake: hit 0 = Physical, hit 1 = Earth)
   if (selectedWA.hitDamageTypes && selectedWA.hitDamageTypes.length > 0) {
     return seq.map((h, i) => {
       const base = typeof h === 'number' ? h : h.n
       const count = typeof h === 'number' ? 1 : h.count
       const dtStr = selectedWA.hitDamageTypes![Math.min(i, selectedWA.hitDamageTypes!.length - 1)]
 
+      const hitScalingStr = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
+      let hitScalingMult = _waScalingMult  // default: WA scaling
+      if (hitScalingStr && hitScalingStr !== 'Same as weapon') {
+        const scRe = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
+        let totalPct = 0; let scM: RegExpExecArray | null
+        while ((scM = scRe.exec(hitScalingStr)) !== null) {
+          const typeName = /dex/i.test(scM[2]) ? 'dexterity' : scM[2].toLowerCase()
+          totalPct += parseFloat(scM[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
+        }
+        hitScalingMult = Math.round((1 + totalPct / 100) * 10000) / 10000
+      } else if (hitScalingStr === 'Same as weapon') {
+        hitScalingMult = _scalingMult
+      }
+
       if (dtStr === 'Same as weapon') {
-        const types = Object.entries(_weaponDmgTypes).map(([k, mult]) => ({
+        const types: DamageDisplayType[] =Object.entries(_weaponDmgTypes).map(([k, mult]) => ({
           label: k.charAt(0).toUpperCase() + k.slice(1),
-          val: Math.round(base * mult * _waScalingMult * 100) / 100,
+          rawVal: Math.round(base * 100) / 100,
+          val: Math.round(base * mult * hitScalingMult * 100) / 100,
+          scalingMult: hitScalingMult,
           color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
         }))
         return { base, count, types }
@@ -444,9 +510,11 @@ $: _waTyped = (() => {
       const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
       let m: RegExpExecArray | null
       while ((m = re.exec(dtStr)) !== null) dtParsed[m[2].toLowerCase()] = parseFloat(m[1])
-      const types = Object.entries(dtParsed).map(([k, mult]) => ({
+      const types: DamageDisplayType[] = Object.entries(dtParsed).map(([k, mult]) => ({
         label: k.charAt(0).toUpperCase() + k.slice(1),
-        val: Math.round(base * mult * _waScalingMult * 100) / 100,
+        rawVal: Math.round(base * 100) / 100,
+        val: Math.round(base * mult * hitScalingMult * 100) / 100,
+        scalingMult: hitScalingMult,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
       }))
       return { base, count, types }
@@ -664,13 +732,13 @@ function applyWeaponCharge(dmg:number){
                   {/if}
 
                   <div class="da-hit-chunk" style="--tc:{t.color}">
-                    {#if _scalingMult !== 1}
-                      <span class="da-hit-raw">{fmtNum(Math.round(t.val / _scalingMult * 100) / 100)}</span>
-                      <span class="da-hit-arrow">→</span>
-                    {/if}
+                  {#if t.scalingMult !== 1}
+                    <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
+                    <span class="da-hit-arrow">→</span>
+                  {/if}
                     <span class="da-hit-num">{fmtNum(t.val)}</span>
                     <span class="da-hit-type">{t.label}</span>
-                  </div>
+                    </div>
                   {#if hit.count > 1}
                     <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
                   {/if}
@@ -709,7 +777,7 @@ function applyWeaponCharge(dmg:number){
                   {@const finalVal = selectedWeaponData?.m2Charge?.enabled ? selectedWeaponData.m2Charge.formula(t.val, weaponCharge) : t.val}
                   <div class="da-hit-chunk" style="--tc:{t.color}">
                     {#if _scalingMult !== 1}
-                      <span class="da-hit-raw">{fmtNum(Math.round(finalVal / _scalingMult * 100) / 100)}</span>
+                      <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
                       <span class="da-hit-arrow">→</span>
                     {/if}
                     <span class="da-hit-num">{fmtNum(finalVal)}</span>
@@ -775,16 +843,24 @@ function applyWeaponCharge(dmg:number){
                 {#each hit.types as t, ti}
                   {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                   <div class="da-hit-chunk" style="--tc:{t.color}">
-                    {#if _waScalingMult !== 1}
-                      <span class="da-hit-raw">
-                        {fmtNum(Math.round(t.val / _waScalingMult * 100) / 100)}
-                      </span>
-                      <span class="da-hit-arrow">→</span>
-                    {/if}
 
-                    <span class="da-hit-num">{fmtNum(t.val)}</span>
-                    <span class="da-hit-type">{t.label}</span>
-                  </div>
+  {#if t.scalingMult !== 1}
+    <span class="da-hit-raw">
+      {fmtNum(t.rawVal)}
+    </span>
+
+    <span class="da-hit-arrow">→</span>
+  {/if}
+
+  <span class="da-hit-num">
+    {fmtNum(t.val)}
+  </span>
+
+  <span class="da-hit-type">
+    {t.label}
+  </span>
+
+</div>
                 {/each}
 
                 {#if hit.count > 1}
@@ -926,7 +1002,7 @@ function applyWeaponCharge(dmg:number){
       <div class="ds-row">
         <div class="ds-col ds-col--type">
           <span class="ds-dot" style="background:{row.color}"></span>
-          <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+          <span style="color:{row.color}">{row.label ??(row.key.charAt(0).toUpperCase()+ row.key.slice(1))}</span>
         </div>
         <div class="ds-col ds-col--val">
           <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
@@ -996,7 +1072,7 @@ function applyWeaponCharge(dmg:number){
           <div class="ds-row">
             <div class="ds-col ds-col--type">
               <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+              <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
             </div>
             <div class="ds-col ds-col--val">
               <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
@@ -1052,21 +1128,23 @@ function applyWeaponCharge(dmg:number){
 </div>
 {:else if _weaponResult && Object.keys(_weaponResult.scalings).length > 0}
 <div class="da-section da-section--scaling">
-  <div class="da-section-title">📐 Damage Scaling</div>
-  <p class="da-empty-hint">Weapon has scalings but no matching boost stats equipped — all contributions are 0%.</p>
-  <div class="ds-result-row">
-    <span class="ds-result-label">Scaling Multiplier</span>
-    <span class="ds-result-val">×1.0000</span>
+  <div class="da-section-title">
+    📐 Damage Scaling
   </div>
+  <p class="da-empty-hint">Weapon has scalings but no matching boost stats equipped — all contributions are 0%.</p>
+  {#if waScalingBreakdown}
+    {#if waScalingBreakdown.isPerHit}
+      <div class="ds-result-row"style="background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.2);">
+        <span class="ds-result-label">Per-hit scaling</span>
+        <span class="ds-result-val">see rows above</span>
+      </div>
+    {:else}
+      <div class="ds-result-row">Scaling Multiplier×{waScalingBreakdown.multiplier.toFixed(4)}</div>
+    {/if}
+  {/if}
 </div>
 {/if}
-<BaseDamageCalc
-  {boosts}
-  {crit}
-  {stats}
-  {disabledBoosts}
-  {activeFinalMult}
-/>
+<BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}/>
 </div>
 
 <style>

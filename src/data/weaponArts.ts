@@ -27,7 +27,8 @@ export interface WeaponArt {
   cooldown: number
   baseDamage?: string
   damageType?: string
-  hitDamageTypes?: string[]   // per-hit override: index matches hit order in baseDamage
+  hitDamageTypes?: string[]
+  hitScalings?: string[]
   scaling?: string
   extras?: string[]
   requirements: WeaponArtRequirement
@@ -432,14 +433,29 @@ export const WEAPON_ARTS: WeaponArt[] = [
     scaling: "Same as weapon",
     requirements: { magicScaling: 0.3, earthScaling: 0.3 },
   },
-  {
-    name: "Starstream",
-    description: "Call forth a powerful stream of stars!!",
-    cooldown: 25,
-    baseDamage: "~360 Average Total",
-    damageType: "1 of each star's element",
-    scaling: "1 per element + 0.5 Magic for True stars",
-    extras: ["~70 Hits"],
-    requirements: { bothParts: ["Starlight Greatblade", "Starlight Handle"] },
-  },
+{
+  name: "Starstream",
+  description: "Call forth a powerful stream of stars!!",
+  cooldown: 25,
+  baseDamage: "9 + 4.5 + 4.5 + 4.5 + 4.5 + 4.5 + 4.5",
+  damageType: "1 True + 1 Magic + 1 Air + 1 Fire + 1 Water + 1 Holy + 1 Hex",
+  hitDamageTypes: ["1 True", "1 Magic", "1 Air", "1 Fire", "1 Water", "1 Holy", "1 Hex"],
+  scaling: "0.5 Magic (True) · 1 Magic/Air/Fire/Water/Holy/Hex (Elemental)",
+  hitScalings: [
+    "0.5 Magic",
+    "1 Magic",
+    "1 Air",
+    "1 Fire",
+    "1 Water",
+    "1 Holy",
+    "1 Hex",
+  ],
+  extras: [
+    "~70 Stars total (range: 60–80)",
+    "~10 hits per element across 7 types",
+    "~360 avg total (68% range: 326–394)",
+    "Formula: (starCount/7) × (9 + 6×4.5) ≈ starCount × 5.14",
+  ],
+  requirements: { bothParts: ["Starlight Greatblade", "Starlight Handle"] },
+},
 ]
