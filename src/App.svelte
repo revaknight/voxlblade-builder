@@ -39,7 +39,7 @@ function weaponMatchesFilter(item: any): boolean {
   let activeAppTab: 'overview' | 'analyze' = 'overview'
 
   function toggleUpgrade(key: 'upgradeHelmet'|'upgradeChestplate'|'upgradeLeggings'|'upgradeRing'|'upgradeRune') {
-    build.update(s => ({...s, [key]: s[key] === UPGRADE_MAX ? 0 : UPGRADE_MAX}))
+    build.update(s => ({...s, [key]: (s[key] + 1) % (UPGRADE_MAX + 1)}))
   }
 
     import { tick, onMount } from 'svelte'
@@ -1985,25 +1985,21 @@ $: waScalingParsed = (() => {
                 on:click={() => openModal('armor-helmet')}
                 on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
                   <span class="sg-label">Helmet</span>
-                  {#if $build.helmet}
-                  
-                      <button class="sg-upgrade-btn"
-                        class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
-                        on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
-                        title={$build.upgradeHelmet === 5 ? 'Reset to +0' : 'Max upgrade'}>
-                        {$build.upgradeHelmet === 5 ? '+5' : '+0'}
-                      </button>
+                  <span class="sg-value">{$build.helmet || 'No helmet'}</span>
+                  {#if $build.helmet && hasEnchants('helmet')}
+                    <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
                   {/if}
-                <span class="sg-value">{$build.helmet || 'No helmet'}</span>
-                {#if $build.helmet && hasEnchants('helmet')}
-                  <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
-                {/if}
-                
-                {#if $build.helmet}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
-                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
-                    on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
-                {/if}
+                  {#if $build.helmet}
+                    <button class="sg-upgrade-btn"
+                      class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
+                      title="Cycle upgrade (+{$build.upgradeHelmet} → +{($build.upgradeHelmet + 1) % 6})">
+                      +{$build.upgradeHelmet}
+                    </button>
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
+                      on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
+                  {/if}
               </div>
               <div class="sg-cell sg-span3 sg-clickable"
                 class:sg-blade={!isMonk} class:sg-monk-glove={isMonk} class:sg-empty={sgPart1Empty}
@@ -2040,19 +2036,17 @@ $: waScalingParsed = (() => {
                 on:click={() => openModal('armor-chestplate')}
                 on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
                 <span class="sg-label">Chestplate</span>
-                {#if $build.chestplate}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
-                    title={$build.upgradeChestplate === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                    {$build.upgradeChestplate === 5 ? '+5' : '+0'}
-                  </button>
-                {/if}
                 <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
                 {#if $build.chestplate && hasEnchants('chestplate')}
                   <span class="sg-ench">{$build.enchantments.chestplate.filter(Boolean).join(' · ')}</span>
                 {/if}
                 {#if $build.chestplate}
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
+                    title="Cycle upgrade (+{$build.upgradeChestplate} → +{($build.upgradeChestplate + 1) % 6})">
+                    +{$build.upgradeChestplate}
+                  </button>
                   <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
                   <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
                     on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
@@ -2073,19 +2067,17 @@ $: waScalingParsed = (() => {
                 on:click={() => openModal('ring')}
                 on:keydown={e => e.key === 'Enter' && openModal('ring')}>
                 <span class="sg-label">Ring</span>  
-                {#if $build.ring}            
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
-                    title={$build.upgradeRing === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                    {$build.upgradeRing === 5 ? '+5' : '+0'}
-                  </button>
-                {/if}
                 <span class="sg-value">{$build.ring || 'No ring'}</span>
                 {#if $build.ring && hasEnchants('ring')}
                   <span class="sg-ench">{$build.enchantments.ring.filter(Boolean).join(' · ')}</span>
                 {/if}
                 {#if $build.ring}
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
+                    title="Cycle upgrade (+{$build.upgradeRing} → +{($build.upgradeRing + 1) % 6})">
+                    +{$build.upgradeRing}
+                  </button>
                   <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
                   <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
                     on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
@@ -2097,7 +2089,7 @@ $: waScalingParsed = (() => {
                 {#if $build.race}
                   {@const race = races.find(r => r.name === $build.race)}
                   {#if race?.passive}
-                    <span class="sg-sub">{race.passive.length > 40 ? race.passive.slice(0,40)+'…' : race.passive}</span>
+                    <span class="sg-sub">{race.passive}</span>
                   {/if}
                 {/if}
               </button>
@@ -2118,19 +2110,17 @@ $: waScalingParsed = (() => {
                 on:click={() => openModal('armor-leggings')}
                 on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
                 <span class="sg-label">Leggings</span>
-                {#if $build.leggings}
-                    <button class="sg-upgrade-btn"
-                      class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
-                      on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
-                      title={$build.upgradeLeggings === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                      {$build.upgradeLeggings === 5 ? '+5' : '+0'}
-                    </button>
-                {/if}
                 <span class="sg-value">{$build.leggings || 'No leggings'}</span>
                 {#if $build.leggings && hasEnchants('leggings')}
                   <span class="sg-ench">{$build.enchantments.leggings.filter(Boolean).join(' · ')}</span>
                 {/if}
                 {#if $build.leggings}
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
+                    title="Cycle upgrade (+{$build.upgradeLeggings} → +{($build.upgradeLeggings + 1) % 6})">
+                    +{$build.upgradeLeggings}
+                  </button>
                   <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
                   <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
                     on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
@@ -2145,14 +2135,6 @@ $: waScalingParsed = (() => {
                 on:click={() => openModal('rune')}
                 on:keydown={e => e.key === 'Enter' && openModal('rune')}>
                 <span class="sg-label">Rune</span>
-                {#if $build.rune}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
-                    title={$build.upgradeRune === 5 ? 'Click to reset to +0' : 'Click to max upgrade'}>
-                    {$build.upgradeRune === 5 ? '+5' : '+0'}
-                  </button>
-                  {/if}
                 <span class="sg-value">{$build.rune || 'No rune'}</span>
                 {#if $build.rune && hasEnchants('rune')}
                   <span class="sg-ench">{$build.enchantments.rune.filter(Boolean).join(' · ')}</span>
@@ -2171,6 +2153,12 @@ $: waScalingParsed = (() => {
                       <span class="sg-sub">CD: {rune.cooldown}s</span>
                     {/if}
                   {/if}
+                  <button class="sg-upgrade-btn"
+                    class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
+                    on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
+                    title="Cycle upgrade (+{$build.upgradeRune} → +{($build.upgradeRune + 1) % 6})">
+                    +{$build.upgradeRune}
+                  </button>
                   <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
                   <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
                     on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
@@ -3320,9 +3308,15 @@ $: waScalingParsed = (() => {
   .sg-span2  { grid-column:span 2; }
 
   .sg-cell {
-    border-radius:8px; padding:9px 11px;
-    display:flex; flex-direction:column; gap:2px; min-height:60px;
-    border:1px solid transparent; position:relative;
+    border-radius:8px;
+    padding:9px 11px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-height:80px;
+    border:1px solid transparent;
+    position:relative;
+    align-self:stretch;
   }
   .sg-clickable { cursor:pointer; transition:all .15s; }
   .sg-clickable:hover { filter:brightness(1.15); transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.3); }
@@ -4221,5 +4215,10 @@ $: waScalingParsed = (() => {
   font-size:.75rem;
   font-weight:600;
   opacity:.9;
+}
+.sg-sub{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.15;
 }
 </style>
