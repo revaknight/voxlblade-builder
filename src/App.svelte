@@ -21,6 +21,7 @@
   import TagFilter from './TagFilter.svelte'
   import StatFilter from './StatFilter.svelte'
   import WeaponStatFilter from './WeaponStatFilter.svelte'
+  import BuffList from './BuffList.svelte'
 
   let weaponStatFilter: Map<string, 'include' | 'exclude'> = new Map()
   let weaponStatFilterRef: WeaponStatFilter
@@ -2479,6 +2480,7 @@ $: _appWaAvgTotal = (() => {
           {/if}
         </div>
       {/if}
+      <BuffList />
 
           <!-- ── DRACONIC RUNE PANEL ── -->
       {#if isDraconic}

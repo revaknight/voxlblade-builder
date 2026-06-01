@@ -12,8 +12,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
 
-      includeAssets:['favicon.ico'],
-
       manifest: {
         name:'voxlblade builder',
         short_name:'voxlbuilder',
