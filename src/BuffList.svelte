@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { build } from './lib/store'
+  import { build, result } from './lib/store'
+
   import {
     BUFF_DEFS,
-    ITEM_BUFF_MAP,
     getActiveBuildBuffs,
+    getPerkBuffs,
     calcBuffEffect,
     type GrantedBuff,
   } from './data/BuffData'
 
-  $: activeBuffs = getActiveBuildBuffs({
+  $: itemBuffs = getActiveBuildBuffs({
     rune: $build.rune,
     ring: $build.ring,
     infusionRing: $build.infusionRing,
@@ -20,26 +21,63 @@
     monkGlove: $build.monkGlove,
   })
 
-  $: buffs   = activeBuffs.filter(b => !BUFF_DEFS[b.buffName]?.isDebuff)
-  $: debuffs = activeBuffs.filter(b =>  BUFF_DEFS[b.buffName]?.isDebuff)
+  $: perkBuffs = getPerkBuffs($result.perks)
 
-  // ── UI state ──────────────────────────────────────────────────────────────
+  $: activeBuffs = [
+    ...itemBuffs,
+    ...perkBuffs,
+  ]
+  type GroupedBuff = {
+  buffName: string
+  entries: GrantedBuff[]
+  strongest: GrantedBuff
+}
+
+$: groupedBuffs = Object.values(
+  activeBuffs.reduce((acc, buff) => {
+    (acc[buff.buffName] ??= []).push(buff)
+    return acc
+  }, {} as Record<string, GrantedBuff[]>)
+).map(entries => ({
+  buffName: entries[0].buffName,
+  entries,
+  strongest: [...entries].sort(
+    (a, b) =>
+      (b.potency - a.potency) ||
+      (b.duration - a.duration)
+  )[0],
+  maxDuration: Math.max(
+    ...entries.map(e => e.duration)
+  ),
+}))
+
+  $: buffs = groupedBuffs.filter(
+    g => !BUFF_DEFS[g.buffName]?.isDebuff
+  )
+
+  $: debuffs = groupedBuffs.filter(
+    g => BUFF_DEFS[g.buffName]?.isDebuff
+  )
+
   let expanded = true
   let activeTab: 'buffs' | 'debuffs' = 'buffs'
 
-  // ── Source type badge color ───────────────────────────────────────────────
   const SRC_COLOR: Record<string, string> = {
-    rune:   '#a78bfa',
-    ring:   '#38bdf8',
-    armor:  '#4ade80',
+    rune: '#a78bfa',
+    ring: '#38bdf8',
+    armor: '#4ade80',
     weapon: '#fb923c',
-    perk:   '#fbbf24',
-    guild:  '#e879f9',
+    perk: '#fbbf24',
+    guild: '#e879f9',
   }
 
   const SRC_LABEL: Record<string, string> = {
-    rune: 'Rune', ring: 'Ring', armor: 'Armor',
-    weapon: 'Weapon', perk: 'Perk', guild: 'Guild',
+    rune: 'Rune',
+    ring: 'Ring',
+    armor: 'Armor',
+    weapon: 'Weapon',
+    perk: 'Perk',
+    guild: 'Guild',
   }
 </script>
 
@@ -86,9 +124,9 @@
       </div>
     {:else}
       <div class="bl-list">
-        {#each list as granted (granted.sourceName + granted.buffName)}
-          {@const def = BUFF_DEFS[granted.buffName]}
-          {@const effect = calcBuffEffect(granted.buffName, granted.potency)}
+        {#each list as group (group.buffName)}
+          {@const def = BUFF_DEFS[group.buffName]}
+          {@const effect = calcBuffEffect(group.strongest.buffName,group.strongest.potency  )}
           {#if def}
             <div
               class="bl-card"
@@ -100,15 +138,19 @@
               <div class="bl-info">
                 <div class="bl-info-top">
                   <span class="bl-buff-name" style="color:{def.color}">{def.name}</span>
-                  {#if granted.duration > 0}
-                    <span class="bl-duration">⏱ {granted.duration}s</span>
+                  {#if group.maxDuration > 0}
+                    <span class="bl-duration">
+                      ⏱ {group.maxDuration}s
+                    </span>
                   {:else}
-                    <span class="bl-duration bl-duration--passive">Passive</span>
+                    <span class="bl-duration bl-duration--passive">
+                      Passive
+                    </span>
                   {/if}
                 </div>
                 <div class="bl-effect">
                   <span class="bl-potency">
-                    {granted.potency} potency
+                    {group.strongest.potency.toFixed(1)} potency
                   </span>
                   <span class="bl-arrow">→</span>
                   <span class="bl-value" style="color:{def.color}">
@@ -116,22 +158,41 @@
                     {def.isDebuff ? ' to enemy' : ''}
                   </span>
                 </div>
-                <div class="bl-desc">{def.description}</div>
-                {#if granted.condition}
+                {#if group.strongest.condition}
                   <div class="bl-condition">
                     <span class="bl-cond-dot"></span>
-                    {granted.condition}
+                    {group.strongest.condition}
                   </div>
                 {/if}
               </div>
 
-              <!-- Right: source badge -->
-              <div class="bl-source">
-                <span class="bl-src-type"
-                  style="color:{SRC_COLOR[granted.sourceType]};background:color-mix(in srgb,{SRC_COLOR[granted.sourceType]} 12%,transparent);border-color:color-mix(in srgb,{SRC_COLOR[granted.sourceType]} 25%,transparent)">
-                  {SRC_LABEL[granted.sourceType]}
-                </span>
-                <span class="bl-src-name">{granted.sourceName}</span>
+              <div class="bl-sources">
+                {#each [...group.entries].sort((a,b)=>b.potency-a.potency) as source}
+                  <div
+                    class="bl-source-row"
+                    class:bl-source-row--main={source === group.strongest}
+                  >
+                    <div class="bl-source-left">
+                      <span class="bl-src-type">
+                        {SRC_LABEL[source.sourceType]}
+                      </span>
+
+                      <span class="bl-src-name">
+                        {source.sourceName}
+                      </span>
+
+                      {#if source.condition}
+                        <div class="bl-source-condition">
+                          • {source.condition}
+                        </div>
+                      {/if}
+                    </div>
+
+                    <span class="bl-src-potency">
+                      {(source.potency * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                {/each}
               </div>
             </div>
           {/if}
@@ -336,12 +397,6 @@
     text-shadow: 0 0 10px color-mix(in srgb, var(--c, #4ade80) 40%, transparent);
   }
 
-  .bl-desc {
-    font-size: .7rem;
-    color: var(--ink-muted, #8a8d85);
-    line-height: 1.35;
-    opacity: .65;
-  }
 
   .bl-condition {
     display: flex;
@@ -360,15 +415,6 @@
     flex-shrink: 0;
   }
 
-  /* ── Source ── */
-  .bl-source {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    flex-shrink: 0;
-    min-width: 80px;
-  }
   .bl-src-type {
     font-size: .58rem;
     font-weight: 800;
@@ -404,4 +450,32 @@
     font-style: italic;
   }
   .bl-leg-icon { opacity: .6; }
+  .bl-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.bl-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: .45;
+  transition: .2s;
+}
+
+.bl-source-row--main {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.bl-source-row:hover {
+  opacity: .85;
+}
+
+.bl-src-potency {
+  color: var(--c);
+  font-weight: 700;
+}
 </style>

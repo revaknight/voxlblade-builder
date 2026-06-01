@@ -1,4 +1,3 @@
-
 export interface BuffDefinition {
   name: string
   color: string
@@ -18,31 +17,56 @@ export interface GrantedBuff {
   sourceType: 'rune' | 'ring' | 'armor' | 'weapon' | 'perk' | 'guild'
 }
 
-
 export const BUFF_DEFS: Record<string, BuffDefinition> = {
-  'Rage': {
+  Rage: {
     name: 'Rage',
     color: '#fb923c',
     description: 'Deal more physical damage.',
     effectPerTenthPotency: 10,
     effectUnit: '%',
     statKey: 'physicalBoost',
-    isDebuff: false,
   },
 }
-
 
 export const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Rage',
     potency: 0.3,
     duration: 10,
-    condition: 'On activate',
     sourceName: 'Rage Rune',
     sourceType: 'rune',
   },
 ]
 
+type PerkBuffFactory = (amount: number) => GrantedBuff
+
+const PERK_BUFFS: Record<string, PerkBuffFactory> = {
+  'Wrathful Crits': (amount) => ({
+    buffName: 'Rage',
+    potency: 0.1 * amount,
+    duration: 5 + 2 * amount,
+    condition: 'On critical hit',
+    sourceName: 'Wrathful Crits',
+    sourceType: 'perk',
+  }),
+}
+
+export function getPerkBuffs(
+  perks: Record<string, number>
+): GrantedBuff[] {
+  const buffs: GrantedBuff[] = []
+
+  for (const [perkName, amount] of Object.entries(perks)) {
+    if (amount <= 0) continue
+
+    const factory = PERK_BUFFS[perkName]
+    if (!factory) continue
+
+    buffs.push(factory(amount))
+  }
+
+  return buffs
+}
 
 export function getActiveBuildBuffs(build: {
   rune: string
@@ -55,36 +79,55 @@ export function getActiveBuildBuffs(build: {
   weaponHandle: string
   monkGlove: string
 }): GrantedBuff[] {
-  const equippedItems = new Set([
-    build.rune,
-    build.ring,
-    build.infusionRing,
-    build.helmet,
-    build.chestplate,
-    build.leggings,
-    build.weaponBlade,
-    build.weaponHandle,
-    build.monkGlove,
-  ].filter(Boolean))
+  const equippedItems = new Set(
+    [
+      build.rune,
+      build.ring,
+      build.infusionRing,
+      build.helmet,
+      build.chestplate,
+      build.leggings,
+      build.weaponBlade,
+      build.weaponHandle,
+      build.monkGlove,
+    ].filter(Boolean)
+  )
 
-  return ITEM_BUFF_MAP.filter(b => equippedItems.has(b.sourceName))
+  return ITEM_BUFF_MAP.filter((buff) =>
+    equippedItems.has(buff.sourceName)
+  )
 }
 
-
-export function calcBuffEffect(buffName: string, potency: number): {
+export function calcBuffEffect(
+  buffName: string,
+  potency: number
+): {
   value: number
   unit: '%' | 'flat'
   label: string
 } {
   const def = BUFF_DEFS[buffName]
-  if (!def) return { value: 0, unit: '%', label: '?' }
 
-  const tenths = Math.round(potency / 0.1)
-  const value = Math.round(def.effectPerTenthPotency * tenths * 100) / 100
+  if (!def) {
+    return {
+      value: 0,
+      unit: '%',
+      label: '?',
+    }
+  }
+
+  const value = Math.round(def.effectPerTenthPotency * potency * 10 * 100) / 100
+
   const sign = def.isDebuff ? '' : '+'
-  const label = def.effectUnit === '%'
-    ? `${sign}${value}% ${def.description.split(' ').slice(0, 3).join(' ')}…`
-    : `${sign}${value} ${def.statKey ?? ''}`
 
-  return { value, unit: def.effectUnit, label }
+  const label =
+    def.effectUnit === '%'
+      ? `${sign}${value}% ${def.description.split(' ').slice(0, 3).join(' ')}…`
+      : `${sign}${value} ${def.statKey ?? ''}`
+
+  return {
+    value,
+    unit: def.effectUnit,
+    label,
+  }
 }
