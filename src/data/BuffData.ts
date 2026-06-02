@@ -102,7 +102,7 @@ export function getPerkBuffs(
     if (amount <= 0) continue
     const factory = PERK_BUFFS[perkName]
     if (!factory) continue
-    buffs.push(...factory(amount))   // spread thay vì push single
+    buffs.push(...factory(amount))
   }
 
   return buffs
