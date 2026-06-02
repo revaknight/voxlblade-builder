@@ -20,7 +20,7 @@ export interface GrantedBuff {
 export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Rage: {
     name: 'Rage',
-    color: '#fb923c',
+    color: '#f70201',
     description: 'Deal more physical damage.',
     effectPerTenthPotency: 10,
     effectUnit: '%',
@@ -28,14 +28,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   Bounce: {
     name: 'Bounce',
-    color: '#38bdf8',
+    color: '#f438d7',
     description: 'Attacks bounce to nearby enemies.',
     effectPerTenthPotency: 0.1, 
     effectUnit: 'flat',
   },
   Regen: {
     name: 'Regen',
-    color: '#4ade80',
+    color: '#18ff0d',
     description: 'Regenerate health over time.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
@@ -43,7 +43,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   Reinforce: {
     name: 'Reinforce',
-    color: '#fbbf24',
+    color: '#fbed0a',
     description: 'Gain increased defense.',
     effectPerTenthPotency: 10,
     effectUnit: '%',
@@ -51,7 +51,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   Tailwind: {
     name: 'Tailwind',
-    color: '#a78bfa',
+    color: '#ffffff',
     description: 'Move and attack faster.',
     effectPerTenthPotency: 10,
     effectUnit: '%',
@@ -68,17 +68,10 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
   },
 ]
 
-// Factory giờ trả về mảng để hỗ trợ perk có nhiều buff (như Blessing)
 type PerkBuffFactory = (amount: number) => GrantedBuff[]
 
 const PERK_BUFFS: Record<string, PerkBuffFactory> = {
-  'Wrathful Crits': (amount) => [{
-    buffName: 'Rage',
-    potency: 0.1 * amount,
-    duration: 5 + 2 * amount,
-    condition: 'On critical hit',
-    sourceName: 'Desert Champion',
-    sourceType: 'armor',
+  'Wrathful Crits': (amount) => [{ buffName: 'Rage', potency: 0.1 * amount, duration: 5 + 2 * amount, condition: 'On critical hit', sourceName: 'Wrathful Crits', sourceType: 'perk',
   }],
 
   'Blessing': (amount) => {
@@ -91,6 +84,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       { buffName: 'Tailwind',  potency: 0.2, duration: 15, condition, sourceName: 'Blessing', sourceType: 'perk' },
     ]
   },
+
+  'Beastial Rage': (amount) => [{ buffName: 'Rage', potency: 0.3 * amount, duration: 15, condition: 'On kill or Poisebreak', sourceName: 'Beastial Rage', sourceType: 'perk' }],
 }
 
 export function getPerkBuffs(
