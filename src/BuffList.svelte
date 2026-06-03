@@ -1,15 +1,14 @@
 <script lang="ts">
   import { build, result } from './lib/store'
-
-import {
-  BUFF_DEFS,
-  getActiveBuildBuffs,
-  getPerkBuffs,
-  applyBuffPerkModifiers,
-  calcBuffEffect,
-  getBuffDescription,
-  type GrantedBuff,
-} from './data/BuffData'
+  import {
+    BUFF_DEFS,
+    getActiveBuildBuffs,
+    getPerkBuffs,
+    applyBuffPerkModifiers,
+    calcBuffEffect,
+    getBuffDescription,
+    type GrantedBuff,
+  } from './data/BuffData'
 
   $: itemBuffs = getActiveBuildBuffs({
     rune: $build.rune,
@@ -42,14 +41,17 @@ import {
       (acc[buff.buffName] ??= []).push(buff)
       return acc
     }, {} as Record<string, GrantedBuff[]>)
-  ).map(entries => ({
-    buffName: entries[0].buffName,
-    entries,
-    strongest: [...entries].sort(
+  ).map(entries => {
+    const sortedEntries = [...entries].sort(
       (a, b) => (b.potency - a.potency) || (b.duration - a.duration)
-    )[0],
-    maxDuration: Math.max(...entries.map(e => e.duration)),
-  }))
+    )
+    return {
+      buffName: sortedEntries[0].buffName,
+      entries: sortedEntries,
+      strongest: sortedEntries[0],
+      maxDuration: Math.max(...sortedEntries.map(e => e.duration)),
+    }
+  })
 
   $: buffs = groupedBuffs.filter(g => !BUFF_DEFS[g.buffName]?.isDebuff)
   $: debuffs = groupedBuffs.filter(g => BUFF_DEFS[g.buffName]?.isDebuff)
@@ -74,15 +76,9 @@ import {
     perk:   'Perk',
     guild:  'Guild',
   }
-
-  // Max potency across all sources in a group, used for bar widths
-  function maxPotency(entries: GrantedBuff[]): number {
-    return Math.max(...entries.map(e => e.potency))
-  }
 </script>
 
 <div class="bl-root">
-  <!-- ── Header ── -->
   <div class="bl-header">
     <div class="bl-tabs">
       <button
@@ -127,20 +123,17 @@ import {
         {#each list as group (group.buffName)}
           {@const def = BUFF_DEFS[group.buffName]}
           {@const effect = calcBuffEffect(group.strongest.buffName, group.strongest.potency)}
-          {@const topPotency = maxPotency(group.entries)}
+          
+          {@const topPotency = group.strongest.potency}
+          
           {#if def}
             <div class="bl-card" class:bl-card--debuff={def.isDebuff} style="--c:{def.color}">
-
-              <!-- ── Accent bar ── -->
               <div class="bl-accent-bar"></div>
 
               <div class="bl-body">
-
-                <!-- ── Top row: name + tags + value ── -->
                 <div class="bl-top-row">
                   <div class="bl-name-group">
                     <span class="bl-buff-name" style="color:{def.color}">{def.name}</span>
-
                     {#if group.maxDuration > 0}
                       <span class="bl-tag bl-tag--duration">⏱ {group.maxDuration}s</span>
                     {:else}
@@ -156,23 +149,18 @@ import {
                   </div>
                 </div>
 
-                <!-- ── Description  ── -->
                 <div class="bl-desc-row">
                   <span class="bl-desc-text">
                     {
                       getBuffDescription(group.buffName, $result.perks)
-                        .replace(
-                          /x%/g,
-                          `${(group.strongest.potency * 100).toFixed(0)}%`
-                        )
+                        .replace(/x%/g, `${(group.strongest.potency * 100).toFixed(0)}%`)
                     }
                   </span>
                 </div>
-                <!-- ── Sources ── -->
+
                 <div class="bl-sources-label">Sources</div>
                 <div class="bl-sources">
-                  {#each [...group.entries].sort((a, b) => b.potency - a.potency) as source}
-                    {@const pct = (source.potency * 100)}
+                  {#each group.entries as source}
                     {@const barW = topPotency > 0 ? Math.round((source.potency / topPotency) * 100) : 0}
                     {@const isMain = source === group.strongest}
                     <div class="bl-source-row" class:bl-source-row--main={isMain}>
@@ -210,7 +198,6 @@ import {
                     </div>
                   {/each}
                 </div>
-
               </div>
             </div>
           {/if}
@@ -229,7 +216,6 @@ import {
     font-family: var(--font-body, 'Trebuchet MS', sans-serif);
   }
 
-  /* ── Header ── */
   .bl-header {
     display: flex;
     align-items: stretch;
@@ -299,7 +285,6 @@ import {
   }
   .bl-collapse:hover { opacity: 1; }
 
-  /* ── Empty ── */
   .bl-empty {
     display: flex;
     align-items: center;
@@ -310,13 +295,11 @@ import {
   .bl-empty-icon { font-size: 1rem; opacity: .3; }
   .bl-empty-text { font-size: .75rem; color: var(--ink-muted, #8a8d85); font-style: italic; opacity: .5; }
 
-  /* ── List ── */
   .bl-list {
     display: flex;
     flex-direction: column;
   }
 
-  /* ── Card ── */
   .bl-card {
     display: flex;
     align-items: stretch;
@@ -326,7 +309,6 @@ import {
   .bl-card:hover { background: rgba(255,255,255,.02); }
   .bl-card:last-child { border-bottom: none; }
 
-  /* Gradient accent bar on the left */
   .bl-accent-bar {
     width: 4px;
     flex-shrink: 0;
@@ -336,7 +318,6 @@ import {
     background: linear-gradient(180deg, var(--c, #f87171) 0%, color-mix(in srgb, var(--c, #f87171) 25%, transparent) 100%);
   }
 
-  /* ── Body ── */
   .bl-body {
     flex: 1;
     padding: 11px 14px 11px 12px;
@@ -346,7 +327,6 @@ import {
     min-width: 0;
   }
 
-  /* ── Top row ── */
   .bl-top-row {
     display: flex;
     align-items: center;
@@ -369,7 +349,6 @@ import {
     line-height: 1;
   }
 
-  /* Tags */
   .bl-tag {
     font-size: .6rem;
     font-weight: 700;
@@ -388,10 +367,7 @@ import {
     color: #a78bfa;
   }
 
-  /* Value box */
-  .bl-value-box {
-    flex-shrink: 0;
-  }
+  .bl-value-box { flex-shrink: 0; }
   .bl-value {
     font-weight: 800;
     font-family: 'Courier New', monospace;
@@ -399,7 +375,6 @@ import {
     letter-spacing: -.01em;
   }
 
-  /* ── Description row ── */
   .bl-desc-row {
     display: flex;
     align-items: center;
@@ -416,7 +391,6 @@ import {
     line-height: 1.4;
   }
 
-  /* ── Sources ── */
   .bl-sources-label {
     font-size: .55rem;
     text-transform: uppercase;
@@ -487,7 +461,6 @@ import {
     text-overflow: ellipsis;
   }
 
-  /* Bar + value */
   .bl-src-right {
     display: flex;
     align-items: center;
@@ -513,43 +486,35 @@ import {
     font-size: .72rem;
     font-weight: 800;
     font-family: 'Courier New', monospace;
-    min-width: 30px;
-    text-align: right;
-  }
-
-  .bl-src-potency {
-    font-size: .72rem;
-    font-weight: 800;
-    font-family: 'Courier New', monospace;
     line-height: 1;
   }
-.bl-potency-cell {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-.bl-base-val {
-  font-size: .62rem;
-  color: var(--ink-muted, #8a8d85);
-  font-family: 'Courier New', monospace;
-  font-weight: 600;
-}
-.bl-arrow {
-  font-size: .6rem;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .5;
-}
-.bl-perk-badge {
-  font-size: .52rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #4ade80;
-  background: rgba(74,222,128,.12);
-  border: 1px solid rgba(74,222,128,.25);
-  padding: 1px 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+  .bl-potency-cell {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .bl-base-val {
+    font-size: .62rem;
+    color: var(--ink-muted, #8a8d85);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+  }
+  .bl-arrow {
+    font-size: .6rem;
+    color: var(--ink-muted, #8a8d85);
+    opacity: .5;
+  }
+  .bl-perk-badge {
+    font-size: .52rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    color: #4ade80;
+    background: rgba(74,222,128,.12);
+    border: 1px solid rgba(74,222,128,.25);
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 </style>
