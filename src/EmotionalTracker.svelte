@@ -3,20 +3,10 @@
 
   type EmotionalState = 'debuff' | 'both' | 'buff'
 
-  const TO_STORE: Record<EmotionalState, 'debuffs' | 'both' | 'buffs'> = {
-    buff: 'buffs',
-    debuff: 'debuffs',
-    both: 'both',
+  const MAPPING = {
+    toStore: { buff: 'buffs', debuff: 'debuffs', both: 'both' } as const,
+    fromStore: { buffs: 'buff', debuffs: 'debuff', both: 'both' } as Record<string, EmotionalState>
   }
-
-  const FROM_STORE: Record<string, EmotionalState> = {
-    buffs: 'buff',
-    debuffs: 'debuff',
-    both: 'both',
-  }
-
-  // Init from store
-  let state: EmotionalState = FROM_STORE[$build.emotionalState] ?? 'buff'
 
   const SLIDER_MAP: EmotionalState[] = ['debuff', 'both', 'buff']
 
@@ -54,45 +44,35 @@
     }
   }
 
+  $: state = MAPPING.fromStore[$build.emotionalState] ?? 'buff'
   $: cur = STATE_DATA[state]
   $: sliderVal = SLIDER_MAP.indexOf(state)
 
-  // Keep local state in sync if store changes externally (e.g. load build)
-  $: {
-    const fromStore = FROM_STORE[$build.emotionalState] ?? 'buff'
-    if (fromStore !== state) state = fromStore
+  function updateState(newState: EmotionalState) {
+    build.update(b => ({ ...b, emotionalState: MAPPING.toStore[newState] }))
   }
 
   function onSlider(e: Event) {
-    state = SLIDER_MAP[parseInt((e.target as HTMLInputElement).value)]
-    build.update(b => ({ ...b, emotionalState: TO_STORE[state] }))
-  }
-
-  function pick(s: EmotionalState) {
-    state = s
-    build.update(b => ({ ...b, emotionalState: TO_STORE[s] }))
+    const idx = parseInt((e.target as HTMLInputElement).value)
+    updateState(SLIDER_MAP[idx])
   }
 </script>
 
 <div class="et"
   style="--c:{cur.color};--glow:{cur.glow};--border-c:{cur.border};--bg:{cur.bg}">
 
-  <!-- Header row -->
   <div class="et-head">
     <span class="et-title">Emotional State</span>
     <span class="et-badge">{cur.label}</span>
   </div>
 
-  <!-- 3-button quick select -->
   <div class="et-btns">
     {#each SLIDER_MAP as s}
       <button
         class="et-btn"
         class:et-btn--active={state === s}
-        style={state === s
-          ? `background:${STATE_DATA[s].bg};border-color:${STATE_DATA[s].border};color:${STATE_DATA[s].color};box-shadow:0 0 8px ${STATE_DATA[s].glow}`
-          : ''}
-        on:click={() => pick(s)}
+        style="--btn-bg:{STATE_DATA[s].bg}; --btn-border:{STATE_DATA[s].border}; --btn-color:{STATE_DATA[s].color}; --btn-glow:{STATE_DATA[s].glow}"
+        on:click={() => updateState(s)}
       >
         <span class="et-btn-icon">{STATE_DATA[s].icon}</span>
         <span class="et-btn-label">
@@ -102,12 +82,10 @@
     {/each}
   </div>
 
-  <!-- Slider -->
   <div class="et-track-row">
     <span class="et-tick-label" style="color:#f87171">Debuff</span>
 
     <div class="et-slider-wrap">
-      <!-- Colored segment track behind the input -->
       <div class="et-seg-track">
         <div class="et-seg et-seg--debuff" class:et-seg--active={state === 'debuff'}></div>
         <div class="et-seg et-seg--both"   class:et-seg--active={state === 'both'}></div>
@@ -122,12 +100,11 @@
         style="--tc:{cur.color};--tg:{cur.glow}"
       />
 
-      <!-- Tick dots below -->
       <div class="et-dots">
         {#each SLIDER_MAP as s}
           <div class="et-dot"
             class:et-dot--active={state === s}
-            style={state === s ? `background:${STATE_DATA[s].color};box-shadow:0 0 5px ${STATE_DATA[s].glow}` : ''}
+            style="--dot-color:{STATE_DATA[s].color}; --dot-glow:{STATE_DATA[s].glow}"
           ></div>
         {/each}
       </div>
@@ -167,7 +144,8 @@
   /* Quick buttons */
   .et-btns { display:flex; gap:5px; }
   .et-btn {
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    flex:1; display:flex;
+    flex-direction:column; align-items:center; gap:2px;
     padding:6px 4px; border-radius:7px;
     border:1px solid rgba(255,255,255,0.08);
     background:rgba(255,255,255,0.03);
@@ -175,21 +153,24 @@
     cursor:pointer; transition:all .18s;
   }
   .et-btn:hover { border-color:rgba(255,255,255,0.15); color:#a0a89a; }
-  .et-btn--active { font-weight:700; }
+  
+  .et-btn--active { 
+    font-weight:700; 
+    background: var(--btn-bg) !important;
+    border-color: var(--btn-border) !important;
+    color: var(--btn-color) !important;
+    box-shadow: 0 0 8px var(--btn-glow);
+  }
   .et-btn-icon { font-size:.8rem; }
   .et-btn-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
 
   /* Slider track row */
-  .et-track-row {
-    display:flex; align-items:center; gap:8px;
-  }
+  .et-track-row { display:flex; align-items:center; gap:8px; }
   .et-tick-label {
     font-size:.58rem; font-weight:700; text-transform:uppercase;
     letter-spacing:.1em; flex-shrink:0; opacity:.75;
   }
-  .et-slider-wrap {
-    flex:1; position:relative; display:flex; flex-direction:column; gap:3px;
-  }
+  .et-slider-wrap { flex:1; position:relative; display:flex; flex-direction:column; gap:3px; }
 
   /* Segment visual track */
   .et-seg-track {
@@ -241,14 +222,15 @@
   }
 
   /* Dot ticks */
-  .et-dots {
-    display:flex; justify-content:space-between;
-    padding:0 10px; pointer-events:none;
-  }
+  .et-dots { display:flex; justify-content:space-between; padding:0 10px; pointer-events:none; }
   .et-dot {
     width:5px; height:5px; border-radius:50%;
     background:rgba(255,255,255,0.12);
     transition:background .2s, transform .2s, box-shadow .2s;
   }
-  .et-dot--active { transform:scale(1.5); }
+  .et-dot--active {
+    transform:scale(1.5);
+    background: var(--dot-color) !important;
+    box-shadow: 0 0 5px var(--dot-glow);
+  }
 </style>

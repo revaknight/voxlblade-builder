@@ -5,7 +5,7 @@
   export let options: Array<{ name: string }> = []
   export let placeholder: string = '— None —'
 
-  const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher<{ change: string }>()
 
   // ── Enchantment color map ─────────────────────────────────────────────────
   const ENCHANT_COLORS: Record<string, string> = {
@@ -61,17 +61,20 @@
     'Candied':       'rgb(246, 178, 255)',
   }
 
-  export function getColor(name: string): string {
-    return ENCHANT_COLORS[name] ?? 'rgb(138, 141, 133)'
-  }
+  const DEFAULT_COLOR = 'rgb(138, 141, 133)'
 
   // ── State ─────────────────────────────────────────────────────────────────
   let open = false
   let containerEl: HTMLElement
   let triggerEl: HTMLElement
+  let inputEl: HTMLInputElement
   let searchQuery = ''
   let highlightIndex = -1
   let dropdownStyle = ''
+
+  const dropdownId = 'ecs-portal-unique'
+
+  $: activeColor = ENCHANT_COLORS[value] ?? DEFAULT_COLOR
 
   function updateDropdownPos() {
     if (!triggerEl) return
@@ -85,8 +88,9 @@
     }
   }
 
-  $: filtered = searchQuery.trim()
-    ? options.filter(o => o.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  $: cleanQuery = searchQuery.trim().toLowerCase()
+  $: filtered = cleanQuery
+    ? options.filter(o => o.name.toLowerCase().includes(cleanQuery))
     : options
 
   function select(name: string) {
@@ -95,6 +99,7 @@
     open = false
     searchQuery = ''
     highlightIndex = -1
+    triggerEl?.focus()
   }
 
   function toggle() {
@@ -103,17 +108,31 @@
       searchQuery = ''
       highlightIndex = -1
       updateDropdownPos()
+      setTimeout(() => inputEl?.focus(), 20)
     }
   }
 
   function handleKeydown(e: KeyboardEvent) {
     if (!open) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open = true }
+      if (e.key === 'Enter' || e.key === ' ') { 
+        e.preventDefault()
+        toggle() 
+      }
       return
     }
-    if (e.key === 'Escape') { open = false; return }
-    if (e.key === 'ArrowDown') { e.preventDefault(); highlightIndex = Math.min(highlightIndex + 1, filtered.length) }
-    if (e.key === 'ArrowUp') { e.preventDefault(); highlightIndex = Math.max(highlightIndex - 1, -1) }
+    if (e.key === 'Escape') { 
+      open = false
+      triggerEl?.focus()
+      return 
+    }
+    if (e.key === 'ArrowDown') { 
+      e.preventDefault()
+      highlightIndex = Math.min(highlightIndex + 1, filtered.length - 1) 
+    }
+    if (e.key === 'ArrowUp') { 
+      e.preventDefault()
+      highlightIndex = Math.max(highlightIndex - 1, -1) 
+    }
     if (e.key === 'Enter') {
       e.preventDefault()
       if (highlightIndex === -1) select('')
@@ -123,116 +142,130 @@
 
   function handleOutsideClick(e: MouseEvent) {
     if (containerEl && !containerEl.contains(e.target as Node)) {
-      // Also check if click is inside the dropdown portal
       const dropdown = document.getElementById(dropdownId)
       if (dropdown && dropdown.contains(e.target as Node)) return
       open = false
     }
   }
 
-  const dropdownId = 'ecs-portal-' + Math.random().toString(36).substr(2, 9)
-
-  function handleScroll() { if (open) updateDropdownPos() }
+  let scrollTicking = false
+  function handleScroll() {
+    if (!open) return
+    if (!scrollTicking) {
+      window.requestAnimationFrame(() => {
+        updateDropdownPos()
+        scrollTicking = false
+      })
+      scrollTicking = true
+    }
+  }
 
   onMount(() => {
     document.addEventListener('mousedown', handleOutsideClick)
-    window.addEventListener('scroll', handleScroll, true)
-    window.addEventListener('resize', handleScroll)
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
   })
+
   onDestroy(() => {
     document.removeEventListener('mousedown', handleOutsideClick)
-    window.removeEventListener('scroll', handleScroll, true)
+    window.removeEventListener('scroll', handleScroll, { capture: true })
     window.removeEventListener('resize', handleScroll)
   })
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="ecs-wrap" bind:this={containerEl} on:keydown={handleKeydown}>
-  <!-- Trigger -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y_role_has_required_aria_props -->
-  <div
+<div class="ecs-wrap" bind:this={containerEl}>
+  <button
+    type="button"
     class="ecs-trigger"
     class:ecs-trigger--open={open}
     class:ecs-trigger--filled={!!value}
-    role="button"
     aria-expanded={open}
     aria-haspopup="listbox"
-    tabindex="0"
+    aria-controls={dropdownId}
     bind:this={triggerEl}
     on:click={toggle}
+    on:keydown={handleKeydown}
   >
     {#if value}
-      <span class="ecs-dot" style="background:{getColor(value)};box-shadow:0 0 6px {getColor(value)}55"></span>
-      <span class="ecs-label" style="color:{getColor(value)}">{value}</span>
+      <span class="ecs-dot" style="background:{activeColor};box-shadow:0 0 6px {activeColor}55"></span>
+      <span class="ecs-label" style="color:{activeColor}">{value}</span>
     {:else}
       <span class="ecs-placeholder">{placeholder}</span>
     {/if}
     <span class="ecs-arrow" class:ecs-arrow--open={open}>▾</span>
-  </div>
+  </button>
 
-  <!-- Dropdown -->
   {#if open}
-    <div class="ecs-dropdown" id={dropdownId} role="listbox" style={dropdownStyle}>
-      <!-- Search -->
-      <!-- svelte-ignore a11y-autofocus -->
+    <div 
+      class="ecs-dropdown" 
+      id={dropdownId} 
+      role="listbox" 
+      aria-label="Enchantment options"
+      tabindex="-1"
+      style={dropdownStyle}
+      on:keydown={handleKeydown}
+    >
       <div class="ecs-search-wrap">
         <span class="ecs-search-icon">⌕</span>
-        <!-- svelte-ignore a11y-autofocus -->
         <input
+          bind:this={inputEl}
           class="ecs-search"
           type="text"
           bind:value={searchQuery}
           placeholder="Search..."
-          autofocus
+          aria-label="Search enchantments"
           on:click|stopPropagation
         />
         {#if searchQuery}
-          <button class="ecs-search-clear" on:click|stopPropagation={() => searchQuery = ''}>✕</button>
+          <button 
+            type="button"
+            class="ecs-search-clear" 
+            aria-label="Clear search"
+            on:click|stopPropagation={() => searchQuery = ''}
+          >
+            ✕
+          </button>
         {/if}
       </div>
 
-      <!-- None option -->
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <div
+      <button
+        type="button"
         class="ecs-option ecs-option--none"
         class:ecs-option--selected={value === ''}
         class:ecs-option--highlight={highlightIndex === -1}
         role="option"
-        tabindex="-1"
         aria-selected={value === ''}
         on:click={() => select('')}
         on:mouseenter={() => highlightIndex = -1}
       >
         <span class="ecs-opt-dot ecs-opt-dot--none"></span>
         <span class="ecs-opt-name ecs-opt-name--none">— None —</span>
-      </div>
+      </button>
 
-      <!-- Options -->
       <div class="ecs-list">
         {#each filtered as opt, i}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
+          {@const optColor = ENCHANT_COLORS[opt.name] ?? DEFAULT_COLOR}
+          <button
+            type="button"
             class="ecs-option"
             class:ecs-option--selected={value === opt.name}
             class:ecs-option--highlight={highlightIndex === i}
             role="option"
-            tabindex="-1"
             aria-selected={value === opt.name}
             on:click={() => select(opt.name)}
             on:mouseenter={() => highlightIndex = i}
           >
             <span
               class="ecs-opt-dot"
-              style="background:{getColor(opt.name)};box-shadow:0 0 5px {getColor(opt.name)}66"
+              style="background:{optColor};box-shadow:0 0 5px {optColor}66"
             ></span>
-            <span class="ecs-opt-name" style="color:{getColor(opt.name)}">{opt.name}</span>
+            <span class="ecs-opt-name" style="color:{optColor}">{opt.name}</span>
             {#if value === opt.name}
               <span class="ecs-opt-check">✓</span>
             {/if}
-          </div>
+          </button>
         {:else}
-          <div class="ecs-empty">No results</div>
+          <div class="ecs-empty" role="status">No results</div>
         {/each}
       </div>
     </div>
@@ -240,6 +273,7 @@
 </div>
 
 <style>
+  /* [Giữ nguyên CSS cũ của bạn, thay thế selector .ecs-option div bằng .ecs-option button] */
   .ecs-wrap {
     position: relative;
     flex: 1;
@@ -247,7 +281,6 @@
     font-family: var(--font-body, 'Trebuchet MS', sans-serif);
   }
 
-  /* ── Trigger ── */
   .ecs-trigger {
     display: flex;
     align-items: center;
@@ -262,6 +295,8 @@
     position: relative;
     transition: border-color 0.15s, background 0.15s;
     user-select: none;
+    color: inherit;
+    text-align: left;
   }
   .ecs-trigger:hover,
   .ecs-trigger--open {
@@ -308,7 +343,6 @@
     transform: translateY(-50%) rotate(180deg);
   }
 
-  /* ── Dropdown ── */
   .ecs-dropdown {
     z-index: 9999;
     background: #141715;
@@ -326,7 +360,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Search ── */
   .ecs-search-wrap {
     display: flex;
     align-items: center;
@@ -362,7 +395,6 @@
   }
   .ecs-search-clear:hover { color: #f87171; }
 
-  /* ── List ── */
   .ecs-list {
     flex: 1;
     overflow-y: auto;
@@ -372,7 +404,6 @@
   .ecs-list::-webkit-scrollbar { width: 4px; }
   .ecs-list::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.2); border-radius: 2px; }
 
-  /* ── Option ── */
   .ecs-option {
     display: flex;
     align-items: center;
@@ -381,6 +412,11 @@
     cursor: pointer;
     transition: background 0.08s;
     position: relative;
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font-family: inherit;
   }
   .ecs-option--none {
     border-bottom: 1px solid rgba(255,255,255,0.05);

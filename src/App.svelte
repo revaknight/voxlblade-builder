@@ -30,14 +30,13 @@
   let weaponStatFilterSortMode:'highest'|'lowest'|'alphabetical'= 'highest'
 
 function weaponMatchesFilter(item: any): boolean {
-  if (weaponStatFilter.size === 0) return true
-  const stats: Record<string, number> = { ...(item.stats ?? {}), ...item }
+  if (weaponStatFilter.size === 0) return true;
   for (const [key, state] of weaponStatFilter) {
-    const val = stats[key] ?? 0
-    if (state === 'include' && !(val > 0)) return false
-    if (state === 'exclude' &&   val > 0)  return false
+    const val = item[key] ?? item.stats?.[key] ?? 0;
+    if (state === 'include' && !(val > 0)) return false;
+    if (state === 'exclude' &&   val > 0)  return false;
   }
-  return true
+  return true;
 }
 
   let activeAppTab: 'overview' | 'analyze' = 'overview'
@@ -58,30 +57,24 @@ function weaponMatchesFilter(item: any): boolean {
   let bubbleX = 0
   let bubbleW = 0
 
-  async function updateBubble(animated = true) {
-    await tick()
+async function updateBubble(animated = true) {
+    await tick();
 
-    const target =
-      activeAppTab === 'overview'
-        ? tabOverview
-        : tabAnalyze
+    const target = activeAppTab === 'overview' ? tabOverview : tabAnalyze;
+    if (!target) return;
 
-    if (!target) return
+    const parentRect = target.parentElement!.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
 
-    const parentRect =
-      target.parentElement!.getBoundingClientRect()
+    bubbleX = rect.left - parentRect.left;
+    bubbleW = rect.width;
 
-    const rect = target.getBoundingClientRect()
-
-    bubbleX = rect.left - parentRect.left
-    bubbleW = rect.width
-
-    if (animated) {
-      bubbleEl?.classList.add('is-moving')
-
-      setTimeout(() => {
-        bubbleEl?.classList.remove('is-moving')
-      }, 180)
+    if (animated && bubbleEl) {
+      bubbleEl.classList.add('is-moving');
+      // Lắng nghe chính xác thời điểm CSS transition hoàn tất
+      bubbleEl.addEventListener('transitionend', () => {
+        bubbleEl.classList.remove('is-moving');
+      }, { once: true });
     }
   }
 
@@ -304,127 +297,149 @@ function applyEnchantToAll(slot: EnchantSlot) {
   $: iepOpts1 = iepSlot ? enchantments.filter(e => e.category === enchantCats[iepSlot] && e.name !== iepS0 && e.name !== iepS2) : []
   $: iepOpts2 = iepSlot ? enchantments.filter(e => e.category === enchantCats[iepSlot] && e.name !== iepS0 && e.name !== iepS1) : []
 
-  // ── Modal search suggestions ───────────────────────────────────────────────
+// ── Modal search suggestions ───────────────────────────────────────────────
   let showSuggestions = false
+  let modalCandidates: Array<{label: string; type: 'name' | 'perk'}> = []
+  let modalSuggestions: Array<{label: string; type: 'name' | 'perk'}> = []
+  let noExactResults = false
+  let didYouMean: Array<{label: string; type: 'name' | 'perk'; score?: number}> = []
 
-  $: modalSuggestions = (() => {
-    if (!modalSearch.trim() || !showSuggestions) return []
-    const q = modalSearch.toLowerCase()
-    const results: Array<{ label: string; type: 'name' | 'perk' }> = []
-    const seen = new Set<string>()
+  // Thuật toán Substring Levenshtein: Tìm kiếm khoảng cách lỗi trên phân đoạn chuỗi
+  // Giúp gõ "drgon" vẫn bắt được "Dragon Blade" (chỉ tính sai lệch 1 ký tự của từ "Dragon")
+  function substringLevenshtein(query: string, candidate: string): number {
+    const q = query.toLowerCase().trim();
+    const c = candidate.toLowerCase().trim();
+    
+    if (!q) return 0;
+    if (c.includes(q)) return 0; // Khớp hoàn toàn cụm từ thì không tính lỗi
 
-    function add(label: string, type: 'name' | 'perk') {
-      if (!seen.has(label) && label.toLowerCase().includes(q)) {
-        seen.add(label); results.push({ label, type })
+    const m = q.length;
+    const n = c.length;
+    
+    // Khởi tạo ma trận DP cho Substring Match
+    const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    
+    // Hàng đầu tiên bằng 0 vì vị trí bắt đầu trong candidate có thể là bất kỳ đâu
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (q[i - 1] === c[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(
+            dp[i - 1][j],    // Xóa
+            dp[i][j - 1],    // Thêm
+            dp[i - 1][j - 1] // Sửa
+          );
+        }
       }
     }
+    // Kết quả là điểm lỗi nhỏ nhất tìm thấy ở bất kỳ phân đoạn nào trong chuỗi ứng viên
+    return Math.min(...dp[m]);
+  }
 
-    if (activeModal === 'race') {
-      races.forEach(r => add(r.name, 'name'))
+  // Khối 1: Gom ứng viên (Bao gồm cả Tên Vật phẩm và Tên Perk)
+  $: {
+    if (!activeModal) {
+      modalCandidates = [];
+    } else {
+      const out: Array<{label: string; type: 'name'|'perk'}> = [];
+      const seen = new Set<string>();
+      
+      const add = (label: string, type: 'name'|'perk') => {
+        if (!label) return;
+        const key = `${label.toLowerCase()}||${type}`;
+        if (!seen.has(key)) { 
+          seen.add(key); 
+          out.push({ label, type }); 
+        }
+      }
+
+      if (activeModal === 'race') {
+        races.forEach(r => add(r.name, 'name'));
+      } else if (activeModal === 'guild') {
+        guilds.forEach(g => {
+          add(g.name, 'name');
+          g.ranks.forEach(r => (r.perks ?? []).forEach((p: any) => add(p.name, 'perk')));
+        });
+      } else if (activeModal.startsWith('armor-') || activeModal.startsWith('infusion-')) {
+        const slotName = activeModal.endsWith('helmet') ? 'Helmet' : activeModal.endsWith('chestplate') ? 'Chestplate' : 'Leggings';
+        armors.forEach(a => { 
+          const p = getArmorPart(a.name, slotName); 
+          if (p) { add(a.name, 'name'); if (p.perkName) add(p.perkName, 'perk'); } 
+        });
+      } else if (activeModal === 'ring' || activeModal === 'infusion-ring') {
+        rings.forEach(r => { add(r.name, 'name'); if (r.perkName) add(r.perkName, 'perk'); });
+      } else if (activeModal === 'rune') {
+        runes.forEach(r => { add(r.name, 'name'); if (r.perkName) add(r.perkName, 'perk'); });
+      } else if (activeModal === 'blade') {
+        blades.forEach(b => { add(b.name, 'name'); getPerkNames(b).forEach(p => add(p, 'perk')); });
+      } else if (activeModal === 'handle') {
+        handles.forEach(h => { add(h.name, 'name'); getPerkNames(h).forEach(p => add(p, 'perk')); });
+      } else if (activeModal === 'glove') {
+        gloves.forEach(g => { add(g.name, 'name'); getPerkNames(g).forEach(p => add(p, 'perk')); });
+      } else if (activeModal === 'essence') {
+        essences.forEach(e => { add(e.name, 'name'); getPerkNames(e).forEach(p => add(p, 'perk')); });
+      }
+
+      modalCandidates = out;
+    }
+  }
+
+  // Khối 2: Lọc gợi ý chính xác khi gõ (Tìm cả tên món đồ lẫn tên Perk của món đó)
+  $: {
+    if (!modalSearch.trim() || !showSuggestions) {
+      modalSuggestions = [];
+    } else {
+      const q = modalSearch.toLowerCase();
+      modalSuggestions = modalCandidates.filter(c => c.label.toLowerCase().includes(q));
+    }
+  }
+
+  // Khối 3: Check xem bộ lọc chính của Modal có trống kết quả hiển thị không
+  $: {
+    if (!modalSearch.trim()) {
+      noExactResults = false;
+    } else if (activeModal === 'race') {
+      noExactResults = searchedRaces.length === 0;
     } else if (activeModal === 'guild') {
-      guilds.forEach(g => {
-        add(g.name, 'name')
-        g.ranks.forEach(r => (r.perks ?? []).forEach((p: any) => add(p.name, 'perk')))
-      })
-    } else if (activeModal === 'armor-helmet' || activeModal === 'infusion-helmet') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Helmet'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
-    } else if (activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Chestplate'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
-    } else if (activeModal === 'armor-leggings' || activeModal === 'infusion-leggings') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Leggings'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
+      noExactResults = searchedGuilds.length === 0;
     } else if (activeModal === 'ring' || activeModal === 'infusion-ring') {
-      rings.forEach(r => { add(r.name,'name'); if(r.perkName)add(r.perkName,'perk') })
+      noExactResults = searchedRings.length === 0;
     } else if (activeModal === 'rune') {
-      runes.forEach(r => { add(r.name,'name'); if(r.perkName)add(r.perkName,'perk') })
+      noExactResults = searchedRunes.length === 0;
     } else if (activeModal === 'blade') {
-      blades.forEach(b => { add(b.name,'name'); getPerkNames(b).forEach(p => add(p,'perk')) })
+      noExactResults = searchedBlades.length === 0;
     } else if (activeModal === 'handle') {
-      handles.forEach(h => { add(h.name,'name'); getPerkNames(h).forEach(p => add(p,'perk')) })
+      noExactResults = searchedHandles.length === 0;
     } else if (activeModal === 'glove') {
-      gloves.forEach(g => { add(g.name,'name'); getPerkNames(g).forEach(p => add(p,'perk')) })
+      noExactResults = searchedGloves.length === 0;
     } else if (activeModal === 'essence') {
-      essences.forEach(e => { add(e.name,'name'); getPerkNames(e).forEach(p => add(p,'perk')) })
+      noExactResults = searchedEssences.length === 0;
+    } else if (activeModal?.startsWith('armor-') || activeModal?.startsWith('infusion-')) {
+      noExactResults = searchedArmorsForModal.length === 0;
+    } else {
+      noExactResults = false;
     }
-
-    return results
-  })()
-
-  // ── Fuzzy "Did you mean?" ─────────────────────────────────────────────────
-  function levenshtein(a: string, b: string): number {
-    const m = a.length, n = b.length
-    const dp: number[][] = Array.from({length: m+1}, (_, i) => [i, ...Array(n).fill(0)])
-    for (let j = 0; j <= n; j++) dp[0][j] = j
-    for (let i = 1; i <= m; i++)
-      for (let j = 1; j <= n; j++)
-        dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
-          : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
-    return dp[m][n]
   }
 
-  function fuzzyScore(candidate: string, query: string): number {
-    const c = candidate.toLowerCase(), q = query.toLowerCase()
-    if (c.includes(q)) return 0
-    // check each word of candidate against query
-    const words = c.split(/\s+/)
-    return Math.min(...words.map(w => levenshtein(w.slice(0, q.length + 2), q)))
-  }
+  // Khối 4: Xử lý hiển thị "Did you mean?" thông minh chống gõ thiếu/sai chữ
+  $: {
+    if (!modalSearch.trim() || !noExactResults || modalSearch.length < 2) {
+      didYouMean = [];
+    } else {
+      const q = modalSearch.toLowerCase().trim();
+      // Ngưỡng sai số động: gõ ngắn cho sai tối đa 1-2 ký tự, gõ dài cho sai nhiều hơn
+      const maxAllowedScore = Math.max(1, Math.floor(q.length * 0.35));
 
-  function getAllModalCandidates(): Array<{label: string; type: 'name'|'perk'}> {
-    const out: Array<{label: string; type: 'name'|'perk'}> = []
-    const seen = new Set<string>()
-    function add(label: string, type: 'name'|'perk') {
-      if (!seen.has(label)) { seen.add(label); out.push({label, type}) }
+      didYouMean = modalCandidates
+        .map(c => ({ ...c, score: substringLevenshtein(q, c.label) }))
+        .filter(c => c.score <= maxAllowedScore)
+        .sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
+        .slice(0, 6);
     }
-    if (activeModal === 'race') {
-      races.forEach(r => add(r.name, 'name'))
-    } else if (activeModal === 'guild') {
-      guilds.forEach(g => { add(g.name,'name'); g.ranks.forEach(r => (r.perks ?? []).forEach((p: any) => add(p.name,'perk'))) })
-    } else if (activeModal === 'armor-helmet' || activeModal === 'infusion-helmet') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Helmet'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
-    } else if (activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Chestplate'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
-    } else if (activeModal === 'armor-leggings' || activeModal === 'infusion-leggings') {
-      armors.forEach(a => { const p = getArmorPart(a.name,'Leggings'); if(p){add(a.name,'name');if(p.perkName)add(p.perkName,'perk')} })
-    } else if (activeModal === 'ring' || activeModal === 'infusion-ring') {
-      rings.forEach(r => { add(r.name,'name'); if(r.perkName)add(r.perkName,'perk') })
-    } else if (activeModal === 'rune') {
-      runes.forEach(r => { add(r.name,'name'); if(r.perkName)add(r.perkName,'perk') })
-    } else if (activeModal === 'blade') {
-      blades.forEach(b => { add(b.name,'name'); getPerkNames(b).forEach(p => add(p,'perk')) })
-    } else if (activeModal === 'handle') {
-      handles.forEach(h => { add(h.name,'name'); getPerkNames(h).forEach(p => add(p,'perk')) })
-    } else if (activeModal === 'glove') {
-      gloves.forEach(g => { add(g.name,'name'); getPerkNames(g).forEach(p => add(p,'perk')) })
-    } else if (activeModal === 'essence') {
-      essences.forEach(e => { add(e.name,'name'); getPerkNames(e).forEach(p => add(p,'perk')) })
-    }
-    return out
   }
-
-  // Chỉ hiện khi: có query, không có exact suggestions, không có kết quả filter
-  $: noExactResults = (() => {
-    if (!modalSearch.trim()) return false
-    if (activeModal === 'race') return searchedRaces.length === 0
-    if (activeModal === 'guild') return searchedGuilds.length === 0
-    if (activeModal === 'ring' || activeModal === 'infusion-ring') return searchedRings.length === 0
-    if (activeModal === 'rune') return searchedRunes.length === 0
-    if (activeModal === 'blade') return searchedBlades.length === 0
-    if (activeModal === 'handle') return searchedHandles.length === 0
-    if (activeModal === 'glove') return searchedGloves.length === 0
-    if (activeModal === 'essence') return searchedEssences.length === 0
-    if (activeModal?.startsWith('armor-') || activeModal?.startsWith('infusion-')) return searchedArmorsForModal.length === 0
-    return false
-  })()
-
-  $: didYouMean = (() => {
-    if (!modalSearch.trim() || !noExactResults || modalSearch.length < 2) return []
-    const q = modalSearch.toLowerCase()
-    return getAllModalCandidates()
-      .map(c => ({ ...c, score: fuzzyScore(c.label, q) }))
-      .filter(c => c.score <= 2)
-      .sort((a, b) => a.score - b.score)
-      .slice(0, 6)
-  })()
 
   $: searchedRaces = races.filter(r => matchSearchReactive(r.name, [], modalSearch))
 $: searchedGuilds = guilds.filter(g => {
@@ -432,65 +447,67 @@ $: searchedGuilds = guilds.filter(g => {
   if (selectedTags.size === 0) return true
   return g.ranks.some(r => (r.perks ?? []).some((p: any) => perkMatchesTags(p.name)))
 })
-$: searchedRings = (void selectedTags,void statFilter,sortByStatFilter(
-    rings.filter(r =>matchSearchReactive(r.name,r.perkName ? [r.perkName] : [],modalSearch) &&perkMatchesTags(r.perkName) &&itemMatchesStatFilter(r.stats as Record<string, number>,statFilter)),r => r.stats as Record<string, number>,statFilter,statFilterSortMode)
+$: searchedRings = (void selectedTags, void statFilter, sortByStatFilter(
+    rings.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName) && itemMatchesStatFilter(r.stats as Record<string, number>, statFilter)),
+    (r, k) => r.stats?.[k] ?? 0,
+    statFilter,
+    statFilterSortMode)
 )
 
-$: searchedRunes = (void selectedTags,void statFilter,sortByStatFilter(
-    runes.filter(r =>matchSearchReactive(r.name,r.perkName ? [r.perkName] : [],modalSearch) &&perkMatchesTags(r.perkName) &&itemMatchesStatFilter(r.stats as Record<string, number>,statFilter)),r => r.stats as Record<string, number>,statFilter,statFilterSortMode)
+$: searchedRunes = (void selectedTags, void statFilter, sortByStatFilter(
+    runes.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName) && itemMatchesStatFilter(r.stats as Record<string, number>, statFilter)),
+    (r, k) => r.stats?.[k] ?? 0,
+    statFilter,
+    statFilterSortMode)
 )
 
-$: searchedBlades = (
-  void weaponStatFilter,
-  void selectedTags,
-  sortByStatFilter(
-    filteredBlades.filter(b =>
-    matchSearchReactive(b.name,getPerkNames(b),modalSearch) &&anyPerkMatchesTags(getPerkNames(b)) &&weaponMatchesFilter(b)),
-    b => ({...(b.stats ?? {}),...b}) as Record<string, number>,
+$: searchedBlades = (void weaponStatFilter, void selectedTags, sortByStatFilter(
+    filteredBlades.filter(b => matchSearchReactive(b.name, getPerkNames(b), modalSearch) && anyPerkMatchesTags(getPerkNames(b)) && weaponMatchesFilter(b)),
+    (b, k) => b[k] ?? b.stats?.[k] ?? 0,
     weaponStatFilter,
     weaponStatFilterSortMode
-  )
-)
+))
 
-$: searchedHandles = (
- void weaponStatFilter,
- void selectedTags,
- sortByStatFilter(
-   filteredHandles.filter(b =>
-    matchSearchReactive(b.name,getPerkNames(b),modalSearch) &&anyPerkMatchesTags(getPerkNames(b)) &&weaponMatchesFilter(b)),
-   h => ({...(h.stats ?? {}),...h}) as Record<string,number>,
-   weaponStatFilter,
+$: searchedHandles = (void weaponStatFilter, void selectedTags, sortByStatFilter(
+    filteredHandles.filter(h => matchSearchReactive(h.name, getPerkNames(h), modalSearch) && anyPerkMatchesTags(getPerkNames(h)) && weaponMatchesFilter(h)),
+    (h, k) => h[k] ?? h.stats?.[k] ?? 0,
+    weaponStatFilter,
     weaponStatFilterSortMode
- )
-)
+))
 
-
-$: searchedGloves = (  
-  void weaponStatFilter,
-  void selectedTags,
- sortByStatFilter(
-   filteredGloves.filter(g =>
-    matchSearchReactive(g.name,getPerkNames(g),modalSearch) &&anyPerkMatchesTags(getPerkNames(g)) &&weaponMatchesFilter(g)),
-   g => ({...(g.stats ?? {}),...g}) as Record<string,number>,
-   weaponStatFilter,
+$: searchedGloves = (void weaponStatFilter, void selectedTags, sortByStatFilter(
+    filteredGloves.filter(g => matchSearchReactive(g.name, getPerkNames(g), modalSearch) && anyPerkMatchesTags(getPerkNames(g)) && weaponMatchesFilter(g)),
+    (g, k) => g[k] ?? g.stats?.[k] ?? 0,
+    weaponStatFilter,
     weaponStatFilterSortMode
- )
-)
+))
 
-
-$: searchedEssences = (  
-  void weaponStatFilter,
-  void selectedTags,
- sortByStatFilter(
-   filteredEssences.filter(e =>
-    matchSearchReactive(e.name,getPerkNames(e),modalSearch) &&anyPerkMatchesTags(getPerkNames(e)) &&weaponMatchesFilter(e)),
-   e => ({...(e.stats ?? {}),...e}) as Record<string,number>,
-   weaponStatFilter,
+$: searchedEssences = (void weaponStatFilter, void selectedTags, sortByStatFilter(
+    filteredEssences.filter(e => matchSearchReactive(e.name, getPerkNames(e), modalSearch) && anyPerkMatchesTags(getPerkNames(e)) && weaponMatchesFilter(e)),
+    (e, k) => e[k] ?? e.stats?.[k] ?? 0,
+    weaponStatFilter,
     weaponStatFilterSortMode
- )
-)
+))
 
-  
+$: searchedArmorsForModal = (() => {
+  void selectedTags; void statFilter;
+  const slotName = activeModal === 'armor-helmet' || activeModal === 'infusion-helmet' ? 'Helmet' : activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate' ? 'Chestplate' : activeModal === 'armor-leggings' || activeModal === 'infusion-leggings' ? 'Leggings' : null;
+  if (!slotName) return [];
+
+  return sortByStatFilter(
+    armors.filter(a => {
+      const part = getArmorPart(a.name, slotName as any);
+      return part && matchSearchReactive(a.name, part.perkName ? [part.perkName] : [], modalSearch) && perkMatchesTags(part.perkName) && itemMatchesStatFilter(part.stats as Record<string, number>, statFilter);
+    }),
+    (a, k) => {
+      const part = getArmorPart(a.name, slotName as any);
+      return part?.stats?.[k] ?? 0;
+    },
+    statFilter,
+    statFilterSortMode
+  );
+})();
+
   function matchSearchReactive(name: string, perkNames: string[], query: string): boolean {
     if (!query.trim()) return true
     const q = query.toLowerCase()
@@ -498,36 +515,6 @@ $: searchedEssences = (
     return perkNames.some(p => p.toLowerCase().includes(q))
   }
 
-$: searchedArmorsForModal = (() => {
-  void selectedTags
-  void statFilter
-  const slotName =
-    activeModal === 'armor-helmet' || activeModal === 'infusion-helmet'
-      ? 'Helmet'
-      : activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate'
-      ? 'Chestplate'
-      : activeModal === 'armor-leggings' || activeModal === 'infusion-leggings'
-      ? 'Leggings'
-      : null
-  if (!slotName) {
-    return []
-  }
-  return sortByStatFilter(
-  armors.filter(a => {
-    const part = getArmorPart(a.name,slotName as any)
-    return part
-      && matchSearchReactive(a.name,part.perkName? [part.perkName]: [],modalSearch)
-      && perkMatchesTags(part.perkName)
-      && itemMatchesStatFilter(part.stats as Record<string,number>,statFilter)
-  }),
-  a => {
-    const part = getArmorPart(a.name,slotName as any)
-    return (part?.stats as Record<string,number>) ?? {}
-  },
-  statFilter,
-  statFilterSortMode
-)
-})()
   let bladeFilterTier = ''
   let bladeFilterType = ''
   let handleFilterTier = ''
@@ -594,62 +581,54 @@ function onStatFilterChange( e: CustomEvent<{
     return true
   }
   function sortByStatFilter(
-  items: any[],
-  getStats: (item: any) => Record<string, number>,
-  sf: Map<string, 'include' | 'exclude'>,
-  mode: 'highest' | 'lowest' | 'alphabetical' = 'highest'
-): any[] {
-  if (sf.size === 0) return items
+    items: any[],
+    getStatVal: (item: any, key: string) => number,
+    sf: Map<string, 'include' | 'exclude'>,
+    mode: 'highest' | 'lowest' | 'alphabetical' = 'highest'
+  ): any[] {
+    if (sf.size === 0) return items;
 
-  const includeKeys: string[] = []
-  const includeNegKeys: string[] = []
-  const excludeKeys: string[] = []
-  const excludeNegKeys: string[] = []
+    const includeKeys: string[] = [];
+    const includeNegKeys: string[] = [];
+    const excludeKeys: string[] = [];
+    const excludeNegKeys: string[] = [];
 
-  for (const [key, state] of sf) {
-    const isNeg = key.startsWith('neg:')
-    const actualKey = isNeg ? key.slice(4) : key
+    for (const [key, state] of sf) {
+      const isNeg = key.startsWith('neg:');
+      const actualKey = isNeg ? key.slice(4) : key;
 
-    if (state === 'include') {
-      if (isNeg) includeNegKeys.push(actualKey)
-      else includeKeys.push(actualKey)
-    } else {
-      if (isNeg) excludeNegKeys.push(actualKey)
-      else excludeKeys.push(actualKey)
+      if (state === 'include') {
+        if (isNeg) includeNegKeys.push(actualKey);
+        else includeKeys.push(actualKey);
+      } else {
+        if (isNeg) excludeNegKeys.push(actualKey);
+        else excludeKeys.push(actualKey);
+      }
     }
+
+    function score(item: any): number {
+      let s = 0;
+      for (const k of includeKeys)    s += getStatVal(item, k);
+      for (const k of includeNegKeys) s -= getStatVal(item, k);
+      for (const k of excludeKeys)    s -= getStatVal(item, k);
+      for (const k of excludeNegKeys) s += getStatVal(item, k);
+      return s;
+    }
+
+    return [...items].sort((a, b) => {
+      const aScore = score(a);
+      const bScore = score(b);
+      if (mode === 'highest') {
+        if (bScore !== aScore) return bScore - aScore;
+        return a.name.localeCompare(b.name);
+      }
+      if (mode === 'lowest') {
+        if (aScore !== bScore) return aScore - bScore;
+        return a.name.localeCompare(b.name);
+      }
+      return a.name.localeCompare(b.name);
+    });
   }
-
-  function score(item: any): number {
-    const stats = getStats(item)
-    let s = 0
-
-    for (const k of includeKeys)
-      s += stats[k] ?? 0
-
-    for (const k of includeNegKeys)
-      s -= stats[k] ?? 0
-
-    for (const k of excludeKeys)
-      s -= stats[k] ?? 0
-
-    for (const k of excludeNegKeys)
-      s += stats[k] ?? 0
-    return s
-  }
-  return [...items].sort((a,b)=>{
-  const aScore = score(a)
-  const bScore = score(b)
-  if(mode==='highest'){
-    if(bScore!==aScore) return bScore-aScore
-    return a.name.localeCompare(b.name)
-  }
-  if(mode==='lowest'){
-    if(aScore!==bScore) return aScore-bScore
-    return a.name.localeCompare(b.name)
-  }
-  return a.name.localeCompare(b.name)
-})
-}
 
   function anyPerkMatchesTags(perkNames: string[]): boolean {
     if (selectedTags.size === 0) return true
@@ -674,7 +653,6 @@ function onStatFilterChange( e: CustomEvent<{
 // ── Weapon enchant damage type bonuses ────────────────────────────────────────
 const WEAPON_ENCHANT_DMG_TYPE: Record<string, Partial<Record<string, number>>> = {
   'Stone': { earth: 0.3 },
-  // thêm các enchant khác ở đây nếu cần
 }
 
 $: weaponEnchantDmgBonus = (() => {
@@ -1192,6 +1170,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1269,6 +1250,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1333,6 +1317,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1396,6 +1383,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1454,6 +1444,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1511,6 +1504,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1571,6 +1567,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1692,6 +1691,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1796,6 +1798,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1896,6 +1901,9 @@ $: _appWaAvgTotal = (() => {
                 {#each didYouMean as s}
                   <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
                     on:click={() => { modalSearch = s.label }}>
+                    {#if s.type === 'perk'}
+                      <span class="perk-icon">💡</span>
+                    {/if}
                     {@html highlight(s.label, modalSearch)}
                   </button>
                 {/each}
@@ -1989,20 +1997,23 @@ $: _appWaAvgTotal = (() => {
             </button>
           {/each}
           {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
+  <div class="dym-block">
+    <span class="dym-label">Did you mean?</span>
+    <div class="dym-chips">
+      {#each didYouMean as s}
+        <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
+          on:click={() => { modalSearch = s.label }}>
+          {#if s.type === 'perk'}
+            <span class="perk-icon">💡</span>
           {/if}
+          {@html highlight(s.label, modalSearch)}
+        </button>
+      {/each}
+    </div>
+  </div>
+{:else if noExactResults}
+  <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
+{/if}
         </div>
       {/if}
 

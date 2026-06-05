@@ -1,5 +1,7 @@
 <script lang="ts">
-import { build } from './lib/store'
+  import { tick } from 'svelte'
+  import { build } from './lib/store'
+
   // ── Props ─────────────────────────────────────────────────────────────────
   export let protection: number = 0
 
@@ -10,29 +12,32 @@ import { build } from './lib/store'
   const STORAGE_KEY = 'voxlbuilder_level'
   const HP_FILL_KEY = 'voxlbuilder_hpfill'
 
-  let level = $build.level ?? 80
-  let fillPct = $build.hpFill ?? 100
+  // ── Single Source of Truth (Reactive States trực tiếp từ Store) ───────────
+  $: level = $build.level ?? 80
+  $: fillPct = $build.hpFill ?? 100
 
   let editing  = false
   let inputVal = String(level)
   let inputEl: HTMLInputElement
 
   function saveLevel(v: number) {
-    level = v
     build.update(s => ({ ...s, level: v }))
     try { localStorage.setItem(STORAGE_KEY, String(v)) } catch {}
   }
 
-  function startEdit() {
+  async function startEdit() {
     editing  = true
     inputVal = String(level)
-    setTimeout(() => inputEl?.select(), 10)
+    await tick()
+    inputEl?.select()
   }
+
   function confirmEdit() {
     const n = parseInt(inputVal)
     if (!isNaN(n) && n >= 0 && n <= 80) saveLevel(n)
     editing = false
   }
+
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter')     confirmEdit()
     if (e.key === 'Escape')    editing = false
@@ -40,86 +45,68 @@ import { build } from './lib/store'
     if (e.key === 'ArrowDown') inputVal = String(Math.max(0,   (parseInt(inputVal) || level) - 1))
   }
 
-  // ── HP Derived ────────────────────────────────────────────────────────────
-
+  // ── HP Derived (Tính toán tự động dựa trên phản ứng) ─────────────────────
   $: baseMaxHP = Math.round(BASE_HP * (1 + level * HP_PER_LEVEL))
-
   $: protRounded = Math.round(protection * 100) / 100
   $: HP_FLOOR = Math.round(baseMaxHP * 0.1)
+
   $: effectiveMaxHP = protRounded >= 0
     ? baseMaxHP
     : Math.max(HP_FLOOR, baseMaxHP + protRounded)
+
   $: effectiveProt = protRounded >= 0
     ? protRounded
     : Math.round((-(baseMaxHP - effectiveMaxHP)) * 100) / 100
+
   $: shieldCount = protRounded > 0 ? protRounded : 0
   $: shieldFrac  = shieldCount > 0 ? Math.min(1, shieldCount / baseMaxHP) : 0
-  $: lostFrac = protRounded < 0 ? Math.min(1, Math.abs(protRounded) / baseMaxHP) : 0
+  $: lostFrac    = protRounded < 0 ? Math.min(1, Math.abs(protRounded) / baseMaxHP) : 0
 
-  function loadFill(): number {
-    try {
-      const raw = localStorage.getItem(HP_FILL_KEY)
-      if (!raw) return 100
-      const n = parseFloat(raw)
-      return isNaN(n) ? 100 : Math.max(0, Math.min(100, n))
-    } catch { return 100 }
-  }
   let dragging = false
   let barEl: HTMLDivElement
 
   function saveFill(v: number) {
-    fillPct = v
     build.update(s => ({ ...s, hpFill: v }))
     try { localStorage.setItem(HP_FILL_KEY, String(v)) } catch {}
   }
 
-
   function calcFillFromMouse(e: MouseEvent): number {
     if (!barEl) return fillPct
-    const rect     = barEl.getBoundingClientRect()
-    // "valid" clickable zone ends at effectiveMaxHP fraction of bar width
+    const rect = barEl.getBoundingClientRect()
     const validEnd = rect.left + rect.width * (effectiveMaxHP / baseMaxHP)
     const clampedX = Math.max(rect.left, Math.min(e.clientX, validEnd))
-    const frac     = (clampedX - rect.left) / (rect.width * (effectiveMaxHP / baseMaxHP))
+    const frac = (clampedX - rect.left) / (rect.width * (effectiveMaxHP / baseMaxHP))
     return Math.round(Math.max(0, Math.min(1, frac)) * 100)
   }
 
-  function onBarMouseDown(e: MouseEvent) { dragging = true; saveFill(calcFillFromMouse(e)) }
-  function onMouseMove(e: MouseEvent)    { if (dragging) saveFill(calcFillFromMouse(e)) }
-  function onMouseUp()                   { dragging = false }
+  function onBarMouseDown(e: MouseEvent) { 
+    dragging = true
+    saveFill(calcFillFromMouse(e)) 
+  }
+  function onMouseMove(e: MouseEvent) { 
+    if (dragging) saveFill(calcFillFromMouse(e)) 
+  }
+  function onMouseUp() { 
+    dragging = false 
+  }
 
   // ── Display helpers ───────────────────────────────────────────────────────
   $: currentHP = Math.round(effectiveMaxHP * fillPct / 100)
-
-  // fillFrac: fill width as fraction of the FULL bar (= baseMaxHP width)
   $: fillFrac  = (effectiveMaxHP / baseMaxHP) * (fillPct / 100)
+  $: thumbPos  = fillFrac * 100
 
-  $: barColor =
-    fillPct > 50 ? '#4ade80' :
-    fillPct > 25 ? '#facc15' : '#f87171'
-
-  $: barGlow =
-    fillPct > 50 ? 'rgba(74,222,128,0.5)' :
-    fillPct > 25 ? 'rgba(250,204,21,0.5)' : 'rgba(248,113,113,0.5)'
-
-  $: thumbPos = fillFrac * 100   // % of bar width for thumb position
-    $: {
-    const storeLevel = $build.level ?? 80
-    if (storeLevel !== level) level = storeLevel
-    const storeFill = $build.hpFill ?? 100
-    if (storeFill !== fillPct) fillPct = storeFill
-  }
+  // Đưa logic màu sắc/glow thành biến đơn giản để gán vào CSS Variable
+  $: barColor = fillPct > 50 ? '#4ade80' : fillPct > 25 ? '#facc15' : '#f87171'
+  $: barGlow  = fillPct > 50 ? 'rgba(74,222,128,0.5)' : fillPct > 25 ? 'rgba(250,204,21,0.5)' : 'rgba(248,113,113,0.5)'
 </script>
 
 <svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
 
-<div class="lb-wrap">
+<div class="lb-wrap" style="--bar-color: {barColor}; --bar-glow: {barGlow};">
 
-  <!-- ── LV badge ── -->
   <div class="lb-lv-block">
     <span class="lb-lv-label">LV</span>
     {#if editing}
-      <!-- svelte-ignore a11y-autofocus -->
       <input
         class="lb-lv-input"
         type="number" min="0" max="80"
@@ -127,7 +114,6 @@ import { build } from './lib/store'
         bind:this={inputEl}
         on:blur={confirmEdit}
         on:keydown={onKeydown}
-        autofocus
       />
     {:else}
       <button class="lb-lv-num" on:click={startEdit} title="Click to edit level">
@@ -136,14 +122,12 @@ import { build } from './lib/store'
     {/if}
   </div>
 
-  <!-- ── HP bar column ── -->
   <div class="lb-bar-col">
 
-    <!-- Label row -->
     <div class="lb-bar-label-row">
       <span class="lb-bar-label">HP</span>
       <span class="lb-hp-nums">
-        <span class="lb-hp-cur" style="color:{barColor}">{currentHP}</span>
+        <span class="lb-hp-cur">{currentHP}</span>
         <span class="lb-hp-sep">/</span>
         <span class="lb-hp-max">{effectiveMaxHP}</span>
         {#if effectiveProt !== 0}
@@ -156,47 +140,40 @@ import { build } from './lib/store'
       </span>
     </div>
 
-    <!-- Bar track -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       class="lb-bar-track"
+      role="slider"
+      aria-label="HP Fill Bar"
+      aria-valuenow={fillPct}
+      aria-valuemin="0"
+      aria-valuemax="100"
       bind:this={barEl}
       on:mousedown={onBarMouseDown}
       title="Drag to set current HP · {baseMaxHP} base HP at LV{level}"
+      tabindex="0"
     >
-      <!-- ① Lost zone — red striped, right-anchored, negative protection -->
       {#if lostFrac > 0}
-        <div class="lb-bar-lost" style="width:{lostFrac * 100}%">
-        </div>
+        <div class="lb-bar-lost" style="width:{lostFrac * 100}%"></div>
       {/if}
 
-      <!-- ② HP fill (green/yellow/red) -->
-      <div
-        class="lb-bar-fill"
-        style="width:{fillFrac * 100}%;background:{barColor};box-shadow:0 0 8px {barGlow},inset 0 1px 0 rgba(255,255,255,0.22)"
-      >
+      <div class="lb-bar-fill" style="width:{fillFrac * 100}%">
         <div class="lb-bar-shine"></div>
       </div>
 
-      <!-- ③ Shield overlay — blue, from left, positive protection -->
       {#if shieldFrac > 0}
         <div class="lb-bar-shield" style="width:{shieldFrac * 100}%">
           <div class="lb-shield-shimmer"></div>
         </div>
       {/if}
 
-      <!-- Notch grid (10 divisions) -->
       <div class="lb-bar-notches">
         {#each Array(9) as _, i}
           <div class="lb-notch" style="left:{(i + 1) * 10}%"></div>
         {/each}
       </div>
 
-      <!-- Drag thumb -->
       {#if fillFrac > 0.01 && fillFrac < 0.99}
-        <div class="lb-thumb"
-          style="left:{thumbPos}%;border-color:{barColor};box-shadow:0 0 6px {barGlow}">
-        </div>
+        <div class="lb-thumb" style="left:{thumbPos}%"></div>
       {/if}
     </div>
   </div>
@@ -298,7 +275,10 @@ import { build } from './lib/store'
     font-size: .68rem;
     font-weight: 800;
   }
-  .lb-hp-cur  { transition: color .2s; }
+  .lb-hp-cur  { 
+    color: var(--bar-color);
+    transition: color .2s; 
+  }
   .lb-hp-sep  { color: rgba(138,141,133,0.35); }
   .lb-hp-max  { color: #8a8d85; }
 
@@ -336,49 +316,39 @@ import { build } from './lib/store'
       inset 0 -1px 0 rgba(255,255,255,0.06);
   }
 
-  /* ① Lost zone — right-anchored red stripes */
+  /* ① Lost zone */
   .lb-bar-lost {
     position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
+    right: 0; top: 0; bottom: 0;
     background: rgb(248 113 113);
     border-left: 1.5px solid rgb(248 113 113);
     z-index: 0;
     overflow: hidden;
   }
 
-/* HP fill */
-.lb-bar-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  border-radius: 2px 0 0 2px;
-  min-width: 0;
-  overflow: hidden;
-  z-index: 2;
-  filter: saturate(1.15) brightness(1.05);
-}
+  /* ② HP fill — Tối ưu hóa render màu qua biến CSS */
+  .lb-bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-radius: 2px 0 0 2px;
+    min-width: 0;
+    overflow: hidden;
+    z-index: 2;
+    filter: saturate(1.15) brightness(1.05);
+    background: var(--bar-color);
+    box-shadow: 0 0 8px var(--bar-glow), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
 
-.lb-bar-shield {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-
-  background: linear-gradient(
-    to bottom,
-    rgba(56,189,248),
-    rgba(56,189,248)
-  );
-
-  border-right: 2px solid rgba(56,189,248);
-
-  z-index: 3;
-  overflow: hidden;
-  pointer-events: none;
-}
+  /* ③ Shield overlay */
+  .lb-bar-shield {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: rgba(56,189,248);
+    border-right: 2px solid rgba(56,189,248);
+    z-index: 3;
+    overflow: hidden;
+    pointer-events: none;
+  }
 
   .lb-bar-shine {
     position: absolute;
@@ -387,17 +357,14 @@ import { build } from './lib/store'
     background: linear-gradient(to bottom, rgba(255,255,255,0.26), transparent);
     border-radius: 2px 2px 0 0;
   }
+  
   .lb-shield-shimmer {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255,255,255,0.12),
-      transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12), transparent 100%);
     animation: shieldShimmer 2.6s ease-in-out infinite;
   }
+  
   @keyframes shieldShimmer {
     0%   { transform: translateX(-100%); }
     55%  { transform: translateX(120%); }
@@ -419,7 +386,7 @@ import { build } from './lib/store'
     transform: translateX(-50%);
   }
 
-  /* Thumb */
+  /* Drag thumb */
   .lb-thumb {
     position: absolute;
     top: 50%;
@@ -428,7 +395,8 @@ import { build } from './lib/store'
     height: 20px;
     border-radius: 2px;
     background: rgba(13,15,14,0.92);
-    border: 1.5px solid;
+    border: 1.5px solid var(--bar-color);
+    box-shadow: 0 0 6px var(--bar-glow);
     z-index: 5;
     pointer-events: none;
     transition: box-shadow .2s;

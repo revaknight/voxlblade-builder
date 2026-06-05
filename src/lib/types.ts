@@ -67,21 +67,26 @@ export interface Perk { name: string; description: string; tags: string[] }
 
 export type EnchantSlot = "helmet" | "chestplate" | "leggings" | "ring" | "rune"
 
-// ── Upgrade helpers ───────────────────────────────────────────────────────────
+// ── Helpers Tối ưu cho Browser ───────────────────────────────────────────────────
 
 export const UPGRADE_MAX = 5
 export const UPGRADE_MULTIPLIER = 1.1
 
-/** Apply upgrade level to a stat map: positive stats ×mult, negative ÷mult */
+const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
+
+/** Áp dụng cấp độ nâng cấp: tối ưu vòng lặp tĩnh tránh sinh rác bộ nhớ */
 export function applyUpgrade(stats: StatMap, level: number): StatMap {
   if (level <= 0) return { ...stats }
-  const mult = 1+ level * 0.1
+  const mult = 1 + level * 0.1
   const result: StatMap = {}
-  for (const [k, v] of Object.entries(stats)) {
+  
+  for (let i = 0; i < STAT_KEYS.length; i++) {
+    const k = STAT_KEYS[i]
+    const v = stats[k]
     if (v == null) continue
-    if (v > 0) result[k as StatKey] = Math.round((v * mult + Number.EPSILON) * 100) / 100
-    else if (v < 0) result[k as StatKey] = Math.round((v / mult + Number.EPSILON) * 100) / 100
-    else result[k as StatKey] = 0
+    if (v > 0) result[k] = round2(v * mult)
+    else if (v < 0) result[k] = round2(v / mult)
+    else result[k] = 0
   }
   return result
 }
@@ -99,7 +104,6 @@ export type WeaponBlade = {
   bladeType: BladeType  
   stats: StatMap
   attackSpeed?: number
-
   perks?: Array<{ name: string; amount: number }>
   perkName?: string
   perkAmount?: number
@@ -187,14 +191,11 @@ export interface BuildState {
   infusionChestplate: string
   infusionLeggings: string
   infusionRing: string
-  // Standard weapon
   weaponBlade: string
   weaponHandle: string
-  // Monk weapon
   monkGlove: string
   monkEssence: string
   shrineActive: boolean
-  // Upgrade levels (0-5, default 0)
   upgradeHelmet: number
   upgradeChestplate: number
   upgradeLeggings: number
@@ -202,7 +203,7 @@ export interface BuildState {
   upgradeRune: number
   selectedWeaponArt: string
   draconicColor: string
-  emotionalState: | 'buffs' | 'debuffs' | 'both'
+  emotionalState: 'buffs' | 'debuffs' | 'both'
   level: number
   hpFill: number
 }

@@ -29,6 +29,7 @@ export interface GrantedBuff {
 
 
 export const BUFF_DEFS: Record<string, BuffDefinition> = {
+  //buffs
   Rage: {
     name: 'Rage',
     color: '#f70201',
@@ -103,7 +104,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
   },
 
-  //Debuff  
+  //Debuffs
   Slowness: {
     name: 'Slowness',
     color: '#7eb4a9',

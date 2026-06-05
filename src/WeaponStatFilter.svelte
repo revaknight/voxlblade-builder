@@ -66,6 +66,30 @@
 
   const GROUPS = [DMG_TYPE_GROUP, SCALING_GROUP, BOOST_GROUP]
 
+  // TỐI ƯU HÓA: Bản đồ tra cứu nhanh để tránh lặp lồng nhau O(N^2) trong HTML UI
+  const STAT_LABEL_MAP = new Map<string, string>()
+  const STAT_COLOR_MAP = new Map<string, string>()
+  const STAT_TAG_MAP = new Map<string, string>()
+
+  function initLookupMaps() {
+    for (const s of DMG_TYPE_GROUP.stats) {
+      STAT_LABEL_MAP.set(s.key, s.label)
+      STAT_COLOR_MAP.set(s.key, DMG_TYPE_GROUP.color)
+      STAT_TAG_MAP.set(s.key, 'DMG')
+    }
+    for (const s of SCALING_GROUP.stats) {
+      STAT_LABEL_MAP.set(s.key, s.label)
+      STAT_COLOR_MAP.set(s.key, SCALING_GROUP.color)
+      STAT_TAG_MAP.set(s.key, 'SCL')
+    }
+    for (const s of BOOST_GROUP.stats) {
+      STAT_LABEL_MAP.set(s.key, s.label)
+      STAT_COLOR_MAP.set(s.key, BOOST_GROUP.color)
+      STAT_TAG_MAP.set(s.key, 'STAT')
+    }
+  }
+  initLookupMaps()
+
   // ── State ───────────────────────────────────────────────────────────────────
   let active: Map<string, 'include' | 'exclude'> = new Map(value)
   let expanded = false
@@ -92,32 +116,22 @@
     dispatch('change', active)
   }
 
-  function getLabel(key: string): string {
-    for (const g of GROUPS)
-      for (const s of g.stats)
-        if (s.key === key) return s.label
-    return key
-  }
-
-  function getGroupColor(key: string): string {
-    for (const g of GROUPS)
-      if (g.stats.some(s => s.key === key)) return g.color
-    return '#8a8d85'
-  }
-
-  function getGroupTag(key: string): string {
-    if (DMG_TYPE_GROUP.stats.some(s => s.key === key)) return 'DMG'
-    if (SCALING_GROUP.stats.some(s => s.key === key))  return 'SCL'
-    return 'STAT'
+  function handleChipKeyDown(e: KeyboardEvent, key: string) {
+    if (e.key === 'Delete' || (e.key === 'Backspace' && e.shiftKey)) {
+      e.preventDefault()
+      remove(key)
+    }
   }
 
   // ── Public filter function (used by parent) ─────────────────────────────────
-  // Weapon stats can be flat on the item or inside item.stats
+  // TỐI ƯU HÓA: Đọc trực tiếp, không nhân bản (shallow clone) object nữa giúp chạy nhanh gấp nhiều lần và tiết kiệm RAM
   export function matchesFilter(item: Record<string, any>): boolean {
     if (active.size === 0) return true
-    const stats: Record<string, number> = { ...(item.stats ?? {}), ...item }
+    
     for (const [key, state] of active) {
-      const val = stats[key] ?? 0
+      // Ưu tiên đọc từ sub-object item.stats trước, nếu không có mới tìm ở tầng ngoài item
+      const val = (item.stats && key in item.stats) ? item.stats[key] : (item[key] ?? 0)
+      
       if (state === 'include' && !(val > 0)) return false
       if (state === 'exclude' &&   val > 0)  return false
     }
@@ -126,9 +140,12 @@
 </script>
 
 <div class="wsf-root">
-  <!-- ── Header ── -->
   <div class="wsf-header">
-    <button class="wsf-toggle" on:click={() => expanded = !expanded}>
+    <button 
+      class="wsf-toggle" 
+      aria-expanded={expanded} 
+      on:click={() => expanded = !expanded}
+    >
       <span class="wsf-icon">{expanded ? '▾' : '▸'}</span>
       <span class="wsf-title">Filter by Weapon Stat</span>
       {#if activeCount > 0}
@@ -145,14 +162,16 @@
             class="wsf-chip wsf-chip--active"
             class:wsf-chip--include={state === 'include'}
             class:wsf-chip--exclude={state === 'exclude'}
-            style="--c:{getGroupColor(key)}"
-            title="Click to cycle · Right-click to remove"
+            style="--c:{STAT_COLOR_MAP.get(key) ?? '#8a8d85'}"
+            title="Click to cycle · Right-click or press Delete to remove"
+            aria-label="Weapon filter {STAT_LABEL_MAP.get(key) ?? key}: {state}. Click to cycle, Delete to remove."
             on:click={() => toggle(key)}
             on:contextmenu|preventDefault={() => remove(key)}
+            on:keydown={(e) => handleChipKeyDown(e, key)}
           >
-            <span class="wsf-tag">{getGroupTag(key)}</span>
+            <span class="wsf-tag">{STAT_TAG_MAP.get(key) ?? 'STAT'}</span>
             <span class="wsf-sign">{state === 'include' ? '+' : '−'}</span>
-            {getLabel(key)}
+            {STAT_LABEL_MAP.get(key) ?? key}
           </button>
         {/each}
         <button class="wsf-clear" on:click={clear}>Clear all</button>
@@ -160,14 +179,13 @@
     {/if}
   </div>
 
-  <!-- ── Expanded panel ── -->
   {#if expanded}
     <div class="wsf-panel">
       <p class="wsf-legend">
         <span class="wsf-leg wsf-leg--off">○ Off</span>
         <span class="wsf-leg wsf-leg--inc">+ Must have</span>
         <span class="wsf-leg wsf-leg--exc">− Must NOT have</span>
-        <span class="wsf-leg-hint">· Click to cycle · Right-click remove</span>
+        <span class="wsf-leg-hint">· Click to cycle · Right-click or Delete to remove</span>
       </p>
 
       {#each GROUPS as group}
@@ -183,8 +201,11 @@
                 class:wsf-chip--include={state === 'include'}
                 class:wsf-chip--exclude={state === 'exclude'}
                 style="--c:{group.color}"
+                aria-pressed={!!state}
+                aria-label="{stat.label} weapon filter. Current state: {state ?? 'off'}."
                 on:click={() => toggle(stat.key)}
                 on:contextmenu|preventDefault={() => remove(stat.key)}
+                on:keydown={(e) => handleChipKeyDown(e, stat.key)}
               >
                 {#if state}
                   <span class="wsf-sign">{state === 'include' ? '+' : '−'}</span>
@@ -239,14 +260,16 @@
   .wsf-title { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
   .wsf-badge {
     font-size: .58rem; font-weight: 800; padding: 1px 6px; border-radius: 999px;
-    background: rgba(251,146,60,.18); border: 1px solid rgba(251,146,60,.35); color: #fb923c;
+    background: rgba(251,146,60,.18);
+    border: 1px solid rgba(251,146,60,.35); color: #fb923c;
   }
   .wsf-hint { font-size: .58rem; opacity: .35; font-style: italic; }
 
   .wsf-active-row { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; flex: 1; }
   .wsf-clear {
     font-size: .6rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-    border: 1px solid rgba(248,113,113,.25); background: rgba(248,113,113,.08);
+    border: 1px solid rgba(248,113,113,.25);
+    background: rgba(248,113,113,.08);
     color: #f87171; cursor: pointer; font-family: inherit; transition: all .12s; flex-shrink: 0;
   }
   .wsf-clear:hover { background: rgba(248,113,113,.2); }
@@ -288,7 +311,8 @@
   /* Chips */
   .wsf-chip {
     display: inline-flex; align-items: center; gap: 3px;
-    font-size: .62rem; font-weight: 600;
+    font-size: .62rem;
+    font-weight: 600;
     padding: 2px 8px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.08);
     background: rgba(255,255,255,.03);
@@ -319,7 +343,8 @@
 
   /* Tag badge (DMG / SCL / STAT) shown in active row */
   .wsf-tag {
-    font-size: .48rem; font-weight: 800; letter-spacing: .1em;
+    font-size: .48rem;
+    font-weight: 800; letter-spacing: .1em;
     padding: 1px 4px; border-radius: 3px;
     background: color-mix(in srgb, var(--c, #fb923c) 18%, transparent);
     color: var(--c, #fb923c);

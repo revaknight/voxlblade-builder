@@ -1,6 +1,5 @@
-<!-- TagFilter.svelte -->
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, tick } from 'svelte'
 
   export let selectedTags: Set<string>
   export let hideTags: string[] = [] 
@@ -8,7 +7,6 @@
   const dispatch = createEventDispatcher()
 
   const TAG_GROUPS: Array<{ label: string; color: string; tags: string[] }> = [
-    
     {
       label: 'Combat',
       color: '#fb923c',
@@ -36,69 +34,118 @@
     },
   ]
 
-  // Color map for active chips
-  const TAG_COLOR: Record<string, string> = {}
-  for (const g of TAG_GROUPS) {
-    for (const t of g.tags) TAG_COLOR[t] = g.color
+  const TAG_COLOR_MAP = new Map<string, string>()
+  for (const group of TAG_GROUPS) {
+    for (const tag of group.tags) {
+      TAG_COLOR_MAP.set(tag, group.color)
+    }
   }
+
+  $: filteredGroups = TAG_GROUPS.map(group => ({
+    ...group,
+    tags: group.tags.filter(t => !hideTags.includes(t))
+  })).filter(group => group.tags.length > 0)
 
   let expanded = false
 
   function toggle(tag: string) {
-    dispatch('toggle', tag)
+    if (selectedTags.has(tag)) {
+      selectedTags.delete(tag)
+    } else {
+      selectedTags.add(tag)
+    }
+    selectedTags = selectedTags
+    dispatch('change', selectedTags)
   }
 
-  function clear() {
-    dispatch('clear')
+  function clearAll() {
+    selectedTags.clear()
+    selectedTags = selectedTags
+    dispatch('change', selectedTags)
   }
 
-  $: activeCount = selectedTags.size
+  async function togglePanel() {
+    expanded = !expanded
+    if (expanded) {
+      await tick()
+    }
+  }
 </script>
 
-<div class="tf-root">
-  <!-- Header row -->
-  <div class="tf-header">
-    <button class="tf-toggle" on:click={() => expanded = !expanded}>
-      <span class="tf-icon">{expanded ? '▾' : '▸'}</span>
-      <span class="tf-title">Filter by Perk Tag</span>
-      {#if activeCount > 0}
-        <span class="tf-badge">{activeCount} active</span>
-      {:else}
-        <span class="tf-hint">click to filter</span>
-      {/if}
-    </button>
-
-    <!-- Active tag chips (shown even when collapsed) -->
-    {#if activeCount > 0}
-      <div class="tf-active-row">
-        {#each [...selectedTags] as tag}
-          <button
-            class="tf-chip tf-chip--active"
-            style="--c:{TAG_COLOR[tag] ?? '#a78bfa'}"
-            on:click={() => toggle(tag)}
-            title="Remove filter"
-          >{tag} ✕</button>
-        {/each}
-        <button class="tf-clear" on:click={clear}>Clear all</button>
+<div class="tf-container">
+<div 
+    class="tf-bar" 
+    class:tf-bar--open={expanded}
+    role="button"
+    tabindex="0"
+    aria-expanded={expanded}
+    aria-label="Toggle Tag Filter Panel"
+    style="cursor: pointer;"
+    on:click={togglePanel}
+    on:keydown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePanel();
+      }
+    }}
+  >
+    <div class="tf-bar-left">
+      <div class="tf-toggle-info">
+        <span class="tf-chevron" class:tf-chevron--rot={expanded}>▸</span>
+        <span class="tf-bar-title">Filter by Tags</span>
+        
+        {#if selectedTags.size > 0}
+          <span class="tf-count-badge">{selectedTags.size}</span>
+        {:else}
+          <span class="sf-hint">click to filter</span>
+        {/if}
       </div>
+
+      {#if selectedTags.size > 0}
+        <div class="tf-summary-chips">
+          {#each Array.from(selectedTags) as tag}
+            <button 
+              class="tf-sum-chip" 
+              style="--c: {TAG_COLOR_MAP.get(tag) ?? '#94a3b8'}"
+              title="Click to remove tag"
+              aria-label="Remove filter tag {tag}"
+              on:click|stopPropagation={() => toggle(tag)}
+            >
+              {tag} <span class="tf-sum-chip-x">×</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+
+    {#if selectedTags.size > 0}
+      <button 
+        class="tf-clear-btn" 
+        on:click|stopPropagation={clearAll}
+        on:keydown|stopPropagation
+      >
+        Clear All
+      </button>
     {/if}
   </div>
 
-  <!-- Expanded panel -->
   {#if expanded}
     <div class="tf-panel">
-      {#each TAG_GROUPS as group}
+      {#each filteredGroups as group}
         <div class="tf-group">
           <span class="tf-group-label" style="color:{group.color}">{group.label}</span>
           <div class="tf-chips">
-            {#each group.tags.filter(t => !hideTags.includes(t)) as tag}
+            {#each group.tags as tag}
               {@const active = selectedTags.has(tag)}
               <button
                 class="tf-chip"
                 class:tf-chip--active={active}
                 style="--c:{group.color}"
+                aria-pressed={active}
                 on:click={() => toggle(tag)}
-              >{tag}</button>
+              >
+                {tag}
+              </button>
             {/each}
           </div>
         </div>
@@ -108,93 +155,125 @@
 </div>
 
 <style>
-  .tf-root {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,.06);
+  .tf-container {
     background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
     overflow: hidden;
-    font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+    font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
   }
 
-  /* Header */
-  .tf-header {
+  .tf-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     padding: 6px 10px;
-    flex-wrap: wrap;
+    gap: 12px;
+    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease;
+    color: #8a8d85;
+  }
+  .tf-bar:hover {
+    background: rgba(255, 255, 255, 0.02);
+    color: #e8e4da;
+  }
+  .tf-bar--open {
+    color: #e8e4da;
   }
 
-  .tf-toggle {
-    width: 100%;
+  .tf-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Wrapper chứa icon chevron và title */
+  .tf-toggle-info {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .tf-chevron {
+    font-size: .65rem;
+    display: inline-block;
+    transition: transform .15s ease;
+    transform: translateX(1px);
+    opacity: .6;
+  }
+  .tf-chevron--rot { transform: rotate(90deg) translateY(-1px); opacity: .9; }
+
+  .tf-bar-title {
+    font-size: .62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+  }
+
+  .tf-count-badge {
+    font-size: .55rem;
+    font-weight: 800;
+    background: #fb923c;
+    color: #000;
+    padding: 0px 5px;
+    border-radius: 4px;
+    line-height: 1.3;
+  }
+
+  /* Summary Active Row */
+  .tf-summary-chips {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0px;
+  }
+  .tf-summary-chips::-webkit-scrollbar { display: none; }
+
+  .tf-sum-chip {
+    font-size: .58rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--c) 10%, rgba(255,255,255,0.02));
+    border: 1px solid color-mix(in srgb, var(--c) 35%, rgba(255,255,255,0.08));
+    color: color-mix(in srgb, var(--c) 85%, #d1d5db);
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: inherit;
+    transition: all .1s;
+  }
+  .tf-sum-chip:hover {
+    background: color-mix(in srgb, var(--c) 20%, rgba(255,255,255,0.05));
+    border-color: var(--c);
+    color: #fff;
+  }
+  .tf-sum-chip-x { opacity: .5; font-size: .65rem; font-weight: 400; }
+
+  .tf-clear-btn {
     background: none;
     border: none;
-    cursor: pointer;
-    padding: 0;
-    font-family: inherit;
-    color: var(--ink-muted, #8a8d85);
-    flex-shrink: 0;
-    transition: color .15s;
-  }
-  .tf-toggle:hover { color: var(--ink, #e8e4da); }
-
-  .tf-icon {
-    font-size: .65rem;
-    opacity: .6;
-    width: 10px;
-  }
-  .tf-title {
-    font-size: .62rem;
+    padding: 2px 6px;
+    font-size: .58rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .14em;
-  }
-  .tf-badge {
-    font-size: .58rem;
-    font-weight: 800;
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: rgba(167,139,250,.2);
-    border: 1px solid rgba(167,139,250,.4);
-    color: #a78bfa;
-  }
-  .tf-hint {
-    font-size: .58rem;
-    opacity: .35;
-    font-style: italic;
-  }
-
-  .tf-active-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    align-items: center;
-    flex: 1;
-  }
-
-  .tf-clear {
-    font-size: .6rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(248,113,113,.25);
-    background: rgba(248,113,113,.08);
+    letter-spacing: .06em;
     color: #f87171;
+    opacity: .7;
     cursor: pointer;
     font-family: inherit;
-    transition: all .12s;
-    flex-shrink: 0;
+    border-radius: 4px;
   }
-  .tf-clear:hover { background: rgba(248,113,113,.2); }
+  .tf-clear-btn:hover { opacity: 1; background: rgba(248,113,113,0.08); }
 
-  /* Expanded panel */
+  /* Drawer Panel */
   .tf-panel {
     display: flex;
     flex-direction: column;
@@ -233,12 +312,12 @@
     flex: 1;
   }
 
-  /* Chips */
+  /* Chips inside panel */
   .tf-chip {
     font-size: .62rem;
     font-weight: 600;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 6px;
     border: 1px solid rgba(255,255,255,.08);
     background: rgba(255,255,255,.03);
     color: #8a8d85;
@@ -246,16 +325,24 @@
     transition: all .12s;
     font-family: inherit;
     line-height: 1.5;
+    user-select: none;
   }
   .tf-chip:hover {
-    border-color: color-mix(in srgb, var(--c, #a78bfa) 50%, transparent);
-    color: var(--c, #a78bfa);
-    background: color-mix(in srgb, var(--c, #a78bfa) 10%, transparent);
+    border-color: color-mix(in srgb, var(--c) 50%, transparent);
+    color: var(--c);
+    background: color-mix(in srgb, var(--c) 10%, transparent);
   }
   .tf-chip--active {
-    background: color-mix(in srgb, var(--c, #a78bfa) 18%, transparent);
-    border-color: color-mix(in srgb, var(--c, #a78bfa) 55%, transparent);
-    color: var(--c, #a78bfa);
+    background: color-mix(in srgb, var(--c) 15%, transparent) !important;
+    border-color: color-mix(in srgb, var(--c) 60%, transparent) !important;
+    color: var(--c) !important;
     font-weight: 700;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--c) 15%, transparent);
   }
+  .tf-chip--active:hover {
+    background: color-mix(in srgb, var(--c) 25%, transparent) !important;
+    border-color: var(--c) !important;
+  }
+  .sf-hint { font-size:.58rem;opacity:.35;font-style:italic; }
+
 </style>

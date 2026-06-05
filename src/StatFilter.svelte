@@ -1,12 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
 
-    const dispatch = createEventDispatcher<{
-      change: {
-        filter: Map<string,'include'|'exclude'>
-        sortMode:'highest'|'lowest'|'alphabetical'
-      }
-    }>()
+  const dispatch = createEventDispatcher<{
+    change: {
+      filter: Map<string,'include'|'exclude'>
+      sortMode:'highest'|'lowest'|'alphabetical'
+    }
+  }>()
 
   const STAT_GROUPS = [
     {
@@ -50,9 +50,8 @@
         { key: 'jumpBoost',        label: 'Jump'      },
       ],
     },
-]
-  let activeTab: 'positive' | 'negative' = 'positive'
-  let sortMode: 'highest' |'lowest' |'alphabetical' ='highest'
+  ]
+
   const NEG_STAT_GROUPS = [
     {
       label: 'Boost', color: '#f87171',
@@ -97,67 +96,78 @@
     },
   ]
 
-    // Fully isolated state per instance
-    let active: Map<string, 'include' | 'exclude'> = new Map()
-    let expanded = false
+  const STAT_LABEL_MAP = new Map<string, string>()
+  const STAT_COLOR_MAP = new Map<string, string>()
 
-    $: activeCount = active.size
+  function initMaps(groups: typeof STAT_GROUPS) {
+    for (const g of groups) {
+      for (const s of g.stats) {
+        STAT_LABEL_MAP.set(s.key, s.label)
+        STAT_COLOR_MAP.set(s.key, g.color)
+      }
+    }
+  }
+  initMaps(STAT_GROUPS)
+  initMaps(NEG_STAT_GROUPS)
 
-    $: hiddenInPositive = new Set(
+  let activeTab: 'positive' | 'negative' = 'positive'
+  let sortMode: 'highest' | 'lowest' | 'alphabetical' = 'highest'
+
+  let active: Map<string, 'include' | 'exclude'> = new Map()
+  let expanded = false
+
+  $: activeCount = active.size
+
+  $: hiddenInPositive = new Set(
     [...active.keys()]
         .filter(k => k.startsWith('neg:'))
         .map(k => k.slice(4))
-    )
+  )
 
-    $: hiddenInNegative = new Set(
+  $: hiddenInNegative = new Set(
     [...active.keys()]
         .filter(k => !k.startsWith('neg:'))
-    )
+  )
 
-    function toggle(key: string) {
-        const cur = active.get(key)
-        // off -> include
-        if (!cur) {
-            active.set(key, 'include')
-        // include -> exclude
-        } else if (cur === 'include') {
-            active.set(key, 'exclude')
-        // exclude -> off
-        } else {
-            active.delete(key)
-        }
-        active = new Map(active)
-        dispatch('change',{filter: active,sortMode})
+  function toggle(key: string) {
+    const cur = active.get(key)
+    if (!cur) {
+        active.set(key, 'include')
+    } else if (cur === 'include') {
+        active.set(key, 'exclude')
+    } else {
+        active.delete(key)
     }
+    active = new Map(active)
+    dispatch('change', { filter: active, sortMode })
+  }
 
   function remove(key: string) {
     active.delete(key)
     active = new Map(active)
-    dispatch('change',{filter: active,sortMode})
+    dispatch('change', { filter: active, sortMode })
   }
 
   function clear() {
     active = new Map()
-    dispatch('change',{filter: active,sortMode})
+    dispatch('change', { filter: active, sortMode })
   }
 
-  function getLabel(key: string) {
-    for (const g of STAT_GROUPS)
-      for (const s of g.stats)
-        if (s.key === key) return s.label
-    return key
-  }
-
-  function getColor(key: string) {
-    for (const g of STAT_GROUPS)
-      if (g.stats.some(s => s.key === key)) return g.color
-    return '#8a8d85'
+  function handleChipKeyDown(e: KeyboardEvent, key: string) {
+    if (e.key === 'Delete' || (e.key === 'Backspace' && e.shiftKey)) {
+      e.preventDefault()
+      remove(key)
+    }
   }
 </script>
 
 <div class="sf-root">
   <div class="sf-header">
-    <button class="sf-toggle" on:click={() => expanded = !expanded}>
+    <button 
+      class="sf-toggle" 
+      aria-expanded={expanded} 
+      on:click={() => expanded = !expanded}
+    >
       <span class="sf-icon">{expanded ? '▾' : '▸'}</span>
       <span class="sf-title">Filter by Stat</span>
       {#if activeCount > 0}
@@ -174,13 +184,15 @@
             class="sf-chip sf-chip--active"
             class:sf-chip--include={state === 'include'}
             class:sf-chip--exclude={state === 'exclude'}
-            style="--c:{getColor(key)}"
-            title="Click cycle · Right-click remove"
+            style="--c:{STAT_COLOR_MAP.get(key) ?? '#8a8d85'}"
+            title="Click to cycle · Right-click or press Delete to remove"
+            aria-label="Filter {STAT_LABEL_MAP.get(key) ?? key}: {state}. Click to cycle, Delete to remove."
             on:click={() => toggle(key)}
             on:contextmenu|preventDefault={() => remove(key)}
+            on:keydown={(e) => handleChipKeyDown(e, key)}
           >
             <span class="sf-sign">{state === 'include' ? '+' : '−'}</span>
-            {getLabel(key)}
+            {STAT_LABEL_MAP.get(key) ?? key}
           </button>
         {/each}
         <button class="sf-clear" on:click={clear}>Clear all</button>
@@ -191,9 +203,11 @@
   {#if expanded}
   <div class="sf-panel">
 
-    <div class="sf-tab-row">
+    <div class="sf-tab-row" role="tablist" aria-label="Stat Types">
       <button
         class="sf-tab"
+        role="tab"
+        aria-selected={activeTab === 'positive'}
         class:sf-tab--active={activeTab === 'positive'}
         on:click={() => activeTab = 'positive'}
       >
@@ -202,6 +216,8 @@
 
       <button
         class="sf-tab"
+        role="tab"
+        aria-selected={activeTab === 'negative'}
         class:sf-tab--active={activeTab === 'negative'}
         on:click={() => activeTab = 'negative'}
       >
@@ -210,14 +226,29 @@
     </div>
 
     <div class="sf-legend">
-      <div class="sf-sort-row">
-        <button class={sortMode==='highest'? 'sf-tab sf-tab--active': 'sf-tab'} on:click={()=>{sortMode='highest'; dispatch('change',{filter:active,sortMode})}}>
+      <div class="sf-sort-row" role="group" aria-label="Sort options">
+        <button 
+          class="sf-tab" 
+          class:sf-tab--active={sortMode === 'highest'} 
+          aria-pressed={sortMode === 'highest'}
+          on:click={()=>{sortMode='highest'; dispatch('change',{filter:active,sortMode})}}
+        >
           Highest
         </button>
-        <button class={sortMode==='lowest'? 'sf-tab sf-tab--active': 'sf-tab'} on:click={()=>{sortMode='lowest'; dispatch('change',{filter:active,sortMode})}}>
+        <button 
+          class="sf-tab" 
+          class:sf-tab--active={sortMode === 'lowest'} 
+          aria-pressed={sortMode === 'lowest'}
+          on:click={()=>{sortMode='lowest'; dispatch('change',{filter:active,sortMode})}}
+        >
           Lowest
         </button>
-        <button class={sortMode==='alphabetical'? 'sf-tab sf-tab--active': 'sf-tab'} on:click={()=>{sortMode='alphabetical'; dispatch('change',{filter:active,sortMode})}}>
+        <button 
+          class="sf-tab" 
+          class:sf-tab--active={sortMode === 'alphabetical'} 
+          aria-pressed={sortMode === 'alphabetical'}
+          on:click={()=>{sortMode='alphabetical'; dispatch('change',{filter:active,sortMode})}}
+        >
           ABC
         </button>
       </div> 
@@ -229,80 +260,76 @@
       </span>
     </div>
 
-        {#if activeTab === 'positive'}
+    {#if activeTab === 'positive'}
+      {#each STAT_GROUPS as group}
+        <div class="sf-group">
+          <span class="sf-group-label" style="color:{group.color}">
+            {group.label}
+          </span>
 
-        {#each STAT_GROUPS as group}
-            <div class="sf-group">
-            <span
-              class="sf-group-label"
-              style="color:{group.color}"
-            >
-              {group.label}
-            </span>
-
-            <div class="sf-chips">
-                {#each group.stats as stat}
-                {@const state = active.get(stat.key)}
-                {@const dimmed = hiddenInPositive.has(stat.key)}
-                <button
-                  class="sf-chip"
-                  class:sf-chip--include={state === 'include'}
-                  class:sf-chip--exclude={state === 'exclude'}
-                  class:sf-chip--dimmed={dimmed}
-                  style="--c:{group.color}"
-                  on:click={() => toggle(stat.key)}
-                  on:contextmenu|preventDefault={() => remove(stat.key)}
-                >
-                  {#if state}
-                    <span class="sf-sign">
-                      {state === 'include' ? '+' : '−'}
-                    </span>
-                  {/if}
-
-                  {stat.label}
-                </button>
-              {/each}
-            </div>
+          <div class="sf-chips">
+            {#each group.stats as stat}
+              {@const state = active.get(stat.key)}
+              {@const dimmed = hiddenInPositive.has(stat.key)}
+              <button
+                class="sf-chip"
+                class:sf-chip--include={state === 'include'}
+                class:sf-chip--exclude={state === 'exclude'}
+                class:sf-chip--dimmed={dimmed}
+                style="--c:{group.color}"
+                aria-pressed={!!state}
+                aria-label="{stat.label} stat filter. Current: {state ?? 'off'}."
+                disabled={dimmed}
+                on:click={() => toggle(stat.key)}
+                on:contextmenu|preventDefault={() => remove(stat.key)}
+                on:keydown={(e) => handleChipKeyDown(e, stat.key)}
+              >
+                {#if state}
+                  <span class="sf-sign">
+                    {state === 'include' ? '+' : '−'}
+                  </span>
+                {/if}
+                {stat.label}
+              </button>
+            {/each}
           </div>
+        </div>
       {/each}
+    {:else}
+      {#each NEG_STAT_GROUPS as group}
+        <div class="sf-group">
+          <span class="sf-group-label" style="color:{group.color}">
+            {group.label}
+          </span>
 
-        {:else}
-
-        {#each NEG_STAT_GROUPS as group}
-            <div class="sf-group">
-            <span
-              class="sf-group-label"
-              style="color:{group.color}"
-            >
-              {group.label}
-            </span>
-
-            <div class="sf-chips">
-                {#each group.stats as stat}
-                {@const state = active.get(stat.key)}
-                {@const dimmed = hiddenInNegative.has(stat.key.slice(4))}
-                <button
-                  class="sf-chip"
-                  class:sf-chip--include={state === 'include'}
-                  class:sf-chip--exclude={state === 'exclude'}
-                  class:sf-chip--dimmed={dimmed}
-                  style="--c:{group.color}"
-                  on:click={() => toggle(stat.key)}
-                  on:contextmenu|preventDefault={() => remove(stat.key)}
-                >
-                  {#if state}
-                    <span class="sf-sign">
-                      {state === 'include' ? '+' : '−'}
-                    </span>
-                  {/if}
-
-                  {stat.label}
-                </button>
-              {/each}
-            </div>
+          <div class="sf-chips">
+            {#each group.stats as stat}
+              {@const state = active.get(stat.key)}
+              {@const dimmed = hiddenInNegative.has(stat.key.slice(4))}
+              <button
+                class="sf-chip"
+                class:sf-chip--include={state === 'include'}
+                class:sf-chip--exclude={state === 'exclude'}
+                class:sf-chip--dimmed={dimmed}
+                style="--c:{group.color}"
+                aria-pressed={!!state}
+                aria-label="Negative {stat.label} stat filter. Current: {state ?? 'off'}."
+                disabled={dimmed}
+                on:click={() => toggle(stat.key)}
+                on:contextmenu|preventDefault={() => remove(stat.key)}
+                on:keydown={(e) => handleChipKeyDown(e, stat.key)}
+              >
+                {#if state}
+                  <span class="sf-sign">
+                    {state === 'include' ? '+' : '−'}
+                  </span>
+                {/if}
+                {stat.label}
+              </button>
+            {/each}
           </div>
+        </div>
       {/each}
-
     {/if}
 
   </div>
@@ -327,7 +354,7 @@
   .sf-title { font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em; }
   .sf-badge {
     font-size:.58rem;font-weight:800;padding:1px 6px;border-radius:999px;
-    background:rgba(251,146,60,.18);border:1px solid rgba(251,146,60,.35);color:#fb923c;
+    background:rgba(251,146,60,.18);border:1px solid rgba(251,146,60 Rim, .35);color:#fb923c;
   }
   .sf-hint { font-size:.58rem;opacity:.35;font-style:italic; }
   .sf-active-row { display:flex;flex-wrap:wrap;gap:3px;align-items:center;flex:1; }
@@ -342,12 +369,8 @@
     border-top:1px solid rgba(255,255,255,.06);animation:sfOpen .12s ease;
   }
   @keyframes sfOpen { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
-  .sf-legend {
-    display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px;
-  }
-  .sf-leg {
-    font-size:.58rem;font-weight:700;padding:1px 6px;border-radius:4px;
-  }
+  .sf-legend { display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px; }
+  .sf-leg { font-size:.58rem;font-weight:700;padding:1px 6px;border-radius:4px; }
   .sf-leg--off  { color:var(--ink-muted,#8a8d85);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08); }
   .sf-leg--inc  { color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25); }
   .sf-leg--exc  { color:#f87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25); }
@@ -381,75 +404,72 @@
   .sf-chip--exclude:hover { background:rgba(248,113,113,.22);border-color:rgba(248,113,113,.65);color:#f87171; }
   .sf-chip--dimmed { opacity:.28; pointer-events:none; }
   .sf-sign { font-size:.7rem;font-weight:900;line-height:1;margin-right:1px; }
-  .sf-tab-row {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-.sf-tab {
-  flex: 1;
-  font-size: .6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.03);
-  color: var(--ink-muted, #8a8d85);
-  cursor: pointer;
-  transition: all .12s;
-  font-family: inherit;
-}
-.sf-tab:hover { color: var(--ink, #e8e4da); border-color: rgba(255,255,255,.15); }
-.sf-tab--active {
-  background: rgba(251,146,60,.12);
-  border-color: rgba(251,146,60,.3);
-  color: #fb923c;
-}
-.sf-tab--active:last-child {
-  background: rgba(248,113,113,.12);
-  border-color: rgba(248,113,113,.3);
-  color: #f87171;
-}
+  
+  .sf-tab-row { display: flex; gap: 4px; margin-bottom: 4px; }
+  .sf-tab {
+    flex: 1;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03);
+    color: var(--ink-muted, #8a8d85);
+    cursor: pointer;
+    transition: all .12s;
+    font-family: inherit;
+  }
+  .sf-tab:hover { color: var(--ink, #e8e4da); border-color: rgba(255,255,255,.15); }
+  .sf-tab--active {
+    background: rgba(251,146,60,.12);
+    border-color: rgba(251,146,60,.3);
+    color: #fb923c;
+  }
+  .sf-tab--active:last-child {
+    background: rgba(248,113,113,.12);
+    border-color: rgba(248,113,113,.3);
+    color: #f87171;
+  }
 
-.sf-sort-row {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
+  .sf-sort-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
 
-.sf-sort-row button {
-  flex: 1;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  background: transparent;
-  color: #8a8d85;
-  font-size: .58rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .sf-sort-row button {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: transparent;
+    color: #8a8d85;
+    font-size: .58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-.sf-sort-row button:hover:not(.sf-tab--active) {
-  color: #e8e4da;
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
+  .sf-sort-row button:hover:not(.sf-tab--active) {
+    color: #e8e4da;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 
-.sf-sort-row button.sf-tab--active {
-  background: rgba(251, 146, 60, 0.15);
-  border-color: rgba(251, 146, 60, 0.4);
-  color: #fb923c;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(251, 146, 60, 0.15);
-  text-shadow: 0 0 4px rgba(251, 146, 60, 0.2);
-}
+  .sf-sort-row button.sf-tab--active {
+    background: rgba(251, 146, 60, 0.15);
+    border-color: rgba(251, 146, 60, 0.4);
+    color: #fb923c;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(251, 146, 60, 0.15);
+    text-shadow: 0 0 4px rgba(251, 146, 60, 0.2);
+  }
 </style>

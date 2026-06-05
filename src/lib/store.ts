@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store'
 import type { BuildState, EnchantSlot } from './types'
-import { calcBuild, races, guilds, enforceEnchantSlot } from './engine'
+import { calcBuild, races, enforceEnchantSlot } from './engine'
 
 export const build = writable<BuildState>({
   race: races[0]?.name ?? "",
@@ -41,9 +41,9 @@ export const build = writable<BuildState>({
 
 export const result = derived(build, $b => calcBuild($b))
 
-export function setEnchantment(slot: EnchantSlot, index: 0|1|2, value: string) {
+export function setEnchantment(slot: EnchantSlot, index: 0 | 1 | 2, value: string) {
   build.update(s => {
-    const next = [...s.enchantments[slot]] as [string,string,string]
+    const next = [...s.enchantments[slot]] as [string, string, string]
     next[index] = value
     return {
       ...s,

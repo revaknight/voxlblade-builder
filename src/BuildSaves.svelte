@@ -1,5 +1,5 @@
-<!-- BuildSaves.svelte -->
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import EmotionalTracker from './EmotionalTracker.svelte';
   import { build } from './lib/store'
   import type { BuildState } from './lib/types'
@@ -12,6 +12,14 @@
     timestamp: number
     state: BuildState
   }
+
+  // Quản lý các bộ định thời gian để tránh Memory Leak khi component unmount
+  let timeouts: number[] = [];
+  function clearAllTimeouts() {
+    timeouts.forEach(clearTimeout);
+    timeouts = [];
+  }
+  onDestroy(clearAllTimeouts);
 
   function loadSlots(): (SaveSlot | null)[] {
     try {
@@ -62,30 +70,42 @@
     editingIndex = null
   }
 
+  // TỐI ƯU HÓA: Dùng structuredClone thay cho JSON.parse(JSON.stringify) để clone deep nhanh hơn
   function saveBuild(i: number) {
     const name = slots[i]?.name ?? `Build ${i + 1}`
-    slots[i] = { name, timestamp: Date.now(), state: JSON.parse(JSON.stringify($build)) }
+    slots[i] = { name, timestamp: Date.now(), state: structuredClone($build) }
     slots = [...slots]
     persistSlots(slots)
   }
 
+  // TỐI ƯU HÓA: Đóng gói dọn dẹp timer an toàn chống rò rỉ RAM
   function loadBuild(i: number) {
     if (confirmLoad === i) {
       const slot = slots[i]
-      if (slot) build.set(JSON.parse(JSON.stringify(slot.state)))
+      if (slot) build.set(structuredClone(slot.state))
       confirmLoad = null
     } else {
       confirmLoad = i
-      setTimeout(() => { if (confirmLoad === i) confirmLoad = null }, 3000)
+      const timer = window.setTimeout(() => { 
+        if (confirmLoad === i) confirmLoad = null 
+      }, 3000);
+      timeouts.push(timer);
     }
   }
 
+  // TỐI ƯU HÓA: Thêm quản lý hủy tác vụ xóa ngầm
   function deleteSlot(i: number) {
     if (confirmDelete === i) {
-      slots[i] = null; slots = [...slots]; persistSlots(slots); confirmDelete = null
+      slots[i] = null;
+      slots = [...slots]; 
+      persistSlots(slots); 
+      confirmDelete = null
     } else {
       confirmDelete = i
-      setTimeout(() => { if (confirmDelete === i) confirmDelete = null }, 3000)
+      const timer = window.setTimeout(() => { 
+        if (confirmDelete === i) confirmDelete = null 
+      }, 3000);
+      timeouts.push(timer);
     }
   }
 
@@ -105,191 +125,182 @@
     return parts.join(' · ') || 'Empty build'
   }
 
-// ── Key map để rút gọn ────────────────────────────────────────────────────
-const KEY_MAP: Record<string, string> = {
-  race:'ra', guild:'gu', guildRank:'gr', helmet:'he', chestplate:'cp',
-  leggings:'le', ring:'ri', rune:'ru', enchantments:'en',
-  infusionHelmet:'ih', infusionChestplate:'ic', infusionLeggings:'il', infusionRing:'ir',
-  weaponBlade:'wb', weaponHandle:'wh', monkGlove:'mg', monkEssence:'me',
-  shrineActive:'sh', upgradeHelmet:'uh', upgradeChestplate:'uc',
-  upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', selectedWeaponArt:'wa', draconicColor:'dc',emotionalState: 'es'
-}
-const KEY_UNMAP = Object.fromEntries(Object.entries(KEY_MAP).map(([k,v])=>[v,k]))
-
-// Enchant slot keys
-const ENCH_MAP: Record<string, string> = {
-  helmet:'he', chestplate:'cp', leggings:'le', ring:'ri', rune:'ru'
-}
-const ENCH_UNMAP = Object.fromEntries(Object.entries(ENCH_MAP).map(([k,v])=>[v,k]))
-
-// Default values để bỏ qua
-const DEFAULTS: Record<string, any> = {
-  race:'', guild:'', guildRank:1, helmet:'', chestplate:'', leggings:'',
-  ring:'', rune:'', infusionHelmet:'', infusionChestplate:'', infusionLeggings:'',
-  infusionRing:'', weaponBlade:'', weaponHandle:'', monkGlove:'', monkEssence:'',
-  shrineActive:false, upgradeHelmet:0, upgradeChestplate:0, upgradeLeggings:0,
-  upgradeRing:0, upgradeRune:0, selectedWeaponArt:'Lunge', draconicColor:'', emotionalState: 'buffs'
-}
-
-function compressToBase64(str: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const enc = new TextEncoder().encode(str)
-      const cs = new CompressionStream('deflate-raw')
-      const writer = cs.writable.getWriter()
-      writer.write(enc)
-      writer.close()
-      const chunks: Uint8Array[] = []
-      const reader = cs.readable.getReader()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      const total = chunks.reduce((a, c) => a + c.length, 0)
-      const merged = new Uint8Array(total)
-      let offset = 0
-      for (const c of chunks) { merged.set(c, offset); offset += c.length }
-      // base64url (không có +/= gây nhầm lẫn)
-      const b64 = btoa(String.fromCharCode(...merged))
-        .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')
-      resolve(b64)
-    } catch(e) { reject(e) }
-  })
-}
-
-function decompressFromBase64(b64: string): Promise<string> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Restore base64
-      const std = b64.replace(/-/g,'+').replace(/_/g,'/')
-      const pad = std + '='.repeat((4 - std.length % 4) % 4)
-      const bin = atob(pad)
-      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0))
-      const ds = new DecompressionStream('deflate-raw')
-      const writer = ds.writable.getWriter()
-      writer.write(bytes)
-      writer.close()
-      const chunks: Uint8Array[] = []
-      const reader = ds.readable.getReader()
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      const total = chunks.reduce((a, c) => a + c.length, 0)
-      const merged = new Uint8Array(total)
-      let offset = 0
-      for (const c of chunks) { merged.set(c, offset); offset += c.length }
-      resolve(new TextDecoder().decode(merged))
-    } catch(e) { reject(e) }
-  })
-}
-
-function encodeState(state: BuildState): Promise<string> {
-  // 1. Short keys + strip defaults
-  const slim: Record<string, any> = {}
-  for (const [k, v] of Object.entries(state)) {
-    if (k === 'enchantments') continue
-    if (JSON.stringify(v) === JSON.stringify(DEFAULTS[k])) continue
-    const sk = KEY_MAP[k] ?? k
-    slim[sk] = v
+  const KEY_MAP: Record<string, string> = {
+    race:'ra', guild:'gu', guildRank:'gr', helmet:'he', chestplate:'cp',
+    leggings:'le', ring:'ri', rune:'ru', enchantments:'en',
+    infusionHelmet:'ih', infusionChestplate:'ic', infusionLeggings:'il', infusionRing:'ir',
+    weaponBlade:'wb', weaponHandle:'wh', monkGlove:'mg', monkEssence:'me',
+    shrineActive:'sh', upgradeHelmet:'uh', upgradeChestplate:'uc',
+    upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', selectedWeaponArt:'wa', draconicColor:'dc',emotionalState: 'es'
   }
-  // Enchantments: chỉ lưu slot có giá trị, dùng short key
-  const enchSlim: Record<string, any> = {}
-  for (const [slot, arr] of Object.entries(state.enchantments)) {
-    const filtered = (arr as string[]).filter(Boolean)
-    if (filtered.length > 0) {
-      enchSlim[ENCH_MAP[slot] ?? slot] = filtered.length === 1 ? filtered[0] : filtered
+  const KEY_UNMAP = Object.fromEntries(Object.entries(KEY_MAP).map(([k,v])=>[v,k]))
+
+  const ENCH_MAP: Record<string, string> = {
+    helmet:'he', chestplate:'cp', leggings:'le', ring:'ri', rune:'ru'
+  }
+  const ENCH_UNMAP = Object.fromEntries(Object.entries(ENCH_MAP).map(([k,v])=>[v,k]))
+
+  const DEFAULTS: Record<string, any> = {
+    race:'', guild:'', guildRank:1, helmet:'', chestplate:'', leggings:'',
+    ring:'', rune:'', infusionHelmet:'', infusionChestplate:'', infusionLeggings:'',
+    infusionRing:'', weaponBlade:'', weaponHandle:'', monkGlove:'', monkEssence:'',
+    shrineActive:false, upgradeHelmet:0, upgradeChestplate:0, upgradeLeggings:0,
+    upgradeRing:0, upgradeRune:0, selectedWeaponArt:'Lunge', draconicColor:'', emotionalState: 'buffs'
+  }
+
+  function compressToBase64(str: string): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const enc = new TextEncoder().encode(str)
+        const cs = new CompressionStream('deflate-raw')
+        const writer = cs.writable.getWriter()
+        writer.write(enc)
+        writer.close()
+        const chunks: Uint8Array[] = []
+        const reader = cs.readable.getReader()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          chunks.push(value)
+        }
+        const total = chunks.reduce((a, c) => a + c.length, 0)
+        const merged = new Uint8Array(total)
+        let offset = 0
+        for (const c of chunks) { merged.set(c, offset); offset += c.length }
+        const b64 = btoa(String.fromCharCode(...merged))
+          .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')
+        resolve(b64)
+      } catch(e) { reject(e) }
+    })
+  }
+
+  function decompressFromBase64(b64: string): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const std = b64.replace(/-/g,'+').replace(/_/g,'/')
+        const pad = std + '='.repeat((4 - std.length % 4) % 4)
+        const bin = atob(pad)
+        const bytes = Uint8Array.from(bin, c => c.charCodeAt(0))
+        const ds = new DecompressionStream('deflate-raw')
+        const writer = ds.writable.getWriter()
+        writer.write(bytes)
+        writer.close()
+        const chunks: Uint8Array[] = []
+        const reader = ds.readable.getReader()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          chunks.push(value)
+        }
+        const total = chunks.reduce((a, c) => a + c.length, 0)
+        const merged = new Uint8Array(total)
+        let offset = 0
+        for (const c of chunks) { merged.set(c, offset); offset += c.length }
+        resolve(new TextDecoder().decode(merged))
+      } catch(e) { reject(e) }
+    })
+  }
+
+  function encodeState(state: BuildState): Promise<string> {
+    const slim: Record<string, any> = {}
+    for (const [k, v] of Object.entries(state)) {
+      if (k === 'enchantments') continue
+      if (JSON.stringify(v) === JSON.stringify(DEFAULTS[k])) continue
+      const sk = KEY_MAP[k] ?? k
+      slim[sk] = v
     }
+    const enchSlim: Record<string, any> = {}
+    for (const [slot, arr] of Object.entries(state.enchantments)) {
+      const filtered = (arr as string[]).filter(Boolean)
+      if (filtered.length > 0) {
+        enchSlim[ENCH_MAP[slot] ?? slot] = filtered.length === 1 ? filtered[0] : filtered
+      }
+    }
+    if (Object.keys(enchSlim).length > 0) slim['en'] = enchSlim
+    return compressToBase64(JSON.stringify(slim))
   }
-  if (Object.keys(enchSlim).length > 0) slim['en'] = enchSlim
 
-  // 2. Gzip
-  return compressToBase64(JSON.stringify(slim))
-}
-
-async function decodeState(code: string): Promise<BuildState> {
-  let slim: Record<string, any>
-  // Thử decode mới (compressed)
-  try {
-    const json = await decompressFromBase64(code)
-    slim = JSON.parse(json)
-  } catch {
-    // Fallback: code cũ (plain base64 JSON)
+  async function decodeState(code: string): Promise<BuildState> {
+    let slim: Record<string, any>
     try {
-      slim = JSON.parse(decodeURIComponent(escape(atob(code.trim()))))
-      // Code cũ đã có full keys, không cần unmap nếu có 'race'
-      if (slim.race !== undefined) return slim as BuildState
+      const json = await decompressFromBase64(code)
+      slim = JSON.parse(json)
     } catch {
-      throw new Error('Invalid code')
-    }
-  }
-
-  // Expand short keys
-  const full: Record<string, any> = { ...DEFAULTS }
-  for (const [k, v] of Object.entries(slim)) {
-    if (k === 'en') continue
-    full[KEY_UNMAP[k] ?? k] = v
-  }
-
-  // Expand enchantments
-  const enchFull: Record<string, [string,string,string]> = {
-    helmet:['','',''], chestplate:['','',''], leggings:['','',''],
-    ring:['','',''], rune:['','','']
-  }
-  if (slim['en']) {
-    for (const [sk, v] of Object.entries(slim['en'] as Record<string,any>)) {
-      const slot = ENCH_UNMAP[sk] ?? sk
-      if (typeof v === 'string') enchFull[slot] = [v,'','']
-      else if (Array.isArray(v)) {
-        enchFull[slot] = [v[0]??'', v[1]??'', v[2]??''] as [string,string,string]
+      try {
+        slim = JSON.parse(decodeURIComponent(escape(atob(code.trim()))))
+        if (slim.race !== undefined) return slim as BuildState
+      } catch {
+        throw new Error('Invalid code')
       }
     }
-  }
-  full['enchantments'] = enchFull
-  return full as BuildState
-}
 
-// ── State ─────────────────────────────────────────────────────────────────
-let shareCode = ''
-let importCode = ''
-let importError = ''
-let importSuccess = false
-let exportingSlot: number | null = null
-
-async function exportSlot(i: number) {
-  const slot = slots[i]
-  if (!slot) return
-  exportingSlot = i
-  importError = ''
-  shareCode = '...'
-  try {
-    shareCode = await encodeState(slot.state)
-  } catch {
-    shareCode = ''
-    importError = 'Export failed!'
-  }
-}
-
-async function importBuild() {
-  try {
-    const state = await decodeState(importCode.trim())
-    if (!state.race && !state.helmet && !state.weaponBlade) {
-      importError = 'Invalid build data!'
-      return
+    const full: Record<string, any> = { ...DEFAULTS }
+    for (const [k, v] of Object.entries(slim)) {
+      if (k === 'en') continue
+      full[KEY_UNMAP[k] ?? k] = v
     }
-    build.set(state)
-    importError = ''
-    importSuccess = true
-    setTimeout(() => importSuccess = false, 2000)
-  } catch {
-    importError = 'Invalid code!'
-  }
-}
 
-function copyCode() {
-  navigator.clipboard.writeText(shareCode)
+    const enchFull: Record<string, [string,string,string]> = {
+      helmet:['','',''], chestplate:['','',''], leggings:['','',''],
+      ring:['','',''], rune:['','','']
+    }
+    if (slim['en']) {
+      for (const [sk, v] of Object.entries(slim['en'] as Record<string,any>)) {
+        const slot = ENCH_UNMAP[sk] ?? sk
+        if (typeof v === 'string') enchFull[slot] = [v,'','']
+        else if (Array.isArray(v)) {
+          enchFull[slot] = [v[0]??'', v[1]??'', v[2]??''] as [string,string,string]
+        }
+      }
+    }
+    full['enchantments'] = enchFull
+    return full as BuildState
+  }
+
+  let shareCode = ''
+  let importCode = ''
+  let importError = ''
+  let importSuccess = false
+  let exportingSlot: number | null = null
+
+  async function exportSlot(i: number) {
+    const slot = slots[i]
+    if (!slot) return
+    exportingSlot = i
+    importError = ''
+    shareCode = '...'
+    try {
+      shareCode = await encodeState(slot.state)
+    } catch {
+      shareCode = ''
+      importError = 'Export failed!'
+    }
+  }
+
+  async function importBuild() {
+    try {
+      const state = await decodeState(importCode.trim())
+      if (!state.race && !state.helmet && !state.weaponBlade) {
+        importError = 'Invalid build data!'
+        return
+      }
+      build.set(state)
+      importError = ''
+      importSuccess = true
+      setTimeout(() => importSuccess = false, 2000)
+    } catch {
+      importError = 'Invalid code!'
+    }
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(shareCode)
+  }
+  function focusOnMount(node: HTMLInputElement) {
+  requestAnimationFrame(() => {
+    node.focus();
+    node.select();
+  });
 }
 </script>
 
@@ -318,13 +329,21 @@ function copyCode() {
             <div class="slot-info">
               {#if slot}
                 {#if editingIndex === i}
-                  <!-- svelte-ignore a11y-autofocus -->
-                  <input class="name-input" bind:value={editingName} autofocus
+                  <label for="edit-name-{i}" class="sr-only">Edit Build Name</label>
+                  <input 
+                    id="edit-name-{i}"
+                    class="name-input" 
+                    bind:value={editingName} 
+                    use:focusOnMount
                     on:blur={() => confirmEdit(i)}
-                    on:keydown={e => { if (e.key === 'Enter') confirmEdit(i); if (e.key === 'Escape') editingIndex = null }} />
+                    on:keydown={e => { 
+                      if (e.key === 'Enter') confirmEdit(i);
+                      if (e.key === 'Escape') editingIndex = null 
+                    }} 
+                  />
                 {:else}
-                  <button class="slot-name" on:click={() => startEdit(i)}>
-                    {slot.name}<span class="edit-icon">✎</span>
+                  <button class="slot-name" on:click={() => startEdit(i)} aria-label="Rename build {slot.name}">
+                    {slot.name}<span class="edit-icon" aria-hidden="true">✎</span>
                   </button>
                 {/if}
                 <div class="slot-meta">
@@ -346,50 +365,60 @@ function copyCode() {
                 {confirmLoad === i ? '✓ Sure?' : '↓ Load'}
               </button>
               <button class="btn btn-share" class:btn-share--active={exportingSlot === i}
-                on:click={() => exportSlot(i)} title="Export this build as code">
-                ⬆
+                on:click={() => exportSlot(i)} title="Export this build as code" aria-label="Export Slot {i+1}">
+                <span>⬆</span>
               </button>
               <button class="btn" class:btn-delete={confirmDelete !== i} class:btn-confirm={confirmDelete === i}
-                on:click={() => deleteSlot(i)}>
-                {confirmDelete === i ? '?' : '✕'}
+                on:click={() => deleteSlot(i)} aria-label="Delete Slot {i+1}">
+                <span>{confirmDelete === i ? '?' : '✕'}</span>
               </button>
             {/if}
           </div>
         </div>
       {/each}
     </div>
+
     <div class="share-section">
-    <div class="share-row">
-      <span class="export-label">Current build:</span>
-      <button class="btn btn-share" class:btn-share--active={currentExportCode === '...'} on:click={exportCurrent}>⬆ Export</button>
-      {#if currentExportCode && currentExportCode !== '...'}
-        <input class="share-code" value={currentExportCode} readonly
-          on:click={e => (e.target as HTMLInputElement).select()} />
-        <button class="btn btn-copy" on:click={() => navigator.clipboard.writeText(currentExportCode)}>Copy</button>
-      {/if}
-    </div>
-
-    {#if exportingSlot !== null && shareCode}
       <div class="share-row">
-        <span class="export-label">Slot {exportingSlot + 1} code:</span>
-        <input class="share-code" value={shareCode} readonly
-          on:click={e => (e.target as HTMLInputElement).select()} />
-        <button class="btn btn-copy" on:click={copyCode}>Copy</button>
+        <span class="export-label">Current build:</span>
+        <button class="btn btn-share" class:btn-share--active={currentExportCode === '...'} on:click={exportCurrent}>⬆ Export</button>
+        {#if currentExportCode && currentExportCode !== '...'}
+          <label for="current-build-code" class="sr-only">Current Build Code</label>
+          <input id="current-build-code" class="share-code" value={currentExportCode} readonly
+            on:click={e => (e.target as HTMLInputElement).select()} />
+          <button class="btn btn-copy" on:click={() => navigator.clipboard.writeText(currentExportCode)}>Copy</button>
+        {/if}
       </div>
-    {/if}
 
-    <div class="import-row">
-      <input class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
-      <button class="btn btn-paste" on:click={async () => { try { importCode = await navigator.clipboard.readText() } catch {} }} title="Paste from clipboard">📋 Paste</button>
-      <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
+      {#if exportingSlot !== null && shareCode}
+        <div class="share-row">
+          <span class="export-label">Slot {exportingSlot + 1} code:</span>
+          <label for="slot-build-code" class="sr-only">Slot {exportingSlot + 1} Code</label>
+          <input id="slot-build-code" class="share-code" value={shareCode} readonly
+            on:click={e => (e.target as HTMLInputElement).select()} />
+          <button class="btn btn-copy" on:click={copyCode}>Copy</button>
+        </div>
+      {/if}
+
+      <div class="import-row">
+        <label for="import-build-code" class="sr-only">Paste Build Code</label>
+        <input id="import-build-code" class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
+        <button class="btn btn-paste" on:click={async () => { try { importCode = await navigator.clipboard.readText() } catch {} }} title="Paste from clipboard">📋 Paste</button>
+        <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
+      </div>
+      {#if importError}<span class="import-err">{importError}</span>{/if}
+      {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
     </div>
-    {#if importError}<span class="import-err">{importError}</span>{/if}
-    {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
-  </div>
   </div>
 {/if}
 
 <style>
+  /* Class tiện ích ẩn phần tử HTML nhưng vẫn hiển thị với máy đọc A11y */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; 
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
   .saves-toggle {
     display:flex;align-items:center;gap:7px;padding:8px 14px;
     background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);
@@ -462,33 +491,28 @@ function copyCode() {
   }
   @keyframes pulse{from{opacity:.8}to{opacity:1}}
 
-.share-section{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--border);}
-.share-row,.import-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-.share-code{
-  flex:1;min-width:0;background:var(--surface3);border:1px solid var(--border-strong);
-  border-radius:6px;color:var(--ink);font-family:monospace;font-size:.7rem;
-  padding:5px 9px;outline:none;
-}
-.share-code:focus{border-color:rgba(167,139,250,.4);}
-.btn-share{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);color:var(--accent3);}
-.btn-share:hover{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.5);}
-.btn-copy{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:var(--accent);flex-shrink:0;}
-.btn-copy:hover{background:rgba(74,222,128,.2);}
-.btn-import{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2);color:var(--infusion);flex-shrink:0;}
-.btn-import:hover{background:rgba(56,189,248,.18);}
-.import-err{font-size:.7rem;color:var(--neg);}
-.import-ok{font-size:.7rem;color:var(--accent);}
-.export-label{font-size:.62rem;color:var(--ink-muted);white-space:nowrap;flex-shrink:0;}
-.btn-share--active{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.6);}
-.saves-icon {
-  color: currentColor;
-  flex-shrink: 0;
-}
-.btn-paste {
-  background: rgba(251,191,36,.08);
-  border-color: rgba(251,191,36,.22);
-  color: var(--accent2);
-  flex-shrink: 0;
-}
-.btn-paste:hover { background: rgba(251,191,36,.18); }
+  .share-section{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--border);}
+  .share-row,.import-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .share-code{
+    flex:1;min-width:0;background:var(--surface3);border:1px solid var(--border-strong);
+    border-radius:6px;color:var(--ink);font-family:monospace;font-size:.7rem;
+    padding:5px 9px;outline:none;
+  }
+  .share-code:focus{border-color:rgba(167,139,250,.4);}
+  .btn-share{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);color:var(--accent3);}
+  .btn-share:hover{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.5);}
+  .btn-copy{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:var(--accent);flex-shrink:0;}
+  .btn-copy:hover{background:rgba(74,222,128,.2);}
+  .btn-import{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2);color:var(--infusion);flex-shrink:0;}
+  .btn-import:hover{background:rgba(56,189,248,.18);}
+  .import-err{font-size:.7rem;color:var(--neg);}
+  .import-ok{font-size:.7rem;color:var(--accent);}
+  .export-label{font-size:.62rem;color:var(--ink-muted);white-space:nowrap;flex-shrink:0;}
+  .btn-share--active{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.6);}
+  .saves-icon { color: currentColor; flex-shrink: 0; }
+  .btn-paste {
+    background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.22);
+    color: var(--accent2); flex-shrink: 0;
+  }
+  .btn-paste:hover { background: rgba(251,191,36,.18); }
 </style>

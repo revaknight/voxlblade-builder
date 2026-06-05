@@ -123,7 +123,7 @@
     {@const list = activeTab === 'buffs' ? buffs : debuffs}
     {#if list.length === 0}
       <div class="bl-empty">
-        <span class="bl-empty-icon">{activeTab === 'buffs' ? '✦' : '☠'}</span>
+        <span class="bl-empty-icon">{activeTab === 'buffs' ? 'ඞ' : '☢'}</span>
         <span class="bl-empty-text">
           No {activeTab === 'buffs' ? 'buff-granting' : 'debuff-applying'} items equipped.
         </span>
