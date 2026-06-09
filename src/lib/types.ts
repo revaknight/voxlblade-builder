@@ -247,6 +247,7 @@ export type WeaponHit = number | WeaponHitObject;
 export interface WeaponBaseDmg {
   type: string;
   m1: WeaponHit[] | null;
+  m1Finisher?: boolean;
   m2: WeaponHit[];
   m2Charge?: {
     enabled: boolean;

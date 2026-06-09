@@ -4,7 +4,7 @@
   import BaseDamageCalc from './BaseDamageCalc.svelte'
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
-  import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, ONE_HANDED_TYPES } from './lib/types'
+  import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, ONE_HANDED_TYPES, type WeaponBaseDmg } from './lib/types'
   import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
 
   $: crit = $result.crit
@@ -251,6 +251,12 @@
 
   function fmtMult(n: number): string {
     return `×${n.toFixed(4)}`
+  }
+  function isFinisher(row: any, attackType: 'm1' | 'm2', hitIndex: number): boolean {
+    if (attackType === 'm2') return true
+    const hasFinisher = (row as any).hasM1Finisher ?? true
+    if (!hasFinisher) return false
+    return row.m1 ? hitIndex === row.m1.length - 1 : false
   }
 
   $: natSources = crit.naturalBreakdown
@@ -801,35 +807,40 @@
           {#if m1Typed}
             {#each m1Typed as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-            <div class="da-hit-wrapper">
-              <div class="da-hit-card">
-                {#each hit.types as t, ti}
-                  {#if ti > 0}
-                    <span class="da-hit-plus">+</span>
-                  {/if}
-
-                  <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
-                    {#if t.scalingMult !== 1}
-                      <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                      <span class="da-hit-arrow">→</span>
+              {@const finisher = isFinisher(row, 'm1', hi)}
+              <div class="da-hit-wrapper">
+                <span class="da-hit-index">{hi + 1}</span>
+                <div class="da-hit-card" class:da-hit-card--finisher={finisher}>
+                  {#each hit.types as t, ti}
+                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                    <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
+                      {#if t.scalingMult !== 1}
+                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
+                        <span class="da-hit-arrow">→</span>
+                      {/if}
+                      <span class="da-hit-num">{fmtNum(t.val)}</span>
+                      <span class="da-hit-type">{t.label}</span>
+                    </div>
+                    {#if hit.count > 1}
+                      <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
                     {/if}
-                    <span class="da-hit-num">{fmtNum(t.val)}</span>
-                    <span class="da-hit-type">{t.label}</span>
-                  </div>
-                  {#if hit.count > 1}
-                    <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
-                  {/if}
-                {/each}
+                  {/each}
+                  {#if finisher}<span class="da-finisher-crown">✦</span>{/if}
+                </div>
               </div>
-          </div>
             {/each}
           {:else if row.m1}
             {#each row.m1 as hit, hi}
+              {@const finisher = isFinisher(row, 'm1', hi)}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-              <div class="da-plain-pill">
+              
+              <div class="da-plain-pill" class:da-plain-pill--finisher={finisher}>
                 <span class="da-plain-num">{typeof hit === 'number' ? hit : hit.n}</span>
                 {#if typeof hit !== 'number' && hit.count > 1}
                   <span class="da-plain-count">×{hit.count}</span>
+                {/if}
+                {#if finisher}
+                  <span class="da-finisher-badge-mini">F</span>
                 {/if}
               </div>
             {/each}
@@ -843,26 +854,35 @@
         <div class="da-wbd-row-label da-wbd-row-label--m2">
           <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m2">M2</span>
           <span class="da-wbd-lbl-text">Heavy</span>
+          <span class="da-m2-finisher-tag">✦ All Finisher</span>
         </div>
         <div class="da-hits-row">
           {#if m2Typed}
             {#each m2Typed as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-              <div class="da-hit-card">
-                {#each hit.types as t, ti}
-                  {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                  {@const finalVal = selectedWeaponData?.m2Charge?.enabled ? selectedWeaponData.m2Charge.formula(t.val, weaponCharge) : t.val}
-                  <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
-                    {#if _scalingMult !== 1}
-                      <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                      <span class="da-hit-arrow">→</span>
-                    {/if}
-                    <span class="da-hit-num">{fmtNum(finalVal)}</span>
-                    <span class="da-hit-type">{t.label}</span>
-                  </div>
-                {/each}
+              <div class="da-hit-wrapper">
+                <span class="da-hit-index">{hi + 1}</span>
+                <div class="da-hit-card da-hit-card--finisher">
+                  {#each hit.types as t, ti}
+                    {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                    {@const finalVal = selectedWeaponData?.m2Charge?.enabled
+                      ? selectedWeaponData.m2Charge.formula(t.val, weaponCharge)
+                      : t.val}
+                    <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
+                      {#if _scalingMult !== 1}
+                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
+                        <span class="da-hit-arrow">→</span>
+                      {/if}
+                      <span class="da-hit-num">{fmtNum(finalVal)}</span>
+                      <span class="da-hit-type">{t.label}</span>
+                    </div>
+                  {/each}
+                  <span class="da-finisher-crown">✦</span>
+                </div>
               </div>
-              {#if hit.count > 1}<span class="da-hit-repeat">×{hit.count}<span class="da-hit-repeat-label">hits</span></span>{/if}
+              {#if hit.count > 1}
+                <span class="da-hit-repeat">×{hit.count}<span class="da-hit-repeat-label">hits</span></span>
+              {/if}
             {/each}
           {:else if row.m2}
             {#each row.m2 as hit, hi}
@@ -1556,10 +1576,11 @@
   position: relative;
 }
 
-.da-hit-wrapper{
-  display:flex;
-  align-items:center;
-  gap:8px;
+.da-hit-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
 }
 
 .da-hit-repeat {
@@ -2212,4 +2233,79 @@
 }
 .da-rage-types { font-size: .68rem; color: var(--ink-muted); }
 .da-rage-sources { font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic; margin-left: auto; }
+.da-hit-index {
+  font-size: .5rem;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .35;
+  letter-spacing: .04em;
+  line-height: 1;
+  user-select: none;
+}
+
+.da-hit-card--finisher {
+  position: relative;
+  border: 1.5px solid rgba(250, 204, 21, 0.75) !important;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.85) 0%, rgba(250, 204, 21, 0.12) 100%) !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.35), inset 0 0 8px rgba(250, 204, 21, 0.1) !important;
+  overflow: visible;
+  animation: finisherPulse 3s infinite ease-in-out;
+}
+
+@keyframes finisherPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.25), inset 0 0 6px rgba(250, 204, 21, 0.05);
+    border-color: rgba(250, 204, 21, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(250, 204, 21, 0.5), inset 0 0 12px rgba(250, 204, 21, 0.2);
+    border-color: rgba(250, 204, 21, 1);
+  }
+}
+
+.da-finisher-crown {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  font-size: 0.9rem;
+  color: #facc15;
+  text-shadow: 0 0 6px #facc15, 0 0 2px #000;
+  z-index: 10;
+  transform: rotate(15deg);
+  font-weight: bold;
+}
+
+.da-m2-finisher-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.15);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 6px rgba(250, 204, 21, 0.15);
+  margin-left: 8px;
+}
+
+.da-plain-pill--finisher {
+  position: relative;
+  border: 1px solid #facc15 !important;
+  background: rgba(250, 204, 21, 0.1) !important;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
+}
+
+.da-finisher-badge-mini {
+  background: #facc15 !important;
+  color: #111 !important;
+  font-weight: 900 !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  font-size: 0.6rem !important;
+}
 </style>

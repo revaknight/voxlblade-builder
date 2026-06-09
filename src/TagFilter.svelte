@@ -49,13 +49,7 @@
   let expanded = false
 
   function toggle(tag: string) {
-    if (selectedTags.has(tag)) {
-      selectedTags.delete(tag)
-    } else {
-      selectedTags.add(tag)
-    }
-    selectedTags = selectedTags
-    dispatch('change', selectedTags)
+    dispatch('toggle', tag)
   }
 
   function clearAll() {
