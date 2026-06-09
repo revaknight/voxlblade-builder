@@ -12,6 +12,8 @@
     type GrantedBuff,
   } from './data/BuffData'
 
+  $: wardingPct = ($result.stats.warding ?? 0) / 100
+  $: wardingDebuffMult = wardingPct > 0 ? 1 / (1 + wardingPct) : 1
   $: itemBuffs = getActiveBuildBuffs({
     rune: $build.rune,
     ring: $build.ring,
@@ -152,7 +154,11 @@ $: groupedBuffs = Object.values(
       <div class="bl-list">
         {#each list as group (group.buffName)}
           {@const def = BUFF_DEFS[group.buffName]}
-          {@const effect = calcBuffEffect(group.strongest.buffName, group.strongest.potency)}
+          {@const isSelf = group.isSelfDebuff}
+          {@const effectivePotency = isSelf && wardingDebuffMult < 1
+            ? Math.round(group.strongest.potency * wardingDebuffMult * 1000) / 1000
+            : group.strongest.potency}
+          {@const effect = calcBuffEffect(group.strongest.buffName, effectivePotency)}
           
           {@const topPotency = group.strongest.potency}
           
@@ -177,7 +183,7 @@ $: groupedBuffs = Object.values(
                   <div class="bl-value-box">
                     <span class="bl-value" style="color:{def.color}">
                       {effect.value}{effect.unit === '%' ? '%' : ''}
-                      {def.isDebuff && !def.isSelfDebuff ? ' to enemy' : ''}
+                      {def.isDebuff && !group.isSelfDebuff ? ' to enemy' : ''}
                     </span>
                   </div>
                 </div>
@@ -223,13 +229,24 @@ $: groupedBuffs = Object.values(
                           <span class="bl-perk-badge">perk +{fmtPotency(source.bonusPotency)}</span>
                         {/if}
 
-                        <div class="bl-potency-cell">
-                          {#if source.bonusPotency && source.bonusPotency > 0}
-                            <span class="bl-base-val">{fmtPotency(source.basePotency ?? 0)}</span>
+                        {#if isSelf && wardingDebuffMult < 1}
+                          {@const effP = Math.round(source.potency * wardingDebuffMult * 1000) / 1000}
+                          <span class="bl-warding-badge">warding ×{fmtPotency(wardingDebuffMult)}</span>
+                          
+                          <div class="bl-potency-cell">
+                            <span class="bl-base-val">{fmtPotency(source.potency)}</span>
                             <span class="bl-arrow">→</span>
-                          {/if}
-                          <span class="bl-src-potency" style="color:{def.color}">{fmtPotency(source.potency)}</span>
-                        </div>
+                            <span class="bl-src-potency" style="color:{def.color}">{fmtPotency(effP)}</span>
+                          </div>
+                        {:else}
+                          <div class="bl-potency-cell">
+                            {#if source.bonusPotency && source.bonusPotency > 0}
+                              <span class="bl-base-val">{fmtPotency(source.basePotency ?? 0)}</span>
+                              <span class="bl-arrow">→</span>
+                            {/if}
+                            <span class="bl-src-potency" style="color:{def.color}">{fmtPotency(source.potency)}</span>
+                          </div>
+                        {/if}
                       </div>
                     </div>
                   {/each}
@@ -567,4 +584,16 @@ $: groupedBuffs = Object.values(
     opacity: .7;
     font-weight: 700;
   }
+  .bl-warding-badge {
+  font-size: .52rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: #7eb4ad;
+  background: rgba(126,180,173,.12);
+  border: 1px solid rgba(126,180,173,.25);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 </style>
