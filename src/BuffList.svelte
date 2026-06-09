@@ -206,10 +206,13 @@ $: groupedBuffs = Object.values(
 
                       <div class="bl-src-info">
                         <span class="bl-src-name">{source.sourceName}</span>
-                        {#if source.condition}
-                          <span class="bl-src-condition">{source.condition}</span>
-                        {/if}
-                      </div>
+                          {#if source.condition}
+                            <span class="bl-src-condition">{source.condition}</span>
+                          {/if}
+                          {#if source.duration > 0}
+                            <span class="bl-src-dur">⏱ {source.duration}s</span>
+                          {/if}
+                        </div>
 
                       <div class="bl-src-right">
                         <div class="bl-bar-wrap">
@@ -281,7 +284,7 @@ $: groupedBuffs = Object.values(
     border-bottom-color: #4ade80;
     background: rgba(74,222,128,.04);
   }
-  .bl-tab--active:last-child {
+  .bl-tab--active:nth-child(2) {
     color: #f87171;
     border-bottom-color: #f87171;
     background: rgba(248,113,113,.04);
@@ -557,5 +560,11 @@ $: groupedBuffs = Object.values(
     color: #6366f1;
     border-bottom-color: #6366f1;
     background: rgba(99,102,241,.04);
+  }
+  .bl-src-dur {
+    font-size: .58rem;
+    color: #34d399;
+    opacity: .7;
+    font-weight: 700;
   }
 </style>

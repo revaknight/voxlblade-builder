@@ -222,3 +222,36 @@ export interface BoostResult {
   dmgFinalMultiplier: number
   healFinalMultiplier: number
 }
+
+export const DMG_TYPE_COLORS: Record<string, string> = {
+  physical: '#fb923c', magic: '#818cf8', fire: '#f97316',
+  water: '#38bdf8', earth: '#a3e635', air: '#AAFFDB',
+  hex: '#e879f9', holy: '#facc15', true: '#ffffff', summon: '#c084fc',
+};
+
+export const ONE_HANDED_TYPES = new Set([
+  'Dagger','1-Handed Sword','Unbalanced Sword','Mallet','Rapier',
+  'Dual Swords','Dual Wielding Daggers','Dual Unbalanced Swords','Dual Mallets','Dual Kamas',
+  'Shield','Lance','Chainsaw',
+]);
+
+export const DMG_TYPE_PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy'];
+
+export interface WeaponHitObject {
+  n: number;
+  count: number;
+}
+
+export type WeaponHit = number | WeaponHitObject;
+
+export interface WeaponBaseDmg {
+  type: string;
+  m1: WeaponHit[] | null;
+  m2: WeaponHit[];
+  m2Charge?: {
+    enabled: boolean;
+    label: string;
+    max: number;
+    formula: (base: number, charge: number) => number;
+  };
+}

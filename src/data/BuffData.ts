@@ -285,6 +285,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       },
     ]
   },
+  'Iron Slayer Spirit': (amount) => [
+    {
+      buffName: 'Weakness',
+      potency: 0.2 * amount,
+      duration: 10,
+      condition: 'Enemies within range on roar',
+      sourceName: 'Iron Slayer Spirit',
+      sourceType: 'perk',
+    },
+  ],
 }
 
 export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
@@ -376,14 +386,17 @@ interface BuffPotencyModifier {
   potencyPerStack: number
   label: string
   runeFilter?: string
+  durationMultiplierPerStack?: number
 }
 
 const BUFF_POTENCY_MODIFIERS: BuffPotencyModifier[] = [
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Gladiatorial Rage' },
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Mage Rage' },
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Oceans Rage' },
-  { buffName: 'Rage',     potencyPerStack: 0.2, label: 'Slayer Rage', runeFilter: 'Rage Rune' },
+  { buffName: 'Rage', potencyPerStack: 0.2, label: 'Slayer Rage', runeFilter: 'Rage Rune' },
   { buffName: 'Weakness', potencyPerStack: 0.1, label: 'Slayer Rage', runeFilter: 'Weakening Roar Rune' },
+  { buffName: 'Rage', potencyPerStack: 0.2, label: 'Iron Slayer Spirit', durationMultiplierPerStack: 2 },
+  { buffName: 'Rage', potencyPerStack: 0,   label: 'Fury', durationMultiplierPerStack: 1.5 },
 ]
 
 const MODIFIERS_BY_BUFF = BUFF_POTENCY_MODIFIERS.reduce((acc, mod) => {
@@ -403,27 +416,27 @@ export function applyBuffPerkModifiers(
   activeRune?: string
 ): GrantedBuff[] {
   if (buffs.length === 0) return buffs
-  const furyStacks = perks['Fury'] ?? 0
   return buffs.map(buff => {
-    let updatedBuff = { ...buff }
-    if (buff.buffName === 'Rage' && furyStacks > 0) {
-      updatedBuff.duration = Math.round(buff.duration * (1 + 0.5 * furyStacks))
-    }
-    const modifiers = MODIFIERS_BY_BUFF[updatedBuff.buffName]
-    if (!modifiers) return updatedBuff
+    const modifiers = MODIFIERS_BY_BUFF[buff.buffName]
+    if (!modifiers) return buff
 
     let bonus = 0
+    let durationMult = 1
     for (const mod of modifiers) {
-      if (mod.runeFilter && mod.runeFilter !== updatedBuff.sourceName) continue
+      if (mod.runeFilter && mod.runeFilter !== buff.sourceName) continue
       const stacks = perks[mod.label] ?? 0
-      if (stacks > 0) bonus += mod.potencyPerStack * stacks
+      if (stacks <= 0) continue
+      bonus += mod.potencyPerStack * stacks
+      if (mod.durationMultiplierPerStack)
+        durationMult *= 1 + (mod.durationMultiplierPerStack - 1) * stacks
     }
-    if (bonus === 0) return updatedBuff
+    if (bonus === 0 && durationMult === 1) return buff
     return {
-      ...updatedBuff,
-      potency: Math.round((updatedBuff.potency + bonus) * 1000) / 1000,
-      basePotency: updatedBuff.potency,
-      bonusPotency: Math.round(bonus * 1000) / 1000,
+      ...buff,
+      duration: Math.round(buff.duration * durationMult),
+      potency: Math.round((buff.potency + bonus) * 1000) / 1000,
+      basePotency: buff.potency,
+      bonusPotency: bonus > 0 ? Math.round(bonus * 1000) / 1000 : undefined,
     }
   })
 }

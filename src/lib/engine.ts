@@ -6,6 +6,7 @@ import type {
 import { STAT_KEYS, PERCENT_STATS, applyUpgrade } from './types'
 import { CDR_PERK_DATA } from '../data/cdr'
 import { applyStatBoostPerks } from '../data/statboost'
+import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from '../data/BuffData'
 
 import racesRaw from '../data/races.json'
 import guildsRaw from '../data/guilds.json'
@@ -97,7 +98,7 @@ export function isMonkGuild(guildName: string): boolean {
   return guildName === "Monk"
 }
 
-export function calcBoosts(perks: Record<string, number>, emotionalState?: string, level: number = 80, naturalCritChance: number = 0, jumpBoost: number = 0,summonCount: number = 0): BoostResult {
+export function calcBoosts(perks: Record<string, number>, emotionalState?: string, level: number = 80, naturalCritChance: number = 0, jumpBoost: number = 0, summonCount: number = 0, ragePotency: number = 0): BoostResult {
   const dmgMap = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
 
@@ -186,6 +187,17 @@ export function calcBoosts(perks: Record<string, number>, emotionalState?: strin
       sourceName: "Vassals Croak",
       rawMultiplier: Math.round(mult * 10000) / 10000,
       condition: `${summonCount} summons × ${vassalsCroakStacks} stack × 2%`,
+      type: 'dmg',
+    })
+  }
+
+  const frenzyStacks = perks['Frenzy'] ?? 0
+  if (frenzyStacks > 0 && ragePotency > 0) {
+    const frenzyPct = (0.05 + 0.1667 * ragePotency) * frenzyStacks
+    dmgMap.set('Frenzy', {
+      sourceName: 'Frenzy',
+      rawMultiplier: Math.round((1 + frenzyPct) * 10000) / 10000,
+      condition: `Rage active · potency ${Math.round(ragePotency * 1000) / 1000}`,
       type: 'dmg',
     })
   }
@@ -962,7 +974,21 @@ export function calcBuild(state: BuildState): BuildResult {
   }
 
   const crit = calcCrit(boostedStats, finalPerks)
-  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0,state.summonCount ?? 0)
+
+  const _itemBuffs = getActiveBuildBuffs({
+    rune: state.rune, ring: state.ring, infusionRing: state.infusionRing,
+    helmet: state.helmet, chestplate: state.chestplate, leggings: state.leggings,
+    weaponBlade: state.weaponBlade, weaponHandle: state.weaponHandle, monkGlove: state.monkGlove,
+  })
+  const _allBuffs = applyBuffPerkModifiers(
+    [..._itemBuffs, ...getPerkBuffs(finalPerks), ...getWeaponArtBuffs(state.selectedWeaponArt)],
+    finalPerks,
+    state.rune || undefined
+  )
+  const _rageBuffs = _allBuffs.filter(b => b.buffName === 'Rage')
+  const ragePotency = _rageBuffs.length > 0 ? Math.max(..._rageBuffs.map(b => b.potency)) : 0
+
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 
