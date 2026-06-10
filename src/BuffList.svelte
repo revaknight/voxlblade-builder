@@ -192,7 +192,7 @@ $: groupedBuffs = Object.values(
                   <span class="bl-desc-text">
                     {
                       getBuffDescription(group.buffName, $result.perks)
-                        .replace(/x%/g, `${(group.strongest.potency * 100).toFixed(0)}%`)
+                        .replace(/x%/g, `${+(group.strongest.potency * 100).toFixed(3)}%`)
                     }
                   </span>
                 </div>

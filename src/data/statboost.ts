@@ -214,7 +214,7 @@ export function applyStatBoostPerks(
     const holyBoost = s['holyBoost'] ?? 0
 
     const resultBoost =
-      (hexBoost + holyBoost) * 0.83 * trueBalance
+      (hexBoost + holyBoost) * 0.83
 
     s['hexBoost'] = resultBoost
     s['holyBoost'] = resultBoost

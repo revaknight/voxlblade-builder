@@ -598,7 +598,7 @@
     return selectedWeaponData.m2Charge.formula(dmg, weaponCharge)
   }
 
-  $: maxSummons = 15 + (perks['Swarm'] ?? 0);
+  $: maxSummons = 15 + Math.floor(perks['Swarm'] ?? 0);
 </script>
 
 <div class="da-root">
@@ -669,17 +669,15 @@
     {#if (perks['Vassals Croak'] ?? 0) > 0}
       <div class="da-summon-row">
         <span class="da-summon-label">Active Summons</span>
-        <input 
-          class="da-summon-input" 
+        <input class="da-summon-input" 
           type="number" 
           min="0" 
-          max={maxSummons} 
-          bind:value={$build.summonCount} 
+          max={maxSummons}
+          value={Math.floor($build.summonCount)}
           on:input={e => {
-            let val = parseInt(e.currentTarget.value);
-            if (isNaN(val)) val = maxSummons;
+            let val = Math.floor(parseInt(e.currentTarget.value));
+            if (isNaN(val) || val < 0) val = 0;
             if (val > maxSummons) val = maxSummons;
-            if (val < 0) val = 0;
             build.update(s => ({ ...s, summonCount: val }));
           }} 
         />
@@ -809,7 +807,6 @@
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
               {@const finisher = isFinisher(row, 'm1', hi)}
               <div class="da-hit-wrapper">
-                <span class="da-hit-index">{hi + 1}</span>
                 <div class="da-hit-card" class:da-hit-card--finisher={finisher}>
                   {#each hit.types as t, ti}
                     {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
@@ -860,7 +857,6 @@
             {#each m2Typed as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
               <div class="da-hit-wrapper">
-                <span class="da-hit-index">{hi + 1}</span>
                 <div class="da-hit-card da-hit-card--finisher">
                   {#each hit.types as t, ti}
                     {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
@@ -2237,16 +2233,6 @@
 }
 .da-rage-types { font-size: .68rem; color: var(--ink-muted); }
 .da-rage-sources { font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic; margin-left: auto; }
-.da-hit-index {
-  font-size: .5rem;
-  font-weight: 800;
-  font-family: 'Courier New', monospace;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .35;
-  letter-spacing: .04em;
-  line-height: 1;
-  user-select: none;
-}
 
 .da-hit-card--finisher {
   position: relative;

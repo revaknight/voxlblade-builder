@@ -2349,8 +2349,8 @@ $: _appWaAvgTotal = (() => {
                 </div>
               </div>
             {/if}
-
-            <!-- ── INLINE ENCHANT PANEL ── -->
+          </div>
+                      <!-- ── INLINE ENCHANT PANEL ── -->
             <!-- Dùng biến reactive iep* thay vì {@const} để tránh stale closure -->
             {#if iepSlot}
               <div class="inline-enchant-panel">
@@ -2435,7 +2435,6 @@ $: _appWaAvgTotal = (() => {
                 {/if}
               </div>
             {/if}
-          </div>
           
   <!-- ── WEAPON ART PANEL ── -->
   <div class="wa-panel">
