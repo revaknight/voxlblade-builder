@@ -1684,9 +1684,6 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-type-badge modal-type-badge--blade">{b.bladeType}</span>
                 {#if b.attackSpeed != null}<span class="modal-cd-badge">{b.attackSpeed}x spd</span>{/if}
               </div>
-              {#if bAny.perks?.length}
-                {#each bAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
-              {/if}
               {#if true}
                 {@const ws = splitWeaponStats(b.stats ?? {})}
 
@@ -1737,6 +1734,9 @@ $: _appWaAvgTotal = (() => {
                     </div>
                   </div>
                 {/if}
+              {/if}              
+              {#if bAny.perks?.length}
+                {#each bAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
@@ -1808,42 +1808,42 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-type-badge modal-type-badge--handle">{h.handleType}</span>
                 {#if h.attackSpeed != null}<span class="modal-cd-badge">{h.attackSpeed}x spd</span>{/if}
               </div>
-              {#if hAny.physicalType || hAny.magicType || hAny.fireType || hAny.waterType || hAny.airType || hAny.hexType || hAny.holyType || hAny.earthType || hAny.trueType}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Dmg Type</span>
-                  <div class="modal-item-stats">
-                    {#each (['true','physical','magic','fire','water','air','hex','holy','earth'] as string[]) as sk}
-                      {#if hAny[`${sk}Type`]}
-                        <span class="modal-stat-pill modal-stat-pill--dmgtype">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {hAny[`${sk}Type`]}x</span>
-                      {/if}
-                    {/each}
+              {#if true}
+                {@const ws = splitWeaponStats(h.stats ?? {})}
+                {#if ws.dmgTypes.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
+                    <div class="modal-item-stats">
+                      {#each ws.dmgTypes as [k, v]}
+                        <span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>
+                      {/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
-              {#if hAny.physicalScaling || hAny.magicScaling || hAny.fireScaling || hAny.waterScaling || hAny.airScaling || hAny.hexScaling || hAny.holyScaling || hAny.earthScaling || hAny.dexterityScaling || hAny.summonScaling}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Scaling</span>
-                  <div class="modal-item-stats">
-                    {#each (['physical','magic','fire','water','air','hex','holy','earth','dexterity','summon'] as StatPrefix[]) as sk}
-                      {#if hAny[`${sk}Scaling` as ScalingKey]}
-                        <span class="modal-stat-pill modal-stat-pill--scaling">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {hAny[`${sk}Scaling` as ScalingKey]}</span>
-                      {/if}
-                    {/each}
+                {/if}
+                {#if ws.scalings.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
+                    <div class="modal-item-stats">
+                      {#each ws.scalings as [k, v]}
+                        <span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>
+                      {/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
+                {/if}
+
+                {#if ws.boosts.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label">Stats</span>
+                    <div class="modal-item-stats">
+                      {#each ws.boosts as [k, v]}
+                        <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              {/if}              
               {#if hAny.perks?.length}
                 {#each hAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
-              {/if}
-              {#if Object.entries(h.stats).filter(([,v]) => v !== 0).length > 0}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Stats</span>
-                  <div class="modal-item-stats">
-                    {#each Object.entries(h.stats).filter(([,v]) => v !== 0) as [k,v]}
-                      <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                    {/each}
-                  </div>
-                </div>
               {/if}
             </button>
           {/each}
@@ -1911,42 +1911,35 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-tier-badge modal-tier-badge--glove">T{g.tier}</span>
                 {#if g.attackSpeed != null}<span class="modal-cd-badge">{g.attackSpeed}x spd</span>{/if}
               </div>
-              {#if gAny.physicalType || gAny.magicType || gAny.fireType || gAny.waterType || gAny.airType || gAny.hexType || gAny.holyType || gAny.earthType || gAny.trueType}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Dmg Type</span>
-                  <div class="modal-item-stats">
-                    {#each (['true','physical','magic','fire','water','air','hex','holy','earth'] as string[]) as sk}
-                      {#if gAny[`${sk}Type`]}
-                        <span class="modal-stat-pill modal-stat-pill--dmgtype">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {gAny[`${sk}Type`]}x</span>
-                      {/if}
-                    {/each}
+              {#if true}
+                {@const ws = splitWeaponStats(g.stats ?? {})}
+                {#if ws.dmgTypes.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
+                    <div class="modal-item-stats">
+                      {#each ws.dmgTypes as [k, v]}<span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>{/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
-              {#if gAny.physicalScaling || gAny.magicScaling || gAny.fireScaling || gAny.waterScaling || gAny.airScaling || gAny.hexScaling || gAny.holyScaling || gAny.earthScaling || gAny.dexterityScaling || gAny.summonScaling}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Scaling</span>
-                  <div class="modal-item-stats">
-                    {#each (['physical','magic','fire','water','air','hex','holy','earth','dexterity','summon'] as StatPrefix[]) as sk}
-                      {#if gAny[`${sk}Scaling` as ScalingKey]}
-                        <span class="modal-stat-pill modal-stat-pill--scaling">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {gAny[`${sk}Scaling` as ScalingKey]}</span>
-                      {/if}
-                    {/each}
+                {/if}
+                {#if ws.scalings.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
+                    <div class="modal-item-stats">
+                      {#each ws.scalings as [k, v]}<span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>{/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
-              {#if gAny.perks?.length}
-                {#each gAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
-              {/if}
-              {#if Object.entries(g.stats).filter(([,v]) => v !== 0).length > 0}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Stats</span>
-                  <div class="modal-item-stats">
-                    {#each Object.entries(g.stats).filter(([,v]) => v !== 0) as [k,v]}
-                      <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                    {/each}
+                {/if}
+                {#if ws.boosts.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label">Stats</span>
+                    <div class="modal-item-stats">
+                      {#each ws.boosts as [k, v]}<span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>{/each}
+                    </div>
                   </div>
-                </div>
+                {/if}
+              {/if}
+              {#if (g as any).perks?.length}
+                {#each (g as any).perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
@@ -2006,49 +1999,42 @@ $: _appWaAvgTotal = (() => {
           </button>
           {#each searchedEssences as e}
             {@const eAny = e as any}
-            <button class="modal-item modal-item--sm modal-item--essence" class:modal-item--active={$build.monkEssence === e.name}
-              on:click={() => { build.update(s => ({...s, monkEssence: e.name})); closeModal() }}>
+            <button class="modal-item modal-item--sm modal-item--glove" class:modal-item--active={$build.monkGlove === e.name}
+              on:click={() => { build.update(s => ({...s, monkGlove: e.name})); closeModal() }}>
               <div class="modal-item-head">
                 <span class="modal-item-name">{@html highlight(e.name, modalSearch)}</span>
-                <span class="modal-tier-badge modal-tier-badge--essence">T{e.tier}</span>
+                <span class="modal-tier-badge modal-tier-badge--glove">T{e.tier}</span>
                 {#if e.attackSpeed != null}<span class="modal-cd-badge">{e.attackSpeed}x spd</span>{/if}
               </div>
-              {#if eAny.physicalType || eAny.magicType || eAny.fireType || eAny.waterType || eAny.airType || eAny.hexType || eAny.holyType || eAny.earthType || eAny.trueType}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Dmg Type</span>
-                  <div class="modal-item-stats">
-                    {#each (['true','physical','magic','fire','water','air','hex','holy','earth'] as string[]) as sk}
-                      {#if eAny[`${sk}Type`]}
-                        <span class="modal-stat-pill modal-stat-pill--dmgtype">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {eAny[`${sk}Type`]}x</span>
-                      {/if}
-                    {/each}
+              {#if true}
+                {@const ws = splitWeaponStats(e.stats ?? {})}
+                {#if ws.dmgTypes.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
+                    <div class="modal-item-stats">
+                      {#each ws.dmgTypes as [k, v]}<span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>{/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
-              {#if eAny.physicalScaling || eAny.magicScaling || eAny.fireScaling || eAny.waterScaling || eAny.airScaling || eAny.hexScaling || eAny.holyScaling || eAny.earthScaling || eAny.dexterityScaling || eAny.summonScaling}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Scaling</span>
-                  <div class="modal-item-stats">
-                    {#each (['physical','magic','fire','water','air','hex','holy','earth','dexterity','summon'] as StatPrefix[]) as sk}
-                      {#if eAny[`${sk}Scaling` as ScalingKey]}
-                        <span class="modal-stat-pill modal-stat-pill--scaling">{sk.charAt(0).toUpperCase() + sk.slice(1)}: {eAny[`${sk}Scaling` as ScalingKey]}</span>
-                      {/if}
-                    {/each}
+                {/if}
+                {#if ws.scalings.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
+                    <div class="modal-item-stats">
+                      {#each ws.scalings as [k, v]}<span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>{/each}
+                    </div>
                   </div>
-                </div>
-              {/if}
-              {#if eAny.perks?.length}
-                {#each eAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
-              {/if}
-              {#if Object.entries(e.stats).filter(([,v]) => v !== 0).length > 0}
-                <div class="modal-stat-group">
-                  <span class="modal-stat-group-label">Stats</span>
-                  <div class="modal-item-stats">
-                    {#each Object.entries(e.stats).filter(([,v]) => v !== 0) as [k,v]}
-                      <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                    {/each}
+                {/if}
+                {#if ws.boosts.length}
+                  <div class="modal-stat-group">
+                    <span class="modal-stat-group-label">Stats</span>
+                    <div class="modal-item-stats">
+                      {#each ws.boosts as [k, v]}<span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>{/each}
+                    </div>
                   </div>
-                </div>
+                {/if}
+              {/if}
+              {#if (e as any).perks?.length}
+                {#each (e as any).perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
@@ -3436,7 +3422,6 @@ $: _appWaAvgTotal = (() => {
   .modal-item--blade.modal-item--active { border-color:var(--weapon-blade); background:rgba(251,146,60,.08); }
   .modal-item--handle.modal-item--active { border-color:var(--weapon-handle); background:rgba(52,211,153,.08); }
   .modal-item--glove.modal-item--active { border-color:var(--monk-glove); background:rgba(232,121,249,.08); }
-  .modal-item--essence.modal-item--active { border-color:var(--monk-essence); background:rgba(129,140,248,.08); }
   .modal-item-head { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   .modal-item-name { font-size:.88rem; font-weight:600; color:var(--ink); }
   .modal-item-desc { font-size:.76rem; color:var(--ink-muted); line-height:1.4; }
@@ -3457,7 +3442,6 @@ $: _appWaAvgTotal = (() => {
   .modal-tier-badge { font-size:.62rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.25); color:var(--weapon-blade); }
   .modal-tier-badge--handle { background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.25); color:var(--weapon-handle); }
   .modal-tier-badge--glove { background:rgba(232,121,249,.12); border-color:rgba(232,121,249,.25); color:var(--monk-glove); }
-  .modal-tier-badge--essence { background:rgba(129,140,248,.12); border-color:rgba(129,140,248,.25); color:var(--monk-essence); }
   .modal-type-badge { font-size:.62rem; padding:2px 6px; border-radius:4px; background:var(--surface3); color:var(--ink-muted); border:1px solid var(--border); }
   .modal-type-badge--blade { color:var(--weapon-blade); }
   .modal-type-badge--handle { color:var(--weapon-handle); }
