@@ -235,6 +235,40 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]
 
 const PERK_BUFFS: Record<string, PerkBuffFactory> = {
+
+  'Iron Bounce': (amount) => {
+    const bounceDuration = 8 + 2 * amount
+    return [
+      {
+        buffName: 'Bounce',
+        potency: 0.3 * amount,
+        duration: bounceDuration,
+        condition: '10% chance on M1/M2',
+        sourceName: 'Iron Bounce',
+        sourceType: 'perk',
+      },
+      {
+        buffName: 'Reinforce',
+        potency: 0.25 * amount,
+        duration: bounceDuration,
+        condition: 'When gaining Bounce from any source (duration matches source)',
+        sourceName: 'Iron Bounce',
+        sourceType: 'perk',
+      },
+    ]
+  },
+
+  'Spring Step': (amount) => [
+    {
+      buffName: 'Bounce',
+      potency: 0.2 * amount,
+      duration: 5 + 5 * amount,
+      condition: 'On weapon art activation',
+      sourceName: 'Spring Step',
+      sourceType: 'perk',
+    },
+  ],
+
   'Wrathful Crits': (amount) => [{ 
     buffName: 'Rage', potency: 0.1 * amount, duration: 5 + 2 * amount, condition: 'On critical hit', sourceName: 'Wrathful Crits', sourceType: 'perk' 
   }],
@@ -295,6 +329,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceType: 'perk',
     },
   ],
+
+
 }
 
 export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {

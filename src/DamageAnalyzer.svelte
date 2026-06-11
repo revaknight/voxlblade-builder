@@ -7,6 +7,7 @@
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, ONE_HANDED_TYPES, type WeaponBaseDmg } from './lib/types'
   import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
 
+  
   $: crit = $result.crit
   $: boosts = $result.boosts
   $: stats = $result.stats
@@ -599,6 +600,99 @@
   }
 
   $: maxSummons = 15 + Math.floor(perks['Swarm'] ?? 0);
+
+  // ── Perk Base Damage ───────────────────────────────────────────────────────
+  import { PERK_DMG_DEFS } from './data/Perkbasedmg'
+
+  /** Total hit count in the current weapon's M2 (used as finisher hits context) */
+  $: _m2FinisherHits = (() => {
+    if (!_displayRows.length || !_displayRows[0].m2) return 1
+    return _displayRows[0].m2.reduce(
+      (s: number, h: any) => s + (typeof h === 'number' ? 1 : (h.count ?? 1)), 0
+    )
+  })()
+
+  /** Hit count of the last element in M1 (M1 finisher) */
+  $: _m1FinisherHits = (() => {
+    if (!_displayRows.length || !_displayRows[0].m1) return 1
+    const m1 = _displayRows[0].m1
+    const last = m1[m1.length - 1]
+    return typeof last === 'number' ? 1 : (last.count ?? 1)
+  })()
+
+  function _computePerkScalingMult(scalingDef: Record<string, number>): number {
+    let totalPct = 0
+    for (const [key, val] of Object.entries(scalingDef)) {
+      const boostKey = SCALING_TO_BOOST[key]
+      if (!boostKey) continue
+      totalPct += val * ((stats as Record<string, number>)[boostKey] ?? 0)
+    }
+    return Math.round((1 + totalPct / 100) * 10000) / 10000
+  }
+
+  interface PerkDmgComputedEntry {
+    perkName: string
+    perkAmount: number
+    condition?: string
+    hits?: number
+    isM1?: boolean; isM2?: boolean; isFinisher?: boolean; isWA?: boolean; isRune?: boolean
+    guardbreak?: boolean
+    note?: string
+    /** typed hits for M2/main finisher context */
+    typedHits_m2: Array<{ rawVal: number; val: number; color: string; label: string }>
+    /** typed hits for M1 finisher context (only shown if different) */
+    typedHits_m1f: Array<{ rawVal: number; val: number; color: string; label: string }>
+    scalingMult: number
+    dmgTypeMode: 'weapon' | 'fixed'
+  }
+
+  $: _activePerkDmgEntries = (() => {
+    const out: PerkDmgComputedEntry[] = []
+    for (const def of PERK_DMG_DEFS) {
+      const perkAmount = perks[def.perkName] ?? 0
+      if (perkAmount <= 0) continue
+
+      const resolvedDmgTypes = def.dmgTypeMode === 'weapon'
+        ? _weaponDmgTypes
+        : (def.dmgTypes ?? {})
+
+      const resolvedScalings = def.scalingMode === 'weapon'
+        ? _weaponResult?.scalings ?? {}
+        : def.scalingMode === 'fixed'
+          ? (def.scalings ?? {})
+          : {}
+
+      const scalingMult = Object.keys(resolvedScalings).length > 0
+        ? _computePerkScalingMult(resolvedScalings)
+        : 1
+
+      const buildTypedHits = (baseDmg: number) =>
+        Object.entries(resolvedDmgTypes).map(([k, mult]) => ({
+          rawVal: Math.round(baseDmg * 100) / 100,
+          val: Math.round(baseDmg * mult * scalingMult * 100) / 100,
+          color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+          label: k.charAt(0).toUpperCase() + k.slice(1),
+        }))
+
+      const baseDmg_m2 = def.getBaseDamage({ perkAmount, finisherHits: _m2FinisherHits })
+      const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _m1FinisherHits })
+
+      out.push({
+        perkName: def.perkName,
+        perkAmount,
+        condition: def.condition,
+        hits: def.hits,
+        isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
+        isWA: def.isWA, isRune: def.isRune, guardbreak: def.guardbreak,
+        note: def.note,
+        typedHits_m2: buildTypedHits(baseDmg_m2),
+        typedHits_m1f: buildTypedHits(baseDmg_m1f),
+        scalingMult,
+        dmgTypeMode: def.dmgTypeMode,
+      })
+    }
+    return out
+  })()
 </script>
 
 <div class="da-root">
@@ -744,18 +838,16 @@
   {/if}
 </div>
 
-<!-- ══════════════════ WEAPON BASE DAMAGE ══════════════════ -->
-<div class="da-section da-section--wbd">
+<!-- ══════════════════ WEAPON BASE DAMAGE + PERK BASE DAMAGE ══════════════════ -->
+<div class="da-wbd-outer">
+
+<!-- Weapon Base Damage -->
+<div class="da-section da-section--wbd da-section--wbd-inner">
   <div class="da-section-title-row">
     <span class="da-section-title">Base Damage</span>
     <div class="da-wbd-controls">
       {#if _currentLabel}
         <span class="da-wbd-current-badge">{_currentLabel}</span>
-      {/if}
-      {#if !showAllWeapons && _scalingMult !== 1}
-        <span class="da-wbd-scaling-badge" title="Base damage × damage type × scaling multiplier">
-          ×scaling {_scalingMult.toFixed(4)}
-        </span>
       {/if}
       <button class="da-wbd-toggle" on:click={() => showAllWeapons = !showAllWeapons}>
         {showAllWeapons ? 'Show current only' : 'Show all weapons'}
@@ -1080,6 +1172,91 @@
 <p class="da-wbd-note">M1 = light attack combo · M2 = heavy attack · × = repeated hits</p>
   {/if}
 </div>
+
+<!-- ── Perk Base Damage ── -->
+{#if _activePerkDmgEntries.length > 0}
+<div class="da-section da-section--pbd">
+  <div class="da-section-title">Perk Base Damage</div>
+  <div class="da-pbd-list">
+    {#each _activePerkDmgEntries as entry}
+      <div class="da-pbd-card">
+        <!-- Header row -->
+        <div class="da-pbd-head">
+          <span class="da-pbd-name">{entry.perkName}</span>
+          <span class="da-pbd-amt">+{Math.round(entry.perkAmount * 100) / 100}</span>
+        </div>
+        <!-- Badges -->
+        <div class="da-pbd-badges">
+          {#if entry.isFinisher}<span class="da-pbd-badge da-pbd-badge--finisher">Finisher</span>{/if}
+          {#if entry.isM1}<span class="da-pbd-badge da-pbd-badge--m1">M1</span>{/if}
+          {#if entry.isM2}<span class="da-pbd-badge da-pbd-badge--m2">M2</span>{/if}
+          {#if entry.isWA}<span class="da-pbd-badge da-pbd-badge--wa">WA</span>{/if}
+          {#if entry.isRune}<span class="da-pbd-badge da-pbd-badge--rune">Rune</span>{/if}
+          {#if entry.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb">Guardbreak</span>{/if}
+          {#if entry.dmgTypeMode === 'weapon'}<span class="da-pbd-badge da-pbd-badge--weapon">Weapon Type</span>{/if}
+        </div>
+        <!-- Condition -->
+        {#if entry.condition}
+          <div class="da-pbd-condition">{entry.condition}</div>
+        {/if}
+        <!-- Typed damage: M2/main finisher -->
+        <div class="da-pbd-dmg-row">
+          {#if entry.isFinisher && _m2FinisherHits > 1}
+            <span class="da-pbd-ctx-label">M2 ({_m2FinisherHits} hits)</span>
+          {/if}
+          <div class="da-hits-row">
+            <div class="da-hit-card" class:da-hit-card--finisher={entry.isFinisher}>
+              {#each entry.typedHits_m2 as t, ti}
+                {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                <div class="da-hit-chunk" style="--tc:{t.color}">
+                  {#if entry.scalingMult !== 1}
+                    <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
+                    <span class="da-hit-arrow">→</span>
+                  {/if}
+                  <span class="da-hit-num">{fmtNum(t.val)}</span>
+                  <span class="da-hit-type">{t.label}</span>
+                </div>
+              {/each}
+              {#if entry.hits && entry.hits > 1}
+                <span class="da-hit-repeat">×{entry.hits}<span class="da-hit-repeat-label">hits</span></span>
+              {/if}
+              {#if entry.isFinisher}<span class="da-finisher-crown">✦</span>{/if}
+            </div>
+          </div>
+        </div>
+        <!-- M1 finisher context (only when different from M2) -->
+        {#if entry.isFinisher && !entry.isM2 && Number(_m1FinisherHits) !== Number(_m2FinisherHits)}
+          <div class="da-pbd-dmg-row">
+            <span class="da-pbd-ctx-label">M1 fin ({_m1FinisherHits} hit{_m1FinisherHits > 1 ? 's' : ''})</span>
+            <div class="da-hits-row">
+              <div class="da-hit-card da-hit-card--finisher">
+                {#each entry.typedHits_m1f as t, ti}
+                  {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                  <div class="da-hit-chunk" style="--tc:{t.color}">
+                    {#if entry.scalingMult !== 1}
+                      <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
+                      <span class="da-hit-arrow">→</span>
+                    {/if}
+                    <span class="da-hit-num">{fmtNum(t.val)}</span>
+                    <span class="da-hit-type">{t.label}</span>
+                  </div>
+                {/each}
+                <span class="da-finisher-crown">✦</span>
+              </div>
+            </div>
+          </div>
+        {/if}
+        <!-- Note -->
+        {#if entry.note}
+          <div class="da-pbd-note">{entry.note}</div>
+        {/if}
+      </div>
+    {/each}
+  </div>
+</div>
+{/if}
+
+</div><!-- end da-wbd-outer -->
 <!-- ══════════════════ DAMAGE SCALING ══════════════════ -->
 {#if _weaponResult && scalingBreakdown.rows.length > 0}
 <div class="da-section da-section--scaling">
@@ -1138,7 +1315,6 @@
     </div>
   </div>
 
-  <!-- Multiplier result -->
   <!-- Multiplier result -->
   <div class="ds-result-row">
     <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
@@ -1245,6 +1421,80 @@
   {/if}
 </div>
 {/if}
+{#if _weaponResult && scalingBreakdown.rows.length > 0 
+  && _activePerkDmgEntries.some(e => (e.dmgTypeMode === 'fixed' && e.scalingMult !== 1) || e.dmgTypeMode === 'weapon')}
+  <div class="da-section da-section--scaling">
+    <div class="da-section-title">📐 Damage Scaling</div>
+    <div class="ds-formula-hint">Effective Boost = Σ (Scaling × Boost%) → adds to base as ×(1 + Effective%)</div>
+    
+    <div class="ds-table">
+      <div class="ds-head">
+        <div class="ds-col ds-col--type">Scaling</div>
+        <div class="ds-col ds-col--val">Scaling Val</div>
+        <div class="ds-col ds-col--op"></div>
+        <div class="ds-col ds-col--boost">Your Boost</div>
+        <div class="ds-col ds-col--op"></div>
+        <div class="ds-col ds-col--contrib">Contribution</div>
+      </div>
+
+      {#each _activePerkDmgEntries as entry}
+        {#if entry.dmgTypeMode === 'fixed' && entry.scalingMult !== 1}
+          <div class="da-perk-scaling-divider">
+            <span class="da-perk-scaling-label">Perk Damage</span>
+          </div>
+
+          <div class="ds-table ds-table--perk" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.9;">
+            {#each Object.entries(PERK_DMG_DEFS.find(d => d.perkName === entry.perkName)?.scalings ?? {}) as [key, scalingVal]}
+              {@const boostKey = SCALING_TO_BOOST[key]}
+              {@const boostPct = boostKey ? (stats[boostKey as keyof typeof stats] ?? 0) : 0}
+              {@const contrib = Math.round(scalingVal * boostPct * 100) / 100}
+              
+              <div class="ds-row">
+                <div class="ds-col ds-col--type">
+                  <span class="ds-dot" style="background: {SCALING_COLORS[key] ?? '#e8e4da'}"></span>
+                  <span style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                </div>
+                <div class="ds-col ds-col--val">
+                  <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal}</span>
+                </div>
+                <div class="ds-col ds-col--op">×</div>
+                <div class="ds-col ds-col--boost">
+                  <span class="ds-boost">+{boostPct}%</span>
+                </div>
+                <div class="ds-col ds-col--op">=</div>
+                <div class="ds-col ds-col--contrib">
+                  <span class="ds-contrib" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">+{contrib}%</span>
+                </div>
+              </div>
+            {/each} 
+          </div>
+
+          <div class="ds-result-row ds-result-row--perk" style="background: rgba(251, 146, 60, 0.05); border-color: rgba(251, 146, 60, 0.15);">
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+              <span class="ds-result-label" style="color: #fb923c;">Perk: {entry.perkName} Scaling</span>
+            </div>
+            <span class="ds-result-eq">Multiplier =</span>
+            <span class="ds-result-val">×{entry.scalingMult.toFixed(4)}</span>
+          </div>
+
+        {:else if entry.dmgTypeMode === 'weapon'}
+          <div class="da-perk-scaling-divider">
+            <span class="da-perk-scaling-label">{entry.perkName}</span>
+          </div>
+          <div class="ds-result-row ds-result-row--perk" style="background: rgba(251, 146, 60, 0.05); border-color: rgba(251, 146, 60, 0.15);">
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+              <span class="ds-result-label" style="color: #fb923c;">Perk: {entry.perkName} Scaling</span>
+              <span class="ds-applies-to" style="opacity:.5;font-size:.58rem;">Same as weapon</span>
+            </div>
+            <span class="ds-result-eq">Multiplier =</span>
+            <span class="ds-result-val">×{entry.scalingMult.toFixed(4)}</span>
+          </div>
+        {/if}
+      {/each}
+    </div>
+  </div>
+{/if}
+
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}/>
 </div>
 
@@ -2280,5 +2530,172 @@
   padding: 1px 4px !important;
   border-radius: 3px !important;
   font-size: 0.6rem !important;
+}
+
+/* ── WBD outer flex container ── */
+.da-wbd-outer {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.da-section--wbd-inner {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ── Perk Base Damage section ── */
+.da-section--pbd {
+  flex: 0 0 260px;
+  min-width: 200px;
+  border-color: rgba(167,139,250,.2);
+  background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(167,139,250,.04) 100%);
+}
+
+.da-pbd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.da-pbd-card {
+  background: var(--surface2, #1a1d1b);
+  border: 1px solid rgba(167,139,250,.14);
+  border-radius: 8px;
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.da-pbd-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.da-pbd-name {
+  font-size: .88rem;
+  font-weight: 800;
+  color: var(--accent3, #a78bfa);
+  line-height: 1;
+}
+.da-pbd-amt {
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--accent2, #f59e0b);
+  font-family: 'Courier New', monospace;
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.22);
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+
+.da-pbd-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.da-pbd-badge {
+  font-size: .52rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+.da-pbd-badge--finisher { color: #facc15; background: rgba(250,204,21,.1); border-color: rgba(250,204,21,.3); }
+.da-pbd-badge--m1      { color: #fb923c; background: rgba(251,146,60,.1); border-color: rgba(251,146,60,.28); }
+.da-pbd-badge--m2      { color: #fbbf24; background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.28); }
+.da-pbd-badge--wa      { color: #a78bfa; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.28); }
+.da-pbd-badge--rune    { color: #38bdf8; background: rgba(56,189,248,.1); border-color: rgba(56,189,248,.28); }
+.da-pbd-badge--gb      { color: #f87171; background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.25); }
+.da-pbd-badge--weapon  { color: #34d399; background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.22); }
+
+.da-pbd-condition {
+  font-size: .62rem;
+  color: var(--ink-muted, #8a8d85);
+  font-style: italic;
+  padding: 2px 0;
+}
+
+.da-pbd-dmg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.da-pbd-ctx-label {
+  font-size: .55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .55;
+}
+
+.da-pbd-note {
+  font-size: .62rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .6;
+  font-style: italic;
+  line-height: 1.4;
+  padding-top: 2px;
+  border-top: 1px dashed rgba(255,255,255,.05);
+}
+
+@media (max-width: 700px) {
+  .da-wbd-outer {
+    flex-direction: column;
+  }
+  .da-section--pbd {
+    flex: none;
+    width: 100%;
+  }
+}
+/* ── Perk scaling section ── */
+.da-perk-scaling-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.da-perk-scaling-divider::before,
+.da-perk-scaling-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(245,158,11,.2);
+}
+.da-perk-scaling-label {
+  font-size: .55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--accent2);
+  opacity: .7;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+/* Perk scaling rows — tinted amber */
+.ds-table--perk .ds-row {
+  background: rgba(245,158,11,.04);
+  border-radius: 5px;
+  margin-bottom: 2px;
+}
+
+/* Perk result row */
+.ds-result-row--perk {
+  background: rgba(245,158,11,.07) !important;
+  border-color: rgba(245,158,11,.22) !important;
+}
+.ds-result-row--perk .ds-result-label {
+  color: var(--accent2) !important;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.ds-result-row--perk .ds-result-val {
+  color: var(--accent2) !important;
 }
 </style>
