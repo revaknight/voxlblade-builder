@@ -1026,9 +1026,15 @@ $: highestDamageType = (() => {
   $: _waBlade = $build.weaponBlade
   $: _waHandle = $build.weaponHandle
 
-  $: availableWeaponArts = WEAPON_ARTS.filter(wa =>
-    checkWA(wa, _waScalings, _waStats, _waWeaponType, isMonk, _waBlade, _waHandle)
-  )
+  $: availableWeaponArts = (() => {
+    const validWAs = WEAPON_ARTS.filter(wa =>
+      checkWA(wa, _waScalings, _waStats, _waWeaponType, isMonk, _waBlade, _waHandle)
+    )
+    const activeReplacements = new Set(
+      validWAs.map(wa => wa.replaces).filter(Boolean)
+    )
+    return validWAs.filter(wa => !activeReplacements.has(wa.name))
+  })()
 
 
   // Auto-select: nếu WA hiện tại không có trong availableWeaponArts thì chọn cái đầu tiên

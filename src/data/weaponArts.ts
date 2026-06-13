@@ -44,6 +44,7 @@ export interface WeaponArt {
   requirements: WeaponArtRequirement
   isMonk?: boolean
   avgTotalHits?: number
+  replaces?: string;
 }
 
 export const WEAPON_ARTS: WeaponArt[] = [
@@ -165,6 +166,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     extras: ["Now gains 6 base spirit commune per hit(tier 1 monk), unaffected by attack speed"],
     requirements: { guild: "Monk" },
     isMonk: true,
+    replaces: "Lunge"
   },
   {
     name: "Shatter",
