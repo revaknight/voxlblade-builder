@@ -2005,11 +2005,11 @@ $: _appWaAvgTotal = (() => {
           </button>
           {#each searchedEssences as e}
             {@const eAny = e as any}
-            <button class="modal-item modal-item--sm modal-item--glove" class:modal-item--active={$build.monkEssence === e.name}
+            <button class="modal-item modal-item--sm modal-item--essence" class:modal-item--active={$build.monkEssence === e.name}
               on:click={() => { build.update(s => ({...s, monkEssence: e.name})); closeModal() }}>
               <div class="modal-item-head">
                 <span class="modal-item-name">{@html highlight(e.name, modalSearch)}</span>
-                <span class="modal-tier-badge modal-tier-badge--glove">T{e.tier}</span>
+                <span class="modal-tier-badge modal-tier-badge--essence">T{e.tier}</span>
                 {#if e.attackSpeed != null}<span class="modal-cd-badge">{e.attackSpeed}x spd</span>{/if}
               </div>
               {#if true}
