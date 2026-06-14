@@ -3,7 +3,7 @@ export interface BoostDef {
   multiplierPerPerk: number
   condition?: string
   type: 'dmg' | 'heal'
-  isLevel?: boolean  // special flag: computed from level, not perk amount
+  isLevel?: boolean
 }
 
 export const BOOST_DEFS: BoostDef[] = [

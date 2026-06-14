@@ -100,4 +100,16 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     guardbreak: true,
     note: 'Each hit counts as individual M1/M2 and procs related effects.',
   },
+  // ── Bounce Momentum ────────────────────────────────────────────────────────
+  {
+    perkName: 'Bounce Momentum',
+    condition: 'On Finisher (Tongue Shot active after jumping with Bounce)',
+    getBaseDamage: ({ perkAmount }) => 5 + 2.5 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { water: 0.5, physical: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { water: 1.0 },
+    guardbreak: true,
+    note: 'Stuns and briefly immobilizes the target.',
+  },
 ]

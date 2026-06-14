@@ -213,6 +213,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isNeutral: true,
   },
+  'Tongue Shot': {
+    name: 'Tongue Shot',
+    color: '#39d9c4',
+    description: 'Next finisher will shoot out a tongue that roots the nearest enemy.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isNeutral: true,
+  },
 }
 
 export const ITEM_BUFF_MAP: GrantedBuff[] = [
@@ -235,6 +243,17 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]
 
 const PERK_BUFFS: Record<string, PerkBuffFactory> = {
+
+  'Bounce Momentum': (amount) => [
+    {
+      buffName: 'Tongue Shot',
+      potency: 1.0,
+      duration: 3 * amount,
+      condition: 'On jump while Bounce is active',
+      sourceName: 'Bounce Momentum',
+      sourceType: 'perk',
+    },
+  ],
 
   'Toadzerker Spirit': () => {
     return [
@@ -284,6 +303,17 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       duration: 5 + 5 * amount,
       condition: 'On weapon art activation',
       sourceName: 'Spring Step',
+      sourceType: 'perk',
+    },
+  ],
+
+  'Spring Powered': (amount) => [
+    {
+      buffName: 'Bounce',
+      potency: 0.1* amount,
+      duration: 1 + 1 * amount,
+      condition: 'On roll',
+      sourceName: 'Spring Powered',
       sourceType: 'perk',
     },
   ],
@@ -503,9 +533,12 @@ interface BuffPotencyModifier {
   label: string
   runeFilter?: string
   durationMultiplierPerStack?: number
+  durationMultiplierFormula?: (stacks: number) => number
 }
 
 const BUFF_POTENCY_MODIFIERS: BuffPotencyModifier[] = [
+  { buffName: 'Bounce', potencyPerStack: 0, label: 'Bounce Momentum', durationMultiplierFormula: stacks => 1.3 + 0.3 * stacks },
+
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Gladiatorial Rage' },
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Mage Rage' },
   { buffName: 'Rage', potencyPerStack: 0.1, label: 'Oceans Rage' },
@@ -543,8 +576,11 @@ export function applyBuffPerkModifiers(
       const stacks = perks[mod.label] ?? 0
       if (stacks <= 0) continue
       bonus += mod.potencyPerStack * stacks
-      if (mod.durationMultiplierPerStack)
+      if (mod.durationMultiplierFormula) {
+        durationMult *= mod.durationMultiplierFormula(stacks)
+      } else if (mod.durationMultiplierPerStack) {
         durationMult *= 1 + (mod.durationMultiplierPerStack - 1) * stacks
+      }
     }
     if (bonus === 0 && durationMult === 1) return buff
     return {
@@ -576,7 +612,9 @@ export function getPerkBuffs(perks: Record<string, number>): GrantedBuff[] {
     if (amount <= 0) continue
     const factory = PERK_BUFFS[perkName]
     if (!factory) continue
-    buffs.push(...factory(amount, perks))
+    for (const b of factory(amount, perks)) {
+      buffs.push({ ...b, duration: Math.round(b.duration * 100) / 100 })
+    }
   }
 
   return buffs

@@ -105,6 +105,7 @@ interface SpecialBoostOpts {
   jumpBoost:         number
   summonCount:       number
   ragePotency:       number
+  bouncePotency:     number
 }
 
 function applySpecialBoosts(
@@ -113,7 +114,7 @@ function applySpecialBoosts(
   healMap: Map<string, BoostEntry>,
   opts:    SpecialBoostOpts,
 ): void {
-  const { naturalCritChance, jumpBoost, summonCount, ragePotency } = opts
+  const { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency } = opts
 
   const primalStacks = perks['Primal'] ?? 0
   if (primalStacks > 0 && naturalCritChance > 0) {
@@ -181,6 +182,16 @@ function applySpecialBoosts(
       type:          'dmg',
     })
   }
+  const ragingBounceStacks = perks['Raging Bounce'] ?? 0
+  if (ragingBounceStacks > 0 && bouncePotency > 0) {
+    const bouncePct = 0.70 * bouncePotency * ragingBounceStacks
+    dmgMap.set('Raging Bounce', {
+      sourceName:    'Raging Bounce',
+      rawMultiplier: Math.round((1 + bouncePct) * 10000) / 10000,
+      condition:     `Bounce active · potency ${Math.round(bouncePotency * 1000) / 1000}`,
+      type:          'dmg',
+    })
+  }
 }
 
 export function calcBoosts(
@@ -191,6 +202,7 @@ export function calcBoosts(
   jumpBoost:         number = 0,
   summonCount:       number = 0,
   ragePotency:       number = 0,
+  bouncePotency:     number = 0,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -220,7 +232,7 @@ export function calcBoosts(
     else                    healMap.set(perkName, entry)
   }
 
-  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency })
+  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency })
 
   const dmgEntries  = [...dmgMap.values()]
   const healEntries = [...healMap.values()]
@@ -1159,7 +1171,10 @@ function deriveResults(
   const _rageBuffs  = _allBuffs.filter(b => b.buffName === 'Rage')
   const ragePotency = _rageBuffs.length > 0 ? Math.max(..._rageBuffs.map(b => b.potency)) : 0
 
-  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency)
+  const _bounceBuffs  = _allBuffs.filter(b => b.buffName === 'Bounce')
+  const bouncePotency = _bounceBuffs.length > 0 ? Math.max(..._bounceBuffs.map(b => b.potency)) : 0
+
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency, bouncePotency)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 
