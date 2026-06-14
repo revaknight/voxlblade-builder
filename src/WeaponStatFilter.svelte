@@ -1,5 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
+  import { ELEMENTAL_BOOST_STATS } from './lib/stats/elementalBoosts'
+  import { createFilterActions } from './lib/stats/filterActions'
 
   const dispatch = createEventDispatcher<{ change: Map<string, 'include' | 'exclude'> }>()
   export let value: Map<string, 'include' | 'exclude'> = new Map()
@@ -41,17 +43,8 @@
   const BOOST_GROUP = {
     label: 'Boost / Stats',
     color: '#4ade80',
-    stats: [
-      { key: 'dexterityBoost',  label: 'Dexterity' },
-      { key: 'physicalBoost',   label: 'Physical'  },
-      { key: 'magicBoost',      label: 'Magic'     },
-      { key: 'fireBoost',       label: 'Fire'      },
-      { key: 'waterBoost',      label: 'Water'     },
-      { key: 'earthBoost',      label: 'Earth'     },
-      { key: 'airBoost',        label: 'Air'       },
-      { key: 'hexBoost',        label: 'Hex'       },
-      { key: 'holyBoost',       label: 'Holy'      },
-      { key: 'summonBoost',     label: 'Summon'    },
+    stats: [    
+      ...ELEMENTAL_BOOST_STATS,
       { key: 'protection',      label: 'Protection'},
       { key: 'warding',         label: 'Warding'   },
       { key: 'speedBoost',      label: 'Speed'     },
@@ -92,44 +85,19 @@
 
   // ── State ───────────────────────────────────────────────────────────────────
   let active: Map<string, 'include' | 'exclude'> = new Map(value)
+  const { toggle, remove, clear, handleChipKeyDown } = createFilterActions(
+    () => active,
+    (next) => { active = next },
+    (next) => dispatch('change', next)
+  )
   let expanded = false
 
   $: activeCount = active.size
 
-  function toggle(key: string) {
-    const cur = active.get(key)
-    if (!cur)                   active.set(key, 'include')
-    else if (cur === 'include') active.set(key, 'exclude')
-    else                        active.delete(key)
-    active = new Map(active)
-    dispatch('change', active)
-  }
-
-  function remove(key: string) {
-    active.delete(key)
-    active = new Map(active)
-    dispatch('change', active)
-  }
-
-  function clear() {
-    active = new Map()
-    dispatch('change', active)
-  }
-
-  function handleChipKeyDown(e: KeyboardEvent, key: string) {
-    if (e.key === 'Delete' || (e.key === 'Backspace' && e.shiftKey)) {
-      e.preventDefault()
-      remove(key)
-    }
-  }
-
-  // ── Public filter function (used by parent) ─────────────────────────────────
-  // TỐI ƯU HÓA: Đọc trực tiếp, không nhân bản (shallow clone) object nữa giúp chạy nhanh gấp nhiều lần và tiết kiệm RAM
   export function matchesFilter(item: Record<string, any>): boolean {
     if (active.size === 0) return true
     
     for (const [key, state] of active) {
-      // Ưu tiên đọc từ sub-object item.stats trước, nếu không có mới tìm ở tầng ngoài item
       const val = (item.stats && key in item.stats) ? item.stats[key] : (item[key] ?? 0)
       
       if (state === 'include' && !(val > 0)) return false

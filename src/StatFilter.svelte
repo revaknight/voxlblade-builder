@@ -1,5 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
+  import { ELEMENTAL_BOOST_STATS, NEGATIVE_ELEMENTAL_BOOST_STATS } from './lib/stats/elementalBoosts'
+  import { createFilterActions } from './lib/stats/filterActions'
 
   const dispatch = createEventDispatcher<{
     change: {
@@ -9,21 +11,7 @@
   }>()
 
   const STAT_GROUPS = [
-    {
-      label: 'Boost', color: '#fb923c',
-      stats: [
-        { key: 'dexterityBoost', label: 'Dexterity' },
-        { key: 'physicalBoost',  label: 'Physical'  },
-        { key: 'magicBoost',     label: 'Magic'     },
-        { key: 'fireBoost',      label: 'Fire'      },
-        { key: 'waterBoost',     label: 'Water'     },
-        { key: 'earthBoost',     label: 'Earth'     },
-        { key: 'airBoost',       label: 'Air'       },
-        { key: 'hexBoost',       label: 'Hex'       },
-        { key: 'holyBoost',      label: 'Holy'      },
-        { key: 'summonBoost',    label: 'Summon'    },
-      ],
-    },
+    { label: 'Boost', color: '#fb923c', stats: ELEMENTAL_BOOST_STATS },
     {
       label: 'Defense', color: '#38bdf8',
       stats: [
@@ -53,21 +41,7 @@
   ]
 
   const NEG_STAT_GROUPS = [
-    {
-      label: 'Boost', color: '#f87171',
-      stats: [
-        { key: 'neg:dexterityBoost', label: 'Dexterity' },
-        { key: 'neg:physicalBoost',  label: 'Physical'  },
-        { key: 'neg:magicBoost',     label: 'Magic'     },
-        { key: 'neg:fireBoost',      label: 'Fire'      },
-        { key: 'neg:waterBoost',     label: 'Water'     },
-        { key: 'neg:earthBoost',     label: 'Earth'     },
-        { key: 'neg:airBoost',       label: 'Air'       },
-        { key: 'neg:hexBoost',       label: 'Hex'       },
-        { key: 'neg:holyBoost',      label: 'Holy'      },
-        { key: 'neg:summonBoost',    label: 'Summon'    },
-      ],
-    },
+    { label: 'Boost', color: '#f87171', stats: NEGATIVE_ELEMENTAL_BOOST_STATS },
     {
       label: 'Defense', color: '#fca5a5',
       stats: [
@@ -114,6 +88,11 @@
   let sortMode: 'highest' | 'lowest' | 'alphabetical' = 'highest'
 
   let active: Map<string, 'include' | 'exclude'> = new Map()
+    const { toggle, remove, clear, handleChipKeyDown } = createFilterActions(
+    () => active,
+    (next) => { active = next },
+    (next) => dispatch('change', { filter: next, sortMode })
+  )
   let expanded = false
 
   $: activeCount = active.size
@@ -128,37 +107,6 @@
     [...active.keys()]
         .filter(k => !k.startsWith('neg:'))
   )
-
-  function toggle(key: string) {
-    const cur = active.get(key)
-    if (!cur) {
-        active.set(key, 'include')
-    } else if (cur === 'include') {
-        active.set(key, 'exclude')
-    } else {
-        active.delete(key)
-    }
-    active = new Map(active)
-    dispatch('change', { filter: active, sortMode })
-  }
-
-  function remove(key: string) {
-    active.delete(key)
-    active = new Map(active)
-    dispatch('change', { filter: active, sortMode })
-  }
-
-  function clear() {
-    active = new Map()
-    dispatch('change', { filter: active, sortMode })
-  }
-
-  function handleChipKeyDown(e: KeyboardEvent, key: string) {
-    if (e.key === 'Delete' || (e.key === 'Backspace' && e.shiftKey)) {
-      e.preventDefault()
-      remove(key)
-    }
-  }
 </script>
 
 <div class="sf-root">

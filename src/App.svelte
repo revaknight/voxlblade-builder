@@ -12,6 +12,7 @@
   import type { EnchantSlot, StatMap, StatPrefix, ScalingKey } from './lib/types'
   import { enchantments, getEnchant as ge, isExclusiveEnchant } from './lib/engine'
   import EnchantSelect from './lib/EnchantSelect.svelte'
+  import { getEnchantTooltipText } from './lib/enchantTooltip'
   import { applyUpgrade, UPGRADE_MAX } from './lib/types'
   import { WEAPON_ARTS, type WeaponArt } from './data/weaponArts'
   import BuildSaves from './BuildSaves.svelte'
@@ -229,6 +230,22 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     helmet: 'unAscended', chestplate: 'unAscended', leggings: 'unAscended',
     ring: 'unAscended', rune: 'unAscended'
   }
+  $: {
+    const slots: EnchantSlot[] = ['helmet', 'chestplate', 'leggings', 'ring', 'rune']
+    let dirty = false
+    for (const slot of slots) {
+      const first = $build.enchantments[slot].find(Boolean)
+      if (first) {
+        const e = ge(first)
+        const cat = (e?.category ?? 'unAscended') as 'unAscended' | 'Ascended'
+        if (enchantCats[slot] !== cat) {
+          enchantCats[slot] = cat
+          dirty = true
+        }
+      }
+    }
+    if (dirty) enchantCats = { ...enchantCats }
+  }
   function toggleEnchantCat(slot: EnchantSlot) {
     enchantCats[slot] = enchantCats[slot] === 'unAscended' ? 'Ascended' : 'unAscended'
     enchantCats = { ...enchantCats }
@@ -436,13 +453,11 @@ function applyEnchantToAll(slot: EnchantSlot) {
     }
   }
 
-  // Khối 4: Xử lý hiển thị "Did you mean?" thông minh chống gõ thiếu/sai chữ
   $: {
     if (!modalSearch.trim() || !noExactResults || modalSearch.length < 2) {
       didYouMean = [];
     } else {
       const q = modalSearch.toLowerCase().trim();
-      // Ngưỡng sai số động: gõ ngắn cho sai tối đa 1-2 ký tự, gõ dài cho sai nhiều hơn
       const maxAllowedScore = Math.max(1, Math.floor(q.length * 0.35));
 
       didYouMean = modalCandidates
@@ -452,73 +467,83 @@ function applyEnchantToAll(slot: EnchantSlot) {
         .slice(0, 6);
     }
   }
+  function filterAccessoryItems(items: any[]) {
+    return sortByStatFilter(
+      items.filter(item =>
+        matchSearchReactive(
+          item.name,
+          item.perkName ? [item.perkName] : [],
+          modalSearch
+        ) &&
+        perkMatchesTags(item.perkName) &&
+        itemMatchesStatFilter(
+          item.stats as Record<string, number>,
+          statFilter
+        )
+      ),
+      (item, k) => item.stats?.[k] ?? 0,
+      statFilter,
+      statFilterSortMode
+    )
+  }
 
   $: searchedRaces = races.filter(r => matchSearchReactive(r.name, [], modalSearch))
-$: searchedGuilds = guilds.filter(g => {
-  if (!matchSearchReactive(g.name, g.ranks.flatMap(r => (r.perks ?? []).map((p: any) => p.name)), modalSearch)) return false
-  if (selectedTags.size === 0) return true
-  return g.ranks.some(r => (r.perks ?? []).some((p: any) => perkMatchesTags(p.name)))
-})
-$: searchedRings = (void selectedTags, void statFilter, sortByStatFilter(
-    rings.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName) && itemMatchesStatFilter(r.stats as Record<string, number>, statFilter)),
-    (r, k) => r.stats?.[k] ?? 0,
-    statFilter,
-    statFilterSortMode)
-)
+  $: searchedGuilds = guilds.filter(g => {
+    if (!matchSearchReactive(g.name, g.ranks.flatMap(r => (r.perks ?? []).map((p: any) => p.name)), modalSearch)) return false
+    if (selectedTags.size === 0) return true
+    return g.ranks.some(r => (r.perks ?? []).some((p: any) => perkMatchesTags(p.name)))
+  })
+  $: searchedRings = (
+    void selectedTags,
+    void statFilter,
+    filterAccessoryItems(rings)
+  )
 
-$: searchedRunes = (void selectedTags, void statFilter, sortByStatFilter(
-    runes.filter(r => matchSearchReactive(r.name, r.perkName ? [r.perkName] : [], modalSearch) && perkMatchesTags(r.perkName) && itemMatchesStatFilter(r.stats as Record<string, number>, statFilter)),
-    (r, k) => r.stats?.[k] ?? 0,
-    statFilter,
-    statFilterSortMode)
-)
+  $: searchedRunes = (
+    void selectedTags,
+    void statFilter,
+    filterAccessoryItems(runes)
+  )
 
-$: searchedBlades = (void weaponStatFilter, void selectedTags, sortByStatFilter(
-    filteredBlades.filter(b => matchSearchReactive(b.name, getPerkNames(b), modalSearch) && anyPerkMatchesTags(getPerkNames(b)) && weaponMatchesFilter(b)),
-    (b, k) => b[k] ?? b.stats?.[k] ?? 0,
-    weaponStatFilter,
-    weaponStatFilterSortMode
-))
+  function filterWeaponItems(items: any[]) {
+    return sortByStatFilter(
+      items.filter(item =>
+        matchSearchReactive(
+          item.name,
+          getPerkNames(item),
+          modalSearch
+        ) &&
+        anyPerkMatchesTags(getPerkNames(item)) &&
+        weaponMatchesFilter(item)
+      ),
+      (item, k) => item[k] ?? item.stats?.[k] ?? 0,
+      weaponStatFilter,
+      weaponStatFilterSortMode
+    )
+  }
+  $: searchedBlades =(void weaponStatFilter, void selectedTags,filterWeaponItems(filteredBlades))
+  $: searchedHandles =(void weaponStatFilter, void selectedTags,filterWeaponItems(filteredHandles))
+  $: searchedGloves =(void weaponStatFilter, void selectedTags,filterWeaponItems(filteredGloves))
+  $: searchedEssences =(void weaponStatFilter, void selectedTags,filterWeaponItems(filteredEssences))
 
-$: searchedHandles = (void weaponStatFilter, void selectedTags, sortByStatFilter(
-    filteredHandles.filter(h => matchSearchReactive(h.name, getPerkNames(h), modalSearch) && anyPerkMatchesTags(getPerkNames(h)) && weaponMatchesFilter(h)),
-    (h, k) => h[k] ?? h.stats?.[k] ?? 0,
-    weaponStatFilter,
-    weaponStatFilterSortMode
-))
+  $: searchedArmorsForModal = (() => {
+    void selectedTags; void statFilter;
+    const slotName = activeModal === 'armor-helmet' || activeModal === 'infusion-helmet' ? 'Helmet' : activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate' ? 'Chestplate' : activeModal === 'armor-leggings' || activeModal === 'infusion-leggings' ? 'Leggings' : null;
+    if (!slotName) return [];
 
-$: searchedGloves = (void weaponStatFilter, void selectedTags, sortByStatFilter(
-    filteredGloves.filter(g => matchSearchReactive(g.name, getPerkNames(g), modalSearch) && anyPerkMatchesTags(getPerkNames(g)) && weaponMatchesFilter(g)),
-    (g, k) => g[k] ?? g.stats?.[k] ?? 0,
-    weaponStatFilter,
-    weaponStatFilterSortMode
-))
-
-$: searchedEssences = (void weaponStatFilter, void selectedTags, sortByStatFilter(
-    filteredEssences.filter(e => matchSearchReactive(e.name, getPerkNames(e), modalSearch) && anyPerkMatchesTags(getPerkNames(e)) && weaponMatchesFilter(e)),
-    (e, k) => e[k] ?? e.stats?.[k] ?? 0,
-    weaponStatFilter,
-    weaponStatFilterSortMode
-))
-
-$: searchedArmorsForModal = (() => {
-  void selectedTags; void statFilter;
-  const slotName = activeModal === 'armor-helmet' || activeModal === 'infusion-helmet' ? 'Helmet' : activeModal === 'armor-chestplate' || activeModal === 'infusion-chestplate' ? 'Chestplate' : activeModal === 'armor-leggings' || activeModal === 'infusion-leggings' ? 'Leggings' : null;
-  if (!slotName) return [];
-
-  return sortByStatFilter(
-    armors.filter(a => {
-      const part = getArmorPart(a.name, slotName as any);
-      return part && matchSearchReactive(a.name, part.perkName ? [part.perkName] : [], modalSearch) && perkMatchesTags(part.perkName) && itemMatchesStatFilter(part.stats as Record<string, number>, statFilter);
-    }),
-    (a, k) => {
-      const part = getArmorPart(a.name, slotName as any);
-      return part?.stats?.[k] ?? 0;
-    },
-    statFilter,
-    statFilterSortMode
-  );
-})();
+    return sortByStatFilter(
+      armors.filter(a => {
+        const part = getArmorPart(a.name, slotName as any);
+        return part && matchSearchReactive(a.name, part.perkName ? [part.perkName] : [], modalSearch) && perkMatchesTags(part.perkName) && itemMatchesStatFilter(part.stats as Record<string, number>, statFilter);
+      }),
+      (a, k) => {
+        const part = getArmorPart(a.name, slotName as any);
+        return part?.stats?.[k] ?? 0;
+      },
+      statFilter,
+      statFilterSortMode
+    );
+  })();
 
   function matchSearchReactive(name: string, perkNames: string[], query: string): boolean {
     if (!query.trim()) return true
@@ -865,23 +890,7 @@ $: highestDamageType = (() => {
   $: sgPart1Empty = isMonk ? !$build.monkGlove : !$build.weaponBlade
   $: sgPart2Empty = isMonk ? !$build.monkEssence : !$build.weaponHandle
 
-  // Tooltip for enchant
   let tooltip = { visible: false, text: '', x: 0, y: 0 }
-  function getEnchantTooltipText(name: string): string {
-    if (!name) return ''
-    const e = getEnchant(name)
-    if (!e) return ''
-    const lines: string[] = []
-    const statLines = Object.entries(e.stats).flatMap(([k, v]) => {
-      if (!v) return []
-      const mods = Array.isArray(v) ? v : [v]
-      return [mods.map((m: any) => m.type === 'multiplier' ? `${k}: ×${m.value}` : `${k}: ${m.value > 0 ? '+' : ''}${m.value}`).join(', ')]
-    })
-    if (statLines.length) lines.push('Stats: ' + statLines.join(' | '))
-    if (e.effects?.length) lines.push('Effects: ' + e.effects.map((ef: any) => `${ef.name} +${ef.value}`).join(', '))
-    if (e.additionalNotes) lines.push('⚠ ' + e.additionalNotes)
-    return lines.join('\n')
-  }
   function onEnchantMove(e: MouseEvent, name: string) {
     const text = getEnchantTooltipText(name)
     tooltip = text ? { visible: true, text, x: e.clientX + 14, y: e.clientY - 10 } : { ...tooltip, visible: false }
@@ -953,7 +962,21 @@ $: highestDamageType = (() => {
 
   // ── Weapon Art helpers ─────────────────────────────────────────────────────
 
-  // Pure function nhận scalings, stats, finalWeaponType, build state để Svelte track đúng
+  function passesAtLeastOneScaling(
+    req: WeaponArt['requirements'],
+    scaleMap: Record<string, string>
+  ): boolean {
+    if (!req.atLeastOneScaling) return true
+
+    return Object.entries(req.atLeastOneScaling).some(([reqKey, minVal]) => {
+      const scalingKey = scaleMap[reqKey as keyof typeof scaleMap]
+
+      return (
+        scalingKey != null &&
+        (_waScalings[scalingKey] ?? 0) >= (minVal ?? 0)
+      )
+    })
+  }
   function checkWA(
     wa: WeaponArt,
     scalings: Record<string, number>,
@@ -981,24 +1004,14 @@ $: highestDamageType = (() => {
       airScaling: 'air', hexScaling: 'hex', holyScaling: 'holy',
       dexterityScaling: 'dexterity', summonScaling: 'summon'
     }
-    if (req.atLeastOneScaling) {
-      const passes = Object.entries(req.atLeastOneScaling).some(([reqKey, minVal]) => {
-        const scalingKey = scaleMap[reqKey as keyof typeof scaleMap]
-        return scalingKey != null && (_waScalings[scalingKey] ?? 0) >= (minVal ?? 0)
-      })
-      if (!passes) return false
-    }
+    if (!passesAtLeastOneScaling(req, scaleMap))
+      return false
     
     const isScalingExempt = req.scalingExemptWeaponTypes?.includes(finalWeaponType) ?? false;
 
     if (!isScalingExempt) {
-      if (req.atLeastOneScaling) {
-        const passes = Object.entries(req.atLeastOneScaling).some(([reqKey, minVal]) => {
-          const scalingKey = scaleMap[reqKey as keyof typeof scaleMap];
-          return scalingKey != null && (_waScalings[scalingKey] ?? 0) >= (minVal ?? 0);
-        });
-        if (!passes) return false;
-      }
+      if (!passesAtLeastOneScaling(req, scaleMap))
+        return false
       for (const [reqKey, scalingKey] of Object.entries(scaleMap)) {
         const needed = (req as any)[reqKey];
         if (needed != null && (_waScalings[scalingKey] ?? 0) < needed) return false;

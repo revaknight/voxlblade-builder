@@ -13,7 +13,6 @@
     state: BuildState
   }
 
-  // Quản lý các bộ định thời gian để tránh Memory Leak khi component unmount
   let timeouts: number[] = [];
   function clearAllTimeouts() {
     timeouts.forEach(clearTimeout);
@@ -70,7 +69,6 @@
     editingIndex = null
   }
 
-  // TỐI ƯU HÓA: Dùng structuredClone thay cho JSON.parse(JSON.stringify) để clone deep nhanh hơn
   function saveBuild(i: number) {
     const name = slots[i]?.name ?? `Build ${i + 1}`
     slots[i] = { name, timestamp: Date.now(), state: structuredClone($build) }
@@ -78,7 +76,6 @@
     persistSlots(slots)
   }
 
-  // TỐI ƯU HÓA: Đóng gói dọn dẹp timer an toàn chống rò rỉ RAM
   function loadBuild(i: number) {
     if (confirmLoad === i) {
       const slot = slots[i]
@@ -86,6 +83,7 @@
       confirmLoad = null
     } else {
       confirmLoad = i
+     
       const timer = window.setTimeout(() => { 
         if (confirmLoad === i) confirmLoad = null 
       }, 3000);
@@ -93,7 +91,6 @@
     }
   }
 
-  // TỐI ƯU HÓA: Thêm quản lý hủy tác vụ xóa ngầm
   function deleteSlot(i: number) {
     if (confirmDelete === i) {
       slots[i] = null;
@@ -122,6 +119,7 @@
     if (state.weaponBlade && state.weaponHandle) parts.push(`${state.weaponBlade} + ${state.weaponHandle}`)
     else if (state.monkGlove) parts.push(`Monk: ${state.monkGlove}`)
     if (state.selectedWeaponArt) parts.push(`WA: ${state.selectedWeaponArt}`)
+    
     return parts.join(' · ') || 'Empty build'
   }
 
@@ -141,64 +139,66 @@
   const ENCH_UNMAP = Object.fromEntries(Object.entries(ENCH_MAP).map(([k,v])=>[v,k]))
 
   const DEFAULTS: Record<string, any> = {
-    race:'', guild:'', guildRank:1, helmet:'', chestplate:'', leggings:'',
+    race:'', 
+    guild:'', guildRank:1, helmet:'', chestplate:'', leggings:'',
     ring:'', rune:'', infusionHelmet:'', infusionChestplate:'', infusionLeggings:'',
     infusionRing:'', weaponBlade:'', weaponHandle:'', monkGlove:'', monkEssence:'',
     shrineActive:false, upgradeHelmet:0, upgradeChestplate:0, upgradeLeggings:0,
     upgradeRing:0, upgradeRune:0, selectedWeaponArt:'Lunge', draconicColor:'', emotionalState: 'buffs'
   }
+  async function readStream(readable: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = []
+    const reader = readable.getReader()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (value) chunks.push(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
 
-  function compressToBase64(str: string): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const enc = new TextEncoder().encode(str)
-        const cs = new CompressionStream('deflate-raw')
-        const writer = cs.writable.getWriter()
-        writer.write(enc)
-        writer.close()
-        const chunks: Uint8Array[] = []
-        const reader = cs.readable.getReader()
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          chunks.push(value)
-        }
-        const total = chunks.reduce((a, c) => a + c.length, 0)
-        const merged = new Uint8Array(total)
-        let offset = 0
-        for (const c of chunks) { merged.set(c, offset); offset += c.length }
-        const b64 = btoa(String.fromCharCode(...merged))
-          .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')
-        resolve(b64)
-      } catch(e) { reject(e) }
-    })
+    const total = chunks.reduce((a, c) => a + c.length, 0)
+    const merged = new Uint8Array(total)
+    let offset = 0
+    for (const c of chunks) { 
+      merged.set(c, offset)
+      offset += c.length 
+    }
+    return merged
   }
 
-  function decompressFromBase64(b64: string): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const std = b64.replace(/-/g,'+').replace(/_/g,'/')
-        const pad = std + '='.repeat((4 - std.length % 4) % 4)
-        const bin = atob(pad)
-        const bytes = Uint8Array.from(bin, c => c.charCodeAt(0))
-        const ds = new DecompressionStream('deflate-raw')
-        const writer = ds.writable.getWriter()
-        writer.write(bytes)
-        writer.close()
-        const chunks: Uint8Array[] = []
-        const reader = ds.readable.getReader()
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          chunks.push(value)
-        }
-        const total = chunks.reduce((a, c) => a + c.length, 0)
-        const merged = new Uint8Array(total)
-        let offset = 0
-        for (const c of chunks) { merged.set(c, offset); offset += c.length }
-        resolve(new TextDecoder().decode(merged))
-      } catch(e) { reject(e) }
-    })
+  async function compressToBase64(str: string): Promise<string> {
+    const enc = new TextEncoder().encode(str)
+    const cs = new CompressionStream('deflate-raw')
+    const writer = cs.writable.getWriter()
+    
+    writer.write(enc)
+    writer.close()
+    
+    const merged = await readStream(cs.readable)
+    
+    const binString = Array.from(merged, b => String.fromCharCode(b)).join('')
+    
+    return btoa(binString)
+      .replace(/\+/g,'-')
+      .replace(/\//g,'_')
+      .replace(/=/g,'')
+  }
+
+  async function decompressFromBase64(b64: string): Promise<string> {
+    const std = b64.replace(/-/g,'+').replace(/_/g,'/')
+    const pad = std + '='.repeat((4 - std.length % 4) % 4)
+    const bytes = Uint8Array.from(atob(pad), c => c.charCodeAt(0))
+    
+    const ds = new DecompressionStream('deflate-raw')
+    const writer = ds.writable.getWriter()
+    writer.write(bytes)
+    writer.close()
+    
+    const merged = await readStream(ds.readable)
+    return new TextDecoder().decode(merged)
   }
 
   function encodeState(state: BuildState): Promise<string> {
@@ -228,6 +228,7 @@
     } catch {
       try {
         slim = JSON.parse(decodeURIComponent(escape(atob(code.trim()))))
+     
         if (slim.race !== undefined) return slim as BuildState
       } catch {
         throw new Error('Invalid code')
@@ -297,11 +298,11 @@
     navigator.clipboard.writeText(shareCode)
   }
   function focusOnMount(node: HTMLInputElement) {
-  requestAnimationFrame(() => {
-    node.focus();
-    node.select();
-  });
-}
+    requestAnimationFrame(() => {
+      node.focus();
+      node.select();
+    });
+  }
 </script>
 
 <button class="saves-toggle" on:click={() => open = !open}>

@@ -2,6 +2,7 @@
   import type { EnchantSlot } from '../types'
   import { build, setEnchantment } from '../store'
   import { enchantments, getEnchant, isExclusiveEnchant } from '../engine'
+  import { getEnchantTooltipText } from '../enchantTooltip'
   import EnchantSelect from '../EnchantSelect.svelte'
 
   export let slot: EnchantSlot
@@ -39,26 +40,23 @@
   $: opts1 = opts(s[0], s[2])
   $: opts2 = opts(s[0], s[1])
 
-  // Tooltip
   let tooltip = { visible: false, text: '', x: 0, y: 0 }
 
-  function getTooltipText(name: string): string {
-    if (!name) return ''
-    const e = getEnchant(name)
-    if (!e) return ''
-    const lines: string[] = []
-    if (e.description) lines.push(e.description)
-    const statLines = Object.entries(e.stats).flatMap(([k, v]) => {
-      if (!v) return []
-      const mods = Array.isArray(v) ? v : [v]
-      return [mods.map(m =>
-        m.type === 'multiplier' ? `${k}: ×${m.value}` : `${k}: ${m.value > 0 ? '+' : ''}${m.value}`
-      ).join(', ')]
-    })
-    if (statLines.length) lines.push('Stats: ' + statLines.join(' | '))
-    if (e.effects?.length) lines.push('Effects: ' + e.effects.map(ef => `${ef.name} +${ef.value}`).join(', '))
-    if (e.additionalNotes) lines.push('⚠ ' + e.additionalNotes)
-    return lines.join('\n')
+  function showTooltip(e: MouseEvent, name: string) {
+    if (!name) return
+    const text = getEnchantTooltipText(name, true)
+    if (!text) return
+
+    tooltip = {
+      visible: true,
+      text,
+      x: e.clientX + 12,
+      y: e.clientY + 12
+    }
+  }
+
+  function hideTooltip() {
+    tooltip.visible = false
   }
 </script>
 
@@ -72,44 +70,56 @@
   <span class="row-label">{label}</span>
   <div class="row-selects">
 
-    <!-- Slot 0 -->
-    <div class="slot-row">
-      <button
-        class="cat-toggle"
-        class:ascended={cat === 'Ascended'}
-        title={cat === 'Ascended'
-          ? 'Currently: Ascended — click to switch to Unascended'
-          : 'Currently: Unascended — click to switch to Ascended'}
-        on:click={toggleCat}
-      >{cat === 'Ascended' ? 'A' : 'U'}</button>
-      <EnchantSelect
-        value={s[0]}
-        options={opts0}
-        on:change={e => set(0, e.detail)}
-      />
-    </div>
+    <div 
+  class="slot-row"
+  role="presentation"
+  on:mousemove={e => showTooltip(e, s[0])}
+  on:mouseleave={hideTooltip}
+>
+  <button
+    class="cat-toggle"
+    class:ascended={cat === 'Ascended'}
+    title={cat === 'Ascended'
+      ? 'Currently: Ascended — click to switch to Unascended'
+      : 'Currently: Unascended — click to switch to Ascended'}
+    on:click={toggleCat}
+  >{cat === 'Ascended' ? 'A' : 'U'}</button>
+  <EnchantSelect
+    value={s[0]}
+    options={opts0}
+    on:change={e => set(0, e.detail)}
+  />
+</div>
 
-    <!-- Slot 1 -->
-    {#if show1}
-      <div class="slot-row slot-row--sub">
-        <EnchantSelect
-          value={s[1]}
-          options={opts1}
-          on:change={e => set(1, e.detail)}
-        />
-      </div>
-    {/if}
+{#if show1}
+  <div 
+    class="slot-row slot-row--sub"
+    role="presentation"
+    on:mousemove={e => showTooltip(e, s[1])}
+    on:mouseleave={hideTooltip}
+  >
+    <EnchantSelect
+      value={s[1]}
+      options={opts1}
+      on:change={e => set(1, e.detail)}
+    />
+  </div>
+{/if}
 
-    <!-- Slot 2 -->
-    {#if show2}
-      <div class="slot-row slot-row--sub">
-        <EnchantSelect
-          value={s[2]}
-          options={opts2}
-          on:change={e => set(2, e.detail)}
-        />
-      </div>
-    {/if}
+{#if show2}
+  <div 
+    class="slot-row slot-row--sub"
+    role="presentation"
+    on:mousemove={e => showTooltip(e, s[2])}
+    on:mouseleave={hideTooltip}
+  >
+    <EnchantSelect
+      value={s[2]}
+      options={opts2}
+      on:change={e => set(2, e.detail)}
+    />
+  </div>
+{/if}
 
   </div>
 </div>
