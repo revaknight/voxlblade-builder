@@ -22,15 +22,15 @@ import essencesRaw from '../data/essences.json'
 import { calcCrit } from './crit'
 import type { CritResult } from './crit'
 
-export const races: Race[] = racesRaw as Race[]
-export const guilds: Guild[] = guildsRaw as Guild[]
-export const perks: Perk[] = perksRaw as Perk[]
-export const rings: Ring[] = ringsRaw as Ring[]
-export const runes: Rune[] = runesRaw as Rune[]
+export const races: Race[]           = racesRaw as Race[]
+export const guilds: Guild[]         = guildsRaw as Guild[]
+export const perks: Perk[]           = perksRaw as Perk[]
+export const rings: Ring[]           = ringsRaw as Ring[]
+export const runes: Rune[]           = runesRaw as Rune[]
 export const enchantments: Enchantment[] = enchantmentsRaw as Enchantment[]
-export const blades: WeaponBlade[] = bladesRaw as WeaponBlade[]
+export const blades: WeaponBlade[]   = bladesRaw as WeaponBlade[]
 export const handles: WeaponHandle[] = handlesRaw as WeaponHandle[]
-export const gloves: MonkGlove[] = glovesRaw as MonkGlove[]
+export const gloves: MonkGlove[]     = glovesRaw as MonkGlove[]
 export const essences: MonkEssence[] = essencesRaw as MonkEssence[]
 
 import { BOOST_DEF_MAP } from '../data/Boost'
@@ -98,52 +98,28 @@ export function isMonkGuild(guildName: string): boolean {
   return guildName === "Monk"
 }
 
-export function calcBoosts(
-  perks: Record<string, number>,
-  emotionalState?: string,
-  level: number = 80,
-  naturalCritChance: number = 0,
-  jumpBoost: number = 0,
-  summonCount: number = 0,
-  ragePotency: number = 0,
-): BoostResult {
-  const dmgMap  = new Map<string, BoostEntry>()
-  const healMap = new Map<string, BoostEntry>()
+// ─── Boost helpers ────────────────────────────────────────────────────────────
 
-  const lvlMult = Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 10000) / 10000
-  dmgMap.set('Level Damage', {
-    sourceName:    'Level Damage',
-    rawMultiplier: lvlMult,
-    condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
-    type:          'dmg',
-  })
+interface SpecialBoostOpts {
+  naturalCritChance: number
+  jumpBoost:         number
+  summonCount:       number
+  ragePotency:       number
+}
 
-  for (const perkName in perks) {
-    if (!Object.prototype.hasOwnProperty.call(perks, perkName)) continue
-    const perkAmount = perks[perkName]
-    if (perkAmount <= 0) continue
-
-    const def = BOOST_DEF_MAP.get(perkName)
-    if (!def || def.isLevel) continue
-    if (perkName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
-
-    const rawMult = 1 + def.multiplierPerPerk * perkAmount
-    const entry: BoostEntry = {
-      sourceName:    perkName,
-      rawMultiplier: rawMult,
-      condition:     def.condition,
-      type:          def.type,
-    }
-    if (def.type === 'dmg') dmgMap.set(perkName, entry)
-    else                    healMap.set(perkName, entry)
-  }
+function applySpecialBoosts(
+  perks:   Record<string, number>,
+  dmgMap:  Map<string, BoostEntry>,
+  healMap: Map<string, BoostEntry>,
+  opts:    SpecialBoostOpts,
+): void {
+  const { naturalCritChance, jumpBoost, summonCount, ragePotency } = opts
 
   const primalStacks = perks['Primal'] ?? 0
   if (primalStacks > 0 && naturalCritChance > 0) {
-    const primalMult = 1 + (naturalCritChance * primalStacks) / 100
     dmgMap.set('Primal', {
       sourceName:    'Primal',
-      rawMultiplier: Math.round(primalMult * 10000) / 10000,
+      rawMultiplier: Math.round((1 + (naturalCritChance * primalStacks) / 100) * 10000) / 10000,
       condition:     `${naturalCritChance.toFixed(1)}% nat. crit × ${primalStacks} stack`,
       type:          'dmg',
     })
@@ -151,10 +127,9 @@ export function calcBoosts(
 
   const springPoweredStacks = perks['Spring Powered'] ?? 0
   if (springPoweredStacks > 0 && jumpBoost > 0) {
-    const springMult = 1 + (jumpBoost * 0.0075 * springPoweredStacks)
     dmgMap.set('Spring Powered', {
       sourceName:    'Spring Powered',
-      rawMultiplier: Math.round(springMult * 10000) / 10000,
+      rawMultiplier: Math.round((1 + jumpBoost * 0.0075 * springPoweredStacks) * 10000) / 10000,
       condition:     `${jumpBoost} jump boost × ${springPoweredStacks} stack × 0.75%`,
       type:          'dmg',
     })
@@ -177,10 +152,9 @@ export function calcBoosts(
 
   const oceansRageStacks = perks['Oceans Rage'] ?? 0
   if (oceansRageStacks > 0) {
-    const mult = Math.round((1 + oceansRageStacks * 0.1) * 10000) / 10000
     healMap.set('Oceans Rage', {
       sourceName:    'Oceans Rage',
-      rawMultiplier: mult,
+      rawMultiplier: Math.round((1 + oceansRageStacks * 0.1) * 10000) / 10000,
       condition:     `${oceansRageStacks} stack × 10% outgoing heal`,
       type:          'heal',
     })
@@ -189,10 +163,9 @@ export function calcBoosts(
   const vassalsCroakStacks = Math.floor(perks['Vassals Croak'] ?? 0)
   if (vassalsCroakStacks > 0 && summonCount > 0) {
     const clampedCount = Math.floor(summonCount)
-    const mult = 1 + 0.02 * clampedCount * vassalsCroakStacks
-    dmgMap.set("Vassals Croak", {
-      sourceName:    "Vassals Croak",
-      rawMultiplier: Math.round(mult * 100) / 100,
+    dmgMap.set('Vassals Croak', {
+      sourceName:    'Vassals Croak',
+      rawMultiplier: Math.round((1 + 0.02 * clampedCount * vassalsCroakStacks) * 100) / 100,
       condition:     `${clampedCount} summons × ${vassalsCroakStacks} stack × 2%`,
       type:          'dmg',
     })
@@ -208,13 +181,52 @@ export function calcBoosts(
       type:          'dmg',
     })
   }
+}
+
+export function calcBoosts(
+  perks:             Record<string, number>,
+  emotionalState?:   string,
+  level:             number = 80,
+  naturalCritChance: number = 0,
+  jumpBoost:         number = 0,
+  summonCount:       number = 0,
+  ragePotency:       number = 0,
+): BoostResult {
+  const dmgMap  = new Map<string, BoostEntry>()
+  const healMap = new Map<string, BoostEntry>()
+
+  const lvlMult = Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 10000) / 10000
+  dmgMap.set('Level Damage', {
+    sourceName:    'Level Damage',
+    rawMultiplier: lvlMult,
+    condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
+    type:          'dmg',
+  })
+
+  for (const perkName in perks) {
+    if (!Object.prototype.hasOwnProperty.call(perks, perkName)) continue
+    const perkAmount = perks[perkName]
+    if (perkAmount <= 0) continue
+    const def = BOOST_DEF_MAP.get(perkName)
+    if (!def || def.isLevel) continue
+    if (perkName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
+    const entry: BoostEntry = {
+      sourceName:    perkName,
+      rawMultiplier: 1 + def.multiplierPerPerk * perkAmount,
+      condition:     def.condition,
+      type:          def.type,
+    }
+    if (def.type === 'dmg') dmgMap.set(perkName, entry)
+    else                    healMap.set(perkName, entry)
+  }
+
+  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency })
 
   const dmgEntries  = [...dmgMap.values()]
   const healEntries = [...healMap.values()]
 
   let dmgFinal = 1.0
   for (let i = 0; i < dmgEntries.length; i++) dmgFinal *= dmgEntries[i].rawMultiplier
-
   let healFinal = 1.0
   for (let i = 0; i < healEntries.length; i++) healFinal *= healEntries[i].rawMultiplier
 
@@ -226,15 +238,15 @@ export function calcBoosts(
   }
 }
 
+// ─── Monk guild bonus ─────────────────────────────────────────────────────────
 
 export function applyMonkGuildBonus(
-  stats: StatMap,
+  stats:      StatMap,
   glovePerks: Array<{ name: string; amount: number }>,
-  monkRank: number,
+  monkRank:   number,
 ): { stats: StatMap; perkBonus: number } {
-  const statMult = 1 + Math.max(0, monkRank - 1) * 0.25
+  const statMult      = 1 + Math.max(0, monkRank - 1) * 0.25
   const boostedStats: StatMap = {}
-
   for (let i = 0; i < STAT_KEYS.length; i++) {
     const k = STAT_KEYS[i]
     const v = stats[k]
@@ -243,6 +255,8 @@ export function applyMonkGuildBonus(
   }
   return { stats: boostedStats, perkBonus: monkRank }
 }
+
+// ─── Stat modifier helpers ────────────────────────────────────────────────────
 
 function applyMod(value: number, mod: StatModifier): number {
   return mod.type === "multiplier" ? value * mod.value : value + mod.value
@@ -277,6 +291,19 @@ function applyModsWhere(
   }
 }
 
+// ─── Enchantment application ──────────────────────────────────────────────────
+
+type StatSelectorEntry = {
+  key:  'positiveStats' | 'negativeStats' | 'defenseStats'
+  pred: (v: number, k: StatKey) => boolean
+}
+
+const STAT_SELECTORS: StatSelectorEntry[] = [
+  { key: 'positiveStats', pred: (v)    => v > 0 },
+  { key: 'negativeStats', pred: (v)    => v < 0 },
+  { key: 'defenseStats',  pred: (v, k) => k.endsWith('Defense') && v > 0 },
+]
+
 export function applyEnchantmentsToSlot(
   baseStats:    StatMap,
   basePerks:    Record<string, number>,
@@ -294,19 +321,9 @@ export function applyEnchantmentsToSlot(
     if (!e) continue
     const es = e.stats
 
-    if (es.positiveStats) {
-      const mods = normalizeModifiers(es.positiveStats as StatModifier | StatModifier[])
-      applyModsWhere(mods, baseStats, mult, add, v => v > 0)
-    }
-
-    if (es.negativeStats) {
-      const mods = normalizeModifiers(es.negativeStats as StatModifier | StatModifier[])
-      applyModsWhere(mods, baseStats, mult, add, v => v < 0)
-    }
-
-    if (es.defenseStats) {
-      const mods = normalizeModifiers(es.defenseStats as StatModifier | StatModifier[])
-      applyModsWhere(mods, baseStats, mult, add, (v, key) => key.endsWith('Defense') && v > 0)
+    for (const { key, pred } of STAT_SELECTORS) {
+      if (!es[key]) continue
+      applyModsWhere(normalizeModifiers(es[key] as StatModifier | StatModifier[]), baseStats, mult, add, pred)
     }
 
     if (es.perks) {
@@ -320,7 +337,7 @@ export function applyEnchantmentsToSlot(
     }
 
     for (let j = 0; j < STAT_KEYS.length; j++) {
-      const key = STAT_KEYS[j]
+      const key      = STAT_KEYS[j]
       const modifier = es[key]
       if (!modifier) continue
       applyModsToKey(key, normalizeModifiers(modifier as StatModifier | StatModifier[]), mult, add)
@@ -344,6 +361,8 @@ export function applyEnchantmentsToSlot(
   return { stats, perks }
 }
 
+// ─── Perk effectiveness ───────────────────────────────────────────────────────
+
 const ENCHANT_EFFECT_PERK_NAMES = new Set(
   (enchantmentsRaw as Enchantment[]).flatMap(e => (e.effects ?? []).map(ef => ef.name))
 )
@@ -355,9 +374,9 @@ const PERK_EFFECTIVENESS_EXEMPT = new Set([
 ])
 
 export function applyPerkEffectiveness(
-  perks: Record<string, number>,
+  perks:                   Record<string, number>,
   perkEffectivenessStacks: number,
-  cursedStacks: number,
+  cursedStacks:            number,
 ): Record<string, number> {
   if (perkEffectivenessStacks <= 0 && cursedStacks <= 0) return perks
   const multiplier = (1 + perkEffectivenessStacks * 0.1) * (1 + cursedStacks * 0.1)
@@ -369,6 +388,8 @@ export function applyPerkEffectiveness(
   }
   return result
 }
+
+// ─── Infusion ─────────────────────────────────────────────────────────────────
 
 export function applyInfusion(
   baseStats: StatMap,
@@ -382,6 +403,8 @@ export function applyInfusion(
   }
   return { stats, perks: { ...basePerks } }
 }
+
+// ─── Shrine ───────────────────────────────────────────────────────────────────
 
 export const SHRINE_MULTIPLIERS: Record<number, number> = {
   1: 3.0, 2: 1.7, 3: 1.4, 4: 1.1, 5: 1.0,
@@ -401,7 +424,6 @@ export function applyShrineToStats(stats: StatMap | undefined | null, tier: numb
   if (!stats) return {}
   const mult   = SHRINE_MULTIPLIERS[tier] ?? 1.0
   const result: StatMap = {}
-
   for (let i = 0; i < STAT_KEYS.length; i++) {
     const k = STAT_KEYS[i]
     const v = stats[k]
@@ -410,6 +432,8 @@ export function applyShrineToStats(stats: StatMap | undefined | null, tier: numb
   }
   return result
 }
+
+// ─── Hybrid check ─────────────────────────────────────────────────────────────
 
 export function checkHybrid(
   part1: { [key: string]: any } | undefined,
@@ -440,48 +464,64 @@ export function checkHybrid(
   return true
 }
 
+// ─── Weapon type resolution ───────────────────────────────────────────────────
+
 const WEAPON_TYPE_MAP: Record<string, Record<string, string>> = {
-  "Medium Handle": { "Small Blade": "Dagger",         "Medium Blade": "1-Handed Sword",  "Heavy Blade": "Unbalanced Sword", "Hammer Head": "Mallet" },
-  "Long Handle":   { "Small Blade": "Dagger",         "Medium Blade": "2-Handed Sword",  "Heavy Blade": "Greatsword",       "Hammer Head": "Mallet" },
-  "Pole":          { "Small Blade": "Spear",           "Medium Blade": "Spear",           "Heavy Blade": "Great Spear",      "Hammer Head": "War Hammer" },
+  "Medium Handle": { "Small Blade": "Dagger",  "Medium Blade": "1-Handed Sword",  "Heavy Blade": "Unbalanced Sword", "Hammer Head": "Mallet" },
+  "Long Handle":   { "Small Blade": "Dagger",  "Medium Blade": "2-Handed Sword",  "Heavy Blade": "Greatsword",       "Hammer Head": "Mallet" },
+  "Pole":          { "Small Blade": "Spear",   "Medium Blade": "Spear",           "Heavy Blade": "Great Spear",      "Hammer Head": "War Hammer" },
 }
 
 export function getWeaponType(handleType: string, bladeType: string): string {
   return WEAPON_TYPE_MAP[handleType]?.[bladeType] ?? ""
 }
 
+type WeaponOverride = {
+  perk:         string
+  bladeTypes?:  string[]
+  handleTypes?: string[]
+  hammerOnly?:  boolean
+  result:       string
+}
+
+// Ordered: first match wins.
+const WEAPON_OVERRIDES: WeaponOverride[] = [
+  { perk: "Kama Blades",    bladeTypes:  ["Small Blade"],                    result: "Dual Kamas" },
+  { perk: "Kama Blades",    bladeTypes:  ["Spear", "Great Spear"],           result: "Scythe" },
+  { perk: "Artillery Mage", hammerOnly:  true,                               result: "Artillery Mage" },
+  { perk: "Stratos Winds",  hammerOnly:  true,                               result: "Stratos Winds" },
+  { perk: "Storm Caster",   hammerOnly:  true,                               result: "Storm Caster" },
+  { perk: "Virulent Core",  hammerOnly:  true,                               result: "Virulent Core" },
+  { perk: "Dual Wielding",  bladeTypes:  ["Small Blade"],                    result: "Dual Wielding Daggers" },
+  { perk: "Dual Wielding",  bladeTypes:  ["Medium Blade"],                   result: "Dual Swords" },
+  { perk: "Dual Wielding",  bladeTypes:  ["Heavy Blade"],                    result: "Dual Unbalanced Swords" },
+  { perk: "Dual Wielding",  bladeTypes:  ["Hammer Head"],                    result: "Dual Mallets" },
+  { perk: "Lance",          handleTypes: ["Long Handle", "Medium Handle"],   result: "Lance" },
+  { perk: "Duelist Stance", bladeTypes:  ["Medium Blade"],                   result: "Rapier" },
+  { perk: "Saw Stance",     bladeTypes:  ["Medium Blade"],                   result: "Chainsaw" },
+]
+
 export function resolveWeaponType(
   handleType: string,
   bladeType:  string,
-  perks: Record<string, number>,
+  perks:      Record<string, number>,
 ): { base: string; final: string; modifier: string } {
   const base = getWeaponType(handleType, bladeType)
   if (!base) return { base: "", final: "", modifier: "" }
 
-  if ((perks["Kama Blades"] ?? 0) > 0) {
-    if (base === "Dagger") return { base, final: "Dual Kamas", modifier: "Kama Blades" }
-    if (base === "Spear")  return { base, final: "Scythe",     modifier: "Kama Blades" }
+  for (const o of WEAPON_OVERRIDES) {
+    if ((perks[o.perk] ?? 0) <= 0)                                    continue
+    if (o.hammerOnly   && bladeType  !== "Hammer Head")               continue
+    if (o.bladeTypes   && !o.bladeTypes.includes(bladeType)
+                       && !o.bladeTypes.includes(base))               continue
+    if (o.handleTypes  && !o.handleTypes.includes(handleType))        continue
+    return { base, final: o.result, modifier: o.perk }
   }
-  if (bladeType === "Hammer Head") {
-    if ((perks["Artillery Mage"] ?? 0) > 0) return { base, final: "Artillery Mage",  modifier: "Artillery Mage" }
-    if ((perks["Stratos Winds"]  ?? 0) > 0) return { base, final: "Stratos Winds",   modifier: "Stratos Winds" }
-    if ((perks["Storm Caster"]   ?? 0) > 0) return { base, final: "Storm Caster",    modifier: "Storm Caster" }
-    if ((perks["Virulent Core"]  ?? 0) > 0) return { base, final: "Virulent Core",   modifier: "Virulent Core" }
-  }
-  if ((perks["Dual Wielding"] ?? 0) > 0) {
-    if (bladeType === "Small Blade")  return { base, final: "Dual Wielding Daggers",  modifier: "Dual Wielding" }
-    if (bladeType === "Medium Blade") return { base, final: "Dual Swords",            modifier: "Dual Wielding" }
-    if (bladeType === "Heavy Blade")  return { base, final: "Dual Unbalanced Swords", modifier: "Dual Wielding" }
-    if (bladeType === "Hammer Head")  return { base, final: "Dual Mallets",           modifier: "Dual Wielding" }
-  }
-  if ((perks["Lance"] ?? 0) > 0 && (handleType === "Long Handle" || handleType === "Medium Handle")) {
-    return { base, final: "Lance", modifier: "Lance" }
-  }
-  if ((perks["Duelist Stance"] ?? 0) > 0 && bladeType === "Medium Blade") return { base, final: "Rapier",   modifier: "Duelist Stance" }
-  if ((perks["Saw Stance"]     ?? 0) > 0 && bladeType === "Medium Blade") return { base, final: "Chainsaw", modifier: "Saw Stance" }
 
   return { base, final: base, modifier: "" }
 }
+
+// ─── Monk weapon type resolution ──────────────────────────────────────────────
 
 const MONK_WEAPON_TYPE_MAP: Record<string, Record<string, string>> = {
   "Monk Essence": { "Gloves": "Fists", "Shield": "Shield" },
@@ -495,56 +535,58 @@ export function getMonkWeaponType(essenceType: string, gloveType: string): strin
 export function resolveMonkWeaponType(
   essenceType: string,
   gloveType:   string,
-  perks: Record<string, number>,
+  perks:       Record<string, number>,
 ): { base: string; final: string; modifier: string } {
   const base = getMonkWeaponType(essenceType, gloveType)
-  if ((perks["Saw Heart"]        ?? 0) > 0 && base === "Fists") return { base, final: "Chain Fists", modifier: "Saw Heart" }
+  if ((perks["Saw Heart"]         ?? 0) > 0 && base === "Fists") return { base, final: "Chain Fists", modifier: "Saw Heart" }
   if ((perks["Locked And Loaded"] ?? 0) > 0 && base === "Fists") return { base, final: "Fists + Gun", modifier: "Locked And Loaded" }
   return { base, final: base, modifier: "" }
 }
 
+// ─── Weapon calculation ───────────────────────────────────────────────────────
+
 export interface WeaponResult {
-  part1DamageTypes: Record<string, number>
-  part2DamageTypes: Record<string, number>
-  part1Name: string
-  part2Name: string
-  part1TypeLabel: string
-  part2TypeLabel: string
-  part1Type: string
-  part2Type: string
-  isMonk: boolean
-  weaponType: string
-  finalWeaponType: string
-  weaponModifier: string
-  tier: number
-  stats: StatMap
-  perks: Record<string, number>
-  attackSpeed: number
-  damageTypes: Record<string, number>
-  part1RawScalings: Record<string, number>
-  part2RawScalings: Record<string, number>
-  part1RawStats: StatMap
-  part2RawStats: StatMap
-  part1FinalScalings: Record<string, number>
-  part2FinalScalings: Record<string, number>
-  part1FinalStats: StatMap
-  part2FinalStats: StatMap
-  scalings: Record<string, number>
-  shrineActive: boolean
-  hybridActive: boolean
-  bladeName: string
-  handleName: string
-  bladeType: string
-  handleType: string
-  bladeRawScalings: Record<string, number>
-  handleRawScalings: Record<string, number>
-  bladeRawStats: StatMap
-  handleRawStats: StatMap
-  bladeFinalScalings: Record<string, number>
+  part1DamageTypes:    Record<string, number>
+  part2DamageTypes:    Record<string, number>
+  part1Name:           string
+  part2Name:           string
+  part1TypeLabel:      string
+  part2TypeLabel:      string
+  part1Type:           string
+  part2Type:           string
+  isMonk:              boolean
+  weaponType:          string
+  finalWeaponType:     string
+  weaponModifier:      string
+  tier:                number
+  stats:               StatMap
+  perks:               Record<string, number>
+  attackSpeed:         number
+  damageTypes:         Record<string, number>
+  part1RawScalings:    Record<string, number>
+  part2RawScalings:    Record<string, number>
+  part1RawStats:       StatMap
+  part2RawStats:       StatMap
+  part1FinalScalings:  Record<string, number>
+  part2FinalScalings:  Record<string, number>
+  part1FinalStats:     StatMap
+  part2FinalStats:     StatMap
+  scalings:            Record<string, number>
+  shrineActive:        boolean
+  hybridActive:        boolean
+  bladeName:           string
+  handleName:          string
+  bladeType:           string
+  handleType:          string
+  bladeRawScalings:    Record<string, number>
+  handleRawScalings:   Record<string, number>
+  bladeRawStats:       StatMap
+  handleRawStats:      StatMap
+  bladeFinalScalings:  Record<string, number>
   handleFinalScalings: Record<string, number>
-  bladeFinalStats: StatMap
-  handleFinalStats: StatMap
-  baseScalings: Record<string, number>
+  bladeFinalStats:     StatMap
+  handleFinalStats:    StatMap
+  baseScalings:        Record<string, number>
 }
 
 function extractDamageAndScalings(part: any) {
@@ -573,6 +615,181 @@ function extractDamageAndScalings(part: any) {
   return { damageTypes, rawScalings, rawStats }
 }
 
+// Sub-function 1: collect perks and attack speed from both weapon parts
+function mergePartPerks(
+  part1: any,
+  part2: any,
+): { perks: Record<string, number>; attackSpeed: number } {
+  const perks:      Record<string, number> = {}
+  const speedParts: number[]               = []
+
+  const processPart = (part: any) => {
+    if (!part) return
+    if (part.attackSpeed != null) speedParts.push(part.attackSpeed)
+    if (part.perkName) perks[part.perkName] = (perks[part.perkName] ?? 0) + (part.perkAmount ?? 1)
+    if (part.perks) {
+      for (let i = 0; i < part.perks.length; i++) {
+        perks[part.perks[i].name] = (perks[part.perks[i].name] ?? 0) + part.perks[i].amount
+      }
+    }
+  }
+  processPart(part1)
+  processPart(part2)
+
+  let attackSpeed = 1.0
+  if (speedParts.length > 0) {
+    let sum = 0
+    for (let i = 0; i < speedParts.length; i++) sum += speedParts[i]
+    attackSpeed = sum / speedParts.length
+  }
+
+  return { perks, attackSpeed }
+}
+
+// Sub-function 2: apply shrine, merge scalings + stats, detect hybrid
+function mergeScalingsAndStats(
+  p1Data:      ReturnType<typeof extractDamageAndScalings>,
+  p2Data:      ReturnType<typeof extractDamageAndScalings>,
+  part1:       any,
+  part2:       any,
+  shrineActive: boolean,
+): {
+  hybridActive:       boolean
+  scalings:           Record<string, number>
+  baseScalings:       Record<string, number>
+  stats:              StatMap
+  part1FinalScalings: Record<string, number>
+  part2FinalScalings: Record<string, number>
+  part1FinalStats:    StatMap
+  part2FinalStats:    StatMap
+} {
+  const part1FinalScalings = shrineActive && part1 ? applyShrineToScalings(p1Data.rawScalings, part1.tier) : { ...p1Data.rawScalings }
+  const part2FinalScalings = shrineActive && part2 ? applyShrineToScalings(p2Data.rawScalings, part2.tier) : { ...p2Data.rawScalings }
+  const part1FinalStats    = shrineActive && part1 ? applyShrineToStats(part1.stats as StatMap, part1.tier) : { ...p1Data.rawStats }
+  const part2FinalStats    = shrineActive && part2 ? applyShrineToStats(part2.stats as StatMap, part2.tier) : { ...p2Data.rawStats }
+
+  const hybridActive = checkHybrid(part1 ?? undefined, part2 ?? undefined)
+
+  const baseScalings: Record<string, number> = {}
+  for (const k in part1FinalScalings) {
+    if (Object.prototype.hasOwnProperty.call(part1FinalScalings, k)) baseScalings[k] = (baseScalings[k] ?? 0) + part1FinalScalings[k]
+  }
+  for (const k in part2FinalScalings) {
+    if (Object.prototype.hasOwnProperty.call(part2FinalScalings, k)) baseScalings[k] = (baseScalings[k] ?? 0) + part2FinalScalings[k]
+  }
+
+  const scalings: Record<string, number> = { ...baseScalings }
+  if (hybridActive) {
+    for (const k in scalings) {
+      if (Object.prototype.hasOwnProperty.call(scalings, k)) scalings[k] *= 1.5
+    }
+  }
+
+  const combinedStats: StatMap = {}
+  const mergeInto = (s: StatMap) => {
+    for (let i = 0; i < STAT_KEYS.length; i++) {
+      const k = STAT_KEYS[i]
+      if (s[k] != null) combinedStats[k] = (combinedStats[k] ?? 0) + (s[k] ?? 0)
+    }
+  }
+  mergeInto(part1FinalStats)
+  mergeInto(part2FinalStats)
+
+  const stats: StatMap = {}
+  for (let i = 0; i < STAT_KEYS.length; i++) {
+    const k = STAT_KEYS[i]
+    if (combinedStats[k] != null) {
+      const rounded = round2(combinedStats[k] ?? 0)
+      if (rounded !== 0) stats[k] = rounded
+    }
+  }
+
+  return { hybridActive, scalings, baseScalings, stats, part1FinalScalings, part2FinalScalings, part1FinalStats, part2FinalStats }
+}
+
+// Sub-function 3: assemble the WeaponResult from pre-computed pieces
+function buildWeaponResult(opts: {
+  part1:          any
+  part2:          any
+  part1TypeLabel: string
+  part2TypeLabel: string
+  part1TypeKey:   string
+  part2TypeKey:   string
+  isMonk:         boolean
+  shrineActive:   boolean
+  p1Data:         ReturnType<typeof extractDamageAndScalings>
+  p2Data:         ReturnType<typeof extractDamageAndScalings>
+  perks:          Record<string, number>
+  attackSpeed:    number
+  merged:         ReturnType<typeof mergeScalingsAndStats>
+}): WeaponResult {
+  const {
+    part1, part2, part1TypeLabel, part2TypeLabel, part1TypeKey, part2TypeKey,
+    isMonk, shrineActive, p1Data, p2Data, perks, attackSpeed, merged,
+  } = opts
+
+  const damageTypes: Record<string, number> = { ...p1Data.damageTypes }
+  for (const k in p2Data.damageTypes) {
+    if (Object.prototype.hasOwnProperty.call(p2Data.damageTypes, k)) {
+      damageTypes[k] = (damageTypes[k] ?? 0) + p2Data.damageTypes[k]
+    }
+  }
+
+  const p1Type = (part1 as any)?.[part1TypeKey] ?? ""
+  const p2Type = (part2 as any)?.[part2TypeKey] ?? ""
+  let weaponType = "", finalWeaponType = "", weaponModifier = ""
+  if (p1Type && p2Type) {
+    const resolved  = isMonk ? resolveMonkWeaponType(p2Type, p1Type, perks) : resolveWeaponType(p2Type, p1Type, perks)
+    weaponType      = resolved.base
+    finalWeaponType = resolved.final
+    weaponModifier  = resolved.modifier
+  }
+
+  return {
+    part1DamageTypes:    p1Data.damageTypes,
+    part2DamageTypes:    p2Data.damageTypes,
+    part1Name:           part1?.name ?? "",
+    part2Name:           part2?.name ?? "",
+    part1TypeLabel,
+    part2TypeLabel,
+    part1Type:           p1Type,
+    part2Type:           p2Type,
+    isMonk,
+    weaponType,
+    finalWeaponType,
+    weaponModifier,
+    tier:                Math.max(part1?.tier ?? 1, part2?.tier ?? 1),
+    stats:               merged.stats,
+    perks,
+    attackSpeed:         round2(attackSpeed),
+    damageTypes,
+    part1RawScalings:    p1Data.rawScalings,
+    part2RawScalings:    p2Data.rawScalings,
+    part1RawStats:       p1Data.rawStats,
+    part2RawStats:       p2Data.rawStats,
+    part1FinalScalings:  merged.part1FinalScalings,
+    part2FinalScalings:  merged.part2FinalScalings,
+    part1FinalStats:     merged.part1FinalStats,
+    part2FinalStats:     merged.part2FinalStats,
+    scalings:            merged.scalings,
+    shrineActive,
+    hybridActive:        merged.hybridActive,
+    bladeName:           part1?.name ?? "",
+    handleName:          part2?.name ?? "",
+    bladeType:           p1Type,
+    handleType:          p2Type,
+    bladeRawScalings:    p1Data.rawScalings,
+    handleRawScalings:   p2Data.rawScalings,
+    bladeRawStats:       p1Data.rawStats,
+    handleRawStats:      p2Data.rawStats,
+    bladeFinalScalings:  merged.part1FinalScalings,
+    handleFinalScalings: merged.part2FinalScalings,
+    bladeFinalStats:     merged.part1FinalStats,
+    handleFinalStats:    merged.part2FinalStats,
+    baseScalings:        merged.baseScalings,
+  }
+}
+
 function calcWeaponGeneric(
   part1:          WeaponBlade | MonkGlove   | null,
   part2:          WeaponHandle | MonkEssence | null,
@@ -585,134 +802,15 @@ function calcWeaponGeneric(
 ): WeaponResult | null {
   if (!part1 && !part2) return null
 
-  const perks:      Record<string, number> = {}
-  const speedParts: number[]               = []
+  const p1Data              = extractDamageAndScalings(part1)
+  const p2Data              = extractDamageAndScalings(part2)
+  const { perks, attackSpeed } = mergePartPerks(part1, part2)
+  const merged              = mergeScalingsAndStats(p1Data, p2Data, part1, part2, shrineActive)
 
-  const processPartPerks = (part: any) => {
-    if (!part) return
-    if (part.attackSpeed != null) speedParts.push(part.attackSpeed)
-    if (part.perkName) perks[part.perkName] = (perks[part.perkName] ?? 0) + (part.perkAmount ?? 1)
-    if (part.perks) {
-      for (let i = 0; i < part.perks.length; i++) {
-        perks[part.perks[i].name] = (perks[part.perks[i].name] ?? 0) + part.perks[i].amount
-      }
-    }
-  }
-  processPartPerks(part1)
-  processPartPerks(part2)
-
-  let attackSpeed = 1.0
-  if (speedParts.length > 0) {
-    let sum = 0
-    for (let i = 0; i < speedParts.length; i++) sum += speedParts[i]
-    attackSpeed = sum / speedParts.length
-  }
-
-  const p1Data = extractDamageAndScalings(part1)
-  const p2Data = extractDamageAndScalings(part2)
-
-  const damageTypes: Record<string, number> = { ...p1Data.damageTypes }
-  for (const k in p2Data.damageTypes) {
-    if (Object.prototype.hasOwnProperty.call(p2Data.damageTypes, k)) {
-      damageTypes[k] = (damageTypes[k] ?? 0) + p2Data.damageTypes[k]
-    }
-  }
-
-  const part1FinalScalings = shrineActive && part1 ? applyShrineToScalings(p1Data.rawScalings, part1.tier) : { ...p1Data.rawScalings }
-  const part2FinalScalings = shrineActive && part2 ? applyShrineToScalings(p2Data.rawScalings, part2.tier) : { ...p2Data.rawScalings }
-
-  const part1FinalStats = shrineActive && part1 ? applyShrineToStats(part1.stats as StatMap, part1.tier) : { ...p1Data.rawStats }
-  const part2FinalStats = shrineActive && part2 ? applyShrineToStats(part2.stats as StatMap, part2.tier) : { ...p2Data.rawStats }
-
-  const hybridActive     = checkHybrid(part1 ?? undefined, part2 ?? undefined)
-  const mergedScalings: Record<string, number> = {}
-  for (const k in part1FinalScalings) {
-    if (Object.prototype.hasOwnProperty.call(part1FinalScalings, k)) mergedScalings[k] = (mergedScalings[k] ?? 0) + part1FinalScalings[k]
-  }
-  for (const k in part2FinalScalings) {
-    if (Object.prototype.hasOwnProperty.call(part2FinalScalings, k)) mergedScalings[k] = (mergedScalings[k] ?? 0) + part2FinalScalings[k]
-  }
-
-  const scalings: Record<string, number> = { ...mergedScalings }
-  if (hybridActive) {
-    for (const k in scalings) {
-      if (Object.prototype.hasOwnProperty.call(scalings, k)) scalings[k] *= 1.5
-    }
-  }
-
-  const combinedStats: StatMap = {}
-  const mergeStats = (s: StatMap) => {
-    for (let i = 0; i < STAT_KEYS.length; i++) {
-      const k = STAT_KEYS[i]
-      if (s[k] != null) combinedStats[k] = (combinedStats[k] ?? 0) + (s[k] ?? 0)
-    }
-  }
-  mergeStats(part1FinalStats)
-  mergeStats(part2FinalStats)
-
-  const finalStats: StatMap = {}
-  for (let i = 0; i < STAT_KEYS.length; i++) {
-    const k       = STAT_KEYS[i]
-    if (combinedStats[k] != null) {
-      const rounded = round2(combinedStats[k] ?? 0)
-      if (rounded !== 0) finalStats[k] = rounded
-    }
-  }
-
-  const p1Type = (part1 as any)?.[part1TypeKey] ?? ""
-  const p2Type = (part2 as any)?.[part2TypeKey] ?? ""
-  let weaponType = "", finalWeaponType = "", weaponModifier = ""
-
-  if (p1Type && p2Type) {
-    const resolved  = isMonk ? resolveMonkWeaponType(p2Type, p1Type, perks) : resolveWeaponType(p2Type, p1Type, perks)
-    weaponType      = resolved.base
-    finalWeaponType = resolved.final
-    weaponModifier  = resolved.modifier
-  }
-
-  return {
-    part1DamageTypes: p1Data.damageTypes,
-    part2DamageTypes: p2Data.damageTypes,
-    part1Name:        part1?.name ?? "",
-    part2Name:        part2?.name ?? "",
-    part1TypeLabel,
-    part2TypeLabel,
-    part1Type: p1Type,
-    part2Type: p2Type,
-    isMonk,
-    weaponType,
-    finalWeaponType,
-    weaponModifier,
-    tier:        Math.max(part1?.tier ?? 1, part2?.tier ?? 1),
-    stats:       finalStats,
-    perks,
-    attackSpeed: round2(attackSpeed),
-    damageTypes,
-    part1RawScalings:   p1Data.rawScalings,
-    part2RawScalings:   p2Data.rawScalings,
-    part1RawStats:      p1Data.rawStats,
-    part2RawStats:      p2Data.rawStats,
-    part1FinalScalings,
-    part2FinalScalings,
-    part1FinalStats,
-    part2FinalStats,
-    scalings,
-    shrineActive,
-    hybridActive,
-    bladeName:          part1?.name ?? "",
-    handleName:         part2?.name ?? "",
-    bladeType:          p1Type,
-    handleType:         p2Type,
-    bladeRawScalings:   p1Data.rawScalings,
-    handleRawScalings:  p2Data.rawScalings,
-    bladeRawStats:      p1Data.rawStats,
-    handleRawStats:     p2Data.rawStats,
-    bladeFinalScalings: part1FinalScalings,
-    handleFinalScalings: part2FinalScalings,
-    bladeFinalStats:    part1FinalStats,
-    handleFinalStats:   part2FinalStats,
-    baseScalings:       mergedScalings,
-  }
+  return buildWeaponResult({
+    part1, part2, part1TypeLabel, part2TypeLabel, part1TypeKey, part2TypeKey,
+    isMonk, shrineActive, p1Data, p2Data, perks, attackSpeed, merged,
+  })
 }
 
 export function calcWeapon(bladeName: string, handleName: string, shrineActive = false): WeaponResult | null {
@@ -747,15 +845,17 @@ export function calcMonkWeapon(gloveName: string, essenceName: string, shrineAct
   return result
 }
 
+// ─── CDR ──────────────────────────────────────────────────────────────────────
+
 export interface CDRStep   { source: string; pct: number; multiplier: number; isMultiply?: boolean }
 export interface CDRResult { runeCDR: number; waCDR: number; runeSetCD?: number; runeBreakdown: CDRStep[]; waBreakdown: CDRStep[] }
 
 export function calcCDR(
-  perks: Record<string, number>,
+  perks:                  Record<string, number>,
   raceCooldownModifiers?: Record<string, number>,
-  activeRuneName?:  string,
-  activeRaceName?:  string,
-  emotionalState?: 'buffs' | 'debuffs' | 'both',
+  activeRuneName?:        string,
+  activeRaceName?:        string,
+  emotionalState?:        'buffs' | 'debuffs' | 'both',
 ): CDRResult {
   const runeSteps: CDRStep[] = []
   const waSteps:   CDRStep[] = []
@@ -828,10 +928,74 @@ export function calcLevelDamageMultiplier(level: number): number {
   return Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 1000) / 1000
 }
 
+// ─── Build calculation ────────────────────────────────────────────────────────
+
 export interface BuildResult { stats: StatMap; perks: Record<string, number>; cdr: CDRResult; boosts: BoostResult; crit: CritResult }
 
-export function calcBuild(state: BuildState): BuildResult {
-  const stats: StatMap               = {}
+// Phase 1a: monk weapon slots
+function accumulateMonkWeapon(
+  state:    BuildState,
+  perks:    Record<string, number>,
+  addStats: (s: StatMap | undefined | null) => void,
+  addPerks: (list: Array<{ name: string; amount: number }> | undefined) => void,
+): void {
+  const glove = getGlove(state.monkGlove)
+  if (glove) {
+    const monkPerkBonus  = Math.max(0, state.guildRank - 1)
+    const monkPct        = monkPerkBonus * 0.25
+    const gloveStats:    StatMap = {}
+    const baseGloveStats = glove.stats as StatMap
+
+    for (let i = 0; i < STAT_KEYS.length; i++) {
+      const k = STAT_KEYS[i]
+      const v = baseGloveStats[k]
+      if (v == null) continue
+      if (v <= 0) { gloveStats[k] = v; continue }
+      const shrineMult = state.shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
+      gloveStats[k] = round2(v * shrineMult + v * monkPct)
+    }
+    addStats(gloveStats)
+    if (glove.perkName) perks[glove.perkName] = (perks[glove.perkName] ?? 0) + (glove.perkAmount ?? 1)
+    if ((glove as any).perks) {
+      const gp = (glove as any).perks
+      for (let i = 0; i < gp.length; i++) {
+        perks[gp[i].name] = (perks[gp[i].name] ?? 0) + gp[i].amount + (i === 0 ? Math.max(0, state.guildRank - 1) : 0)
+      }
+    }
+  }
+
+  const essence = getEssence(state.monkEssence)
+  if (essence) {
+    addStats(state.shrineActive ? applyShrineToStats(essence.stats as StatMap, essence.tier) : essence.stats as StatMap)
+    if (essence.perkName) perks[essence.perkName] = (perks[essence.perkName] ?? 0) + (essence.perkAmount ?? 1)
+    if ((essence as any).perks) addPerks((essence as any).perks)
+  }
+}
+
+// Phase 1b: standard weapon slots
+function accumulateStandardWeapon(
+  state:    BuildState,
+  perks:    Record<string, number>,
+  addStats: (s: StatMap | undefined | null) => void,
+  addPerks: (list: Array<{ name: string; amount: number }> | undefined) => void,
+): void {
+  const blade = getBlade(state.weaponBlade)
+  if (blade) {
+    addStats(state.shrineActive ? applyShrineToStats(blade.stats as StatMap, blade.tier) : blade.stats as StatMap)
+    if (blade.perkName) perks[blade.perkName] = (perks[blade.perkName] ?? 0) + (blade.perkAmount ?? 1)
+    if ((blade as any).perks) addPerks((blade as any).perks)
+  }
+  const handle = getHandle(state.weaponHandle)
+  if (handle) {
+    addStats(state.shrineActive ? applyShrineToStats(handle.stats as StatMap, handle.tier) : handle.stats as StatMap)
+    if (handle.perkName) perks[handle.perkName] = (perks[handle.perkName] ?? 0) + (handle.perkAmount ?? 1)
+    if ((handle as any).perks) addPerks((handle as any).perks)
+  }
+}
+
+// Phase 1: accumulate raw stats + perks from all equipment
+function accumulateEquipment(state: BuildState): { stats: StatMap; perks: Record<string, number> } {
+  const stats: StatMap                = {}
   const perks: Record<string, number> = {}
 
   const addStats = (s: StatMap | undefined | null) => {
@@ -858,18 +1022,14 @@ export function calcBuild(state: BuildState): BuildResult {
   const guild = getGuild(state.guild)
   if (guild) {
     const rank = getGuildRank(guild, state.guildRank)
-    if (rank) {
-      addStats(rank.stats)
-      addPerks(rank.perks)
-    }
+    if (rank) { addStats(rank.stats); addPerks(rank.perks) }
   }
 
   const armorSlots: Array<[string, ArmorPart["type"], EnchantSlot, 'upgradeHelmet' | 'upgradeChestplate' | 'upgradeLeggings']> = [
-    [state.helmet,      "Helmet",      "helmet",      "upgradeHelmet"],
-    [state.chestplate,  "Chestplate",  "chestplate",  "upgradeChestplate"],
-    [state.leggings,    "Leggings",    "leggings",    "upgradeLeggings"],
+    [state.helmet,     "Helmet",     "helmet",     "upgradeHelmet"],
+    [state.chestplate, "Chestplate", "chestplate", "upgradeChestplate"],
+    [state.leggings,   "Leggings",   "leggings",   "upgradeLeggings"],
   ]
-
   for (let i = 0; i < armorSlots.length; i++) {
     const [armorName, partType, enchSlot, upgradeKey] = armorSlots[i]
     if (!armorName) continue
@@ -911,49 +1071,9 @@ export function calcBuild(state: BuildState): BuildResult {
   }
 
   if (isMonkGuild(state.guild)) {
-    const glove = getGlove(state.monkGlove)
-    if (glove) {
-      const monkPerkBonus  = Math.max(0, state.guildRank - 1)
-      const monkPct        = monkPerkBonus * 0.25
-      const gloveStats:    StatMap = {}
-      const baseGloveStats = glove.stats as StatMap
-
-      for (let i = 0; i < STAT_KEYS.length; i++) {
-        const k = STAT_KEYS[i]
-        const v = baseGloveStats[k]
-        if (v == null) continue
-        if (v <= 0) { gloveStats[k] = v; continue }
-        const shrineMult = state.shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
-        gloveStats[k] = round2(v * shrineMult + v * monkPct)
-      }
-      addStats(gloveStats)
-      if (glove.perkName) perks[glove.perkName] = (perks[glove.perkName] ?? 0) + (glove.perkAmount ?? 1)
-      if ((glove as any).perks) {
-        const gp = (glove as any).perks
-        for (let i = 0; i < gp.length; i++) {
-          perks[gp[i].name] = (perks[gp[i].name] ?? 0) + gp[i].amount + (i === 0 ? monkPerkBonus : 0)
-        }
-      }
-    }
-    const essence = getEssence(state.monkEssence)
-    if (essence) {
-      addStats(state.shrineActive ? applyShrineToStats(essence.stats as StatMap, essence.tier) : essence.stats as StatMap)
-      if (essence.perkName) perks[essence.perkName] = (perks[essence.perkName] ?? 0) + (essence.perkAmount ?? 1)
-      if ((essence as any).perks) addPerks((essence as any).perks)
-    }
+    accumulateMonkWeapon(state, perks, addStats, addPerks)
   } else {
-    const blade = getBlade(state.weaponBlade)
-    if (blade) {
-      addStats(state.shrineActive ? applyShrineToStats(blade.stats as StatMap, blade.tier) : blade.stats as StatMap)
-      if (blade.perkName) perks[blade.perkName] = (perks[blade.perkName] ?? 0) + (blade.perkAmount ?? 1)
-      if ((blade as any).perks) addPerks((blade as any).perks)
-    }
-    const handle = getHandle(state.weaponHandle)
-    if (handle) {
-      addStats(state.shrineActive ? applyShrineToStats(handle.stats as StatMap, handle.tier) : handle.stats as StatMap)
-      if (handle.perkName) perks[handle.perkName] = (perks[handle.perkName] ?? 0) + (handle.perkAmount ?? 1)
-      if ((handle as any).perks) addPerks((handle as any).perks)
-    }
+    accumulateStandardWeapon(state, perks, addStats, addPerks)
   }
 
   const infusionSlots: Array<[string, ArmorPart["type"] | "Ring"]> = [
@@ -962,7 +1082,6 @@ export function calcBuild(state: BuildState): BuildResult {
     [state.infusionLeggings,   "Leggings"],
     [state.infusionRing,       "Ring"],
   ]
-
   for (let i = 0; i < infusionSlots.length; i++) {
     const [infName, infType] = infusionSlots[i]
     if (!infName) continue
@@ -974,24 +1093,20 @@ export function calcBuild(state: BuildState): BuildResult {
     }
   }
 
-  const finalStats: StatMap = {}
-  for (let i = 0; i < STAT_KEYS.length; i++) {
-    const k = STAT_KEYS[i]
-    if (stats[k] != null) {
-      const rounded = round2(stats[k] ?? 0)
-      if (rounded !== 0) finalStats[k] = rounded
-    }
-  }
+  return { stats, perks }
+}
 
+// Phase 2: round, apply perk effectiveness, add derived perks
+function finalizePerks(rawPerks: Record<string, number>): Record<string, number> {
   let finalPerks: Record<string, number> = {}
-  for (const k in perks) {
-    if (Object.prototype.hasOwnProperty.call(perks, k)) {
-      const rounded = round2(perks[k])
+  for (const k in rawPerks) {
+    if (Object.prototype.hasOwnProperty.call(rawPerks, k)) {
+      const rounded = round2(rawPerks[k])
       if (rounded !== 0) finalPerks[k] = rounded
     }
   }
 
-  const cursedStacks           = finalPerks["Cursed"] ?? 0
+  const cursedStacks            = finalPerks["Cursed"] ?? 0
   const perkEffectivenessStacks = finalPerks["Perk Effectiveness"] ?? 0
   if (perkEffectivenessStacks > 0 || cursedStacks > 0) {
     finalPerks = applyPerkEffectiveness(finalPerks, perkEffectivenessStacks, cursedStacks)
@@ -1001,6 +1116,24 @@ export function calcBuild(state: BuildState): BuildResult {
   }
 
   if (finalPerks["Buckler"] != null) finalPerks["Parry"] = (finalPerks["Parry"] ?? 0) + finalPerks["Buckler"]
+
+  return finalPerks
+}
+
+// Phase 3: CDR, boosts, crit from finalized stats + perks
+function deriveResults(
+  rawStats:   StatMap,
+  finalPerks: Record<string, number>,
+  state:      BuildState,
+): BuildResult {
+  const finalStats: StatMap = {}
+  for (let i = 0; i < STAT_KEYS.length; i++) {
+    const k = STAT_KEYS[i]
+    if (rawStats[k] != null) {
+      const rounded = round2(rawStats[k] ?? 0)
+      if (rounded !== 0) finalStats[k] = rounded
+    }
+  }
 
   const cdr = calcCDR(finalPerks, getRace(state.race)?.cooldownModifiers, state.rune || undefined, state.race || undefined, state.emotionalState)
 
@@ -1034,6 +1167,15 @@ export function calcBuild(state: BuildState): BuildResult {
   const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
+
+export function calcBuild(state: BuildState): BuildResult {
+  const { stats, perks } = accumulateEquipment(state)
+  const finalPerks       = finalizePerks(perks)
+  return deriveResults(stats, finalPerks, state)
+}
+
+// ─── Formatting ───────────────────────────────────────────────────────────────
+
 export function formatStat(key: string, value: number): string {
   const rounded   = round2(value)
   const abs       = Math.abs(rounded)
@@ -1045,6 +1187,8 @@ export function formatStat(key: string, value: number): string {
 export function formatLabel(key: string): string {
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, c => c.toUpperCase())
 }
+
+// ─── Enchant slot enforcement ─────────────────────────────────────────────────
 
 export function isExclusiveEnchant(e: Enchantment | undefined): boolean {
   return e?.stacking === "exclusive"
