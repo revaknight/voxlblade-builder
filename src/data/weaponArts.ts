@@ -383,7 +383,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     baseDamage: "35",
     damageType: "1 Fire",
     scaling: "Same as weapon",
-    extras: ["Burn Potency: 0.5", "Burn Duration: 5s"],
+    extras: ["Burn Potency: 0", "Burn Duration: 5s"],
     requirements: { fireScaling: 0.3 },
   },
   {

@@ -105,6 +105,13 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
   },
+  'Perfection': {
+    name: 'Perfection',
+    color: '#e5e7eb',
+    description: '+2% damage · +1% crit chance & crit damage · +3% speed per potency. Indefinite — lose perkAmount potency on unblocked hit.',
+    effectPerTenthPotency: 0.2,
+    effectUnit: 'flat',
+  },
 
   //Debuffs
   Slowness: {
@@ -250,6 +257,17 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]
 
 const PERK_BUFFS: Record<string, PerkBuffFactory> = {
+
+  'Perfection': (amount) => [
+    {
+      buffName: 'Perfection',
+      potency: amount * 0.5,
+      duration: 0,
+      condition: `On dodge/parry · +${amount}/dodge · max ${amount * 5} · −${amount} on unblocked hit`,
+      sourceName: 'Perfection',
+      sourceType: 'perk',
+    },
+  ],
 
   'Bounce Momentum': (amount) => [
     {
@@ -397,6 +415,29 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     },
   ],
 
+  'Bastion Bless': (amount) => {
+    const rate = 5 * amount
+    const condition = `~${rate}% chance on healing`
+    
+    return [
+      {
+        buffName: 'Regen',
+        potency: 0.5,
+        duration: 15,
+        condition,
+        sourceName: 'Bastion Bless',
+        sourceType: 'perk',
+      },
+      {
+        buffName: 'Reinforce',
+        potency: 0.5,
+        duration: 15,
+        condition,
+        sourceName: 'Bastion Bless',
+        sourceType: 'perk',
+      },
+    ]
+  },
 
 }
 
@@ -583,24 +624,34 @@ export function applyBuffPerkModifiers(
   activeRune?: string
 ): GrantedBuff[] {
   if (buffs.length === 0) return buffs
-  return buffs.map(buff => {
-    const modifiers = MODIFIERS_BY_BUFF[buff.buffName]
-    if (!modifiers) return buff
 
+  return buffs.map(buff => {
     let bonus = 0
     let durationMult = 1
-    for (const mod of modifiers) {
-      if (mod.runeFilter && mod.runeFilter !== buff.sourceName) continue
-      const stacks = perks[mod.label] ?? 0
-      if (stacks <= 0) continue
-      bonus += mod.potencyPerStack * stacks
-      if (mod.durationMultiplierFormula) {
-        durationMult *= mod.durationMultiplierFormula(stacks)
-      } else if (mod.durationMultiplierPerStack) {
-        durationMult *= 1 + (mod.durationMultiplierPerStack - 1) * stacks
+    const modifiers = MODIFIERS_BY_BUFF[buff.buffName]
+    if (modifiers) {
+      for (const mod of modifiers) {
+        if (mod.runeFilter && mod.runeFilter !== buff.sourceName) continue
+        const stacks = perks[mod.label] ?? 0
+        if (stacks <= 0) continue
+        bonus += mod.potencyPerStack * stacks
+        if (mod.durationMultiplierFormula) {
+          durationMult *= mod.durationMultiplierFormula(stacks)
+        } else if (mod.durationMultiplierPerStack) {
+          durationMult *= 1 + (mod.durationMultiplierPerStack - 1) * stacks
+        }
       }
     }
+    const bastionStacks = perks['Bastion Bless'] ?? 0
+    if (bastionStacks > 0 && !buff.isSelfDebuff) {
+      const def = BUFF_DEFS[buff.buffName]
+      if (def && !def.isDebuff && !def.isNeutral) {
+        bonus += 0.1 * bastionStacks * buff.potency
+      }
+    }
+
     if (bonus === 0 && durationMult === 1) return buff
+
     return {
       ...buff,
       duration: Math.round(buff.duration * durationMult),

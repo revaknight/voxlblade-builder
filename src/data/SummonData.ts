@@ -34,8 +34,8 @@ export const SUMMON_DEFS: SummonDef[] = [
     baseDmg: 20,
     dmgType: "holy",
     attacks: [
-      { label: "Radial Explosion", baseDmg: 20, dmgType: "holy", guardbreak: true },
-      { label: "Beam",             baseDmg: 15, dmgType: "holy" },
+      { label: "Radial Explosion", baseDmg: 20, dmgType: "Magic", guardbreak: true },
+      { label: "Beam",             baseDmg: 15, dmgType: "Magic" },
     ],
     notes: ["Radial explosion guardbreaks"],
   },
