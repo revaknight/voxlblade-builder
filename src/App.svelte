@@ -97,6 +97,28 @@ function weaponMatchesFilter(item: any): boolean {
 
   let activeAppTab: 'overview' | 'analyze' = 'overview'
 
+  // ── Undo clear ─────────────────────────────────────────────────────────────
+  import type { BuildState } from './lib/types'
+  let _previousBuild: BuildState | null = null
+  let _undoVisible = false
+  let _undoTimer: ReturnType<typeof setTimeout> | null = null
+
+  function handleClearBuild() {
+    _previousBuild = { ...$build, enchantments: JSON.parse(JSON.stringify($build.enchantments)) }
+    clearBuild()
+    _undoVisible = true
+    if (_undoTimer) clearTimeout(_undoTimer)
+    _undoTimer = setTimeout(() => { _undoVisible = false; _previousBuild = null }, 8000)
+  }
+
+  function handleUndo() {
+    if (!_previousBuild) return
+    build.set(_previousBuild)
+    _previousBuild = null
+    _undoVisible = false
+    if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null }
+  }
+
   function toggleUpgrade(key: 'upgradeHelmet'|'upgradeChestplate'|'upgradeLeggings'|'upgradeRing'|'upgradeRune') {
     build.update(s => ({...s, [key]: (s[key] + 1) % (UPGRADE_MAX + 1)}))
   }
@@ -2236,10 +2258,17 @@ $: _appWaAvgTotal = (() => {
       <div class="panel summary-panel">
         <div class="summary-title-row">
           <h3 class="panel-title summary-title">Build Summary</h3>
-          <button class="clear-all-btn" on:click={clearBuild} title="Clear all selections">
+          <LevelBar protection={$result.stats.protection ?? 0} />
+        </div>
+        <div class="summary-actions">
+          <button class="clear-all-btn" on:click={handleClearBuild} title="Clear all selections">
             ✕ Clear All
           </button>
-          <LevelBar protection={$result.stats.protection ?? 0} />
+          {#if _undoVisible}
+            <button class="undo-btn" on:click={handleUndo} title="Undo clear">
+              ↩ Undo
+            </button>
+          {/if}
         </div>
         <div class="summary-layout">
           <div class="summary-grid-wrap">
@@ -4439,7 +4468,34 @@ $: _appWaAvgTotal = (() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.undo-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(74,222,128,.3);
+  background: rgba(74,222,128,.08);
+  color: var(--accent);
+  font-size: .7rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  letter-spacing: .04em;
+  transition: all .15s;
+  flex-shrink: 0;
+  animation: fadeIn .2s ease;
+}
+.undo-btn:hover {
+  background: rgba(74,222,128,.2);
+  border-color: rgba(74,222,128,.55);
 }
 
 .app-tabs {
