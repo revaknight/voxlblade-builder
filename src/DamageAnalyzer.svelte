@@ -318,7 +318,7 @@
   $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
   $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
   $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
-  // ── Per-category combat multipliers ─────────────────────────────────────────
+
   function _categoryMult(type: BoostAttackType): number {
     return Math.round(
       activeEntries
@@ -332,6 +332,41 @@
   $: _waCombatMult   = _categoryMult('wa')
   $: _runeCombatMult = _categoryMult('rune')
   $: _perkCombatMult = _categoryMult('perk')
+
+  $: _hasSpecificBoosts = boosts.dmgEntries.some(e => !!(e as any).appliesTo)
+
+  $: _allUniversalChips = boosts.dmgEntries.filter(e => !(e as any).appliesTo)
+
+  $: _universalActiveMult = Math.round(
+    _allUniversalChips
+      .filter(e => !disabledBoosts.has(e.sourceName))
+      .reduce((acc, e) => acc * e.rawMultiplier, 1.0) * 10000
+  ) / 10000
+
+  $: _catGroups = (() => {
+    const CAT_DEFS: Array<{ key: BoostAttackType; label: string }> = [
+      { key: 'm1',   label: 'M1'   },
+      { key: 'm2',   label: 'M2'   },
+      { key: 'perk', label: 'Perk' },
+      { key: 'rune', label: 'Rune' },
+      { key: 'wa',   label: 'WA'   },
+    ]
+    type CatGroup = { labels: string[]; allChips: typeof boosts.dmgEntries; totalMult: number }
+    const groups: CatGroup[] = []
+
+    for (const { key, label } of CAT_DEFS) {
+      const allChips   = boosts.dmgEntries.filter(e => (e as any).appliesTo?.includes(key))
+      const activeChips = allChips.filter(e => !disabledBoosts.has(e.sourceName))
+      const specMult   = activeChips.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
+      const totalMult  = Math.round(_universalActiveMult * specMult * 10000) / 10000
+      const sigKey     = allChips.map(e => e.sourceName).join('|')
+
+      const existing = groups.find(g => g.allChips.map(e => e.sourceName).join('|') === sigKey)
+      if (existing) existing.labels.push(label)
+      else groups.push({ labels: [label], allChips, totalMult })
+    }
+    return groups
+  })()
 
   const SCALING_TO_BOOST: Record<string, string> = {
     physical:   'physicalBoost',
@@ -834,36 +869,92 @@
       </div>
     {/if}
 
-<div class="da-boost-row">
-    {#each boosts.dmgEntries as entry}
-      {@const disabled = disabledBoosts.has(entry.sourceName)}
-      <button
-        class="da-boost-chip"
-        class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
-        class:da-boost-chip--off={disabled}
-        title={entry.condition ?? ''}
-        on:click={() => toggleBoost(entry.sourceName)}
-      >
-        <span class="da-bc-name">
-          {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
+    {#if !_hasSpecificBoosts}
+      <div class="da-boost-row">
+        {#each boosts.dmgEntries as entry}
+          {@const disabled = disabledBoosts.has(entry.sourceName)}
+          <button
+            class="da-boost-chip"
+            class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
+            class:da-boost-chip--off={disabled}
+            title={entry.condition ?? ''}
+            on:click={() => toggleBoost(entry.sourceName)}
+          >
+            <span class="da-bc-name">
+              {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
+            </span>
+            <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(3)}`}</span>
+            {#if entry.condition}<span class="da-bc-cond">{entry.condition}</span>{/if}
+            <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
+          </button>
+          <span class="da-chain-op">×</span>
+        {/each}
+        <span class="da-chain-result" class:da-chain-result--dimmed={hasDisabledVisible}>
+          = ×{+activeFinalMultRounded.toFixed(4)}
+          {#if hasDisabledVisible}
+            <span class="da-chain-orig">/{+boosts.dmgFinalMultiplier.toFixed(4)}</span>
+          {/if}
         </span>
-        <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(3)}`}</span>
-        {#if entry.condition}
-          <span class="da-bc-cond">{entry.condition}</span>
-        {/if}
-        <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
-      </button>
-      <span class="da-chain-op">×</span>
-    {/each}
-    <span class="da-chain-result"
-      class:da-chain-result--dimmed={hasDisabledVisible}>
-      = ×{+activeFinalMultRounded.toFixed(4)}
-      {#if hasDisabledVisible}
-        <span class="da-chain-orig">/{+boosts.dmgFinalMultiplier.toFixed(4)}</span>
-      {/if}
-    </span>
-  </div>
+      </div>
 
+    {:else}
+      <div class="da-boost-split">
+        <div class="da-boost-universal">
+          {#each _allUniversalChips as entry}
+            {@const disabled = disabledBoosts.has(entry.sourceName)}
+            <button
+              class="da-boost-chip"
+              class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
+              class:da-boost-chip--off={disabled}
+              title={entry.condition ?? ''}
+              on:click={() => toggleBoost(entry.sourceName)}
+            >
+              <span class="da-bc-name">
+                {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
+              </span>
+              <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(3)}`}</span>
+              {#if entry.condition}<span class="da-bc-cond">{entry.condition}</span>{/if}
+              <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
+            </button>
+            <span class="da-chain-op">×</span>
+          {/each}
+        </div>
+        <div class="da-boost-cats">
+          {#each _catGroups as grp, gi}
+            <div class="da-boost-cat-row">
+              <span class="da-tree-line" class:da-tree-line--last={gi === _catGroups.length - 1}></span>
+              <div class="da-cat-labels">
+                {#each grp.labels as lbl}
+                  <span class="da-cat-lbl da-cat-lbl--{lbl.toLowerCase()}">{lbl}</span>
+                {/each}
+              </div>
+
+              {#if grp.allChips.length > 0}
+                {#each grp.allChips as entry}
+                  {@const disabled = disabledBoosts.has(entry.sourceName)}
+                  <button
+                    class="da-boost-chip da-boost-chip--sm"
+                    class:da-boost-chip--off={disabled}
+                    title={entry.condition ?? ''}
+                    on:click={() => toggleBoost(entry.sourceName)}
+                  >
+                    <span class="da-bc-name">{entry.sourceName}</span>
+                    <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(3)}`}</span>
+                    <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
+                  </button>
+                  <span class="da-chain-op">×</span>
+                {/each}
+              {:else}
+                <span class="da-cat-nospec">no modifier</span>
+                <span class="da-chain-op">×</span>
+              {/if}
+
+              <span class="da-cat-total">= ×{+grp.totalMult.toFixed(4)}</span>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {#if _ragePotency > 0}
     <div class="da-rage-row" style="margin-top: 8px;">
       <span class="da-rage-badge">
@@ -877,7 +968,6 @@
       </span>
     </div>
   {/if}
-
   {#if boosts.healEntries.length > 0}
     <div class="da-boost-row" style="margin-top:8px">
       <span class="da-heal-label">✦ Heal</span>
@@ -3003,5 +3093,164 @@
   align-items: center;
   pointer-events: none;
   z-index: 10;
+}
+.da-bc-scope {
+  font-size: .46rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #38bdf8;
+  background: rgba(56,189,248,.1);
+  border: 1px solid rgba(56,189,248,.2);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-top: 1px;
+}
+
+.da-chain-result-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.da-chain-result-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: rgba(251,146,60,.1);
+  border: 1px solid rgba(251,146,60,.2);
+  white-space: nowrap;
+}
+
+.da-crg-scope {
+  font-size: .52rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .7;
+  text-transform: uppercase;
+}
+
+.da-crg-val {
+  font-size: .95rem;
+  font-weight: 900;
+  color: #fb923c;
+  font-family: 'Courier New', monospace;
+}
+.da-boost-split {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.da-boost-universal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.da-boost-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(255,255,255,.07);
+  margin-left: 2px;
+  position: relative;
+}
+
+.da-boost-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.da-tree-line {
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background: rgba(255,255,255,.12);
+}
+.da-tree-line::before {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 50px;
+  background: rgba(255,255,255,.12);
+}
+.da-tree-line--last::before {
+  display: none;
+}
+
+.da-cat-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-width: 90px;
+}
+
+.da-cat-lbl {
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.da-cat-lbl--m1, .da-cat-lbl--m2 {
+  color: #fb923c;
+  background: rgba(251,146,60,.12);
+  border-color: rgba(251,146,60,.3);
+}
+.da-cat-lbl--wa {
+  color: #a78bfa;
+  background: rgba(167,139,250,.12);
+  border-color: rgba(167,139,250,.3);
+}
+.da-cat-lbl--rune {
+  color: #38bdf8;
+  background: rgba(56,189,248,.12);
+  border-color: rgba(56,189,248,.3);
+}
+.da-cat-lbl--perk {
+  color: #34d399;
+  background: rgba(52,211,153,.12);
+  border-color: rgba(52,211,153,.3);
+}
+
+.da-boost-chip--sm {
+  padding: 3px 8px;
+}
+.da-boost-chip--sm .da-bc-name { font-size: .62rem; }
+.da-boost-chip--sm .da-bc-val  { font-size: .75rem; }
+
+.da-cat-nospec {
+  font-size: .62rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .3;
+  font-style: italic;
+}
+
+.da-cat-total {
+  font-size: .95rem;
+  font-weight: 900;
+  color: #fb923c;
+  font-family: 'Courier New', monospace;
+  background: rgba(251,146,60,.1);
+  border: 1px solid rgba(251,146,60,.2);
+  padding: 3px 10px;
+  border-radius: 7px;
+  white-space: nowrap;
 }
 </style>

@@ -893,11 +893,12 @@ $: highestDamageType = (() => {
     }).filter((x): x is EnchantInfo => x !== null)
   }
 
-  function buildSlotCard(title: string, label: string, description: string, baseStats: StatMap, basePerks: Record<string, number>, enchSlot: EnchantSlot, extras?: string[]): DetailCard {
+  function buildSlotCard(title: string, label: string, description: string, baseStats: StatMap, basePerks: Record<string, number>, enchSlot: EnchantSlot, extras?: string[], upgradeLevel: number = 0): DetailCard {
     const enchNames = $build.enchantments[enchSlot]
     const slotResult = applyEnchantmentsToSlot(baseStats, basePerks, enchNames)
+    const finalStats = upgradeLevel > 0 ? applyUpgrade(slotResult.stats, upgradeLevel) : slotResult.stats
     const filteredStats: Record<string, number> = {}
-    for (const [k, v] of Object.entries(slotResult.stats)) {
+    for (const [k, v] of Object.entries(finalStats)) {
       const rounded = Math.round((v + Number.EPSILON) * 100) / 100
       if (rounded !== 0) filteredStats[k] = rounded
     }
@@ -949,7 +950,7 @@ $: highestDamageType = (() => {
       if (part || ip) {
         const bp: Record<string, number> = part?.perkName ? { [part.perkName]: 1 } : {}
         const upgradedStats = part ? applyUpgrade(part.stats as StatMap, upgradeLevel) : {}
-        const main = part ? buildSlotCard(partType, buildEnchantLabel(armorName, enchSlot), part.description, upgradedStats, bp, enchSlot) : null
+        const main = part ? buildSlotCard(partType, buildEnchantLabel(armorName, enchSlot), part.description, part.stats as StatMap, bp, enchSlot, undefined, upgradeLevel) : null
         let infusion: DetailCard | null = null
         if (ip) {
           const ibp: Record<string, number> = ip.perkName ? { [ip.perkName]: 1 } : {}
@@ -964,7 +965,7 @@ $: highestDamageType = (() => {
       if (ring || ir) {
         const bp: Record<string, number> = ring?.perkName ? { [ring.perkName]: ring.perkAmount ?? 1 } : {}
         const upgradedRingStats = applyUpgrade(ring.stats, $build.upgradeRing ?? 0)
-        const main = ring ? buildSlotCard('Ring', buildEnchantLabel(ring.name, 'ring'), ring.description, upgradedRingStats, bp, 'ring') : null
+        const main = ring ? buildSlotCard('Ring', buildEnchantLabel(ring.name, 'ring'), ring.description, ring.stats, bp, 'ring', undefined, $build.upgradeRing ?? 0) : null
         let infusion: DetailCard | null = null
         if (ir) {
           const ibp: Record<string, number> = ir.perkName ? { [ir.perkName]: ir.perkAmount ?? 1 } : {}
@@ -977,7 +978,7 @@ $: highestDamageType = (() => {
       const rune = getRune($build.rune)
       if (rune) {
         const bp: Record<string, number> = rune.perkName ? { [rune.perkName]: rune.perkAmount ?? 1 } : {}
-        groups.push({ main: buildSlotCard('Rune', buildEnchantLabel(rune.name, 'rune'), rune.description, applyUpgrade(rune.stats, $build.upgradeRune ?? 0), bp, 'rune', hasRuneCDR ? [`Base CD: ${rune.cooldown}s → ${formatCD(rune.cooldown, cdr)}`] : [`Cooldown: ${rune.cooldown}s`]), infusion: null })
+        groups.push({ main: buildSlotCard('Rune', buildEnchantLabel(rune.name, 'rune'), rune.description, rune.stats, bp, 'rune', hasRuneCDR ?[`Base CD: ${rune.cooldown}s → ${formatCD(rune.cooldown, cdr)}`] : [`Cooldown: ${rune.cooldown}s`], $build.upgradeRune ?? 0), infusion: null })
       }
     }
     return groups
