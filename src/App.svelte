@@ -2271,261 +2271,263 @@ $: _appWaAvgTotal = (() => {
           {/if}
         </div>
         <div class="summary-layout">
-          <div class="summary-grid-wrap">
-            <div class="summary-grid">
+          <div class="left-column">
+            <div class="summary-grid-wrap">
+              <div class="summary-grid">
 
-              <!-- Weapon type row -->
-              <div class="sg-cell sg-weapon sg-span10 sg-clickable"
-                on:click={() => build.update(s => ({...s, shrineActive: !s.shrineActive}))}
-                role="button" tabindex="0"
-                on:keydown={e => e.key === 'Enter' && build.update(s => ({...s, shrineActive: !s.shrineActive}))}>
-                <div class="sg-weapon-inner">
-                  <div class="sg-weapon-left">
-                    <span class="sg-label">{isMonk ? 'Monk Weapon Type' : 'Weapon Type'}</span>
-                    <span class="sg-value">{summaryWeaponLabel}</span>
-                    {#if summaryWeaponSub}<span class="sg-sub">{summaryWeaponSub}</span>{/if}
-                    {#if weaponResult?.attackSpeed != null && weaponResult.part1Name && weaponResult.part2Name}
-                      <span class="sg-badge">{weaponResult.attackSpeed}x spd</span>
-                    {/if}
-                  </div>
-                  <div class="shrine-inline">
-                    <div class="shrine-btn-inline" class:shrine-btn-inline--active={shrineActive}>
-                      <span class="shrine-icon-sm">⚖</span>
-                      <span class="shrine-label-sm">Shrine</span>
-                      <span class="shrine-state-sm">{shrineActive ? 'ON' : 'OFF'}</span>
+                <!-- Weapon type row -->
+                <div class="sg-cell sg-weapon sg-span10 sg-clickable"
+                  on:click={() => build.update(s => ({...s, shrineActive: !s.shrineActive}))}
+                  role="button" tabindex="0"
+                  on:keydown={e => e.key === 'Enter' && build.update(s => ({...s, shrineActive: !s.shrineActive}))}>
+                  <div class="sg-weapon-inner">
+                    <div class="sg-weapon-left">
+                      <span class="sg-label">{isMonk ? 'Monk Weapon Type' : 'Weapon Type'}</span>
+                      <span class="sg-value">{summaryWeaponLabel}</span>
+                      {#if summaryWeaponSub}<span class="sg-sub">{summaryWeaponSub}</span>{/if}
+                      {#if weaponResult?.attackSpeed != null && weaponResult.part1Name && weaponResult.part2Name}
+                        <span class="sg-badge">{weaponResult.attackSpeed}x spd</span>
+                      {/if}
                     </div>
-                    {#if shrineActive}
-                      <span class="shrine-hint-sm">T1×3.0 · T2×1.7 · T3×1.4 · T4×1.1 · T5×1.0</span>
-                    {/if}
+                    <div class="shrine-inline">
+                      <div class="shrine-btn-inline" class:shrine-btn-inline--active={shrineActive}>
+                        <span class="shrine-icon-sm">⚖</span>
+                        <span class="shrine-label-sm">Shrine</span>
+                        <span class="shrine-state-sm">{shrineActive ? 'ON' : 'OFF'}</span>
+                      </div>
+                      {#if shrineActive}
+                        <span class="shrine-hint-sm">T1×3.0 · T2×1.7 · T3×1.4 · T4×1.1 · T5×1.0</span>
+                      {/if}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Row 1: Inf Helmet | Helmet | Blade/Glove | Handle/Essence -->
-              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionHelmet}
-                role="button" tabindex="0"
-                on:click={() => openModal('infusion-helmet')}
-                on:keydown={e => e.key === 'Enter' && openModal('infusion-helmet')}>
-                <span class="sg-label">Inf. Helmet</span>
-                <span class="sg-value">{$build.infusionHelmet || 'No infused helmet'}</span>
-                {#if $build.infusionHelmet}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionHelmet: ''}))} title="Clear">✕</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.helmet}
-                role="button" tabindex="0"
-                on:click={() => openModal('armor-helmet')}
-                on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
-                  <span class="sg-label">Helmet</span>
-                  <span class="sg-value">{$build.helmet || 'No helmet'}</span>
-                  {#if $build.helmet && hasEnchants('helmet')}
-                    <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
+                <!-- Row 1: Inf Helmet | Helmet | Blade/Glove | Handle/Essence -->
+                <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionHelmet}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('infusion-helmet')}
+                  on:keydown={e => e.key === 'Enter' && openModal('infusion-helmet')}>
+                  <span class="sg-label">Inf. Helmet</span>
+                  <span class="sg-value">{$build.infusionHelmet || 'No infused helmet'}</span>
+                  {#if $build.infusionHelmet}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionHelmet: ''}))} title="Clear">✕</button>
                   {/if}
-                  {#if $build.helmet}
+                </div>
+                <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.helmet}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('armor-helmet')}
+                  on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
+                    <span class="sg-label">Helmet</span>
+                    <span class="sg-value">{$build.helmet || 'No helmet'}</span>
+                    {#if $build.helmet && hasEnchants('helmet')}
+                      <span class="sg-ench">{$build.enchantments.helmet.filter(Boolean).join(' · ')}</span>
+                    {/if}
+                    {#if $build.helmet}
+                      <button class="sg-upgrade-btn"
+                        class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
+                        on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
+                        title="Cycle upgrade (+{$build.upgradeHelmet} → +{($build.upgradeHelmet + 1) % 6})">
+                        +{$build.upgradeHelmet}
+                      </button>
+                      <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
+                      <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
+                        on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
+                    {/if}
+                </div>
+                <div class="sg-cell sg-span3 sg-clickable"
+                  class:sg-blade={!isMonk} class:sg-monk-glove={isMonk} class:sg-empty={sgPart1Empty}
+                  role="button" tabindex="0"
+                  on:click={() => openModal(isMonk ? 'glove' : 'blade')}
+                  on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'glove' : 'blade')}>
+                  <span class="sg-label">{part1Label}</span>
+                  <span class="sg-value">{sgPart1Name}</span>
+                  {#if weaponResult?.part1Type}<span class="sg-sub">{weaponResult.part1Type}</span>{/if}
+                </div>
+                <div class="sg-cell sg-span3 sg-clickable"
+                  class:sg-handle={!isMonk} class:sg-monk-essence={isMonk} class:sg-empty={sgPart2Empty}
+                  role="button" tabindex="0"
+                  on:click={() => openModal(isMonk ? 'essence' : 'handle')}
+                  on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'essence' : 'handle')}>
+                  <span class="sg-label">{part2Label}</span>
+                  <span class="sg-value">{sgPart2Name}</span>
+                  {#if weaponResult?.part2Type}<span class="sg-sub">{weaponResult.part2Type}</span>{/if}
+                </div>
+
+                <!-- Row 2: Inf Chest | Chest | Inf Ring | Ring | Race -->
+                <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionChestplate}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('infusion-chestplate')}
+                  on:keydown={e => e.key === 'Enter' && openModal('infusion-chestplate')}>
+                  <span class="sg-label">Inf. Chestplate</span>
+                  <span class="sg-value">{$build.infusionChestplate || 'No infused chestplate'}</span>
+                  {#if $build.infusionChestplate}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionChestplate: ''}))} title="Clear">✕</button>
+                  {/if}
+                </div>
+                <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.chestplate}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('armor-chestplate')}
+                  on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
+                  <span class="sg-label">Chestplate</span>
+                  <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
+                  {#if $build.chestplate && hasEnchants('chestplate')}
+                    <span class="sg-ench">{$build.enchantments.chestplate.filter(Boolean).join(' · ')}</span>
+                  {/if}
+                  {#if $build.chestplate}
                     <button class="sg-upgrade-btn"
-                      class:sg-upgrade-btn--maxed={$build.upgradeHelmet === 5}
-                      on:click|stopPropagation={() => toggleUpgrade('upgradeHelmet')}
-                      title="Cycle upgrade (+{$build.upgradeHelmet} → +{($build.upgradeHelmet + 1) % 6})">
-                      +{$build.upgradeHelmet}
+                      class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
+                      title="Cycle upgrade (+{$build.upgradeChestplate} → +{($build.upgradeChestplate + 1) % 6})">
+                      +{$build.upgradeChestplate}
                     </button>
-                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
-                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
-                      on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
+                      on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
                   {/if}
-              </div>
-              <div class="sg-cell sg-span3 sg-clickable"
-                class:sg-blade={!isMonk} class:sg-monk-glove={isMonk} class:sg-empty={sgPart1Empty}
-                role="button" tabindex="0"
-                on:click={() => openModal(isMonk ? 'glove' : 'blade')}
-                on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'glove' : 'blade')}>
-                <span class="sg-label">{part1Label}</span>
-                <span class="sg-value">{sgPart1Name}</span>
-                {#if weaponResult?.part1Type}<span class="sg-sub">{weaponResult.part1Type}</span>{/if}
-              </div>
-              <div class="sg-cell sg-span3 sg-clickable"
-                class:sg-handle={!isMonk} class:sg-monk-essence={isMonk} class:sg-empty={sgPart2Empty}
-                role="button" tabindex="0"
-                on:click={() => openModal(isMonk ? 'essence' : 'handle')}
-                on:keydown={e => e.key === 'Enter' && openModal(isMonk ? 'essence' : 'handle')}>
-                <span class="sg-label">{part2Label}</span>
-                <span class="sg-value">{sgPart2Name}</span>
-                {#if weaponResult?.part2Type}<span class="sg-sub">{weaponResult.part2Type}</span>{/if}
-              </div>
-
-              <!-- Row 2: Inf Chest | Chest | Inf Ring | Ring | Race -->
-              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionChestplate}
-                role="button" tabindex="0"
-                on:click={() => openModal('infusion-chestplate')}
-                on:keydown={e => e.key === 'Enter' && openModal('infusion-chestplate')}>
-                <span class="sg-label">Inf. Chestplate</span>
-                <span class="sg-value">{$build.infusionChestplate || 'No infused chestplate'}</span>
-                {#if $build.infusionChestplate}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionChestplate: ''}))} title="Clear">✕</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.chestplate}
-                role="button" tabindex="0"
-                on:click={() => openModal('armor-chestplate')}
-                on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
-                <span class="sg-label">Chestplate</span>
-                <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
-                {#if $build.chestplate && hasEnchants('chestplate')}
-                  <span class="sg-ench">{$build.enchantments.chestplate.filter(Boolean).join(' · ')}</span>
-                {/if}
-                {#if $build.chestplate}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeChestplate === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeChestplate')}
-                    title="Cycle upgrade (+{$build.upgradeChestplate} → +{($build.upgradeChestplate + 1) % 6})">
-                    +{$build.upgradeChestplate}
-                  </button>
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
-                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
-                    on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
-                role="button" tabindex="0"
-                on:click={() => openModal('infusion-ring')}
-                on:keydown={e => e.key === 'Enter' && openModal('infusion-ring')}>
-                <span class="sg-label">Inf. Ring</span>
-                <span class="sg-value">{$build.infusionRing || 'No infused ring'}</span>
-                {#if $build.infusionRing}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionRing: ''}))} title="Clear">✕</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
-                role="button" tabindex="0"
-                on:click={() => openModal('ring')}
-                on:keydown={e => e.key === 'Enter' && openModal('ring')}>
-                <span class="sg-label">Ring</span>  
-                <span class="sg-value">{$build.ring || 'No ring'}</span>
-                {#if $build.ring && hasEnchants('ring')}
-                  <span class="sg-ench">{$build.enchantments.ring.filter(Boolean).join(' · ')}</span>
-                {/if}
-                {#if $build.ring}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
-                    title="Cycle upgrade (+{$build.upgradeRing} → +{($build.upgradeRing + 1) % 6})">
-                    +{$build.upgradeRing}
-                  </button>
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
-                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
-                    on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
-                {/if}
-              </div>
-              <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
-                <span class="sg-label">Race</span>
-                <span class="sg-value">{$build.race || '—'}</span>
-                {#if $build.race}
-                  {@const race = races.find(r => r.name === $build.race)}
-                  {#if race?.passive}
-                    <span class="sg-sub">{race.passive}</span>
+                </div>
+                <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('infusion-ring')}
+                  on:keydown={e => e.key === 'Enter' && openModal('infusion-ring')}>
+                  <span class="sg-label">Inf. Ring</span>
+                  <span class="sg-value">{$build.infusionRing || 'No infused ring'}</span>
+                  {#if $build.infusionRing}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionRing: ''}))} title="Clear">✕</button>
                   {/if}
-                {/if}
-              </button>
-
-              <!-- Row 3: Inf Legs | Legs | — | Rune | Guild -->
-              <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionLeggings}
-                role="button" tabindex="0"
-                on:click={() => openModal('infusion-leggings')}
-                on:keydown={e => e.key === 'Enter' && openModal('infusion-leggings')}>
-                <span class="sg-label">Inf. Leggings</span>
-                <span class="sg-value">{$build.infusionLeggings || 'No infused leggings'}</span>
-                {#if $build.infusionLeggings}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionLeggings: ''}))} title="Clear">✕</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.leggings}
-                role="button" tabindex="0"
-                on:click={() => openModal('armor-leggings')}
-                on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
-                <span class="sg-label">Leggings</span>
-                <span class="sg-value">{$build.leggings || 'No leggings'}</span>
-                {#if $build.leggings && hasEnchants('leggings')}
-                  <span class="sg-ench">{$build.enchantments.leggings.filter(Boolean).join(' · ')}</span>
-                {/if}
-                {#if $build.leggings}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
-                    title="Cycle upgrade (+{$build.upgradeLeggings} → +{($build.upgradeLeggings + 1) % 6})">
-                    +{$build.upgradeLeggings}
-                  </button>
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
-                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
-                    on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-infusion sg-span2" style="opacity:0.3">
-                <span class="sg-label">Inf. Rune</span>
-                <span class="sg-value">Coming soon</span>
-              </div>
-              <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.rune}
-                role="button" tabindex="0"
-                on:click={() => openModal('rune')}
-                on:keydown={e => e.key === 'Enter' && openModal('rune')}>
-                <span class="sg-label">Rune</span>
-                <span class="sg-value">{$build.rune || 'No rune'}</span>
-                {#if $build.rune && hasEnchants('rune')}
-                  <span class="sg-ench">{$build.enchantments.rune.filter(Boolean).join(' · ')}</span>
-                {/if}
-                {#if $build.rune}
-                {@const rune = runes.find(r => r.name === $build.rune)}
-                  {#if rune}
-                    {#if hasRuneCDR}
-                      <span class="sg-cd-row">
-                        <span class="sg-sub">CD:</span>
-                        <span class="sg-cd-base">{rune.cooldown}s</span>
-                        <span class="sg-cd-arrow">→</span>
-                        <span class="sg-cd-final">{formatCD(rune.cooldown, cdr)}</span>
-                      </span>
-                    {:else}
-                      <span class="sg-sub">CD: {rune.cooldown}s</span>
+                </div>
+                <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('ring')}
+                  on:keydown={e => e.key === 'Enter' && openModal('ring')}>
+                  <span class="sg-label">Ring</span>  
+                  <span class="sg-value">{$build.ring || 'No ring'}</span>
+                  {#if $build.ring && hasEnchants('ring')}
+                    <span class="sg-ench">{$build.enchantments.ring.filter(Boolean).join(' · ')}</span>
+                  {/if}
+                  {#if $build.ring}
+                    <button class="sg-upgrade-btn"
+                      class:sg-upgrade-btn--maxed={$build.upgradeRing === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeRing')}
+                      title="Cycle upgrade (+{$build.upgradeRing} → +{($build.upgradeRing + 1) % 6})">
+                      +{$build.upgradeRing}
+                    </button>
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
+                      on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
+                  {/if}
+                </div>
+                <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
+                  <span class="sg-label">Race</span>
+                  <span class="sg-value">{$build.race || '—'}</span>
+                  {#if $build.race}
+                    {@const race = races.find(r => r.name === $build.race)}
+                    {#if race?.passive}
+                      <span class="sg-sub">{race.passive}</span>
                     {/if}
                   {/if}
-                  <button class="sg-upgrade-btn"
-                    class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
-                    on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
-                    title="Cycle upgrade (+{$build.upgradeRune} → +{($build.upgradeRune + 1) % 6})">
-                    +{$build.upgradeRune}
-                  </button>
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
-                  <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
-                    on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
-                {/if}
-              </div>
-              <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
-                role="button" tabindex="0"
-                on:click={() => openModal('guild')}
-                on:keydown={e => e.key === 'Enter' && openModal('guild')}>
-                <span class="sg-label">Guild</span>
-                <span class="sg-value">{$build.guild || '—'}</span>
-                {#if $build.guild}<span class="sg-sub">Rank {$build.guildRank}</span>{/if}
-                {#if $build.guild}
-                  <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, guild: '', guildRank: 1}))} title="Clear">✕</button>
-                {/if}
-              </div>
-            </div>
-            {#if isDraconic && isDragonBlooded}
-              <div class="sg-cell sg-span10 sg-draconic-row">
-                <div class="sg-draconic-header">
-                  <span class="sg-label" style="color:#a855f7">Draconic Rune</span>
-                  <span class="sg-draconic-hint">Select your dragon color</span>
+                </button>
+
+                <!-- Row 3: Inf Legs | Legs | — | Rune | Guild -->
+                <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionLeggings}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('infusion-leggings')}
+                  on:keydown={e => e.key === 'Enter' && openModal('infusion-leggings')}>
+                  <span class="sg-label">Inf. Leggings</span>
+                  <span class="sg-value">{$build.infusionLeggings || 'No infused leggings'}</span>
+                  {#if $build.infusionLeggings}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, infusionLeggings: ''}))} title="Clear">✕</button>
+                  {/if}
                 </div>
-                <div class="sg-draconic-colors">
-                  {#each DRACO_COLORS as dc}
-                    <button class="draco-color-btn"
-                      class:draco-color-btn--active={$build.draconicColor === dc.id}
-                      style="--dc:{dc.color}"
-                      on:click={() => build.update(s => ({...s, draconicColor: s.draconicColor === dc.id ? '' : dc.id}))}>
-                      {dc.label}
+                <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.leggings}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('armor-leggings')}
+                  on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
+                  <span class="sg-label">Leggings</span>
+                  <span class="sg-value">{$build.leggings || 'No leggings'}</span>
+                  {#if $build.leggings && hasEnchants('leggings')}
+                    <span class="sg-ench">{$build.enchantments.leggings.filter(Boolean).join(' · ')}</span>
+                  {/if}
+                  {#if $build.leggings}
+                    <button class="sg-upgrade-btn"
+                      class:sg-upgrade-btn--maxed={$build.upgradeLeggings === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeLeggings')}
+                      title="Cycle upgrade (+{$build.upgradeLeggings} → +{($build.upgradeLeggings + 1) % 6})">
+                      +{$build.upgradeLeggings}
                     </button>
-                  {/each}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
+                      on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
+                  {/if}
+                </div>
+                <div class="sg-cell sg-infusion sg-span2" style="opacity:0.3">
+                  <span class="sg-label">Inf. Rune</span>
+                  <span class="sg-value">Coming soon</span>
+                </div>
+                <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.rune}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('rune')}
+                  on:keydown={e => e.key === 'Enter' && openModal('rune')}>
+                  <span class="sg-label">Rune</span>
+                  <span class="sg-value">{$build.rune || 'No rune'}</span>
+                  {#if $build.rune && hasEnchants('rune')}
+                    <span class="sg-ench">{$build.enchantments.rune.filter(Boolean).join(' · ')}</span>
+                  {/if}
+                  {#if $build.rune}
+                  {@const rune = runes.find(r => r.name === $build.rune)}
+                    {#if rune}
+                      {#if hasRuneCDR}
+                        <span class="sg-cd-row">
+                          <span class="sg-sub">CD:</span>
+                          <span class="sg-cd-base">{rune.cooldown}s</span>
+                          <span class="sg-cd-arrow">→</span>
+                          <span class="sg-cd-final">{formatCD(rune.cooldown, cdr)}</span>
+                        </span>
+                      {:else}
+                        <span class="sg-sub">CD: {rune.cooldown}s</span>
+                      {/if}
+                    {/if}
+                    <button class="sg-upgrade-btn"
+                      class:sg-upgrade-btn--maxed={$build.upgradeRune === 5}
+                      on:click|stopPropagation={() => toggleUpgrade('upgradeRune')}
+                      title="Cycle upgrade (+{$build.upgradeRune} → +{($build.upgradeRune + 1) % 6})">
+                      +{$build.upgradeRune}
+                    </button>
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
+                      on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
+                  {/if}
+                </div>
+                <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
+                  role="button" tabindex="0"
+                  on:click={() => openModal('guild')}
+                  on:keydown={e => e.key === 'Enter' && openModal('guild')}>
+                  <span class="sg-label">Guild</span>
+                  <span class="sg-value">{$build.guild || '—'}</span>
+                  {#if $build.guild}<span class="sg-sub">Rank {$build.guildRank}</span>{/if}
+                  {#if $build.guild}
+                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, guild: '', guildRank: 1}))} title="Clear">✕</button>
+                  {/if}
                 </div>
               </div>
-            {/if}
+              {#if isDraconic && isDragonBlooded}
+                <div class="sg-cell sg-span10 sg-draconic-row">
+                  <div class="sg-draconic-header">
+                    <span class="sg-label" style="color:#a855f7">Draconic Rune</span>
+                    <span class="sg-draconic-hint">Select your dragon color</span>
+                  </div>
+                  <div class="sg-draconic-colors">
+                    {#each DRACO_COLORS as dc}
+                      <button class="draco-color-btn"
+                        class:draco-color-btn--active={$build.draconicColor === dc.id}
+                        style="--dc:{dc.color}"
+                        on:click={() => build.update(s => ({...s, draconicColor: s.draconicColor === dc.id ? '' : dc.id}))}>
+                        {dc.label}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+            </div>
           </div>
             {#if iepSlot}
               <div class="inline-enchant-panel">
@@ -3670,7 +3672,11 @@ $: _appWaAvgTotal = (() => {
     gap: 12px;
     align-items: start;
   }
-  .summary-grid-wrap { grid-row: 1 / 3; }
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   .summary-stats { grid-row: 1; grid-column: 2; }
   .wa-panel { grid-row: 2; grid-column: 2; }
 
@@ -3768,8 +3774,75 @@ $: _appWaAvgTotal = (() => {
   .shrine-label-sm { letter-spacing:.06em; }
   .shrine-state-sm { font-size:.65rem; opacity:.7; }
   .shrine-hint-sm { font-size:.6rem; color:var(--weapon-combined); opacity:.6; }
+.summary-stats {
+  position: relative;
+  background: var(--surface2);
+  border: 1px solid rgba(139,92,246,.18);
+  border-radius: 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: border-color .25s ease, box-shadow .25s ease;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139,92,246,.45) transparent;
+  /* Fade CHỈ ở bottom — không xung đột với sticky header */
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 20px), transparent 100%);
+  mask-image:         linear-gradient(to bottom, black calc(100% - 20px), transparent 100%);
+}
+.summary-stats:hover {
+  border-color: rgba(139,92,246,.4);
+  box-shadow: 0 0 0 1px rgba(139,92,246,.12), 0 8px 28px rgba(139,92,246,.1);
+}
+.summary-stats::-webkit-scrollbar { width: 12px; }
+.summary-stats::-webkit-scrollbar-track { background: transparent; }
+.summary-stats::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6, #6366f1);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.summary-stats::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a78bfa, #818cf8);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.ss-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: none;
+  mask-image: none;
+  font-size: .6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--accent3);
+  padding: 12px 16px 8px;
+  margin: 0;
+  border-bottom: 1px solid rgba(139,92,246,.2);
+  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ss-header::before {
+  content: '◈';
+  font-size: .55rem;
+  opacity: .45;
+}
 
-  .summary-stats { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; max-height:400px; overflow-y:auto; scrollbar-width:thin; }
+.ss-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px 16px;
+}
   .ss-header { font-size:.62rem; text-transform:uppercase; letter-spacing:.16em; color:var(--ink-muted); font-weight:700; padding-bottom:6px; border-bottom:1px solid var(--border); margin-bottom:2px; }
   .ss-section { display:flex; flex-direction:column; gap:2px; }
   .ss-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:3px 5px; border-radius:4px; font-size:.75rem; transition:background .1s; }
@@ -3777,7 +3850,6 @@ $: _appWaAvgTotal = (() => {
   .ss-key { color:var(--ink-muted); }
   .ss-val { font-weight:700; color:var(--accent); white-space:nowrap; }
   .ss-val.neg { color:var(--neg); }
-  /* ── INLINE ENCHANT PANEL ── */
   .inline-enchant-panel {
     margin-top:10px;
     background:linear-gradient(135deg,rgba(167,139,250,.08) 0%,rgba(167,139,250,.04) 100%);
@@ -4755,4 +4827,5 @@ $: _appWaAvgTotal = (() => {
   background: rgba(248,113,113,.2);
   border-color: rgba(248,113,113,.55);
 }
+
 </style>
