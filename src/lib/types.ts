@@ -209,11 +209,14 @@ export interface BuildState {
   summonCount: number
 }
 
+export type BoostAttackType = 'm1' | 'm2' | 'wa' | 'rune' | 'perk'
+
 export interface BoostEntry {
   sourceName: string
   rawMultiplier: number
   condition?: string
   type: 'dmg' | 'heal'
+  appliesTo?: BoostAttackType[]
 }
 
 export interface BoostResult {

@@ -192,6 +192,37 @@ function applySpecialBoosts(
       type:          'dmg',
     })
   }
+const guidingWindsStacks = perks['Guiding Winds'] ?? 0
+
+if (guidingWindsStacks > 0) {
+  dmgMap.set('Guiding Winds', {
+    sourceName: 'Guiding Winds',
+    rawMultiplier: 1 + 0.40 * guidingWindsStacks,
+    condition: 'Moving (at max)',
+    type: 'dmg',
+    appliesTo: ['m1', 'm2', 'perk'],
+  })
+
+  dmgMap.set('Guiding Winds WA/Rune', {
+    sourceName: 'Guiding Winds (WA/Rune)',
+    rawMultiplier: 1 + 0.30 * guidingWindsStacks,
+    condition: 'Moving (at max)',
+    type: 'dmg',
+    appliesTo: ['wa', 'rune'],
+  })
+}
+
+const civilianStacks = perks['Civilian'] ?? 0
+
+if (civilianStacks > 0) {
+  dmgMap.set('Civilian', {
+    sourceName: 'Civilian',
+    rawMultiplier: 1 + 0.40 * civilianStacks,
+    condition: 'Weapon unequipped 3s+',
+    type: 'dmg',
+    appliesTo: ['rune'],
+  })
+}
 }
 
 export function calcBoosts(

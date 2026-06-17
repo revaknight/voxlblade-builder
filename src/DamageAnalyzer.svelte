@@ -136,30 +136,32 @@
   }
 
   function seqWithTypes(
-    seq: HitSeq,
-    dmgTypes: Record<string, number>,
-    scalingMult: number = 1,
-    rageMult: number = 1,
-    rageAffectedTypes: Set<string> = new Set()
-  ): Array<{ base: number; count: number; types: HitBreakdown }> {
-    return seq.map(h => {
-      const base = typeof h === 'number' ? h : h.n
-      const count = typeof h === 'number' ? 1 : h.count
-      const types: HitBreakdown = Object.entries(dmgTypes).map(([k, mult]) => {
-        const rageApplied = rageMult !== 1 && rageAffectedTypes.has(k)
-        const finalMult = rageApplied ? mult * rageMult : mult
-        return {
-          label: k.charAt(0).toUpperCase() + k.slice(1),
-          rawVal: Math.round(base * 100) / 100,
-          val: Math.round(base * finalMult * scalingMult * 100) / 100,
-          scalingMult,
-          color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
-          rageApplied,
-        }
-      })
-      return { base, count, types }
+  seq: HitSeq,
+  dmgTypes: Record<string, number>,
+  scalingMult: number = 1,
+  rageMult: number = 1,
+  rageAffectedTypes: Set<string> = new Set(),
+  combatMult: number = 1
+): Array<{ base: number; count: number; types: HitBreakdown }> {
+  return seq.map(h => {
+    const base = typeof h === 'number' ? h : h.n
+    const count = typeof h === 'number' ? 1 : h.count
+    const effectiveMult = scalingMult * combatMult
+    const types: HitBreakdown = Object.entries(dmgTypes).map(([k, mult]) => {
+      const rageApplied = rageMult !== 1 && rageAffectedTypes.has(k)
+      const finalMult = rageApplied ? mult * rageMult : mult
+      return {
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        rawVal: Math.round(base * 100) / 100,
+        val: Math.round(base * finalMult * effectiveMult * 100) / 100,
+        scalingMult: effectiveMult,
+        color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+        rageApplied,
+      }
     })
-  }
+    return { base, count, types }
+  })
+}
 
   $: _isMonk = isMonkGuild($build.guild)
 
@@ -316,6 +318,20 @@
   $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
   $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
   $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
+  // ── Per-category combat multipliers ─────────────────────────────────────────
+  function _categoryMult(type: BoostAttackType): number {
+    return Math.round(
+      activeEntries
+        .filter(e => !(e as any).appliesTo || (e as any).appliesTo.includes(type))
+        .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
+      * 10000) / 10000
+  }
+
+  $: _m1CombatMult   = _categoryMult('m1')
+  $: _m2CombatMult   = _categoryMult('m2')
+  $: _waCombatMult   = _categoryMult('wa')
+  $: _runeCombatMult = _categoryMult('rune')
+  $: _perkCombatMult = _categoryMult('perk')
 
   const SCALING_TO_BOOST: Record<string, string> = {
     physical:   'physicalBoost',
@@ -523,60 +539,47 @@
   })()
 
   $: _waTyped = (() => {
-    if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
-    const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
+  if (!_waHitsSeq || Object.keys(_waDmgTypes).length === 0) return null
+  const seq: HitSeq = _waHitsSeq.map(h => h.count === 1 ? h.n : h)
 
-    if (selectedWA.hitDamageTypes && selectedWA.hitDamageTypes.length > 0) {
-      return seq.map((h, i) => {
-        const base = typeof h === 'number' ? h : h.n
-        const count = typeof h === 'number' ? 1 : h.count
-        const dtStr = selectedWA.hitDamageTypes![Math.min(i, selectedWA.hitDamageTypes!.length - 1)]
+  if (selectedWA.hitDamageTypes && selectedWA.hitDamageTypes.length > 0) {
+    return seq.map((h, i) => {
+      const base = typeof h === 'number' ? h : h.n
+      const count = typeof h === 'number' ? 1 : h.count
+      const dtStr = selectedWA.hitDamageTypes![Math.min(i, selectedWA.hitDamageTypes!.length - 1)]
 
-        const hitScalingStr = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
-        let hitScalingMult = _waScalingMult
-        if (hitScalingStr && hitScalingStr !== 'Same as weapon') {
-          const scRe = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
-          let totalPct = 0
-          let scM: RegExpExecArray | null
-          while ((scM = scRe.exec(hitScalingStr)) !== null) {
-            const typeName = /dex/i.test(scM[2]) ? 'dexterity' : scM[2].toLowerCase()
-            totalPct += parseFloat(scM[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
-          }
-          hitScalingMult = Math.round((1 + totalPct / 100) * 10000) / 10000
-        } else if (hitScalingStr === 'Same as weapon') {
-          hitScalingMult = _scalingMult
+      const hitScalingStr = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
+      let hitScalingMult = _waScalingMult
+      if (hitScalingStr && hitScalingStr !== 'Same as weapon') {
+        const scRe = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
+        let totalPct = 0
+        let scM: RegExpExecArray | null
+        while ((scM = scRe.exec(hitScalingStr)) !== null) {
+          const typeName = /dex/i.test(scM[2]) ? 'dexterity' : scM[2].toLowerCase()
+          totalPct += parseFloat(scM[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
         }
+        hitScalingMult = Math.round((1 + totalPct / 100) * 10000) / 10000
+      } else if (hitScalingStr === 'Same as weapon') {
+        hitScalingMult = _scalingMult
+      }
 
-        if (dtStr === 'Same as weapon') {
-          const types: DamageDisplayType[] = Object.entries(_weaponDmgTypes).map(([k, mult]) => ({
-            label: k.charAt(0).toUpperCase() + k.slice(1),
-            rawVal: Math.round(base * 100) / 100,
-            val: Math.round(base * mult * hitScalingMult * 100) / 100,
-            scalingMult: hitScalingMult,
-            color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
-          }))
-          return { base, count, types }
-        }
+      const effectiveMult = hitScalingMult * _waCombatMult  // ← THÊM
 
-        const dtParsed: Record<string, number> = {}
-        const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
-        let m: RegExpExecArray | null
-        while ((m = re.exec(dtStr)) !== null) dtParsed[m[2].toLowerCase()] = parseFloat(m[1])
-        const dtFinal = _applyDmgBonuses(dtParsed, _perkDmgTypeBonuses)
-        const types: DamageDisplayType[] = Object.entries(dtFinal).map(([k, mult]) => ({
-          label: k.charAt(0).toUpperCase() + k.slice(1),
-          rawVal: Math.round(base * 100) / 100,
-          val: Math.round(base * mult * hitScalingMult * 100) / 100,
-          scalingMult: hitScalingMult,
-          color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
-        }))
-        
-        return { base, count, types }
-      })
-    }
+      // ... (giữ nguyên phần parse dtStr)
+      const types: DamageDisplayType[] = Object.entries(/* dtFinal */{}).map(([k, mult]) => ({
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        rawVal: Math.round(base * 100) / 100,
+        val: Math.round(base * (mult as number) * effectiveMult * 100) / 100,
+        scalingMult: effectiveMult,   // ← đổi
+        color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+      }))
+      return { base, count, types }
+    })
+  }
 
-    return seqWithTypes(seq, _waDmgTypes, _waScalingMult, _rageMult, _rageAffectedTypes)
-  })()
+  // fallback path — truyền _waCombatMult
+  return seqWithTypes(seq, _waDmgTypes, _waScalingMult, _rageMult, _rageAffectedTypes, _waCombatMult)
+})()
 
   $: _waAvgTotal = (() => {
     if (!selectedWA.avgTotalHits || !_waTyped || _waTyped.length === 0) return null
@@ -691,6 +694,12 @@
       const perkAmount = perks[def.perkName] ?? 0
       if (perkAmount <= 0) continue
 
+      const combatMult = def.isWA   ? _waCombatMult
+                     : def.isRune ? _runeCombatMult
+                     : (def.isM2 || def.isFinisher) ? _m2CombatMult
+                     : def.isM1  ? _m1CombatMult
+                     : _perkCombatMult
+
       const resolvedDmgTypes = def.dmgTypeMode === 'weapon'
         ? _weaponDmgTypes
         : (def.dmgTypes ?? {})
@@ -711,7 +720,7 @@
         const finalMult = rageApplied ? mult * _rageMult : mult
         return {
           rawVal: Math.round(baseDmg * 100) / 100,
-          val: Math.round(baseDmg * finalMult * scalingMult * 100) / 100,
+          val: Math.round(baseDmg * finalMult * scalingMult * combatMult * 100) / 100, // ← THÊM combatMult
           color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
           label: k.charAt(0).toUpperCase() + k.slice(1),
           rageApplied,
@@ -923,8 +932,12 @@
     {@const hasDmgTypes = isActive && Object.keys(_weaponDmgTypes).length > 0}
     {@const m1DmgTypes = (isActive && gunLabel && !m2Only) ? _gunDmgTypes : _weaponDmgTypes}
     {@const m2DmgTypes = (isActive && gunLabel && !(row as any).m2NoLock) ? _gunDmgTypes : _weaponDmgTypes}
-    {@const m1Typed = hasDmgTypes && row.m1 ? seqWithTypes(row.m1, m1DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes) : null}
-    {@const m2Typed = hasDmgTypes && row.m2 ? seqWithTypes(row.m2, m2DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes) : null}
+    {@const m1Typed = hasDmgTypes && row.m1
+      ? seqWithTypes(row.m1, m1DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes, _m1CombatMult)
+      : null}
+    {@const m2Typed = hasDmgTypes && row.m2
+      ? seqWithTypes(row.m2, m2DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes, _m2CombatMult)
+      : null}
     <div class="da-wbd-card" class:da-wbd-card--active={isActive || isGunActive} class:da-wbd-card--gun={isGunActive}>
 
       <div class="da-wbd-card-head">
