@@ -353,7 +353,8 @@ export function applyEnchantmentsToSlot(
   enchantNames: string[],
 ): { stats: StatMap; perks: Record<string, number> } {
   const ordered = [...enchantNames].reverse()
-  let currentStats: StatMap = { ...baseStats }
+  const mult: Partial<Record<StatKey, number>> = {}
+  const add:  Partial<Record<StatKey, number>> = {}
   const perks = { ...basePerks }
 
   for (let i = 0; i < ordered.length; i++) {
@@ -361,14 +362,11 @@ export function applyEnchantmentsToSlot(
     if (!name) continue
     const e = getEnchant(name)
     if (!e) continue
-
-    const mult: Partial<Record<StatKey, number>> = {}
-    const add:  Partial<Record<StatKey, number>> = {}
     const es = e.stats
 
     for (const { key, pred } of STAT_SELECTORS) {
       if (!es[key]) continue
-      applyModsWhere(normalizeModifiers(es[key] as StatModifier | StatModifier[]), currentStats, mult, add, pred)
+      applyModsWhere(normalizeModifiers(es[key] as StatModifier | StatModifier[]), baseStats, mult, add, pred)
     }
 
     if (es.perks) {
@@ -394,17 +392,16 @@ export function applyEnchantmentsToSlot(
         perks[eff.name] = (perks[eff.name] ?? 0) + eff.value
       }
     }
-
-    const nextStats: StatMap = {}
-    for (let j = 0; j < STAT_KEYS.length; j++) {
-      const key    = STAT_KEYS[j]
-      const result = (currentStats[key] ?? 0) * (mult[key] ?? 1) + (add[key] ?? 0)
-      if (result !== 0) nextStats[key] = result
-    }
-    currentStats = nextStats
   }
 
-  return { stats: currentStats, perks }
+  const stats: StatMap = {}
+  for (let j = 0; j < STAT_KEYS.length; j++) {
+    const key    = STAT_KEYS[j]
+    const result = (baseStats[key] ?? 0) * (mult[key] ?? 1) + (add[key] ?? 0)
+    if (result !== 0) stats[key] = result
+  }
+
+  return { stats, perks }
 }
 
 // ─── Perk effectiveness ───────────────────────────────────────────────────────
@@ -1078,32 +1075,38 @@ function accumulateEquipment(state: BuildState): { stats: StatMap; perks: Record
     if (!armorName) continue
     const part = getArmorPart(armorName, partType)
     if (!part) continue
-    const enchResult = applyEnchantmentsToSlot(
-      part.stats as StatMap,
+    const slotResult = applyEnchantmentsToSlot(
+      applyUpgrade(part.stats as StatMap, state[upgradeKey] ?? 0),
       part.perkName ? { [part.perkName]: 1 } : {},
       state.enchantments[enchSlot],
     )
-    addStats(applyUpgrade(enchResult.stats, state[upgradeKey] ?? 0))
-    addPerkMap(enchResult.perks)
+    addStats(slotResult.stats)
+    addPerkMap(slotResult.perks)
   }
 
   if (state.ring) {
     const ring = getRing(state.ring)
     if (ring) {
-      const bp = ring.perkName ? { [ring.perkName]: ring.perkAmount ?? 1 } : {}
-      const enchResult = applyEnchantmentsToSlot(ring.stats, bp, state.enchantments.ring)
-      addStats(applyUpgrade(enchResult.stats, state.upgradeRing ?? 0))
-      addPerkMap(enchResult.perks)
+      const slotResult = applyEnchantmentsToSlot(
+        applyUpgrade(ring.stats, state.upgradeRing ?? 0),
+        ring.perkName ? { [ring.perkName]: ring.perkAmount ?? 1 } : {},
+        state.enchantments.ring,
+      )
+      addStats(slotResult.stats)
+      addPerkMap(slotResult.perks)
     }
   }
 
   if (state.rune) {
     const rune = getRune(state.rune)
     if (rune) {
-      const bp = rune.perkName ? { [rune.perkName]: rune.perkAmount ?? 1 } : {}
-      const enchResult = applyEnchantmentsToSlot(rune.stats, bp, state.enchantments.rune)
-      addStats(applyUpgrade(enchResult.stats, state.upgradeRune ?? 0))
-      addPerkMap(enchResult.perks)
+      const slotResult = applyEnchantmentsToSlot(
+        applyUpgrade(rune.stats, state.upgradeRune ?? 0),
+        rune.perkName ? { [rune.perkName]: rune.perkAmount ?? 1 } : {},
+        state.enchantments.rune,
+      )
+      addStats(slotResult.stats)
+      addPerkMap(slotResult.perks)
     }
   }
 

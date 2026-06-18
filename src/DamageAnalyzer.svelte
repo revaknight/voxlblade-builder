@@ -313,7 +313,7 @@
     else disabledBoosts.add(name)
     disabledBoosts = new Set(disabledBoosts)
   }
-
+  type BoostAttackType = 'm1' | 'm2' | 'perk' | 'rune' | 'wa';
   $: activeEntries = boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName))
   $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
   $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
@@ -783,6 +783,53 @@
     }
     return out
   })()
+
+  interface BDCHit {
+    group: 'M1' | 'M2' | 'WA'
+    index: number
+    count: number
+    base: number
+    scalingMult: number
+    combatMult: number
+    isFinisher: boolean
+  }
+
+  $: _bdcWeaponHits = (() => {
+    const result: BDCHit[] = []
+    const row = _displayRows[0]
+    if (row && Object.keys(_weaponDmgTypes).length > 0) {
+      if (row.m1) {
+        row.m1.forEach((h: any, i: number) => {
+          const base = typeof h === 'number' ? h : h.n
+          const count = typeof h === 'number' ? 1 : h.count
+          result.push({ group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult, isFinisher: isFinisher(row, 'm1', i) })
+        })
+      }
+      if (row.m2) {
+        row.m2.forEach((h: any, i: number) => {
+          const base = typeof h === 'number' ? h : h.n
+          const count = typeof h === 'number' ? 1 : h.count
+          result.push({ group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult, isFinisher: true })
+        })
+      }
+    }
+    if (_waHitsSeq && Object.keys(_waDmgTypes).length > 0) {
+      _waHitsSeq.forEach((h, i) => {
+        const hss = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
+        let sc = _waScalingMult
+        if (hss && hss !== 'Same as weapon') {
+          const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|Dex(?:terity)?|Summon)/gi
+          let t = 0, m: RegExpExecArray | null
+          while ((m = re.exec(hss)) !== null)
+            t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
+          sc = Math.round((1 + t / 100) * 10000) / 10000
+        } else if (hss === 'Same as weapon') sc = _scalingMult
+        result.push({ group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult, isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false })
+      })
+    }
+    return result
+  })()
+
 </script>
 
 <div class="da-root">
@@ -1776,7 +1823,11 @@
   </div>
 {/if}
 
-<BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}/>
+<BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
+  weaponHits={_bdcWeaponHits}
+  rageMult={_rageMult}
+  rageAffectedTypes={_rageAffectedTypes}
+/>
 </div>
 
 <style>
