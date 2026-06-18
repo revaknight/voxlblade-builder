@@ -1,15 +1,16 @@
 <script lang="ts">
+  import CritIcon from './CritIcon.svelte'
   export let boosts: any
   export let crit: any
   export let stats: any
   export let disabledBoosts: Set<string> = new Set(['Thief Training (would-crit bonus)'])
   export let activeFinalMult: number = 1
+  export let showCritValues: boolean = false
+  export let showCritToggle: boolean = false
 
-  // Giải quyết cảnh báo export_let_unused bằng cách tham chiếu dữ liệu
-  boosts;
-  disabledBoosts;
+  boosts
+  disabledBoosts
 
-  // weapon hits from DamageAnalyzer
   export let weaponHits: Array<{
     group: 'M1'|'M2'|'WA'; index: number; count: number
     base: number; scalingMult: number; combatMult: number; isFinisher: boolean
@@ -17,10 +18,16 @@
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
 
-  let baseDamage = 100
+  let baseDamage = 0
   let damageType = 'physical'
   let hits = 1
   let selectedHit: typeof weaponHits[0] | null = null
+  let hasAutoSelected = false
+
+  $: if (!hasAutoSelected && weaponHits.length > 0) {
+    selectHit(weaponHits[0])
+    hasAutoSelected = true
+  }
 
   const DMG_TYPES = [
     { id: 'physical', label: 'Physical', color: '#fb923c' },
@@ -96,7 +103,6 @@
   $: m2Hits = weaponHits.filter(h => h.group === 'M2')
   $: waHits = weaponHits.filter(h => h.group === 'WA')
 
-  // Định nghĩa Object rõ ràng để ép kiểu chuẩn xác loại bỏ lỗi TypeScript suy luận sai
   $: hitGroups = [
     { label: 'M1', list: m1Hits },
     { label: 'M2', list: m2Hits },
@@ -110,7 +116,7 @@
 </script>
 
 <div class="bdc-root da-section">
-  <div class="da-section-title">🎯 Damage Calculator</div>
+  <div class="da-section-title">Damage Calculator</div>
 
   <div class="bdc-layout">
 
@@ -216,6 +222,18 @@
         {/each}
       </div>
 
+      {#if showCritToggle}
+        <div class="bdc-crit-toggle-row">
+          <button
+            class="bdc-crit-toggle"
+            class:bdc-crit-toggle--on={showCritValues}
+            on:click={() => showCritValues = !showCritValues}
+          >
+            <CritIcon size={12}/> {showCritValues ? 'Crit ON' : 'Crit OFF'}
+          </button>
+        </div>
+      {/if}
+
       <div class="bdc-chain">
         <div class="bdc-chain-row">
           <span class="bdc-chain-base">{fmt(baseDamage)}</span>
@@ -271,6 +289,13 @@
             </div>
           {/if}
 
+          <span class="bdc-chain-op">×</span>
+          <div class="bdc-chain-chip bdc-chain-chip--amplify">
+            <span class="bdc-chip-name">⬆ Pen Bonus</span>
+            <span class="bdc-chip-val">×{fmt(defMult)}</span>
+            <span class="bdc-chip-sub">def=0, pen={fmt(armorPen)}</span>
+          </div>
+          
           <span class="bdc-chain-eq">=</span>
           <span class="bdc-chain-result" style="--tc:{curType.color}">{fmt(rawHit)}</span>
         </div>
@@ -281,7 +306,7 @@
           <span class="bdc-result-label">Per Hit</span>
           <span class="bdc-result-val" style="color:{curType.color}">{fmt(rawHit)}</span>
         </div>
-        {#if critChance > 0}
+        {#if critChance > 0 && showCritValues}
           <div class="bdc-result-card bdc-result-card--crit">
             <span class="bdc-result-label">✦ Crit Hit</span>
             <span class="bdc-result-val" style="color:#e2b203">{fmt(critHit)}</span>
@@ -294,8 +319,8 @@
         {#if hits > 1}
           <div class="bdc-result-card bdc-result-card--total">
             <span class="bdc-result-label">×{hits} Total</span>
-            <span class="bdc-result-val" style="color:{curType.color}">{fmt(critChance > 0 ? totalAvg : totalRaw)}</span>
-            {#if critChance > 0}
+            <span class="bdc-result-val" style="color:{curType.color}">{fmt(critChance > 0 && showCritValues ? totalAvg : totalRaw)}</span>
+            {#if critChance > 0 && showCritValues}
               <span class="bdc-result-sub">{fmt(totalRaw)} raw</span>
             {/if}
           </div>
@@ -470,6 +495,33 @@
   border-color: var(--tc);
   color: var(--tc);
   font-weight: 800;
+}
+
+/* Crit Toggle Row */
+.bdc-crit-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+}
+.bdc-crit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .62rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(226,178,3,.25);
+  background: var(--surface2, #1a1d1b);
+  color: var(--ink-muted, #8a8d85);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.bdc-crit-toggle--on {
+  border-color: rgba(226,178,3,.6);
+  background: rgba(226,178,3,.12);
+  color: #e2b203;
+  box-shadow: 0 0 8px rgba(226,178,3,.2);
 }
 
 /* Multiplier chain */

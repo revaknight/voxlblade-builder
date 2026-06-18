@@ -612,8 +612,7 @@
     })
   }
 
-  // fallback path — truyền _waCombatMult
-  return seqWithTypes(seq, _waDmgTypes, _waScalingMult, _rageMult, _rageAffectedTypes, _waCombatMult)
+  return seqWithTypes(seq, _waDmgTypes, 1, 1, new Set(), 1)
 })()
 
   $: _waAvgTotal = (() => {
@@ -651,17 +650,11 @@
     if (!_waRangeDamage || Object.keys(_waDmgTypes).length === 0) return null
     const { min, minLabel, max, maxLabel } = _waRangeDamage
     const toEnds = (base: number): RangeEnd[] =>
-      Object.entries(_waDmgTypes).map(([k, mult]) => {
-        const rageApplied = _rageMult !== 1 && _rageAffectedTypes.has(k)
-        const finalMult = rageApplied ? mult * _rageMult : mult
-        
-        return {
-          label: k.charAt(0).toUpperCase() + k.slice(1),
-          val: Math.round(base * finalMult * _waScalingMult * 100) / 100,
-          color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
-          rageApplied,
-        }
-      })
+      Object.entries(_waDmgTypes).map(([k, mult]) => ({
+        label: k.charAt(0).toUpperCase() + k.slice(1),
+        val: Math.round(base * mult * 100) / 100,
+        color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
+      }))
     return { minEnds: toEnds(min), minLabel, maxEnds: toEnds(max), maxLabel }
   })()
 
@@ -1041,15 +1034,6 @@
       {#if _currentLabel}
         <span class="da-wbd-current-badge">{_currentLabel}</span>
       {/if}
-      {#if _showCrit}
-        <button
-          class="da-crit-toggle"
-          class:da-crit-toggle--on={showCritValues}
-          on:click={() => showCritValues = !showCritValues}
-        >
-          <CritIcon size={12}/> {showCritValues ? 'Crit ON' : 'Crit OFF'}
-        </button>
-      {/if}
       <button class="da-wbd-toggle" on:click={() => showAllWeapons = !showAllWeapons}>
         {showAllWeapons ? 'Show current only' : 'Show all weapons'}
       </button>
@@ -1069,12 +1053,8 @@
     {@const hasDmgTypes = isActive && Object.keys(_weaponDmgTypes).length > 0}
     {@const m1DmgTypes = (isActive && gunLabel && !m2Only) ? _gunDmgTypes : _weaponDmgTypes}
     {@const m2DmgTypes = (isActive && gunLabel && !(row as any).m2NoLock) ? _gunDmgTypes : _weaponDmgTypes}
-    {@const m1Typed = hasDmgTypes && row.m1
-      ? seqWithTypes(row.m1, m1DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes, _m1CombatMult)
-      : null}
-    {@const m2Typed = hasDmgTypes && row.m2
-      ? seqWithTypes(row.m2, m2DmgTypes, _scalingMult, _rageMult, _rageAffectedTypes, _m2CombatMult)
-      : null}
+    {@const m1Typed = hasDmgTypes && row.m1 ? seqWithTypes(row.m1, m1DmgTypes, 1, 1, new Set(), 1) : null}
+    {@const m2Typed = hasDmgTypes && row.m2 ? seqWithTypes(row.m2, m2DmgTypes, 1, 1, new Set(), 1) : null}  
     <div class="da-wbd-card" class:da-wbd-card--active={isActive || isGunActive} class:da-wbd-card--gun={isGunActive}>
 
       <div class="da-wbd-card-head">
@@ -1107,28 +1087,15 @@
                 <div class="da-hit-card" class:da-hit-card--finisher={finisher}>
                   {#each hit.types as t, ti}
                     {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                    <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
-                      {#if t.scalingMult !== 1}
-                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
-                      <span class="da-hit-num" class:da-hit-num--crit={showCritValues} style="--tc:{t.color}">
-                        {fmtNum(showCritValues ? Math.round(t.val * _critMult * 100) / 100 : t.val)}
-                      </span>
+                    <div class="da-hit-chunk" style="--tc:{t.color}">
+                      <span class="da-hit-num" style="--tc:{t.color}">{fmtNum(t.val)}</span>
                       <span class="da-hit-type">{t.label}</span>
                     </div>
                     {#if hit.count > 1}
                       <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
                     {/if}
                   {/each}
-                  {#if finisher}
-                    <span class="da-finisher-crown">✦</span>
-                  {/if}
-                  {#if showCritValues}
-                    <span class="da-crit-mini-badge">
-                      <CritIcon size={12}/>
-                    </span>
-                  {/if}
+                  {#if finisher}<span class="da-finisher-crown">✦</span>{/if}
                 </div>
               </div>
             {/each}
@@ -1169,21 +1136,12 @@
                     {@const finalVal = selectedWeaponData?.m2Charge?.enabled
                       ? selectedWeaponData.m2Charge.formula(t.val, weaponCharge)
                       : t.val}
-                    <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
-                      {#if _scalingMult !== 1}
-                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
-                        <span class="da-hit-num" class:da-hit-num--crit={showCritValues} style="--tc:{t.color}">
-                          {fmtNum(showCritValues ? Math.round(finalVal * _critMult * 100) / 100 : finalVal)}
-                        </span>
+                    <div class="da-hit-chunk" style="--tc:{t.color}">
+                      <span class="da-hit-num" style="--tc:{t.color}">{fmtNum(finalVal)}</span>
                       <span class="da-hit-type">{t.label}</span>
                     </div>
                   {/each}
                   <span class="da-finisher-crown">✦</span>
-                  {#if showCritValues}
-                    <span class="da-crit-mini-badge"><CritIcon size={12}/></span>
-                  {/if}
                 </div>
               </div>
               {#if hit.count > 1}
@@ -1242,56 +1200,31 @@
           {#if _waTyped}
             {#each _waTyped as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
-              
               <div class="da-hit-card"
                 class:da-hit-card--finisher={selectedWA.hits?.[hi]?.isFinisher}
                 class:da-hit-card--crit={selectedWA.hits?.[hi]?.isCrit}>
                 {#each hit.types as t, ti}
                   {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
-                  <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
+                  <div class="da-hit-chunk" style="--tc:{t.color}">
                     {#if selectedWA.hits?.[hi]?.isCrit}
-                      {#if t.scalingMult !== 1}
-                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
                       <span class="da-hit-num da-hit-num--gcrit-base" style="--tc:{t.color}">{fmtNum(t.val)}</span>
                       <span class="da-hit-num da-hit-num--gcrit" style="--tc:{t.color}">
                         {fmtNum(Math.round(t.val * _critMult * 100) / 100)}
                       </span>
                       <span class="da-hit-type da-hit-type--gcrit" style="--tc:{t.color}">✦ Crit · {t.label}</span>
                     {:else}
-                      {#if t.scalingMult !== 1}
-                        <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
-                      <span class="da-hit-num" class:da-hit-num--crit={showCritValues} style="--tc:{t.color}">
-                        {fmtNum(showCritValues ? Math.round(t.val * _critMult * 100) / 100 : t.val)}
-                      </span>
-                      <span class="da-hit-type">
-                        {t.label}
-                      </span>
+                      <span class="da-hit-num" style="--tc:{t.color}">{fmtNum(t.val)}</span>
+                      <span class="da-hit-type">{t.label}</span>
                     {/if}
                   </div>
                 {/each}
-
-                {#if selectedWA.hits?.[hi]?.isCrit}
-                  <CritIcon size={12}/>
-                {/if}
-
-                {#if selectedWA.hits?.[hi]?.isFinisher}
-                  <span class="da-finisher-crown">✦</span>
-                {/if}
-
-                {#if showCritValues && !selectedWA.hits?.[hi]?.isCrit}
-                  <span class="da-crit-mini-badge"><CritIcon size={12}/></span>
-                {/if}
-
+                {#if selectedWA.hits?.[hi]?.isCrit}<CritIcon size={12}/>{/if}
+                {#if selectedWA.hits?.[hi]?.isFinisher}<span class="da-finisher-crown">✦</span>{/if}
                 {#if hit.count > 1}
                   <span class="da-hit-repeat">×{hit.count}<span class="da-hit-repeat-label">hits</span></span>
                 {/if}
               </div>
             {/each}
-
           {:else if _waHitsSeq}
             {_waHitsSeq.map(h => h.count > 1 ? `${h.n}×${h.count}` : String(h.n)).join(', ')}
 
@@ -1377,24 +1310,14 @@
                   {#each _waSummonDef.scaledAttacks as atk, ai}
                     {#if ai > 0}<span class="da-hit-plus">+</span>{/if}
                     <div class="da-hit-chunk" style="--tc:#c084fc">
-                      {#if atk.scaledDmg !== atk.baseDmg}
-                        <span class="da-hit-raw">{atk.baseDmg}</span>
-                        <span class="da-hit-arrow">→</span>
-                      {/if}
-                      <span class="da-hit-num" style="--tc:#c084fc">{atk.scaledDmg}</span>
+                      <span class="da-hit-num" style="--tc:#c084fc">{atk.baseDmg}</span>
                       <span class="da-hit-type">{atk.label}</span>
                     </div>
-                    {#if atk.guardbreak}
-                      <span class="da-pbd-badge da-pbd-badge--gb" style="align-self:center">GB</span>
-                    {/if}
+                    {#if atk.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb" style="align-self:center">GB</span>{/if}
                   {/each}
                 {:else}
                   <div class="da-hit-chunk" style="--tc:#c084fc">
-                    {#if _waSummonDef.scaledDmg !== _waSummonDef.baseDmg}
-                      <span class="da-hit-raw">{_waSummonDef.baseDmg}</span>
-                      <span class="da-hit-arrow">→</span>
-                    {/if}
-                    <span class="da-hit-num" style="--tc:#c084fc">{_waSummonDef.scaledDmg}</span>
+                    <span class="da-hit-num" style="--tc:#c084fc">{_waSummonDef.baseDmg}</span>
                     <span class="da-hit-type">{_waSummonDef.dmgType}</span>
                   </div>
                 {/if}
@@ -1402,9 +1325,6 @@
                   ×{_waSummonDef.count}<span class="da-hit-repeat-label">summons</span>
                 </span>
               </div>
-              <span class="da-summon-formula">
-                ({_waSummonDef.baseDmg} × (1 + {_waSummonDef.summonBoostPct}% × (1 + LV{$build.level}/80)))
-              </span>
             </div>
           {:else}
             <span class="da-wbd-na">—</span>
@@ -1413,24 +1333,13 @@
           {#if _waHealSeq}
             <div class="da-heal-hits-row">
               {#each _waHealSeq as h, hi}
-                {@const scaledHeal = Math.round(h.n * _waScalingMult * 100) / 100}
-                {#if hi > 0}
-                  <span class="da-hit-divider">›</span>
-                {/if}
+                {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
                 <div class="da-hit-card da-hit-card--heal">
                   <div class="da-hit-chunk" style="--tc:#4ade80">
-                    {#if _waScalingMult !== 1}
-                      <span class="da-hit-raw">{fmtNum(h.n)}</span>
-                      <span class="da-hit-arrow">→</span>
-                    {/if}
-                    <span class="da-hit-num" style="--tc:#4ade80">
-                      {fmtNum(scaledHeal)}
-                    </span>
+                    <span class="da-hit-num" style="--tc:#4ade80">{fmtNum(h.n)}</span>
                     <span class="da-heal-badge">✦ Heal</span>
                   </div>
-                  {#if h.count > 1}
-                    <span class="da-hit-repeat">×{h.count}</span>
-                  {/if}
+                  {#if h.count > 1}<span class="da-hit-repeat">×{h.count}</span>{/if}
                 </div>
               {/each}
             </div>
@@ -1827,6 +1736,8 @@
   weaponHits={_bdcWeaponHits}
   rageMult={_rageMult}
   rageAffectedTypes={_rageAffectedTypes}
+  showCritToggle={_showCrit}
+  bind:showCritValues
 />
 </div>
 
