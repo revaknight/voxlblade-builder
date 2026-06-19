@@ -10,24 +10,16 @@
 
   boosts
   disabledBoosts
+  activeFinalMult
 
   export let weaponHits: Array<{
-    group: 'M1'|'M2'|'WA'; index: number; count: number
+    group: string; index: number; count: number
     base: number; scalingMult: number; combatMult: number; isFinisher: boolean
+    dmgTypes: Record<string, number>
+    label?: string
   }> = []
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
-
-  let baseDamage = 0
-  let damageType = 'physical'
-  let hits = 1
-  let selectedHit: typeof weaponHits[0] | null = null
-  let hasAutoSelected = false
-
-  $: if (!hasAutoSelected && weaponHits.length > 0) {
-    selectHit(weaponHits[0])
-    hasAutoSelected = true
-  }
 
   const DMG_TYPES = [
     { id: 'physical', label: 'Physical', color: '#fb923c' },
@@ -42,35 +34,9 @@
     { id: 'summon',   label: 'Summon',   color: '#c084fc' },
   ]
   const DMG_TYPE_MAP = new Map(DMG_TYPES.map(t => [t.id, t]))
-  $: curType = DMG_TYPE_MAP.get(damageType) ?? DMG_TYPES[0]
 
   const DEF_TYPE_IDS = ['physical','magic','fire','water','earth','air','hex','holy']
   let defenses: Record<string, number> = Object.fromEntries(DEF_TYPE_IDS.map(t => [t, 0]))
-
-  // ── Hit selection ──────────────────────────────────────────────────────────
-  function selectHit(hit: typeof weaponHits[0]) {
-    if (selectedHit === hit) { selectedHit = null; return }
-    selectedHit = hit
-    baseDamage = hit.base
-  }
-
-  // If user manually edits baseDamage, clear hit selection
-  function onBaseDmgInput(e: Event) {
-    baseDamage = parseFloat((e.target as HTMLInputElement).value) || 0
-    selectedHit = null
-  }
-
-  // ── Effective mults ────────────────────────────────────────────────────────
-  $: effectiveScalingMult = selectedHit ? selectedHit.scalingMult : 1
-  $: effectiveCombatMult  = selectedHit ? selectedHit.combatMult  : activeFinalMult
-  $: effectiveRageMult    = rageMult > 1 && rageAffectedTypes.has(damageType) ? rageMult : 1
-
-  // ── Stat boosts ───────────────────────────────────────────────────────────
-  $: typeBoostPct = (() => {
-    if (damageType === 'true' || damageType === 'summon') return 0
-    return (stats as any)?.[`${damageType}Boost`] ?? 0
-  })()
-  $: typeBoostMult = Math.round((1 + typeBoostPct / 100) * 10000) / 10000
 
   // ── Armor pen ─────────────────────────────────────────────────────────────
   $: armorPen   = (stats as any)?.armorPenetration ?? 0
@@ -87,32 +53,63 @@
     }
   }
 
-  $: enemyDefPct = (damageType === 'true' || damageType === 'summon') ? 0 : (defenses[damageType] ?? 0)
-  $: armorCalc  = calcArmorMult(enemyDefPct, penDecimal)
-  $: defMult    = Math.round(armorCalc.mult * 10000) / 10000
-
-  // ── Final damage ──────────────────────────────────────────────────────────
-  $: rawHit    = Math.round(baseDamage * effectiveScalingMult * typeBoostMult * effectiveRageMult * effectiveCombatMult * defMult * 100) / 100
-  $: critHit   = Math.round(rawHit * (crit?.critDamageMultiplier ?? 100) / 100 * 100) / 100
-  $: critChance = crit?.effectiveCritChance ?? 0
-  $: avgHit    = Math.round((rawHit * (1 - critChance / 100) + critHit * (critChance / 100)) * 100) / 100
-  $: totalRaw  = Math.round(rawHit * hits * 100) / 100
-  $: totalAvg  = Math.round(avgHit * hits * 100) / 100
-
-  $: m1Hits = weaponHits.filter(h => h.group === 'M1')
-  $: m2Hits = weaponHits.filter(h => h.group === 'M2')
-  $: waHits = weaponHits.filter(h => h.group === 'WA')
-
-  $: hitGroups = [
-    { label: 'M1', list: m1Hits },
-    { label: 'M2', list: m2Hits },
-    { label: 'WA', list: waHits }
-  ]
-
   function fmt(n: number) {
     const r = Math.round(n * 100) / 100
     return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/\.?0+$/, '')
   }
+
+  function fmtMult(n: number) {
+    const r = Math.round(n * 10000) / 10000
+    return Number.isInteger(r) ? String(r) : r.toFixed(4).replace(/\.?0+$/, '')
+  }
+
+  // ── Compute every hit × every damage type up front (no manual selection) ───
+  interface ComputedType {
+    key: string; label: string; color: string
+    typeBase: number; scalingMult: number; combatMult: number
+    rageApplied: boolean; rageMultUsed: number
+    defMult: number; enemyDefPct: number
+    raw: number; critVal: number
+  }
+  interface ComputedHit {
+    group: string; index: number; count: number; isFinisher: boolean; label?: string
+    types: ComputedType[]
+  }
+
+  $: critChance  = crit?.effectiveCritChance ?? 0
+  $: critDmgMult = crit?.critDamageMultiplier ?? 100
+
+  $: computedHits = weaponHits.map((hit): ComputedHit => {
+    const types: ComputedType[] = Object.entries(hit.dmgTypes ?? {}).map(([k, mult]) => {
+      const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+      const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
+      const rageMultUsed = rageApplied ? rageMult : 1
+      const enemyDefPct  = (k === 'true' || k === 'summon') ? 0 : (defenses[k] ?? 0)
+      const defMult      = Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
+      const typeBase     = Math.round(hit.base * mult * 100) / 100
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * defMult * 100) / 100
+      const critVal      = Math.round(raw * critDmgMult / 100 * 100) / 100
+      return {
+        key: k, label: info.label, color: info.color,
+        typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
+        rageApplied, rageMultUsed, defMult, enemyDefPct,
+        raw, critVal,
+      }
+    })
+    return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, types }
+  })
+
+  $: m1Hits   = computedHits.filter(h => h.group === 'M1')
+  $: m2Hits   = computedHits.filter(h => h.group === 'M2')
+  $: waHits   = computedHits.filter(h => h.group === 'WA')
+  $: perkHits = computedHits.filter(h => h.group !== 'M1' && h.group !== 'M2' && h.group !== 'WA')
+
+  $: hitGroups = [
+    { label: 'M1', list: m1Hits },
+    { label: 'M2', list: m2Hits },
+    { label: 'WA', list: waHits },
+    ...(perkHits.length > 0 ? [{ label: 'Perk', list: perkHits }] : [])
+  ]
 </script>
 
 <div class="bdc-root da-section">
@@ -159,13 +156,7 @@
 
       <div class="bdc-def-grid">
         {#each DMG_TYPES.filter(t => t.id !== 'true' && t.id !== 'summon') as t}
-          {@const active = damageType === t.id}
-          <button
-            class="bdc-def-row"
-            class:bdc-def-row--active={active}
-            style="--tc:{t.color}"
-            on:click={() => damageType = t.id}
-          >
+          <div class="bdc-def-row" style="--tc:{t.color}">
             <span class="bdc-def-type">{t.label}</span>
             <input
               class="bdc-def-input"
@@ -175,53 +166,14 @@
               step="1"
               value={defenses[t.id]}
               on:input={e => { defenses[t.id] = parseFloat((e.target as HTMLInputElement).value) || 0 }}
-              on:click|stopPropagation
             />
             <span class="bdc-def-pct">%</span>
-          </button>
+          </div>
         {/each}
       </div>
     </div>
 
     <div class="bdc-calc-col">
-      {#if weaponHits.length > 0}
-        <div class="bdc-hit-sel">
-          {#each hitGroups as grp}
-            {#if grp.list.length > 0}
-              <div class="bdc-hit-grp">
-                <span class="bdc-hit-grp-label">{grp.label}</span>
-                {#each grp.list as hit, i}
-                  <button
-                    class="bdc-hit-btn"
-                    class:bdc-hit-btn--active={selectedHit === hit}
-                    class:bdc-hit-btn--finisher={hit.isFinisher}
-                    on:click={() => selectHit(hit)}
-                  >
-                    {fmt(hit.base)}
-                    {#if hit.count > 1}<span class="bdc-hit-cnt">×{hit.count}</span>{/if}
-                    {#if hit.isFinisher}<span class="bdc-hit-fin">✦</span>{/if}
-                  </button>
-                {/each}
-              </div>
-            {/if}
-          {/each}
-          {#if selectedHit}
-            <button class="bdc-hit-clear" on:click={() => selectedHit = null}>✕ manual</button>
-          {/if}
-        </div>
-      {/if}
-
-      <div class="bdc-type-row">
-        {#each DMG_TYPES as t}
-          <button
-            class="bdc-type-btn"
-            class:bdc-type-btn--active={damageType === t.id}
-            style="--tc:{t.color}"
-            on:click={() => damageType = t.id}
-          >{t.label}</button>
-        {/each}
-      </div>
-
       {#if showCritToggle}
         <div class="bdc-crit-toggle-row">
           <button
@@ -234,99 +186,68 @@
         </div>
       {/if}
 
-      <div class="bdc-chain">
-        <div class="bdc-chain-row">
-          <span class="bdc-chain-base">{fmt(baseDamage)}</span>
-          
-          {#if effectiveScalingMult !== 1}
-            <span class="bdc-chain-op">×</span>
-            <div class="bdc-chain-chip bdc-chain-chip--scaling">
-              <span class="bdc-chip-name">Scaling</span>
-              <span class="bdc-chip-val">×{fmt(effectiveScalingMult)}</span>
-            </div>
-          {/if}
-
-          {#if effectiveRageMult !== 1}
-            <span class="bdc-chain-op">×</span>
-            <div class="bdc-chain-chip bdc-chain-chip--rage">
-              <span class="bdc-chip-name">🔥 Rage</span>
-              <span class="bdc-chip-val">×{fmt(effectiveRageMult)}</span>
-            </div>
-          {/if}
-
-          {#if typeBoostMult !== 1}
-            <span class="bdc-chain-op">×</span>
-            <div class="bdc-chain-chip" style="--tc:{curType.color}">
-              <span class="bdc-chip-name">{curType.label} Boost</span>
-              <span class="bdc-chip-val">×{fmt(typeBoostMult)}</span>
-              <span class="bdc-chip-sub">+{fmt(typeBoostPct)}%</span>
-            </div>
-          {/if}
-
-          <span class="bdc-chain-op">×</span>
-          <div class="bdc-chain-chip bdc-chain-chip--combat">
-            <span class="bdc-chip-name">Combat</span>
-            <span class="bdc-chip-val">×{fmt(effectiveCombatMult)}</span>
-          </div>
-
-          {#if defMult !== 1}
-            <span class="bdc-chain-op">×</span>
-            <div class="bdc-chain-chip bdc-chain-chip--def" class:bdc-chain-chip--amplify={defMult > 1}>
-              <span class="bdc-chip-name">
-                {defMult > 1 ? '⬆ Neg.Def' : '⬇ Defense'}
-              </span>
-              <span class="bdc-chip-val">×{fmt(defMult)}</span>
-              {#if armorPen > 0}
-                <span class="bdc-chip-sub">pen {fmt(armorPen)}</span>
-              {/if}
-            </div>
-          {:else if armorPen > 0 && enemyDefPct === 0}
-            <span class="bdc-chain-op">×</span>
-            <div class="bdc-chain-chip bdc-chain-chip--amplify">
-              <span class="bdc-chip-name">⬆ Pen Bonus</span>
-              <span class="bdc-chip-val">×{fmt(defMult)}</span>
-              <span class="bdc-chip-sub">def=0, pen={fmt(armorPen)}</span>
-            </div>
-          {/if}
-
-          <span class="bdc-chain-op">×</span>
-          <div class="bdc-chain-chip bdc-chain-chip--amplify">
-            <span class="bdc-chip-name">⬆ Pen Bonus</span>
-            <span class="bdc-chip-val">×{fmt(defMult)}</span>
-            <span class="bdc-chip-sub">def=0, pen={fmt(armorPen)}</span>
-          </div>
-          
-          <span class="bdc-chain-eq">=</span>
-          <span class="bdc-chain-result" style="--tc:{curType.color}">{fmt(rawHit)}</span>
-        </div>
-      </div>
-
-      <div class="bdc-results">
-        <div class="bdc-result-card">
-          <span class="bdc-result-label">Per Hit</span>
-          <span class="bdc-result-val" style="color:{curType.color}">{fmt(rawHit)}</span>
-        </div>
-        {#if critChance > 0 && showCritValues}
-          <div class="bdc-result-card bdc-result-card--crit">
-            <span class="bdc-result-label">✦ Crit Hit</span>
-            <span class="bdc-result-val" style="color:#e2b203">{fmt(critHit)}</span>
-          </div>
-          <div class="bdc-result-card bdc-result-card--avg">
-            <span class="bdc-result-label">~ Avg Hit</span>
-            <span class="bdc-result-val" style="color:#a78bfa">{fmt(avgHit)}</span>
-          </div>
-        {/if}
-        {#if hits > 1}
-          <div class="bdc-result-card bdc-result-card--total">
-            <span class="bdc-result-label">×{hits} Total</span>
-            <span class="bdc-result-val" style="color:{curType.color}">{fmt(critChance > 0 && showCritValues ? totalAvg : totalRaw)}</span>
-            {#if critChance > 0 && showCritValues}
-              <span class="bdc-result-sub">{fmt(totalRaw)} raw</span>
+      {#if hitGroups.every(g => g.list.length === 0)}
+        <p class="bdc-empty">No weapon hits available.</p>
+      {:else}
+        <div class="bdc-hit-list">
+          {#each hitGroups as grp}
+            {#if grp.list.length > 0}
+              <div class="bdc-hit-list-grp">
+                <span class="bdc-hit-grp-label">{grp.label}</span>
+                <div class="bdc-hit-list-rows">
+                  {#each grp.list as hit}
+                    <div class="bdc-hit-row" class:bdc-hit-row--finisher={hit.isFinisher}>
+                      {#if hit.label != null}
+                        <span class="bdc-hit-row-label">{hit.label}</span>
+                      {/if}
+                      <div class="bdc-hit-row-types">
+                        {#each hit.types as t, ti}
+                          {#if ti > 0}<span class="bdc-hit-plus">+</span>{/if}
+                          <div class="bdc-hit-type-chunk" style="--tc:{t.color}" class:bdc-hit-type-chunk--rage={t.rageApplied} class:bdc-hit-type-chunk--crit={showCritValues}>
+                          <div class="bdc-hit-type-top">
+                            {#if showCritValues}
+                              <span class="bdc-crit-inline-icon">
+                                <CritIcon size={12} />
+                              </span>
+                            {/if}
+                            
+                            <span class="bdc-hit-type-val">{fmt(showCritValues ? t.critVal : t.raw)}</span>
+                            <span class="bdc-hit-type-label">{t.label}</span>
+                          </div>
+                            <div class="bdc-hit-type-formula">
+                              <span class="bdc-mini-num">{fmt(t.typeBase)}</span>
+                              {#if t.scalingMult !== 1}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--scaling" title="Scaling">{fmtMult(t.scalingMult)}</span>
+                              {/if}
+                              {#if t.rageApplied}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--rage" title="Rage">🔥{fmtMult(t.rageMultUsed)}</span>
+                              {/if}
+                              {#if t.combatMult !== 1}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--combat" title="Combat multipliers">{fmtMult(t.combatMult)}</span>
+                              {/if}
+                              {#if t.defMult !== 1}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--def" class:bdc-mini-chip--amplify={t.defMult > 1} title={`Enemy def ${fmt(t.enemyDefPct)}% vs pen ${fmt(armorPen)}`}>{fmtMult(t.defMult)}</span>
+                              {/if}
+                              <span class="bdc-mini-op">=</span>
+                              <span class="bdc-mini-result" style="--tc:{t.color}">{fmt(t.raw)}</span>
+                            </div>
+                          </div>
+                        {/each}
+                      </div>
+                      {#if hit.count > 1}<span class="bdc-hit-cnt">×{hit.count}</span>{/if}
+                      {#if hit.isFinisher}<span class="bdc-hit-fin">✦</span>{/if}
+                    </div>
+                  {/each}
+                </div>
+              </div>
             {/if}
-          </div>
-        {/if}
-      </div>
-
+          {/each}
+        </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -421,10 +342,6 @@
   min-width: 140px;
 }
 .bdc-def-row:hover { background: var(--surface3, #212420); }
-.bdc-def-row--active {
-  border-color: color-mix(in srgb, var(--tc) 40%, transparent);
-  background: color-mix(in srgb, var(--tc) 7%, transparent);
-}
 
 .bdc-def-type {
   font-size: .62rem;
@@ -470,33 +387,6 @@
 }
 
 
-/* Type selector */
-.bdc-type-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.bdc-type-btn {
-  font-size: .6rem;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.08);
-  background: var(--surface2, #1a1d1b);
-  color: var(--ink-muted, #8a8d85);
-  cursor: pointer;
-  font-family: inherit;
-  transition: all .1s;
-}
-.bdc-type-btn:hover { border-color: var(--tc); color: var(--tc); }
-.bdc-type-btn--active {
-  background: color-mix(in srgb, var(--tc) 15%, transparent);
-  border-color: var(--tc);
-  color: var(--tc);
-  font-weight: 800;
-}
-
 /* Crit Toggle Row */
 .bdc-crit-toggle-row {
   display: flex;
@@ -524,148 +414,6 @@
   box-shadow: 0 0 8px rgba(226,178,3,.2);
 }
 
-/* Multiplier chain */
-.bdc-chain {
-  background: var(--surface2, #1a1d1b);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-
-.bdc-chain-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-}
-
-.bdc-chain-base {
-  font-family: 'Courier New', monospace;
-  font-size: .95rem;
-  font-weight: 700;
-  color: var(--ink-muted, #8a8d85);
-}
-
-.bdc-chain-op {
-  font-size: .7rem;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .4;
-}
-
-.bdc-chain-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 7px;
-  background: rgba(251,146,60,.08);
-  border: 1px solid rgba(251,146,60,.22);
-}
-.bdc-chain-chip--combat {
-  background: rgba(52,211,153,.07);
-  border-color: rgba(52,211,153,.2);
-}
-.bdc-chain-chip--def {
-  background: rgba(248,113,113,.07);
-  border-color: rgba(248,113,113,.2);
-}
-.bdc-chain-chip--amplify {
-  background: rgba(251,191,36,.07);
-  border-color: rgba(251,191,36,.22);
-}
-
-.bdc-chip-name {
-  font-size: .52rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .7;
-}
-.bdc-chip-val {
-  font-family: 'Courier New', monospace;
-  font-size: .88rem;
-  font-weight: 800;
-  color: #fb923c;
-}
-.bdc-chain-chip--combat .bdc-chip-val { color: #34d399; }
-.bdc-chain-chip--def    .bdc-chip-val { color: #f87171; }
-.bdc-chain-chip--amplify .bdc-chip-val { color: #fbbf24; }
-
-.bdc-chip-sub {
-  font-size: .5rem;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .55;
-  font-style: italic;
-}
-
-.bdc-chain-eq {
-  font-size: .85rem;
-  font-weight: 900;
-  color: var(--ink-muted, #8a8d85);
-  margin: 0 2px;
-}
-
-.bdc-chain-result {
-  font-family: 'Courier New', monospace;
-  font-size: 1.2rem;
-  font-weight: 900;
-  color: var(--tc, #e8e4da);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--tc, #e8e4da) 50%, transparent);
-}
-
-/* Results */
-.bdc-results {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.bdc-result-card {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 14px;
-  border-radius: 9px;
-  background: var(--surface2, #1a1d1b);
-  border: 1px solid rgba(255,255,255,.07);
-  min-width: 80px;
-}
-.bdc-result-card--crit {
-  background: rgba(226,178,3,.06);
-  border-color: rgba(226,178,3,.2);
-}
-.bdc-result-card--avg {
-  background: rgba(167,139,250,.06);
-  border-color: rgba(167,139,250,.2);
-}
-.bdc-result-card--total {
-  background: rgba(52,211,153,.06);
-  border-color: rgba(52,211,153,.2);
-}
-
-.bdc-result-label {
-  font-size: .55rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .65;
-}
-.bdc-result-val {
-  font-family: 'Courier New', monospace;
-  font-size: 1.35rem;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 0 14px color-mix(in srgb, currentColor 50%, transparent);
-}
-.bdc-result-sub {
-  font-size: .58rem;
-  color: var(--ink-muted, #8a8d85);
-  opacity: .5;
-  font-family: 'Courier New', monospace;
-}
-
 @media (max-width: 600px) {
   .bdc-layout { flex-direction: column; }
   .bdc-dummy-col { flex-direction: row; align-items: flex-start; width: 100%; }
@@ -674,22 +422,6 @@
 }
 
 /* ── Hit selector ── */
-.bdc-hit-sel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border-radius: 7px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.06);
-}
-.bdc-hit-grp {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
 .bdc-hit-grp-label {
   font-size: .52rem;
   font-weight: 900;
@@ -699,62 +431,158 @@
   opacity: .5;
   min-width: 20px;
 }
-.bdc-hit-btn {
+.bdc-hit-cnt { font-size: .58rem; opacity: .6; }
+
+/* ── Full hit list (no selection needed) ── */
+.bdc-empty {
+  font-size: .78rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .5;
+  font-style: italic;
+}
+.bdc-hit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bdc-hit-list-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.bdc-hit-list-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bdc-hit-row {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,.1);
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
   background: var(--surface2, #1a1d1b);
+  border: 1px solid rgba(255,255,255,.07);
+}
+.bdc-hit-row--finisher {
+  border-color: rgba(250,204,21,.4);
+  background: linear-gradient(135deg, rgba(20,20,20,.6), rgba(250,204,21,.07));
+}
+.bdc-hit-row-label {
+  font-size: .72rem;
+  font-weight: 700;
   color: var(--ink-muted, #8a8d85);
-  font-size: .75rem;
-  font-weight: 700;
+  flex-shrink: 0;
+}
+.bdc-hit-row-types {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+.bdc-hit-type-chunk {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 4px 9px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--tc) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tc) 25%, transparent);
+}
+.bdc-hit-type-chunk--rage {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 50%, #f70201);
+}
+.bdc-hit-type-val {
   font-family: 'Courier New', monospace;
-  cursor: pointer;
-  transition: all .1s;
+  font-size: .9rem;
+  font-weight: 800;
+  color: var(--tc, #e8e4da);
 }
-.bdc-hit-btn:hover { border-color: rgba(251,146,60,.4); color: #fb923c; }
-.bdc-hit-btn--active {
-  background: rgba(251,146,60,.15);
-  border-color: rgba(251,146,60,.5);
-  color: #fb923c;
-  box-shadow: 0 0 6px rgba(251,146,60,.25);
-}
-.bdc-hit-btn--finisher {
-  border-color: rgba(250,204,21,.25);
-}
-.bdc-hit-btn--finisher.bdc-hit-btn--active {
-  background: rgba(250,204,21,.12);
-  border-color: rgba(250,204,21,.5);
-  color: #facc15;
-}
-.bdc-hit-cnt { font-size: .58rem; opacity: .6; }
-.bdc-hit-fin { font-size: .65rem; color: #facc15; }
-.bdc-hit-clear {
-  font-size: .58rem;
+.bdc-hit-type-label {
+  font-size: .55rem;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(248,113,113,.25);
-  background: rgba(248,113,113,.07);
-  color: #f87171;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all .1s;
-  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--tc, #e8e4da);
+  opacity: .65;
 }
-.bdc-hit-clear:hover { background: rgba(248,113,113,.18); }
+.bdc-hit-plus {
+  font-size: .6rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .35;
+}
 
-/* chain chips */
-.bdc-chain-chip--scaling {
-  background: rgba(52,211,153,.07);
-  border-color: rgba(52,211,153,.2);
+.bdc-hit-type-top {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
-.bdc-chain-chip--scaling .bdc-chip-val { color: #34d399; }
-.bdc-chain-chip--rage {
-  background: rgba(247,2,1,.07);
-  border-color: rgba(247,2,1,.25);
+.bdc-hit-type-formula {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+  padding-top: 3px;
+  border-top: 1px dashed color-mix(in srgb, var(--tc) 25%, transparent);
 }
-.bdc-chain-chip--rage .bdc-chip-val { color: #f70201; }
+.bdc-mini-num {
+  font-family: 'Courier New', monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .75;
+}
+.bdc-mini-op {
+  font-size: .6rem;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .4;
+}
+.bdc-mini-chip {
+  font-family: 'Courier New', monospace;
+  font-size: .65rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--ink, #e8e4da);
+}
+.bdc-mini-chip--scaling { color: #34d399; border-color: rgba(52,211,153,.25); background: rgba(52,211,153,.06); }
+.bdc-mini-chip--rage    { color: #f70201; border-color: rgba(247,2,1,.3);    background: rgba(247,2,1,.07); }
+.bdc-mini-chip--combat  { color: #34d399; border-color: rgba(52,211,153,.25); background: rgba(52,211,153,.06); }
+.bdc-mini-chip--def     { color: #f87171; border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.06); }
+.bdc-mini-chip--amplify { color: #fbbf24; border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.07); }
+.bdc-mini-result {
+  font-family: 'Courier New', monospace;
+  font-size: .72rem;
+  font-weight: 900;
+  color: var(--tc, #e8e4da);
+}
+.bdc-hit-fin { font-size: .65rem; color: #facc15; }
+.bdc-crit-inline-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 2px;
+  animation: bdc-pop 0.2s ease-out;
+}
+
+.bdc-hit-type-chunk--crit .bdc-hit-type-val {
+  font-weight: 900;
+  text-shadow: 0 0 4px rgba(216, 75, 85, 0.4);
+
+  filter: hue-rotate(-15deg) saturate(1.8) brightness(1.2);
+}
+
+.bdc-hit-type-chunk--crit {
+  border-color: color-mix(in srgb, var(--tc) 50%, #d84b55) !important;
+  box-shadow: inset 0 0 4px color-mix(in srgb, var(--tc) 20%, #ff9a42);
+}
+
+@keyframes bdc-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
 </style>

@@ -713,6 +713,8 @@
     typedHits_m2:  Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
     typedHits_m1f: Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
     scalingMult: number
+    combatMult: number
+    resolvedDmgTypes: Record<string, number>
     dmgTypeMode: 'weapon' | 'fixed'
   }
 
@@ -771,6 +773,8 @@
         typedHits_m2: buildTypedHits(baseDmg_m2),
         typedHits_m1f: buildTypedHits(baseDmg_m1f),
         scalingMult,
+        combatMult,
+        resolvedDmgTypes,
         dmgTypeMode: def.dmgTypeMode,
       })
     }
@@ -778,31 +782,36 @@
   })()
 
   interface BDCHit {
-    group: 'M1' | 'M2' | 'WA'
+    group: string
     index: number
     count: number
     base: number
     scalingMult: number
     combatMult: number
     isFinisher: boolean
+    dmgTypes: Record<string, number>
+    label?: string
   }
 
   $: _bdcWeaponHits = (() => {
     const result: BDCHit[] = []
     const row = _displayRows[0]
     if (row && Object.keys(_weaponDmgTypes).length > 0) {
+      const gunLabel = (row as any).gunLabel as string | undefined
+      const m1Types = (gunLabel && !(row as any).m2Only)   ? _gunDmgTypes : _weaponDmgTypes
+      const m2Types = (gunLabel && !(row as any).m2NoLock) ? _gunDmgTypes : _weaponDmgTypes
       if (row.m1) {
         row.m1.forEach((h: any, i: number) => {
           const base = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
-          result.push({ group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult, isFinisher: isFinisher(row, 'm1', i) })
+          result.push({ group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult, isFinisher: isFinisher(row, 'm1', i), dmgTypes: m1Types })
         })
       }
       if (row.m2) {
         row.m2.forEach((h: any, i: number) => {
           const base = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
-          result.push({ group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult, isFinisher: true })
+          result.push({ group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult, isFinisher: true, dmgTypes: m2Types })
         })
       }
     }
@@ -817,7 +826,21 @@
             t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
           sc = Math.round((1 + t / 100) * 10000) / 10000
         } else if (hss === 'Same as weapon') sc = _scalingMult
-        result.push({ group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult, isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false })
+        result.push({ group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult, isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: _waDmgTypes })
+      })
+    }
+    for (const entry of _activePerkDmgEntries) {
+      if (entry.typedHits_m2.length === 0) continue
+      result.push({
+        group: 'Perk',
+        index: result.length,
+        count: entry.hits ?? 1,
+        base: entry.typedHits_m2[0].rawVal,
+        scalingMult: entry.scalingMult,
+        combatMult: entry.combatMult,
+        isFinisher: entry.isFinisher ?? false,
+        dmgTypes: entry.resolvedDmgTypes,
+        label: entry.perkName,
       })
     }
     return result
