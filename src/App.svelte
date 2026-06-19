@@ -162,13 +162,16 @@ async function updateBubble(animated = true) {
     activeAppTab = tab
     updateBubble(true)
   }
-
-  onMount(() => {
+  let waHydrated = false
+  onMount(async () => {
     updateBubble(false)
 
     window.addEventListener('resize', () => {
       updateBubble(false)
     })
+
+    await tick()
+    waHydrated = true
   })
 
 // ── Modal state ────────────────────────────────────────────────────────────
@@ -278,10 +281,10 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
 
   $: shrineActive = $build.shrineActive
   $: selectedWA = (() => {
-  const found = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt)
-  if (found && availableWeaponArts.some(wa => wa.name === found.name)) return found
-  return availableWeaponArts[0] ?? WEAPON_ARTS[0]
-})()
+    const found = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt)
+    if (found && availableWeaponArts.some(wa => wa.name === found.name)) return found
+    return availableWeaponArts[0] ?? WEAPON_ARTS[0]
+  })()
 
   $: monkGlovePerkBonus = (() => {
     if (!isMonk || !weaponResult?.part1Name) return 0
@@ -1156,20 +1159,12 @@ $: highestDamageType = (() => {
     return validWAs.filter(wa => !activeReplacements.has(wa.name))
   })()
 
-
-let _prevIsMonk = isMonk
-$: if (isMonk !== _prevIsMonk) {
-  _prevIsMonk = isMonk
-  const firstAvail = WEAPON_ARTS.find(wa => isMonk ? wa.isMonk : !wa.isMonk)
-  if (firstAvail) build.update(s => ({...s, selectedWeaponArt: firstAvail.name}))
-}
-
-$: {
-  const _inAvail = availableWeaponArts.some(wa => wa.name === $build.selectedWeaponArt)
-  if (!_inAvail && availableWeaponArts.length > 0) {
-    build.update(s => ({...s, selectedWeaponArt: availableWeaponArts[0].name}))
+  $: if (waHydrated) {
+    const _inAvail = availableWeaponArts.some(wa => wa.name === $build.selectedWeaponArt)
+    if (!_inAvail && availableWeaponArts.length > 0) {
+      build.update(s => ({ ...s, selectedWeaponArt: availableWeaponArts[0].name }))
+    }
   }
-}
 
   $: waAvailable = checkWA(selectedWA, _waScalings, _waStats, _waWeaponType, isMonk, _waBlade, _waHandle)
   $: waReq = selectedWA.requirements
