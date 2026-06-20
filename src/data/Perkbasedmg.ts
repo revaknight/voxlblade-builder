@@ -112,4 +112,14 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     guardbreak: true,
     note: 'Stuns and briefly immobilizes the target.',
   },
+  {
+    perkName: 'Protector Spirit',
+    condition: 'While above 50% HP the spirit guardian will fire a tiny beam attack at an enemy struck by your M1/M2',
+    getBaseDamage: ({ perkAmount }) => 0.4 + 0.1 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { earth: 0.5, magic: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { earth: 0.5, magic: 0.5 },
+    note: 'Stuns and briefly immobilizes the target.',
+  },
 ]

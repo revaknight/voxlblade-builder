@@ -13,10 +13,8 @@
   activeFinalMult
 
   export let weaponHits: Array<{
-    group: string;
-    index: number; count: number
-    base: number; scalingMult: number; combatMult: number;
-    isFinisher: boolean
+    group: string; index: number; count: number
+    base: number; scalingMult: number; combatMult: number; isFinisher: boolean
     dmgTypes: Record<string, number>
     label?: string
   }> = []
@@ -38,7 +36,64 @@
   const DMG_TYPE_MAP = new Map(DMG_TYPES.map(t => [t.id, t]))
 
   const DEF_TYPE_IDS = ['physical','magic','fire','water','earth','air','hex','holy']
-  let defenses: Record<string, number> = Object.fromEntries(DEF_TYPE_IDS.map(t => [t, 0]))
+  const DEF_STORAGE_KEY = 'voxlbuilder_defenses_v1'
+
+  function loadDefenses(): Record<string, number> {
+    try {
+      const raw = localStorage.getItem(DEF_STORAGE_KEY)
+      if (!raw) return Object.fromEntries(DEF_TYPE_IDS.map(t => [t, 0]))
+      const parsed = JSON.parse(raw)
+      return Object.fromEntries(DEF_TYPE_IDS.map(t => [t, parsed[t] ?? 0]))
+    } catch {
+      return Object.fromEntries(DEF_TYPE_IDS.map(t => [t, 0]))
+    }
+  }
+
+  let defenses: Record<string, number> = loadDefenses()
+
+  $: try { localStorage.setItem(DEF_STORAGE_KEY, JSON.stringify(defenses)) } catch {}
+
+  // ── Daily Challenge presets ────────────────────────────────────────────────
+  interface Preset {
+    id: string
+    label: string
+    desc: string
+    color: string
+    values: Partial<Record<string, number>>
+  }
+
+  const DAILY_PRESETS: Preset[] = [
+    {
+      id: 'magic_resistant',
+      label: 'Magic Resistant',
+      desc: 'Enemies gain +100% Magic Defense',
+      color: '#818cf8',
+      values: { magic: 100 },
+    },
+    {
+      id: 'physical_resistant',
+      label: 'Physical Resistant',
+      desc: 'Enemies gain +100% Physical Defense',
+      color: '#fb923c',
+      values: { physical: 100 },
+    },
+  ]
+
+  let activePreset: string | null = null
+
+  function applyPreset(p: Preset) {
+    if (activePreset === p.id) {
+      resetDefenses()
+      return
+    }
+    defenses = Object.fromEntries(DEF_TYPE_IDS.map(t => [t, p.values[t] ?? 0]))
+    activePreset = p.id
+  }
+
+  function resetDefenses() {
+    defenses = Object.fromEntries(DEF_TYPE_IDS.map(t => [t, 0]))
+    activePreset = null
+  }
 
   // ── Armor pen ─────────────────────────────────────────────────────────────
   $: armorPen   = (stats as any)?.armorPenetration ?? 0
@@ -65,20 +120,15 @@
     return Number.isInteger(r) ? String(r) : r.toFixed(4).replace(/\.?0+$/, '')
   }
 
-  // ── Compute every hit × every damage type up front (no manual selection) ───
   interface ComputedType {
-    key: string;
-    label: string; color: string
+    key: string; label: string; color: string
     typeBase: number; scalingMult: number; combatMult: number
-    rageApplied: boolean;
-    rageMultUsed: number
+    rageApplied: boolean; rageMultUsed: number
     defMult: number; enemyDefPct: number
-    raw: number;
-    critVal: number
+    raw: number; critVal: number
   }
   interface ComputedHit {
-    group: string; index: number; count: number; isFinisher: boolean;
-    label?: string
+    group: string; index: number; count: number; isFinisher: boolean; label?: string
     types: ComputedType[]
   }
 
@@ -90,14 +140,23 @@
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
       const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
       const rageMultUsed = rageApplied ? rageMult : 1
-      const enemyDefPct  = (k === 'true' || k === 'summon') ? 0 : (defenses[k] ?? 0)
+      
+      let enemyDefPct = 0
+      if (k !== 'true' && k !== 'summon') {
+        enemyDefPct = defenses[k] ?? 0
+        if (k === 'air' || k === 'earth') {
+          enemyDefPct += defenses['physical'] ?? 0
+        } else if (k === 'fire' || k === 'water' || k === 'hex' || k === 'holy') {
+          enemyDefPct += defenses['magic'] ?? 0
+        }
+      }
+      
       const defMult      = Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
       const typeBase     = Math.round(hit.base * mult * 100) / 100
       const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * defMult * 100) / 100
       const critVal      = Math.round(raw * critDmgMult / 100 * 100) / 100
       return {
-        key: k, 
-        label: info.label, color: info.color,
+        key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
         rageApplied, rageMultUsed, defMult, enemyDefPct,
         raw, critVal,
@@ -118,7 +177,7 @@
     ...(perkHits.length > 0 ? [{ label: 'Perk', list: perkHits }] : [])
   ]
 
-  // ── Totals ────────────────────────────────────────────────────────────────
+  // ── Totals (From Claude) ──────────────────────────────────────────────────
   function hitTypeSum(hit: ComputedHit, useCrit: boolean): number {
     return Math.round(hit.types.reduce((s, t) => s + (useCrit ? t.critVal : t.raw), 0) * 100) / 100
   }
@@ -169,6 +228,22 @@
         {/if}
       </div>
 
+      <div class="bdc-presets">
+        <span class="bdc-presets-label">Daily</span>
+        <div class="bdc-preset-chips">
+          {#each DAILY_PRESETS as p}
+            <button
+              class="bdc-preset-chip"
+              class:bdc-preset-chip--active={activePreset === p.id}
+              style="--pc:{p.color}"
+              title={p.desc}
+              on:click={() => applyPreset(p)}
+            >{p.label}</button>
+          {/each}
+          <button class="bdc-preset-chip bdc-preset-chip--reset" on:click={resetDefenses}>Reset</button>
+        </div>
+      </div>
+
       <div class="bdc-def-grid">
         {#each DMG_TYPES.filter(t => t.id !== 'true' && t.id !== 'summon') as t}
           <div class="bdc-def-row" style="--tc:{t.color}">
@@ -180,7 +255,7 @@
               max="1000"
               step="1"
               value={defenses[t.id]}
-              on:input={e => { defenses[t.id] = parseFloat((e.target as HTMLInputElement).value) || 0 }}
+              on:input={e => { defenses[t.id] = parseFloat((e.target as HTMLInputElement).value) || 0; defenses = defenses; activePreset = null }}
             />
             <span class="bdc-def-pct">%</span>
           </div>
@@ -247,7 +322,7 @@
                               {/if}
                               {#if t.rageApplied}
                                 <span class="bdc-mini-op">×</span>
-                                <span class="bdc-mini-chip bdc-mini-chip--rage" title="Rage">{fmtMult(t.rageMultUsed)}</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--rage" title="Rage">🔥{fmtMult(t.rageMultUsed)}</span>
                               {/if}
                               {#if t.combatMult !== 1}
                                 <span class="bdc-mini-op">×</span>
@@ -360,6 +435,54 @@
   letter-spacing: .06em;
   white-space: nowrap;
 }
+
+/* Daily presets */
+.bdc-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+.bdc-presets-label {
+  font-size: .52rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .55;
+}
+.bdc-preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bdc-preset-chip {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--pc, #8a8d85) 35%, transparent);
+  background: color-mix(in srgb, var(--pc, #8a8d85) 10%, transparent);
+  color: var(--pc, #8a8d85);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.bdc-preset-chip:hover {
+  background: color-mix(in srgb, var(--pc, #8a8d85) 22%, transparent);
+  border-color: color-mix(in srgb, var(--pc, #8a8d85) 60%, transparent);
+}
+.bdc-preset-chip--active {
+  background: color-mix(in srgb, var(--pc, #8a8d85) 28%, transparent);
+  border-color: var(--pc, #8a8d85);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pc, #8a8d85) 30%, transparent);
+}
+.bdc-preset-chip--reset {
+  --pc: #8a8d85;
+  opacity: .45;
+}
+.bdc-preset-chip--reset:hover { opacity: .8; }
 
 /* Defense grid */
 .bdc-def-grid {
