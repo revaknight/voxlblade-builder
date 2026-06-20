@@ -21,6 +21,7 @@ import glovesRaw from '../data/gloves.json'
 import essencesRaw from '../data/essences.json'
 import { calcCrit } from './crit'
 import type { CritResult } from './crit'
+import { getActiveRaceEffect } from '../data/raceEffects'
 
 export const races: Race[]           = racesRaw as Race[]
 export const guilds: Guild[]         = guildsRaw as Guild[]
@@ -234,6 +235,8 @@ export function calcBoosts(
   summonCount:       number = 0,
   ragePotency:       number = 0,
   bouncePotency:     number = 0,
+  raceName?:         string,
+  hpFillPct?:        number,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -264,6 +267,18 @@ export function calcBoosts(
   }
 
   applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency })
+  
+  if (raceName && hpFillPct != null) {
+    const raceEffect = getActiveRaceEffect(raceName, hpFillPct)
+    if (raceEffect?.dmgBoostMultiplier) {
+      dmgMap.set(raceEffect.label, {
+        sourceName:    raceEffect.label,
+        rawMultiplier: raceEffect.dmgBoostMultiplier,
+        condition:     raceEffect.condition,
+        type:          'dmg',
+      })
+    }
+  }
 
   const dmgEntries  = [...dmgMap.values()]
   const healEntries = [...healMap.values()]
@@ -1205,7 +1220,7 @@ function deriveResults(
   const _bounceBuffs  = _allBuffs.filter(b => b.buffName === 'Bounce')
   const bouncePotency = _bounceBuffs.length > 0 ? Math.max(..._bounceBuffs.map(b => b.potency)) : 0
 
-  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency, bouncePotency)
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency, bouncePotency, state.race, state.hpFill ?? 100,)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 

@@ -1,0 +1,81 @@
+
+export function calcDefMultiplier(defPct: number): number {
+  if (!defPct) return 1
+  const def = defPct / 100
+  return def > 0 ? 1 / (1 + def) : 1 + Math.abs(def)
+}
+
+export function calcTrueDrPercent(defPct: number): number {
+  const def = defPct / 100
+  return Math.round((def / (1 + Math.max(def, 0))) * 10000) / 100
+}
+
+export interface DefenseSource {
+  name: string
+  defPct: number
+  isFlat?: boolean
+  condition?: string
+}
+
+export interface ResolvedDefenseSource extends DefenseSource {
+  mult: number
+  trueDrPct: number
+}
+
+export interface DefenseBreakdown {
+  percentSources: ResolvedDefenseSource[]
+  flatSources: ResolvedDefenseSource[]
+  percentMultiplier: number
+  flatMultiplier: number
+  finalMultiplier: number
+}
+
+export function resolveDefenseSources(sources: DefenseSource[]): DefenseBreakdown {
+  const percentSources: ResolvedDefenseSource[] = []
+  const flatSources: ResolvedDefenseSource[] = []
+
+  for (const s of sources) {
+    if (s.isFlat) {
+      flatSources.push({ ...s, mult: Math.round((1 - s.defPct / 100) * 10000) / 10000, trueDrPct: s.defPct })
+    } else {
+      percentSources.push({
+        ...s,
+        mult: Math.round(calcDefMultiplier(s.defPct) * 10000) / 10000,
+        trueDrPct: calcTrueDrPercent(s.defPct),
+      })
+    }
+  }
+
+  let percentMultiplier = 1
+  for (const s of percentSources) percentMultiplier *= s.mult
+  let flatMultiplier = 1
+  for (const s of flatSources) flatMultiplier *= s.mult
+
+  return {
+    percentSources,
+    flatSources,
+    percentMultiplier: Math.round(percentMultiplier * 10000) / 10000,
+    flatMultiplier: Math.round(flatMultiplier * 10000) / 10000,
+    finalMultiplier: Math.round(percentMultiplier * flatMultiplier * 10000) / 10000,
+  }
+}
+
+const DEF_GROUP: Record<string, string[]> = {
+  physical: ['physicalDefense'],
+  air:      ['airDefense', 'physicalDefense'],
+  earth:    ['earthDefense', 'physicalDefense'],
+  fire:     ['fireDefense', 'magicDefense'],
+  water:    ['waterDefense', 'magicDefense'],
+  hex:      ['hexDefense', 'magicDefense'],
+  holy:     ['holyDefense', 'magicDefense'],
+  magic:    ['magicDefense'],
+  true:     [],
+  summon:   [],
+}
+
+export function calcBaseArmorDefPct(dmgType: string, stats: Record<string, number>): number {
+  const keys = DEF_GROUP[dmgType] ?? []
+  let total = 0
+  for (const k of keys) total += stats[k] ?? 0
+  return Math.round(total * 100) / 100
+}

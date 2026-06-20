@@ -8,6 +8,35 @@
   import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
+  import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive } from './data/Perkbasedmg'
+  import { resolveDefenseSources, calcBaseArmorDefPct, type DefenseSource } from './lib/defense'
+  import { getActiveRaceEffect } from './data/raceEffects'
+  import { getActiveDefensivePerkSources } from './data/defensivePerks'
+
+  $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
+  const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
+  
+  $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct)
+  $: _defenseRows = _DEF_TYPE_LIST.map(type => {
+    const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
+    const sources: DefenseSource[] = baseArmorDefPct !== 0 ? [{ name: 'Base Armor', defPct: baseArmorDefPct }] : []
+    for (const s of _activeDefensivePerkSources) {
+      sources.push({ 
+        name: s.name, 
+        defPct: s.defPct, 
+        isFlat: s.isFlat, 
+        condition: s.condition 
+      })
+    }
+    
+    if (_activeRaceEffect?.flatDrPct) {
+      sources.push({ name: _activeRaceEffect.label, defPct: _activeRaceEffect.flatDrPct, isFlat: true, condition: _activeRaceEffect.condition })
+    }
+    
+    return { type, color: DMG_TYPE_COLORS[type] ?? '#e8e4da', ...resolveDefenseSources(sources) }
+  }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
+
+  $: _hpFillPct = $build.hpFill ?? 100
 
   $: _waSummonDef = (() => {
     const summonName = WA_SUMMON_MAP[selectedWA.name]
@@ -237,8 +266,6 @@
     ? `${_baseWeaponType} + ${_gunOverlay.type}`
     : _gunOverlay?.type ?? _baseWeaponType
 
-  // Aggregated perk-based damage type bonuses applied unconditionally to ALL attacks.
-  // Add new perks here — they'll automatically propagate to M1/M2, WA, and per-hit.
   $: _perkDmgTypeBonuses = (() => {
     const bonus: Record<string, number> = {}
     const voidRage = ($result.perks['Void Rage'] ?? 0)
@@ -597,14 +624,13 @@
         hitScalingMult = _scalingMult
       }
 
-      const effectiveMult = hitScalingMult * _waCombatMult  // ← THÊM
+      const effectiveMult = hitScalingMult * _waCombatMult
 
-      // ... (giữ nguyên phần parse dtStr)
       const types: DamageDisplayType[] = Object.entries(/* dtFinal */{}).map(([k, mult]) => ({
         label: k.charAt(0).toUpperCase() + k.slice(1),
         rawVal: Math.round(base * 100) / 100,
         val: Math.round(base * (mult as number) * effectiveMult * 100) / 100,
-        scalingMult: effectiveMult,   // ← đổi
+        scalingMult: effectiveMult,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
       }))
       return { base, count, types }
@@ -671,8 +697,6 @@
   $: maxSummons = 15 + Math.floor(perks['Swarm'] ?? 0);
 
   // ── Perk Base Damage ───────────────────────────────────────────────────────
-  import { PERK_DMG_DEFS } from './data/Perkbasedmg'
-
   let springblastFinisherHits = 1
 
   /** Total hit count in the current weapon's M2 (used as finisher hits context) */
@@ -715,6 +739,8 @@
     combatMult: number
     resolvedDmgTypes: Record<string, number>
     dmgTypeMode: 'weapon' | 'fixed'
+    isActive: boolean
+    secondaryEffects: Array<{ label: string; display: string; condition?: string; color: string; isActive: boolean }>
   }
 
   $: _activePerkDmgEntries = (() => {
@@ -756,6 +782,19 @@
       const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2  })
       const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _fhM1f })
 
+      const isActive = isHpGateActive(def.hpGate, _hpFillPct, perkAmount)
+
+      const secondaryEffects = (def.secondaryEffects ?? []).map(se => {
+        const raw = Math.round(se.getValue({ perkAmount }) * 100) / 100
+        return {
+          label: se.label,
+          display: (se.format ?? String)(raw),
+          condition: se.condition,
+          color: SECONDARY_TONE_COLORS[se.tone ?? 'utility'],
+          isActive: isHpGateActive(se.hpGate, _hpFillPct, perkAmount),
+        }
+      })
+
       out.push({
         perkName: def.perkName,
         perkAmount,
@@ -770,6 +809,8 @@
         combatMult,
         resolvedDmgTypes,
         dmgTypeMode: def.dmgTypeMode,
+        isActive,
+        secondaryEffects,
       })
     }
     return out
@@ -826,6 +867,7 @@
     }
     for (const entry of _activePerkDmgEntries) {
       if (entry.typedHits_m2.length === 0) continue
+      if (!entry.isActive) continue 
       result.push({
         group: 'Perk',
         index: result.length,
@@ -1038,6 +1080,53 @@
       {/each}
       <span class="da-chain-result" style="color:#4ade80">= ×{+boosts.healFinalMultiplier.toFixed(4)}</span>
     </div>
+  {/if}
+</div>
+
+<!-- ══════════════════ DEFENSE ══════════════════ -->
+<div class="da-section da-section--defense">
+  <div class="da-section-title">Damage Taken</div>
+
+  <div class="ds-formula-hint">
+    dmgTaken = def% &gt; 0 → dmg ÷ (1 + def%) &nbsp;·&nbsp; def% &lt; 0 → dmg × (1 + |def%|)
+  </div>
+
+  <ul class="def-rules">
+    <li>Positive Defense decreases incoming damage · negative Defense increases it.</li>
+    <li>Every <strong>unique source</strong> of defense is multiplicative with every other source.</li>
+    <li>Defense <strong>stats</strong> within the same source are additive — e.g. Physical + Air Defense both apply when taking Air damage.</li>
+    <li>Flat DR effects (e.g. Lithic Veil, Grandmagic Bubble) apply <strong>after</strong> every percent-based source.</li>
+  </ul>
+
+  {#if _defenseRows.length > 0}
+    <div class="def-type-grid">
+      {#each _defenseRows as row}
+        <div class="def-type-card" style="--tc:{row.color}">
+          <div class="def-type-head">
+            <span class="def-type-dot" style="background:{row.color}"></span>
+            <span class="def-type-name">{row.type.charAt(0).toUpperCase() + row.type.slice(1)}</span>
+            <span class="def-type-final">×{row.finalMultiplier}</span>
+          </div>
+          {#each row.percentSources as s}
+            <div class="def-source-row">
+              <span class="def-source-name">{s.name}</span>
+              <span class="def-source-raw">{s.defPct >= 0 ? '+' : ''}{s.defPct}%</span>
+              <span class="def-source-arrow">→</span>
+              <span class="def-source-dr" class:def-source-dr--neg={s.trueDrPct < 0}>{s.trueDrPct}% true DR</span>
+            </div>
+          {/each}
+          {#each row.flatSources as s}
+            <div class="def-source-row def-source-row--flat" title={s.condition ?? ''}>
+              <span class="def-source-name">{s.name} <span class="def-flat-badge">FLAT</span></span>
+              <span class="def-source-dr">{s.trueDrPct}% DR</span>
+            </div>
+          {/each}
+        </div>
+      {/each}
+    </div>
+    <!--<p class="da-empty-hint">Additional defense sources (flat-DR buffs, etc.) will stack here as separate multiplicative layers once added.</p>-->
+  {:else}
+    <p class="da-empty-hint">No defense stats equipped — incoming damage is currently unmitigated.</p>
   {/if}
 </div>
 
@@ -1422,9 +1511,12 @@
           </div>
         {/if}
         <!-- Typed damage: M2/main finisher -->
-        <div class="da-pbd-dmg-row">
+        <div class="da-pbd-dmg-row" class:da-pbd-dmg-row--inactive={!entry.isActive}>
           {#if entry.isFinisher && _m2FinisherHits > 1}
             <span class="da-pbd-ctx-label">M2 ({_m2FinisherHits} hits)</span>
+          {/if}
+          {#if !entry.isActive}
+            <span class="da-pbd-inactive-badge">Inactive</span>
           {/if}
           <div class="da-hits-row">
             <div class="da-hit-card" class:da-hit-card--finisher={entry.isFinisher}>
@@ -1499,6 +1591,20 @@
                 {/each}
               </div>
             </div>
+          </div>
+        {/if}
+        {#if entry.secondaryEffects.length > 0}
+          <div class="da-pbd-secondary-list">
+            {#each entry.secondaryEffects as se}
+              <div class="da-pbd-secondary" class:da-pbd-secondary--inactive={!se.isActive} style="--sc:{se.color}">
+                <span class="da-pbd-secondary-label">{se.label}</span>
+                <span class="da-pbd-secondary-val">{se.display}</span>
+                {#if !se.isActive}<span class="da-pbd-secondary-inactive">inactive</span>{/if}
+                {#if se.condition}
+                  <span class="da-pbd-secondary-cond">{se.condition}</span>
+                {/if}
+              </div>
+            {/each}
           </div>
         {/if}
         <!-- Note -->
@@ -3232,5 +3338,65 @@
   padding: 3px 10px;
   border-radius: 7px;
   white-space: nowrap;
+}
+.da-pbd-secondary-list { display:flex; flex-direction:column; gap:4px; }
+.da-pbd-secondary {
+  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+  padding:5px 8px; border-radius:6px;
+  background: color-mix(in srgb, var(--sc) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc) 22%, transparent);
+}
+.da-pbd-secondary-label { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--sc); opacity:.85; }
+.da-pbd-secondary-val { font-family:'Courier New',monospace; font-size:.85rem; font-weight:800; color:var(--sc); }
+.da-pbd-secondary-cond { font-size:.58rem; color:var(--ink-muted,#8a8d85); opacity:.55; font-style:italic; flex-basis:100%; }
+.da-pbd-dmg-row--inactive { opacity: .35; filter: grayscale(.5); }
+.da-pbd-inactive-badge {
+  font-size: .55rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-muted, #8a8d85); padding: 1px 6px; border-radius: 4px;
+  background: rgba(255,255,255,.05); border: 1px dashed rgba(255,255,255,.15);
+}
+.da-pbd-secondary--inactive { opacity: .35; filter: grayscale(.5); }
+.da-pbd-secondary-inactive {
+  font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-muted, #8a8d85); opacity: .8;
+}
+
+.da-section--defense {
+  border-color: rgba(248,113,113,.18);
+  background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(248,113,113,.03) 100%);
+}
+.def-rules {
+  margin: 0; padding-left: 18px;
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: .72rem; color: var(--ink-muted, #8a8d85); line-height: 1.45;
+}
+.def-rules strong { color: var(--ink, #e8e4da); font-weight: 700; }
+.def-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+.def-type-card {
+  background: var(--surface2, #1a1d1b);
+  border: 1px solid color-mix(in srgb, var(--tc) 22%, transparent);
+  border-radius: 9px; padding: 9px 11px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.def-type-head { display: flex; align-items: center; gap: 6px; }
+.def-type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.def-type-name { font-size: .8rem; font-weight: 700; color: var(--tc); flex: 1; }
+.def-type-final { font-family: 'Courier New', monospace; font-size: .82rem; font-weight: 800; color: var(--tc); }
+.def-source-row { display: flex; align-items: center; gap: 5px; font-size: .68rem; padding: 2px 0; }
+.def-source-name { color: var(--ink-muted, #8a8d85); flex: 1; }
+.def-source-raw { font-family: 'Courier New', monospace; color: var(--ink, #e8e4da); opacity: .7; }
+.def-source-arrow { color: var(--ink-muted, #8a8d85); opacity: .4; font-size: .6rem; }
+.def-source-dr { font-family: 'Courier New', monospace; font-weight: 700; color: #4ade80; }
+.def-source-dr--neg { color: #f87171; }
+.def-source-row--flat { border-top: 1px dashed rgba(255,255,255,.08); padding-top: 4px; margin-top: 2px; }
+.def-flat-badge {
+  font-size: .5rem; font-weight: 800; letter-spacing: .08em;
+  padding: 0 4px; border-radius: 3px;
+  background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.28);
+  color: var(--accent2, #f59e0b); margin-left: 4px;
 }
 </style>

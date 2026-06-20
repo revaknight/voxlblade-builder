@@ -4,45 +4,54 @@ export interface PerkDmgCtx {
   finisherHits?: number
   m1FinisherHits?: number
 }
+export type SecondaryEffectTone = 'defense' | 'offense' | 'utility'
+
+export interface HpGate {
+  hpThreshold: number
+  aboveThreshold: boolean
+  alwaysActiveAtPerkAmount?: number
+}
+
+export function isHpGateActive(gate: HpGate | undefined, hpFillPct: number, perkAmount: number): boolean {
+  if (!gate) return true
+  if (gate.alwaysActiveAtPerkAmount != null && perkAmount >= gate.alwaysActiveAtPerkAmount) return true
+  return gate.aboveThreshold ? hpFillPct > gate.hpThreshold : hpFillPct <= gate.hpThreshold
+}
+
+export interface SecondaryEffect {
+  label: string
+  getValue: (ctx: PerkDmgCtx) => number
+  format?: (value: number) => string
+  condition?: string
+  tone?: SecondaryEffectTone
+  hpGate?: HpGate
+}
+
+export const SECONDARY_TONE_COLORS: Record<SecondaryEffectTone, string> = {
+  defense: '#f87171',
+  offense: '#fb923c',
+  utility: '#8a8d85',
+}
 
 export interface PerkDmgDef {
   perkName: string
-  /** Short display label if different from perkName */
   label?: string
-  /** Trigger / activation condition */
   condition?: string
-  /**
-   * Returns base damage per single proc.
-   * For multi-hit entries (hits > 1), this is the per-hit value.
-   */
   getBaseDamage: (ctx: PerkDmgCtx) => number
-  /**
-   * Static hit count for display (e.g. Basic Spirit = 3).
-   * Undefined = single proc/hit.
-   */
   hits?: number
-  /**
-   * 'weapon' → inherit current weapon's damage types.
-   * 'fixed'  → use dmgTypes below.
-   */
   dmgTypeMode: 'weapon' | 'fixed'
   dmgTypes?: Record<string, number>
-  /**
-   * 'weapon' → inherit current weapon's scalings.
-   * 'fixed'  → use scalings below.
-   * 'none'   → no scaling contribution.
-   */
   scalingMode: 'weapon' | 'fixed' | 'none'
   scalings?: Record<string, number>
-  /** Attack classification tags for display badges */
   isM1?: boolean
   isM2?: boolean
   isFinisher?: boolean
   isWA?: boolean
   isRune?: boolean
   guardbreak?: boolean
-  /** Extra per-instance note shown under the card */
   note?: string
+  hpGate?: HpGate
+  secondaryEffects?: SecondaryEffect[]
 }
 
 export const PERK_DMG_DEFS: PerkDmgDef[] = [
@@ -120,6 +129,17 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { earth: 0.5, magic: 0.5 },
     scalingMode: 'fixed',
     scalings: { earth: 0.5, magic: 0.5 },
-    note: 'Stuns and briefly immobilizes the target.',
+    hpGate: { hpThreshold: 50, aboveThreshold: true, alwaysActiveAtPerkAmount: 2 },
+    secondaryEffects: [
+      {
+        label: 'DR below 50% HP',
+        getValue: ({ perkAmount }) => 20 * perkAmount,
+        format: v => `${v}%`,
+        condition: 'Flat, non-diminishing · 3s CD per activation',
+        tone: 'defense',
+        hpGate: { hpThreshold: 50, aboveThreshold: false, alwaysActiveAtPerkAmount: 2 },
+      },
+    ],
+    note: 'Spirit fires one beam at a time. Beam + DR both active simultaneously at 2+ stacks.',
   },
 ]
