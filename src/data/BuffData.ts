@@ -462,7 +462,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       isSelfDebuff: true
     },
   ],
-
+  'Aggressive Personality': (amount) => [
+    {
+      buffName: 'Taunt',
+      potency: 0,
+      duration: 0,
+      condition: 'On Warhammer/Dual Mallets M1 Finisher or Mallet M2 hit',
+      sourceName: 'Aggressive Personality',
+      sourceType: 'perk',
+    },
+  ],
 }
 
 export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {

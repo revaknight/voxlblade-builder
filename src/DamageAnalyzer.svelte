@@ -12,6 +12,10 @@
   import { resolveDefenseSources, calcBaseArmorDefPct, type DefenseSource } from './lib/defense'
   import { getActiveRaceEffect } from './data/raceEffects'
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
+  import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
+
+  $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
+  $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
 
   $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
@@ -840,7 +844,13 @@
         row.m1.forEach((h: any, i: number) => {
           const base = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
-          result.push({ group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult, isFinisher: isFinisher(row, 'm1', i), dmgTypes: m1Types })
+          const finisherHit = isFinisher(row, 'm1', i)
+          const wb = finisherHit ? _m1FinisherWeaponBoost : null
+          result.push({
+            group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult,
+            isFinisher: finisherHit, dmgTypes: m1Types,
+            ...(wb && wb.mult !== 1 ? { weaponBoostMult: wb.mult, weaponBoostLabel: wb.labels.join(', ') } : {}),
+          })
         })
       }
       if (row.m2) {
@@ -848,7 +858,11 @@
           const rawBase = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
           const base = applyWeaponCharge(rawBase)
-          result.push({ group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult, isFinisher: true, dmgTypes: m2Types })
+          result.push({
+            group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult,
+            isFinisher: true, dmgTypes: m2Types,
+            ...(_m2WeaponBoost.mult !== 1 ? { weaponBoostMult: _m2WeaponBoost.mult, weaponBoostLabel: _m2WeaponBoost.labels.join(', ') } : {}),
+          })
         })
       }
     }
@@ -1069,6 +1083,22 @@
       </span>
     </div>
   {/if}
+  {#if _m1FinisherWeaponBoost.mult !== 1 || _m2WeaponBoost.mult !== 1}
+    <div class="da-weaponboost-row" style="margin-top: 8px;">
+      {#if _m1FinisherWeaponBoost.mult !== 1}
+        <span class="da-weaponboost-badge">
+          M1 Finisher ×{+_m1FinisherWeaponBoost.mult.toFixed(4)}
+        </span>
+        <span class="da-weaponboost-sources">{_m1FinisherWeaponBoost.labels.join(', ')}</span>
+      {/if}
+      {#if _m2WeaponBoost.mult !== 1}
+        <span class="da-weaponboost-badge">
+          M2 ×{+_m2WeaponBoost.mult.toFixed(4)}
+        </span>
+        <span class="da-weaponboost-sources">{_m2WeaponBoost.labels.join(', ')}</span>
+      {/if}
+    </div>
+  {/if}
   {#if boosts.healEntries.length > 0}
     <div class="da-boost-row" style="margin-top:8px">
       <span class="da-heal-label">✦ Heal</span>
@@ -1103,8 +1133,6 @@
 
   <div class="ds-formula-hint">
     Defense: dmgTaken = 1 / (1 + def%) &nbsp;·&nbsp; Each +1% Defense = +1% EHP (linear, no diminishing returns)
-    <br/>
-    Flat DR: dmgTaken = 1 − DR% &nbsp;·&nbsp; EHP gains accelerate as DR stacks (e.g. 50% DR = +100% EHP)
   </div>
 
   <ul class="def-rules">
@@ -3457,5 +3485,17 @@
   background: rgba(248,113,113,.1);
   color: #f87171;
   box-shadow: 0 0 8px rgba(248,113,113,.18);
+}
+.da-weaponboost-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 5px 10px; border-radius: 6px;
+  background: rgba(251,191,36,.06); border: 1px solid rgba(251,191,36,.2);
+}
+.da-weaponboost-badge {
+  font-size: .75rem; font-weight: 800;
+  color: #fbbf24; font-family: 'Courier New', monospace;
+}
+.da-weaponboost-sources {
+  font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic;
 }
 </style>

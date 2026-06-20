@@ -17,6 +17,8 @@
     base: number; scalingMult: number; combatMult: number; isFinisher: boolean
     dmgTypes: Record<string, number>
     label?: string
+    weaponBoostMult?: number
+    weaponBoostLabel?: string
   }> = []
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
@@ -124,6 +126,7 @@
     key: string; label: string; color: string
     typeBase: number; scalingMult: number; combatMult: number
     rageApplied: boolean; rageMultUsed: number
+    weaponBoostMult: number; weaponBoostLabel?: string
     defMult: number; enemyDefPct: number
     raw: number; critVal: number
   }
@@ -151,14 +154,16 @@
         }
       }
       
+      const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
       const typeBase     = Math.round(hit.base * mult * 100) / 100
-      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * defMult * 100) / 100
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * 100) / 100
       const critVal      = Math.round(raw * critDmgMult / 100 * 100) / 100
       return {
         key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
-        rageApplied, rageMultUsed, defMult, enemyDefPct,
+        rageApplied, rageMultUsed, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
+        defMult, enemyDefPct,
         raw, critVal,
       }
     })
@@ -304,7 +309,10 @@
                       <div class="bdc-hit-row-types">
                         {#each hit.types as t, ti}
                           {#if ti > 0}<span class="bdc-hit-plus">+</span>{/if}
-                          <div class="bdc-hit-type-chunk" style="--tc:{t.color}" class:bdc-hit-type-chunk--rage={t.rageApplied} class:bdc-hit-type-chunk--crit={showCritValues}>
+                          <div class="bdc-hit-type-chunk" style="--tc:{t.color}"
+                            class:bdc-hit-type-chunk--rage={t.rageApplied}
+                            class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
+                            class:bdc-hit-type-chunk--crit={showCritValues}>
                             <div class="bdc-hit-type-top">
                               {#if showCritValues}
                                 <span class="bdc-crit-inline-icon">
@@ -327,6 +335,12 @@
                               {#if t.combatMult !== 1}
                                 <span class="bdc-mini-op">×</span>
                                 <span class="bdc-mini-chip bdc-mini-chip--combat" title="Combat multipliers">{fmtMult(t.combatMult)}</span>
+                              {/if}
+                              {#if t.weaponBoostMult !== 1}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--weaponboost" title={t.weaponBoostLabel ?? 'Weapon-specific boost'}>
+                                  {fmtMult(t.weaponBoostMult)}
+                                </span>
                               {/if}
                               {#if t.defMult !== 1}
                                 <span class="bdc-mini-op">×</span>
@@ -837,5 +851,12 @@
 @keyframes bdc-pop {
   0% { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
+}
+.bdc-hit-type-chunk--weaponboost {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 50%, #fbbf24);
+}
+.bdc-mini-chip--weaponboost {
+  display: inline-flex; align-items: center; gap: 3px;
+  color: #fbbf24; border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.1);
 }
 </style>
