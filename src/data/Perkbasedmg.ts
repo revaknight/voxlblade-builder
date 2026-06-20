@@ -1,8 +1,8 @@
 export interface PerkDmgCtx {
   perkAmount: number
-  /** Total number of hits in the current finisher event (M2 hit count) */
   finisherHits?: number
   m1FinisherHits?: number
+  statuses?: Record<string, number> 
 }
 export type SecondaryEffectTone = 'defense' | 'offense' | 'utility'
 
@@ -142,4 +142,23 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     ],
     note: 'Spirit fires one beam at a time. Beam + DR both active simultaneously at 2+ stacks.',
   },
+  // ── Air Pressure ───────────────────────────────────────────────────────────
+  {
+    perkName: 'Air Pressure',
+    condition: 'Upon using a rune release an air burst',
+    getBaseDamage: ({ perkAmount }) => 7.5 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { air: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { air: 1.0 },
+    isRune: true,
+    secondaryEffects: [
+      {
+        label: 'Damage Reduction',
+        getValue: ({ perkAmount }) => 10 * perkAmount,
+        format: v => `${v}%`,
+        tone: 'defense',
+      }
+    ]
+  }
 ]

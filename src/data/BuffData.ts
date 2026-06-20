@@ -114,6 +114,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     potencyCapped: true,
   },
+  'Air Pressure': {
+    name: 'Air Pressure',
+    color: '#AAFFDB',
+    description: 'Take x% less damage and upon using a rune release an air burst.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    statKey: 'airDefense',
+  },
 
   //Debuffs
   Slowness: {
@@ -135,7 +143,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Weakness: {
     name: 'Weakness',
     color: '#8b11e9',
-    description: 'Reduce enemy damage output.',
+    description: 'Reduce damage output.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -143,7 +151,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Bleed: {
     name: 'Bleed',
     color: '#ff0004',
-    description: 'Enemy bleeds over time.',
+    description: 'bleeds over time.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -151,7 +159,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Burn: {
     name: 'Burn',
     color: '#fd5d00',
-    description: 'Enemy burns over time.',
+    description: 'burns over time.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -159,7 +167,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Poison: {
     name: 'Poison',
     color: '#d900ff',
-    description: 'Enemy is poisoned over time.',
+    description: 'poisons over time.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -183,7 +191,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Shatter: {
     name: 'Shatter',
     color: '#ff8183',
-    description: 'Shatter enemy armor.',
+    description: 'Shatter armor.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -443,6 +451,17 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       },
     ]
   },
+    'Barbskin': () => [
+    {
+      buffName: 'Bleed',
+      potency: 0,
+      duration: 5,
+      condition: 'Inflicting Bleed will cause yourself to Bleed',
+      sourceName: 'Barbskin',
+      sourceType: 'perk',
+      isSelfDebuff: true
+    },
+  ],
 
 }
 

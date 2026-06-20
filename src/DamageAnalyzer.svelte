@@ -16,7 +16,7 @@
   $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
   
-  $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct)
+  $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered)
   $: _defenseRows = _DEF_TYPE_LIST.map(type => {
     const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
     const sources: DefenseSource[] = baseArmorDefPct !== 0 ? [{ name: 'Base Armor', defPct: baseArmorDefPct }] : []
@@ -37,6 +37,7 @@
   }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
 
   $: _hpFillPct = $build.hpFill ?? 100
+  let _adaptivePlateTriggered = false
 
   $: _waSummonDef = (() => {
     const summonName = WA_SUMMON_MAP[selectedWA.name]
@@ -1087,15 +1088,30 @@
 <div class="da-section da-section--defense">
   <div class="da-section-title">Damage Taken</div>
 
+  {#if (perks['Adaptive Plate'] ?? 0) > 0}
+    <div class="ap-toggle-row">
+      <span class="ap-toggle-label">Adaptive Plate</span>
+      <button
+        class="ap-toggle-btn"
+        class:ap-toggle-btn--on={_adaptivePlateTriggered}
+        on:click={() => _adaptivePlateTriggered = !_adaptivePlateTriggered}
+      >
+        {_adaptivePlateTriggered ? 'Triggered' : 'Idle'}
+      </button>
+    </div>
+  {/if}
+
   <div class="ds-formula-hint">
-    dmgTaken = def% &gt; 0 → dmg ÷ (1 + def%) &nbsp;·&nbsp; def% &lt; 0 → dmg × (1 + |def%|)
+    Defense: dmgTaken = 1 / (1 + def%) &nbsp;·&nbsp; Each +1% Defense = +1% EHP (linear, no diminishing returns)
+    <br/>
+    Flat DR: dmgTaken = 1 − DR% &nbsp;·&nbsp; EHP gains accelerate as DR stacks (e.g. 50% DR = +100% EHP)
   </div>
 
   <ul class="def-rules">
     <li>Positive Defense decreases incoming damage · negative Defense increases it.</li>
-    <li>Every <strong>unique source</strong> of defense is multiplicative with every other source.</li>
+    <li>Every <strong>unique source</strong> is multiplicative — Defense sources multiply with Flat DR sources.</li>
     <li>Defense <strong>stats</strong> within the same source are additive — e.g. Physical + Air Defense both apply when taking Air damage.</li>
-    <li>Flat DR effects (e.g. Lithic Veil, Grandmagic Bubble) apply <strong>after</strong> every percent-based source.</li>
+    <li>Flat DR (e.g. Stoneskin, Lithic Veil) applies <strong>after</strong> all Defense sources and is more efficient per % the higher it stacks.</li>
   </ul>
 
   {#if _defenseRows.length > 0}
@@ -1108,17 +1124,15 @@
             <span class="def-type-final">×{row.finalMultiplier}</span>
           </div>
           {#each row.percentSources as s}
-            <div class="def-source-row">
+            <div class="def-source-row" title={s.condition ?? ''}>
               <span class="def-source-name">{s.name}</span>
-              <span class="def-source-raw">{s.defPct >= 0 ? '+' : ''}{s.defPct}%</span>
-              <span class="def-source-arrow">→</span>
-              <span class="def-source-dr" class:def-source-dr--neg={s.trueDrPct < 0}>{s.trueDrPct}% true DR</span>
+              <span class="def-source-raw" class:def-source-dr--neg={s.defPct < 0}>{s.defPct >= 0 ? '+' : ''}{s.defPct}% Defense</span>
             </div>
           {/each}
           {#each row.flatSources as s}
             <div class="def-source-row def-source-row--flat" title={s.condition ?? ''}>
-              <span class="def-source-name">{s.name} <span class="def-flat-badge">FLAT</span></span>
-              <span class="def-source-dr">{s.trueDrPct}% DR</span>
+              <span class="def-source-name">{s.name}</span>
+              <span class="def-source-dr def-source-dr--flat">{s.trueDrPct}% Damage Reduction</span>
             </div>
           {/each}
         </div>
@@ -1649,15 +1663,19 @@
         <div class="ds-col ds-col--op">×</div>
         <div class="ds-col ds-col--boost">
           {#if row.boostPct !== 0}
-            <span class="ds-boost" class:ds-boost--zero={row.boostPct === 0}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
+            <span class="ds-boost" style={row.boostPct < 0 ? 'color: #cf6679;' : ''} class:ds-boost--zero={row.boostPct === 0}>
+              {row.boostPct > 0 ? '+' : ''}{row.boostPct}%
+            </span>
           {:else}
             <span class="ds-boost ds-boost--zero">+0%</span>
           {/if}
         </div>
         <div class="ds-col ds-col--op">=</div>
         <div class="ds-col ds-col--contrib">
-          <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0} style={row.contribution > 0 ? `color:${row.color}` : ''}>
-            +{row.contribution}%
+          <span class="ds-contrib" 
+                class:ds-contrib--zero={row.contribution === 0} 
+                style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+            {row.contribution > 0 ? '+' : ''}{row.contribution}%
           </span>
         </div>
       </div>
@@ -1718,16 +1736,19 @@
             <div class="ds-col ds-col--op">×</div>
             <div class="ds-col ds-col--boost">
               {#if row.boostPct !== 0}
-                <span class="ds-boost">{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
+                <span class="ds-boost" style={row.boostPct < 0 ? 'color: #cf6679;' : ''}>
+                  {row.boostPct > 0 ? '+' : ''}{row.boostPct}%
+                </span>
               {:else}
                 <span class="ds-boost ds-boost--zero">+0%</span>
               {/if}
             </div>
             <div class="ds-col ds-col--op">=</div>
             <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0}
-                style={row.contribution > 0 ? `color:${row.color}` : ''}>
-                +{row.contribution}%
+              <span class="ds-contrib" 
+                    class:ds-contrib--zero={row.contribution === 0}
+                    style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+                {row.contribution > 0 ? '+' : ''}{row.contribution}%
               </span>
             </div>
           </div>
@@ -1819,12 +1840,19 @@
                   <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal}</span>
                 </div>
                 <div class="ds-col ds-col--op">×</div>
+                
                 <div class="ds-col ds-col--boost">
-                  <span class="ds-boost">+{boostPct}%</span>
+                  <span class="ds-boost" style={boostPct < 0 ? 'color: #cf6679;' : ''}>
+                    {boostPct > 0 ? '+' : ''}{boostPct}%
+                  </span>
                 </div>
+                
                 <div class="ds-col ds-col--op">=</div>
+                
                 <div class="ds-col ds-col--contrib">
-                  <span class="ds-contrib" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">+{contrib}%</span>
+                  <span class="ds-contrib" style="color: {contrib < 0 ? '#cf6679' : (SCALING_COLORS[key] ?? '#e8e4da')}">
+                    {contrib > 0 ? '+' : ''}{contrib}%
+                  </span>
                 </div>
               </div>
             {/each} 
@@ -3388,15 +3416,46 @@
 .def-type-final { font-family: 'Courier New', monospace; font-size: .82rem; font-weight: 800; color: var(--tc); }
 .def-source-row { display: flex; align-items: center; gap: 5px; font-size: .68rem; padding: 2px 0; }
 .def-source-name { color: var(--ink-muted, #8a8d85); flex: 1; }
-.def-source-raw { font-family: 'Courier New', monospace; color: var(--ink, #e8e4da); opacity: .7; }
-.def-source-arrow { color: var(--ink-muted, #8a8d85); opacity: .4; font-size: .6rem; }
+.def-source-raw { font-family: 'Courier New', monospace; font-weight: 700; color: #4ade80; }
 .def-source-dr { font-family: 'Courier New', monospace; font-weight: 700; color: #4ade80; }
 .def-source-dr--neg { color: #f87171; }
+.def-source-dr--flat { color: #f59e0b; }
 .def-source-row--flat { border-top: 1px dashed rgba(255,255,255,.08); padding-top: 4px; margin-top: 2px; }
 .def-flat-badge {
   font-size: .5rem; font-weight: 800; letter-spacing: .08em;
   padding: 0 4px; border-radius: 3px;
   background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.28);
   color: var(--accent2, #f59e0b); margin-left: 4px;
+}
+.ap-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ap-toggle-label {
+  font-size: .62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--ink-muted, #8a8d85);
+  opacity: .6;
+}
+.ap-toggle-btn {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(248,113,113,.2);
+  background: var(--surface2, #1a1d1b);
+  color: var(--ink-muted, #8a8d85);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.ap-toggle-btn--on {
+  border-color: rgba(248,113,113,.55);
+  background: rgba(248,113,113,.1);
+  color: #f87171;
+  box-shadow: 0 0 8px rgba(248,113,113,.18);
 }
 </style>
