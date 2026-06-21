@@ -10,6 +10,7 @@ export const BOOST_DEFS: BoostDef[] = [
   // dmg boost
   {sourceName: 'Blood Thirsty', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed',},
   {sourceName:'Perfection',multiplierPerPerk: 0.10, type: 'dmg', condition: 'at max potency',},
+  {sourceName:'Stealth',multiplierPerPerk: 0.10, type: 'dmg', condition: "gain a Damage Boost against enemies that aren't targeting you",},
   {sourceName:'Venom Eater',multiplierPerPerk: 0.10, type: 'dmg', condition: 'On Poison proc hit',},
   { sourceName: 'Golden Crits', multiplierPerPerk: 0.50, type: 'dmg', condition: '40% chance on crit' },
   { sourceName: 'Spring Powered', multiplierPerPerk: 0, type: 'dmg', isLevel: true },

@@ -41,6 +41,7 @@ const DEFAULT_BUILD: BuildState = {
   hpFill: 100,
   summonCount: 0,
   buffsConsumed: 0,
+  inDarkness: true,
 }
 
 function loadBuild(): BuildState {

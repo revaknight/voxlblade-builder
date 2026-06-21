@@ -800,14 +800,23 @@ function onStatFilterChange( e: CustomEvent<{
     (!essenceFilterTier || e.tier === Number(essenceFilterTier))
   )
 // ── Weapon enchant damage type bonuses ────────────────────────────────────────
-const WEAPON_ENCHANT_DMG_TYPE: Record<string, Partial<Record<string, number>>> = {
-  'Stone': { earth: 0.3 },
+interface PerkDmgTypeBonusDef {
+  perkName: string
+  type: string
+  amountPerStack: number
 }
+
+const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
+  { perkName: 'Stone Weapon', type: 'earth', amountPerStack: 0.3 },
+]
 
 $: weaponEnchantDmgBonus = (() => {
   const bonus: Record<string, number> = {}
-  const stoneWeapon = $result.perks['Stone Weapon'] ?? 0
-  if (stoneWeapon > 0) bonus['earth'] = Math.round(stoneWeapon * 0.3 * 100) / 100
+  for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
+    const amt = $result.perks[def.perkName] ?? 0
+    if (amt <= 0) continue
+    bonus[def.type] = Math.round(((bonus[def.type] ?? 0) + amt * def.amountPerStack) * 100) / 100
+  }
   return bonus
 })()
 

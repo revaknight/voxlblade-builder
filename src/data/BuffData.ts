@@ -124,7 +124,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   'Ancient Shield': {
     name: 'Ancient Shield',
-    color: '#38bdf8',
+    color: '#9aff00',
     description: 'Gain a shield equal to potency HP for 15s. Consumes buffs/neutrals applied to allies.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',

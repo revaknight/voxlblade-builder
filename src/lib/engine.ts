@@ -107,6 +107,7 @@ interface SpecialBoostOpts {
   summonCount:       number
   ragePotency:       number
   bouncePotency:     number
+  inDarkness:        boolean
 }
 
 function applySpecialBoosts(
@@ -115,7 +116,7 @@ function applySpecialBoosts(
   healMap: Map<string, BoostEntry>,
   opts:    SpecialBoostOpts,
 ): void {
-  const { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency } = opts
+  const { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency, inDarkness } = opts
 
   const primalStacks = perks['Primal'] ?? 0
   if (primalStacks > 0 && naturalCritChance > 0) {
@@ -224,6 +225,25 @@ if (civilianStacks > 0) {
     appliesTo: ['rune'],
   })
 }
+const vampireStacks = perks['Vampire'] ?? 0
+  if (vampireStacks > 0) {
+    const fullPct = vampireStacks / 15 // 1/15 = 6.667%, ×3 = 20%
+    const dmgPct  = inDarkness ? fullPct : fullPct / 2
+    dmgMap.set('Vampire', {
+      sourceName:    'Vampire',
+      rawMultiplier: Math.round((1 + dmgPct) * 10000) / 10000,
+      condition:     inDarkness ? 'In darkness' : 'In sunlight (dmg boost halved)',
+      type:          'dmg',
+    })
+    if (!inDarkness) {
+      healMap.set('Vampire (Sunlight)', {
+        sourceName:    'Vampire (Sunlight)',
+        rawMultiplier: 0.5,
+        condition:     'Healing received halved in sunlight',
+        type:          'heal',
+      })
+    }
+  }
 }
 
 export function calcBoosts(
@@ -237,6 +257,7 @@ export function calcBoosts(
   bouncePotency:     number = 0,
   raceName?:         string,
   hpFillPct?:        number,
+  inDarkness:        boolean = true,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -272,7 +293,7 @@ export function calcBoosts(
     else                    healMap.set(perkName, entry)
   }
 
-  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency })
+  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency, inDarkness })
   
   if (raceName && hpFillPct != null) {
     const raceEffect = getActiveRaceEffect(raceName, hpFillPct)
@@ -1226,7 +1247,7 @@ function deriveResults(
   const _bounceBuffs  = _allBuffs.filter(b => b.buffName === 'Bounce')
   const bouncePotency = _bounceBuffs.length > 0 ? Math.max(..._bounceBuffs.map(b => b.potency)) : 0
 
-  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency, bouncePotency, state.race, state.hpFill ?? 100,)
+  const boosts = calcBoosts(finalPerks, state.emotionalState, state.level ?? 80, crit.naturalCritChance, boostedStats.jumpBoost ?? 0, state.summonCount ?? 0, ragePotency, bouncePotency, state.race, state.hpFill ?? 100, state.inDarkness ?? true)
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }
 

@@ -22,24 +22,22 @@
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
   
   $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered)
+  $: _vampireStacks = perks['Vampire'] ?? 0
+
   $: _defenseRows = _DEF_TYPE_LIST.map(type => {
-    const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
-    const sources: DefenseSource[] = baseArmorDefPct !== 0 ? [{ name: 'Base Armor', defPct: baseArmorDefPct }] : []
-    for (const s of _activeDefensivePerkSources) {
-      sources.push({ 
-        name: s.name, 
-        defPct: s.defPct, 
-        isFlat: s.isFlat, 
-        condition: s.condition 
-      })
-    }
-    
-    if (_activeRaceEffect?.flatDrPct) {
-      sources.push({ name: _activeRaceEffect.label, defPct: _activeRaceEffect.flatDrPct, isFlat: true, condition: _activeRaceEffect.condition })
-    }
-    
-    return { type, color: DMG_TYPE_COLORS[type] ?? '#e8e4da', ...resolveDefenseSources(sources) }
-  }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
+      const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
+      const sources: DefenseSource[] = baseArmorDefPct !== 0 ? [{ name: 'Base Armor', defPct: baseArmorDefPct }] : []
+      for (const s of _activeDefensivePerkSources) {
+        sources.push({ name: s.name, defPct: s.defPct, isFlat: s.isFlat, condition: s.condition })
+      }
+      if (_activeRaceEffect?.flatDrPct) {
+        sources.push({ name: _activeRaceEffect.label, defPct: _activeRaceEffect.flatDrPct, isFlat: true, condition: _activeRaceEffect.condition })
+      }
+      if (_vampireStacks > 0 && $build.inDarkness) {
+        sources.push({ name: 'Vampire', defPct: Math.round((_vampireStacks * 10 / 3) * 100) / 100, isFlat: true, condition: 'In darkness · lost in sunlight' })
+      }
+      return { type, color: DMG_TYPE_COLORS[type] ?? '#e8e4da', ...resolveDefenseSources(sources) }
+    }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
 
   $: _hpFillPct = $build.hpFill ?? 100
   let _adaptivePlateTriggered = false
@@ -272,11 +270,43 @@
     ? `${_baseWeaponType} + ${_gunOverlay.type}`
     : _gunOverlay?.type ?? _baseWeaponType
 
+  interface WaDmgTypeBonusDef {
+    perkName: string
+    type: string
+    amountPerStack: number
+  }
+
+  const WA_DMG_TYPE_BONUS_DEFS: WaDmgTypeBonusDef[] = [
+    { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
+  ]
+
+  $: _waPerkDmgTypeBonuses = (() => {
+    const bonus: Record<string, number> = {}
+    for (const def of WA_DMG_TYPE_BONUS_DEFS) {
+      const amt = perks[def.perkName] ?? 0
+      if (amt <= 0) continue
+      bonus[def.type] = Math.round(((bonus[def.type] ?? 0) + amt * def.amountPerStack) * 100) / 100
+    }
+    return bonus
+  })()
+  interface PerkDmgTypeBonusDef {
+    perkName: string
+    type: string
+    amountPerStack: number
+    condition?: (ctx: { ragePotency: number }) => boolean
+  }
+
+  const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
+    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
+  ]
+
   $: _perkDmgTypeBonuses = (() => {
     const bonus: Record<string, number> = {}
-    const voidRage = ($result.perks['Void Rage'] ?? 0)
-    if (voidRage > 0 && _ragePotency > 0) {
-      bonus['hex'] = Math.round(voidRage * 0.1 * 100) / 100
+    for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
+      const amt = perks[def.perkName] ?? 0
+      if (amt <= 0) continue
+      if (def.condition && !def.condition({ ragePotency: _ragePotency })) continue
+      bonus[def.type] = Math.round(((bonus[def.type] ?? 0) + amt * def.amountPerStack) * 100) / 100
     }
     return bonus
   })()
@@ -586,10 +616,10 @@
 
   $: _waDmgTypes = (() => {
     const dt = selectedWA.damageType
-    if (!dt || dt === 'Same as weapon') return _weaponDmgTypes
+    if (!dt || dt === 'Same as weapon') return _applyDmgBonuses(_weaponDmgTypes, _waPerkDmgTypeBonuses)
     if (dt.includes('Highest damage type')) {
       const entries = Object.entries(_weaponDmgTypes)
-      if (entries.length === 0) return _weaponDmgTypes
+      if (entries.length === 0) return _applyDmgBonuses(_weaponDmgTypes, _waPerkDmgTypeBonuses)
       const PRIORITY = ['hex', 'water', 'air', 'true', 'earth', 'magic', 'fire', 'physical', 'holy']
       const [highestKey] = entries.reduce((a, b) => {
         if (b[1] > a[1]) return b
@@ -601,14 +631,14 @@
         return a
       })
       const total = Math.round(entries.reduce((s, [, v]) => s + v, 0) * 100) / 100
-      return _applyDmgBonuses({ [highestKey]: total }, _perkDmgTypeBonuses)
+      return _applyDmgBonuses(_applyDmgBonuses({ [highestKey]: total }, _perkDmgTypeBonuses), _waPerkDmgTypeBonuses)
     }
     const types: Record<string, number> = {}
     const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
     let m: RegExpExecArray | null
     while ((m = re.exec(dt)) !== null) types[m[2].toLowerCase()] = parseFloat(m[1])
     const base = Object.keys(types).length > 0 ? types : { ..._weaponDmgTypes }
-    return _applyDmgBonuses(base, _perkDmgTypeBonuses)
+    return _applyDmgBonuses(_applyDmgBonuses(base, _perkDmgTypeBonuses), _waPerkDmgTypeBonuses)
   })()
 
   $: _waScalingMult = (() => {
@@ -956,6 +986,7 @@
     }
     return result
   })()
+  
 
 </script>
 
@@ -1167,6 +1198,18 @@
         on:click={() => _adaptivePlateTriggered = !_adaptivePlateTriggered}
       >
         {_adaptivePlateTriggered ? 'Triggered' : 'Idle'}
+      </button>
+    </div>
+  {/if}
+  {#if _vampireStacks > 0}
+    <div class="ap-toggle-row">
+      <span class="ap-toggle-label">Vampire</span>
+      <button
+        class="ap-toggle-btn"
+        class:ap-toggle-btn--on={$build.inDarkness}
+        on:click={() => build.update(s => ({...s, inDarkness: !s.inDarkness}))}
+      >
+        {$build.inDarkness ? '🌙 Darkness' : '☀ Sunlight'}
       </button>
     </div>
   {/if}
