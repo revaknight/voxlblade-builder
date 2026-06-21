@@ -238,6 +238,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isNeutral: true,
   },
+  'Beenades': {
+    name: 'Beenades',
+    color: '#ffe97a',
+    description: 'Throw an additional x Beenades.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isNeutral: true,
+  },
 }
 
 export const ITEM_BUFF_MAP: GrantedBuff[] = [
@@ -260,6 +268,13 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
     potency: 0.3,
     duration: 10,
     sourceName: 'Bounce Rune',
+    sourceType: 'rune',
+  },
+    {
+    buffName: 'Beenades',
+    potency: 5,
+    duration: 10,
+    sourceName: 'Beenade Rune',
     sourceType: 'rune',
   },
 ]
