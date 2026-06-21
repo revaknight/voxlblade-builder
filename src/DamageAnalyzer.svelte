@@ -422,7 +422,7 @@
     air:       '#AAFFDB',
     hex:       '#e879f9',
     holy:      '#facc15',
-    dexterity: '#34d399',
+    dexterity: '#ffe373',
     summon:    '#c084fc',
   }
 
