@@ -359,11 +359,11 @@
       * 10000) / 10000
   }
 
-  $: _m1CombatMult   = _categoryMult('m1')
-  $: _m2CombatMult   = _categoryMult('m2')
-  $: _waCombatMult   = _categoryMult('wa')
-  $: _runeCombatMult = _categoryMult('rune')
-  $: _perkCombatMult = _categoryMult('perk')
+  $: _m1CombatMult   = (void activeEntries, _categoryMult('m1'))
+  $: _m2CombatMult   = (void activeEntries, _categoryMult('m2'))
+  $: _waCombatMult   = (void activeEntries, _categoryMult('wa'))
+  $: _runeCombatMult = (void activeEntries, _categoryMult('rune'))
+  $: _perkCombatMult = (void activeEntries, _categoryMult('perk'))
 
   $: _hasSpecificBoosts = boosts.dmgEntries.some(e => !!(e as any).appliesTo)
 
