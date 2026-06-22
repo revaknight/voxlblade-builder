@@ -18,6 +18,8 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Royal Parry', multiplierPerPerk: 0.50, type: 'dmg', condition: 'on the hit that activated the Critical Boost status per 1 of this perk.' },
   { sourceName: 'Spell Piercer', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Increase damage dealt by weapon arts and runes on crit by 20% per 1 of this perk' },
   { sourceName: 'Scourge', multiplierPerPerk: 0.2, condition: 'Gain a chance for any hit to count as a Guardbreak', type: 'dmg' },
+  { sourceName: 'Valor', multiplierPerPerk: 0.0666, type: 'dmg', condition: 'Damage Boost vs Taunted enemies, per 1 of this perk' },
+
   
 
   // level damage (handled specially in calcBoosts — perkAmount unused)
@@ -25,6 +27,8 @@ export const BOOST_DEFS: BoostDef[] = [
 
   // heal
   { sourceName: 'Emotional', multiplierPerPerk: 0.20, type: 'heal', condition: 'when you have both buffs and debuffs' },
+  { sourceName: 'Heal Boost', multiplierPerPerk: 0.10, type: 'heal', condition: 'Increase healing by 10% per 1 of this perk' },
+
 ]
 
 export const BOOST_DEF_MAP = new Map(BOOST_DEFS.map(d => [d.sourceName, d]))

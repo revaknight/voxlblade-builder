@@ -23,6 +23,7 @@
   }> = []
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
+  export let luminescentPct: number = 0
 
   const DMG_TYPES = [
     { id: 'physical', label: 'Physical', color: '#fb923c' },
@@ -132,6 +133,7 @@
     defMult: number; enemyDefPct: number
     raw: number; critVal: number
     isHeal: boolean
+    isLuminescent?: boolean
   }
   interface ComputedHit {
       group: string; index: number; count: number; isFinisher: boolean; label?: string
@@ -150,7 +152,7 @@
       const rageMultUsed = rageApplied ? rageMult : 1
 
       let enemyDefPct = 0
-      if (!isHeal && k !== 'true' && k !== 'summon') {   // ← heal bỏ qua giáp
+      if (!isHeal && k !== 'true' && k !== 'summon') {
         enemyDefPct = defenses[k] ?? 0
         if (k === 'air' || k === 'earth') {
           enemyDefPct += defenses['physical'] ?? 0
@@ -158,7 +160,6 @@
           enemyDefPct += defenses['magic'] ?? 0
         }
       }
-
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = isHeal ? 1 : Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
       const typeBase     = Math.round(hit.base * mult * 100) / 100
@@ -172,6 +173,23 @@
         raw, critVal, isHeal,
       }
     })
+    if (!isHeal && luminescentPct > 0) {
+      const baseSum = types.reduce((s, t) => s + t.raw, 0)
+      if (baseSum > 0) {
+        const holyDefPct  = (defenses['holy'] ?? 0) + (defenses['magic'] ?? 0)
+        const holyDefMult = Math.round(calcArmorMult(holyDefPct, penDecimal).mult * 10000) / 10000
+        const lumTypeBase = Math.round(baseSum * luminescentPct * 100) / 100
+        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 100) / 100
+        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 100) / 100
+        types.push({
+          key: 'holy', label: 'Holy', color: DMG_TYPE_MAP.get('holy')?.color ?? '#facc15',
+          typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
+          rageApplied: false, rageMultUsed: 1, weaponBoostMult: 1,
+          defMult: holyDefMult, enemyDefPct: holyDefPct,
+          raw: lumRaw, critVal: lumCrit, isHeal: false, isLuminescent: true,
+        })
+      }
+    }
     return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types }
   })
 
@@ -320,15 +338,17 @@
                             class:bdc-hit-type-chunk--rage={t.rageApplied}
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
+                            class:bdc-hit-type-chunk--luminescent={t.isLuminescent}
                             class:bdc-hit-type-chunk--crit={showCritValues}>
                             <div class="bdc-hit-type-top">
                               {#if showCritValues}
-                                <span class="bdc-crit-inline-icon">
-                                  <CritIcon size={12} />
-                                </span>
+                                <span class="bdc-crit-inline-icon"><CritIcon size={12} /></span>
                               {/if}
                               <span class="bdc-hit-type-val">{fmt(showCritValues ? t.critVal : t.raw)}</span>
                               <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
+                              {#if t.isLuminescent}
+                                <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
+                              {/if}
                             </div>
                             <div class="bdc-hit-type-formula">
                               <span class="bdc-mini-num">{fmt(t.typeBase)}</span>

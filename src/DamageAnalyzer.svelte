@@ -96,6 +96,7 @@
   $: boosts = $result.boosts
   $: stats = $result.stats
   $: perks = $result.perks
+  $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
 
   $: _activeRageBuffs = _allActiveBuffs.filter(b => b.buffName === 'Rage')
   $: _activeReinforcePotency      = _allActiveBuffs.reduce((m, b) => b.buffName === 'Reinforce'       ? Math.max(m, b.potency) : m, 0)
@@ -2158,6 +2159,7 @@
   weaponHits={_bdcWeaponHits}
   rageMult={_rageMult}
   rageAffectedTypes={_rageAffectedTypes}
+  luminescentPct={_luminescentPct}
   showCritToggle={_showCrit}
   bind:showCritValues
 />

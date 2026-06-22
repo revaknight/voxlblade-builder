@@ -455,7 +455,7 @@ const ENCHANT_EFFECT_PERK_NAMES = new Set(
 const PERK_EFFECTIVENESS_EXEMPT = new Set([
   ...ENCHANT_EFFECT_PERK_NAMES,
   "Cursed", "Luminescent Fervor", "Valor", "Spirit Commune",
-  "Channeled Weapon", "Quickcast", "Thief Training", "Vampire",
+  "Channeled Weapon", "Quickcast", "Thief Training", "Vampire", "Heal Boost",
 ])
 
 export function applyPerkEffectiveness(

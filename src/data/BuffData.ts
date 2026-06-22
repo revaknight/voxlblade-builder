@@ -134,6 +134,17 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
   },
+  Luminescent: {
+    name: 'Luminescent',
+    color: '#fde047',
+    description: "Deal x% of your damage as bonus holy damage that counts as the applier's damage.",
+    dynamicDescription: (_perks, potency) => {
+      const pct = +(potency * 50).toFixed(3)
+      return `Deal ${pct}% of your damage as bonus holy damage that counts as the applier's damage.`
+    },
+    effectPerTenthPotency: 5,
+    effectUnit: '%',
+  },
 
   //Debuffs
   Slowness: {
@@ -423,6 +434,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       { buffName: 'Tailwind',  potency: 0.2, duration: 15, condition, sourceName: 'Blessing', sourceType: 'perk' },
     ]
   },
+  'Luminescent Fervor': (amount) => [
+    {
+      buffName: 'Luminescent',
+      potency: 0.1 * amount,
+      duration: 25,
+      condition: 'On healing an Ally or self',
+      sourceName: 'Luminescent Fervor',
+      sourceType: 'perk',
+    },
+  ],
   'Cursed Experiment': (amount) => [
     { buffName: 'Rage',           potency: 0.3 + 0.1 * amount, duration: 5 + 2 * amount, condition: 'Rune used below 50% HP', sourceName: 'Cursed Experiment', sourceType: 'perk' },
     { buffName: 'Critical Boost', potency: 1.0,                 duration: 5 + 2 * amount, condition: 'Rune used below 50% HP', sourceName: 'Cursed Experiment', sourceType: 'perk' },
@@ -534,6 +555,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
         duration: 15,
         condition: 'Using a Rune',
         sourceName: 'Apollo Boost',
+        sourceType: 'perk',
+      },
+    ],
+    'Valor': () => [
+      {
+        buffName: 'Taunt',
+        potency: 1.0,
+        duration: 16,
+        condition: 'Weapon Art hits an enemy',
+        sourceName: 'Valor',
         sourceType: 'perk',
       },
     ],

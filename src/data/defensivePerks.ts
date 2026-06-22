@@ -59,7 +59,14 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     label: 'Air Pressure (Max Potency)',
     conditionLabel: 'Calculate at maximum accumulation, assuming 10 potency per perk level.',
   },
-    {
+  {
+    perkName: 'Valor',
+    drPctPerStack: 50,
+    maxDrPct: 50,
+    label: 'Valor (Shield Block)',
+    conditionLabel: 'While Blocking · requires one-handed weapon or Spear (not Dual Wielding) · stacks with Parry · damageTaken/(1+DR%)',
+  },
+  {
     perkName: 'Vampire',
     drPctPerStack: 10 / 3,
     label: 'Vampire',
