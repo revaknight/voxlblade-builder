@@ -2,7 +2,7 @@ export interface BuffDefinition {
   name: string
   color: string
   description: string
-  dynamicDescription?: (perks: Record<string, number>) => string
+  dynamicDescription?: (perks: Record<string, number>, potency: number) => string 
   effectPerTenthPotency: number
   effectUnit: '%' | 'flat'
   statKey?: string
@@ -126,6 +126,11 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Magic Reinforce',
     color: '#1cf8ff',
     description: 'Take x% less damage and gain y flat reduction to magic damage.',
+    dynamicDescription: (perks, potency) => {
+      const x = +(potency * 50).toFixed(3)
+      const y = +(potency * 3).toFixed(3)
+      return `Take ${x}% less damage and gain ${y} flat reduction to magic damage.`
+    },
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
   },
@@ -767,14 +772,17 @@ export function applyBuffPerkModifiers(
 
 export function getBuffDescription(
   buffName: string,
-  perks: Record<string, number>
+  perks: Record<string, number>,
+  potency: number = 0 // Thêm tham số potency
 ): string {
   const buff = BUFF_DEFS[buffName]
   if (!buff) return ''
 
-  return buff.dynamicDescription
-    ? buff.dynamicDescription(perks)
+  let desc = buff.dynamicDescription
+    ? buff.dynamicDescription(perks, potency)
     : buff.description
+
+  return desc.replace(/x%/g, `${+(potency * 100).toFixed(3)}%`)
 }
 
 export function getPerkBuffs(perks: Record<string, number>): GrantedBuff[] {

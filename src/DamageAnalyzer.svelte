@@ -33,6 +33,22 @@
       if (_activeRaceEffect?.flatDrPct) {
         sources.push({ name: _activeRaceEffect.label, defPct: _activeRaceEffect.flatDrPct, isFlat: true, condition: _activeRaceEffect.condition })
       }
+      if (_activeReinforcePotency > 0) {
+        const defPct = Math.round(_activeReinforcePotency * 100 * 100) / 100
+        sources.push({ name: 'Reinforce', defPct })
+      }
+      if (_activeMagicReinforcePotency > 0) {
+        const P = _activeMagicReinforcePotency
+        const defPct = Math.round((P / 2) * 100 * 100) / 100
+        const isMagicType = ['magic', 'fire', 'water', 'hex', 'holy'].includes(type)
+        const flatDmg = Math.round(P * 3 * 100) / 100
+
+        sources.push({
+          name: 'Magic Reinforce',
+          defPct,
+          condition: isMagicType ? `Take ${flatDmg} less magic damage` : undefined
+        })
+      }
       return { type, color: DMG_TYPE_COLORS[type] ?? '#e8e4da', ...resolveDefenseSources(sources) }
     }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
 
@@ -58,19 +74,19 @@
     }
   })()
 
-  $: _hasCritBoostBuff = (() => {
+  $: _allActiveBuffs = (() => {
     const itemBuffs = getActiveBuildBuffs({
       rune: $build.rune, ring: $build.ring, infusionRing: $build.infusionRing,
       helmet: $build.helmet, chestplate: $build.chestplate, leggings: $build.leggings,
       weaponBlade: $build.weaponBlade, weaponHandle: $build.weaponHandle,
       monkGlove: $build.monkGlove, race: $build.race,
     })
-    const all = applyBuffPerkModifiers(
+    return applyBuffPerkModifiers(
       [...itemBuffs, ...getPerkBuffs($result.perks), ...getWeaponArtBuffs($build.selectedWeaponArt)],
       $result.perks, $build.rune || undefined
     )
-    return all.some(b => b.buffName === 'Critical Boost')
   })()
+  $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
 
   $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks
   $: _critMult = crit.critDamageMultiplier / 100  
@@ -81,25 +97,9 @@
   $: stats = $result.stats
   $: perks = $result.perks
 
-  $: _activeRageBuffs = (() => {
-    const itemBuffs = getActiveBuildBuffs({
-      rune: $build.rune,
-      ring: $build.ring,
-      infusionRing: $build.infusionRing,
-      helmet: $build.helmet,
-      chestplate: $build.chestplate,
-      leggings: $build.leggings,
-      weaponBlade: $build.weaponBlade,
-      weaponHandle: $build.weaponHandle,
-      monkGlove: $build.monkGlove,
-    })
-    const all = applyBuffPerkModifiers(
-      [...itemBuffs, ...getPerkBuffs($result.perks), ...getWeaponArtBuffs($build.selectedWeaponArt)],
-      $result.perks,
-      $build.rune || undefined
-    )
-    return all.filter(b => b.buffName === 'Rage')
-  })()
+  $: _activeRageBuffs = _allActiveBuffs.filter(b => b.buffName === 'Rage')
+  $: _activeReinforcePotency      = _allActiveBuffs.reduce((m, b) => b.buffName === 'Reinforce'       ? Math.max(m, b.potency) : m, 0)
+  $: _activeMagicReinforcePotency = _allActiveBuffs.reduce((m, b) => b.buffName === 'Magic Reinforce' ? Math.max(m, b.potency) : m, 0)
 
   $: _ragePotency = _activeRageBuffs.length > 0
     ? Math.max(..._activeRageBuffs.map(b => b.potency))
@@ -1244,7 +1244,13 @@
           {#each row.percentSources as s}
             <div class="def-source-row" title={s.condition ?? ''}>
               <span class="def-source-name">{s.name}</span>
-              <span class="def-source-raw" class:def-source-dr--neg={s.defPct < 0}>{s.defPct >= 0 ? '+' : ''}{s.defPct}% Defense</span>
+              <span class="def-source-raw" class:def-source-dr--neg={s.defPct < 0}>
+                {s.defPct >= 0 ? '+' : ''}{s.defPct}% Defense
+              </span>
+
+              {#if s.condition}
+                <span class="def-source-note">{s.condition}</span>
+              {/if}
             </div>
           {/each}
           {#each row.flatSources as s}
@@ -3734,4 +3740,6 @@
 .da-weaponboost-sources {
   font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic;
 }
+
+
 </style>
