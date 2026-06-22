@@ -26,7 +26,7 @@ export interface GrantedBuff {
   duration: number
   condition?: string
   sourceName: string
-  sourceType: 'perk' | 'weaponArt'| 'rune'
+  sourceType: 'perk' | 'weaponArt'| 'rune'| 'cantrip'
   isSelfDebuff?: boolean
 }
 
@@ -121,6 +121,13 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     statKey: 'airDefense',
+  },
+  'Magic Reinforce': {
+    name: 'Magic Reinforce',
+    color: '#1cf8ff',
+    description: 'Take x% less damage and gain y flat reduction to magic damage.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
   },
 
   //Debuffs
@@ -525,6 +532,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
         sourceType: 'perk',
       },
     ],
+    'Channeled Weapon': () => [
+    {
+      buffName: 'Magic Reinforce',
+      potency: 0.1,
+      duration: 20,
+      condition: 'rank 2 in the Scholar Guild.',
+      sourceName: 'PONDER(Scholar cantrip)',
+      sourceType: 'cantrip',
+    },
+  ],
 }
 
 export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {

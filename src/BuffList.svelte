@@ -87,7 +87,8 @@ $: groupedBuffs = Object.values(
     rune:   '#a78bfa',
     perk:   '#fbbf24',
     weaponArt: '#38bdf8',
-    race:      '#34d399'
+    race:      '#34d399',
+    cantrip: '#38ff49',
   }
 
   const SRC_LABEL: Record<string, string> = {
@@ -95,6 +96,7 @@ $: groupedBuffs = Object.values(
     perk:       'Perk',
     weaponArt:  'W. Art',
     race:       'Race',
+    cantrip: 'cantrip',
   }
   function fmtPotency(v: number): string {
     return String(Math.round(v * 1000) / 1000);
