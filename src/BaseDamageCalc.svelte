@@ -20,6 +20,7 @@
     weaponBoostMult?: number
     weaponBoostLabel?: string
     isHeal?: boolean
+    forceCrit?: boolean
   }> = []
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
@@ -134,6 +135,7 @@
     raw: number; critVal: number
     isHeal: boolean
     isLuminescent?: boolean
+    forceCrit: boolean
   }
   interface ComputedHit {
       group: string; index: number; count: number; isFinisher: boolean; label?: string
@@ -170,7 +172,7 @@
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
         rageApplied, rageMultUsed, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
         defMult, enemyDefPct,
-        raw, critVal, isHeal,
+        raw, critVal, isHeal, forceCrit: hit.forceCrit ?? false,
       }
     })
     if (!isHeal && luminescentPct > 0) {
@@ -186,7 +188,7 @@
           typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
           rageApplied: false, rageMultUsed: 1, weaponBoostMult: 1,
           defMult: holyDefMult, enemyDefPct: holyDefPct,
-          raw: lumRaw, critVal: lumCrit, isHeal: false, isLuminescent: true,
+          raw: lumRaw, critVal: lumCrit, isHeal: false, isLuminescent: true, forceCrit: false,
         })
       }
     }
@@ -209,7 +211,7 @@
 
   // ── Totals (From Claude) ──────────────────────────────────────────────────
   function hitTypeSum(hit: ComputedHit, useCrit: boolean): number {
-    return Math.round(hit.types.reduce((s, t) => s + (useCrit ? t.critVal : t.raw), 0) * 100) / 100
+    return Math.round(hit.types.reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * 100) / 100
   }
   function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {
     return Math.round(list.reduce((s, h) => s + hitTypeSum(h, useCrit) * h.count, 0) * 100) / 100
@@ -327,6 +329,7 @@
                   {#each grp.list as hit}
                     {@const hSum = hitTypeSum(hit, showCritValues)}
                     {@const multiType = hit.types.length > 1}
+                    {@const hitForceCrit = hit.types.some(t => t.forceCrit)}
                     <div class="bdc-hit-row" class:bdc-hit-row--finisher={hit.isFinisher}>
                       {#if hit.label != null}
                         <span class="bdc-hit-row-label">{hit.label}</span>
@@ -339,12 +342,12 @@
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
                             class:bdc-hit-type-chunk--luminescent={t.isLuminescent}
-                            class:bdc-hit-type-chunk--crit={showCritValues}>
+                            class:bdc-hit-type-chunk--crit={showCritValues || t.forceCrit}>
                             <div class="bdc-hit-type-top">
-                              {#if showCritValues}
+                              {#if showCritValues || t.forceCrit}
                                 <span class="bdc-crit-inline-icon"><CritIcon size={12} /></span>
                               {/if}
-                              <span class="bdc-hit-type-val">{fmt(showCritValues ? t.critVal : t.raw)}</span>
+                              <span class="bdc-hit-type-val">{fmt((showCritValues || t.forceCrit) ? t.critVal : t.raw)}</span>
                               <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
                               {#if t.isLuminescent}
                                 <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
@@ -376,9 +379,9 @@
                               {/if}
                               <span class="bdc-mini-op">=</span>
                               <span class="bdc-mini-result" style="--tc:{t.color}">{fmt(t.raw)}</span>
-                              {#if showCritValues}
+                              {#if showCritValues || t.forceCrit}
                                 <span class="bdc-mini-op">×</span>
-                                <span class="bdc-mini-chip bdc-mini-chip--crit" title="Crit damage multiplier">
+                                <span class="bdc-mini-chip bdc-mini-chip--crit" title={t.forceCrit ? 'Guaranteed crit' : 'Crit damage multiplier'}>
                                   <CritIcon size={9}/>{fmtMult(critDmgMult / 100)}
                                 </span>
                                 <span class="bdc-mini-op">=</span>
@@ -392,8 +395,8 @@
                         {#if hit.count > 1}<span class="bdc-hit-cnt">×{hit.count}</span>{/if}
                         
                         <span class="bdc-hit-type-sum-sep">=</span>
-                        <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues}>
-                          {#if showCritValues}<CritIcon size={11}/>{/if}
+                          <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues || hitForceCrit}>
+                          {#if showCritValues || hitForceCrit}<CritIcon size={11}/>{/if}
                           {fmt(hSum * hit.count)}
                         </span>
                         

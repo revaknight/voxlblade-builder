@@ -578,6 +578,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceType: 'cantrip',
     },
   ],
+  'Gladiatorial Rage': () => [
+    {
+      buffName: 'Rage',
+      potency: 0.1,
+      duration: 5,
+      condition: 'rank 2 in the Gladiator Guild.',
+      sourceName: 'HUNT(Gladiator cantrip)',
+      sourceType: 'cantrip',
+    },
+  ],
 }
 
 export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {

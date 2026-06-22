@@ -64,7 +64,7 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     drPctPerStack: 50,
     maxDrPct: 50,
     label: 'Valor (Shield Block)',
-    conditionLabel: 'While Blocking · requires one-handed weapon or Spear (not Dual Wielding) · stacks with Parry · damageTaken/(1+DR%)',
+    conditionLabel: 'While blocking with one-handed weapon or spear',
   },
   {
     perkName: 'Vampire',

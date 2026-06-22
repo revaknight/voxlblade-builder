@@ -184,7 +184,7 @@
       return {
         label: k.charAt(0).toUpperCase() + k.slice(1),
         rawVal: Math.round(base * 100) / 100,
-        val: Math.round(base * finalMult * effectiveMult * 100) / 100,
+        val: Math.round(base * finalMult * 100) / 100,
         scalingMult: effectiveMult,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
         rageApplied,
@@ -304,6 +304,20 @@
       out[k] = Math.round(((out[k] ?? 0) + v) * 100) / 100
     }
     return out
+  }
+  function _resolveHitDmgTypes(
+    dtStr: string,
+    weaponTypes: Record<string, number>,
+    bonuses: Record<string, number>
+  ): Record<string, number> {
+    if (dtStr === 'Same as weapon') return _applyDmgBonuses(weaponTypes, bonuses)
+    const types: Record<string, number> = {}
+    const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
+    let m: RegExpExecArray | null
+    while ((m = re.exec(dtStr)) !== null) {
+      types[m[2].toLowerCase()] = parseFloat(m[1])
+    }
+    return _applyDmgBonuses(types, bonuses)
   }
 
   $: _weaponDmgTypes = (() => {
@@ -690,10 +704,11 @@
 
       const effectiveMult = hitScalingMult * _waCombatMult
 
-      const types: DamageDisplayType[] = Object.entries(/* dtFinal */{}).map(([k, mult]) => ({
+      const dtFinal = _resolveHitDmgTypes(dtStr, _weaponDmgTypes, _perkDmgTypeBonuses)
+      const types: DamageDisplayType[] = Object.entries(dtFinal).map(([k, mult]) => ({
         label: k.charAt(0).toUpperCase() + k.slice(1),
         rawVal: Math.round(base * 100) / 100,
-        val: Math.round(base * (mult as number) * effectiveMult * 100) / 100,
+        val: Math.round(base * (mult as number) * 100) / 100,
         scalingMult: effectiveMult,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
       }))
@@ -894,6 +909,7 @@
     dmgTypes: Record<string, number>
     label?: string
     isHeal?: boolean
+    forceCrit?: boolean
   }
 
   $: _bdcWeaponHits = (() => {
@@ -941,7 +957,14 @@
             t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
           sc = Math.round((1 + t / 100) * 10000) / 10000
         } else if (hss === 'Same as weapon') sc = _scalingMult
-        result.push({ group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult, isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: _waDmgTypes })
+          const hitDt = selectedWA.hitDamageTypes?.length
+           ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)
+           : _waDmgTypes
+         result.push({
+           group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
+           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
+           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
+         })
       })
     }
     if (_waHealSeq) {
