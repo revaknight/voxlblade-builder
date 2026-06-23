@@ -237,7 +237,6 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
         showIf: ({ draconicColor }) => draconicColor === 'water',
       },
     ],
-    note: 'Heal applies regardless of equipped draconic color.',
   },
   // ── Dragon Bubble (Draconic Rune Infusion ability) ───────────────────────────
   {
@@ -273,6 +272,5 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
         showIf: ({ draconicColor }) => draconicColor === 'water',
       },
     ],
-    note: 'Goes through walls · Detonates on contact. Heal applies regardless of equipped draconic color.',
   },
 ]
