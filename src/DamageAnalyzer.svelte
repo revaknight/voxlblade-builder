@@ -14,6 +14,7 @@
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
+  import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -280,14 +281,21 @@
 
   interface PerkDmgTypeBonusDef {
     perkName: string
-    type: string
+    type?: string
+    getType?: (ctx: { draconicColor: string }) => string
     amountPerStack: number
-    condition?: (ctx: { ragePotency: number }) => boolean
+    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string }) => boolean
   }
 
   const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
     { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },    
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
+    {
+      perkName: 'Draconic Blood',
+      getType: ctx => ctx.draconicColor || 'physical',
+      amountPerStack: 0.1,
+      condition: ctx => ctx.draconicRuneInfusion === 'infusion',
+    },
   ]
 
   $: _perkDmgTypeBonuses = (() => {
@@ -295,8 +303,10 @@
     for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
       const amt = perks[def.perkName] ?? 0
       if (amt <= 0) continue
-      if (def.condition && !def.condition({ ragePotency: _ragePotency })) continue
-      bonus[def.type] = Math.round(((bonus[def.type] ?? 0) + amt * def.amountPerStack) * 100) / 100
+      if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion })) continue
+      const type = def.getType ? def.getType({ draconicColor: $build.draconicColor }) : def.type
+      if (!type) continue
+      bonus[type] = Math.round(((bonus[type] ?? 0) + amt * def.amountPerStack) * 100) / 100
     }
     return bonus
   })()
@@ -813,6 +823,7 @@
 
   interface PerkDmgComputedEntry {
     perkName: string
+    displayName: string
     perkAmount: number
     condition?: string
     hits?: number
@@ -824,7 +835,7 @@
     scalingMult: number
     combatMult: number
     resolvedDmgTypes: Record<string, number>
-    dmgTypeMode: 'weapon' | 'fixed'
+    dmgTypeMode: 'weapon' | 'fixed' | 'dynamic'
     isActive: boolean
     secondaryEffects: Array<{ label: string; display: string; condition?: string; color: string; isActive: boolean }>
   }
@@ -834,6 +845,7 @@
     for (const def of PERK_DMG_DEFS) {
       const perkAmount = perks[def.perkName] ?? 0
       if (perkAmount <= 0) continue
+      if (def.activeIf && !def.activeIf({ draconicRuneInfusion: $build.draconicRuneInfusion, draconicColor: $build.draconicColor })) continue
 
       const combatMult = def.isWA   ? _waCombatMult
                      : def.isRune ? _runeCombatMult
@@ -843,13 +855,17 @@
 
       const resolvedDmgTypes = def.dmgTypeMode === 'weapon'
         ? _weaponDmgTypes
-        : (def.dmgTypes ?? {})
+        : def.dmgTypeMode === 'dynamic'
+          ? (def.getDmgTypes?.({ draconicColor: $build.draconicColor }) ?? {})
+          : (def.dmgTypes ?? {})
 
       const resolvedScalings = def.scalingMode === 'weapon'
         ? _weaponResult?.scalings ?? {}
         : def.scalingMode === 'fixed'
           ? (def.scalings ?? {})
-          : {}
+          : def.scalingMode === 'dynamic'
+            ? (def.getScalings?.({ draconicColor: $build.draconicColor }) ?? {})
+            : {}
 
       const scalingMult = Object.keys(resolvedScalings).length > 0
         ? _computePerkScalingMult(resolvedScalings)
@@ -865,13 +881,13 @@
 
       const _fhM2  = def.perkName === 'Springblast' ? springblastFinisherHits : _m2FinisherHits
       const _fhM1f = def.perkName === 'Springblast' ? springblastFinisherHits : _m1FinisherHits
-      const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2  })
-      const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _fhM1f })
+      const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2,  draconicColor: $build.draconicColor })
+      const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _fhM1f, draconicColor: $build.draconicColor })
 
       const isActive = isHpGateActive(def.hpGate, _hpFillPct, perkAmount)
 
       const secondaryEffects = (def.secondaryEffects ?? []).map(se => {
-        const raw = Math.round(se.getValue({ perkAmount }) * 100) / 100
+        const raw = Math.round(se.getValue({ perkAmount, draconicColor: $build.draconicColor }) * 100) / 100
         return {
           label: se.label,
           display: (se.format ?? String)(raw),
@@ -883,6 +899,7 @@
 
       out.push({
         perkName: def.perkName,
+        displayName: def.label ?? def.perkName,
         perkAmount,
         condition: def.condition,
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
@@ -990,16 +1007,27 @@
     for (const entry of _activePerkDmgEntries) {
       if (entry.typedHits_m2.length === 0) continue
       if (!entry.isActive) continue 
+
+      const _colorMult = entry.perkName === 'Draconic Blood'
+        ? getDraconicColorDmgMultiplier($build.draconicColor)
+        : 1
+      const _rawBase = entry.typedHits_m2[0].rawVal
+      const _preColorBase = _colorMult !== 1 ? Math.round((_rawBase / _colorMult) * 100) / 100 : _rawBase
+
       result.push({
         group: 'Perk',
         index: result.length,
         count: entry.perkName === 'Springblast' ? springblastFinisherHits : (entry.hits ?? 1),
-        base: entry.typedHits_m2[0].rawVal,
+        base: _preColorBase,
         scalingMult: entry.scalingMult,
         combatMult: entry.combatMult,
         isFinisher: entry.isFinisher ?? false,
         dmgTypes: entry.resolvedDmgTypes,
-        label: entry.perkName,
+        label: entry.displayName,
+        ...(_colorMult !== 1 ? {
+          weaponBoostMult: _colorMult,
+          weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,
+        } : {}),
       })
     }
     if (_activeRuneDmgDef && Object.keys(_activeRuneDmgDef.dmgTypes).length > 0) {
@@ -1716,7 +1744,7 @@
       <div class="da-pbd-card">
         <!-- Header row -->
         <div class="da-pbd-head">
-          <span class="da-pbd-name">{entry.perkName}</span>
+          <span class="da-pbd-name">{entry.displayName}</span>
           <span class="da-pbd-amt">+{Math.round(entry.perkAmount * 100) / 100}</span>
         </div>
         <!-- Badges -->

@@ -1,8 +1,11 @@
+import { getDraconicColorDmgMultiplier } from '../data/draconicColorEffects'
+
 export interface PerkDmgCtx {
   perkAmount: number
   finisherHits?: number
   m1FinisherHits?: number
   statuses?: Record<string, number> 
+  draconicColor?: string
 }
 export type SecondaryEffectTone = 'defense' | 'offense' | 'utility'
 
@@ -40,10 +43,12 @@ export interface PerkDmgDef {
   getBaseDamage: (ctx: PerkDmgCtx) => number
   hits?: number
   getHits?: (ctx: PerkDmgCtx) => number 
-  dmgTypeMode: 'weapon' | 'fixed'
+  dmgTypeMode: 'weapon' | 'fixed' | 'dynamic'
   dmgTypes?: Record<string, number>
-  scalingMode: 'weapon' | 'fixed' | 'none'
+  getDmgTypes?: (ctx: { draconicColor: string }) => Record<string, number>
+  scalingMode: 'weapon' | 'fixed' | 'none' | 'dynamic'
   scalings?: Record<string, number>
+  getScalings?: (ctx: { draconicColor: string }) => Record<string, number>
   isM1?: boolean
   isM2?: boolean
   isFinisher?: boolean
@@ -53,6 +58,7 @@ export interface PerkDmgDef {
   note?: string
   hpGate?: HpGate
   secondaryEffects?: SecondaryEffect[]
+  activeIf?: (ctx: { draconicRuneInfusion: string; draconicColor: string }) => boolean
 }
 
 export const PERK_DMG_DEFS: PerkDmgDef[] = [
@@ -195,5 +201,55 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       },
     ],
     note: 'Overrides Launch Rune boost / Combat Roll Rune roll if used together. Launch height also scales with perk amount (not modeled).',
+  },
+  // ── Dragon Claw (Draconic Rune Infusion ability) ────────────────────────────
+  {
+    perkName: 'Draconic Blood',
+    label: 'Dragon Claw',
+    condition: 'Draconic Rune Infusion · Dragon Claw selected',
+    getBaseDamage: ({ perkAmount, draconicColor }) =>
+      Math.round((25 + 2.5 * perkAmount) * getDraconicColorDmgMultiplier(draconicColor ?? '') * 1000) / 1000,
+    dmgTypeMode: 'dynamic',
+    getDmgTypes: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
+    scalingMode: 'dynamic',
+    getScalings: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
+    guardbreak: true,
+    activeIf: ({ draconicRuneInfusion }) => draconicRuneInfusion === 'claw',
+    secondaryEffects: [
+      { label: 'Poise Damage', getValue: () => 60, tone: 'offense' },
+      {
+        label: 'Color Damage Multiplier',
+        getValue: ({ draconicColor }) => getDraconicColorDmgMultiplier(draconicColor ?? ''),
+        format: v => `×${v}`,
+        condition: 'Earth ×1.5 · Water ×1.1 · others ×1.0',
+        tone: 'offense',
+      },
+    ],
+    note: 'Holy/Water colors also grant a heal (not modeled yet).',
+  },
+  // ── Dragon Bubble (Draconic Rune Infusion ability) ───────────────────────────
+  {
+    perkName: 'Draconic Blood',
+    label: 'Dragon Bubble',
+    condition: 'Draconic Rune Infusion · Dragon Bubble selected',
+    getBaseDamage: ({ perkAmount, draconicColor }) =>
+      Math.round((20 + 2 * perkAmount) * getDraconicColorDmgMultiplier(draconicColor ?? '') * 1000) / 1000,
+    dmgTypeMode: 'dynamic',
+    getDmgTypes: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
+    scalingMode: 'dynamic',
+    getScalings: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
+    guardbreak: true,
+    activeIf: ({ draconicRuneInfusion }) => draconicRuneInfusion === 'bubble',
+    secondaryEffects: [
+      { label: 'Poise Damage', getValue: () => 45, tone: 'offense' },
+      {
+        label: 'Color Damage Multiplier',
+        getValue: ({ draconicColor }) => getDraconicColorDmgMultiplier(draconicColor ?? ''),
+        format: v => `×${v}`,
+        condition: 'Earth ×1.5 · Water ×1.1 · others ×1.0',
+        tone: 'offense',
+      },
+    ],
+    note: 'Goes through walls · Detonates on contact. Holy/Water colors also grant a heal (not modeled yet).',
   },
 ]

@@ -150,7 +150,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     color: '#ff6336',
     description: 'All attacks gain draconic damage type. Does not apply to attacks without proc coefficient.',
     dynamicDescription: (_perks, potency) => {
-      const bonus = +(potency * 10).toFixed(3)
+      const bonus = +potency.toFixed(3)
       return `All attacks gain +${bonus} draconic damage type. Lasts 20s. Does not apply without proc coefficient.`
     },
     effectPerTenthPotency: 0.1,
