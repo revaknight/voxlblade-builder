@@ -85,13 +85,13 @@
     const poolCond = `${abilityLabel} · Hex · 3 random chances from pool`
 
     return [
-      { buffName: 'Weakness', potency: Math.round(perkAmt * 0.1 * 1000) / 1000, duration: 5, condition: `${abilityLabel} · Hex · on hit (guaranteed)`, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Bleed',    potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Burn',     potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Poison',   potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Shatter',  potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Slowness', potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
-      { buffName: 'Weakness', potency: 0.5, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Weakness', potency: Math.round(perkAmt * 0.1 * 1000) / 1000, duration: 5, condition: `${abilityLabel} · Hex · on hit (guaranteed)`, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Bleed',    potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Burn',     potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Poison',   potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Shatter',  potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Slowness', potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
+      { buffName: 'Weakness', potency: 0.5, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
     ] satisfies GrantedBuff[]
   })()
 
