@@ -45,6 +45,7 @@ export interface WeaponArt {
   isMonk?: boolean
   avgTotalHits?: number
   replaces?: string;
+  category?: string;
 }
 
 export const WEAPON_ARTS: WeaponArt[] = [
@@ -287,6 +288,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     baseDamage: "15 Healing",
     scaling: "0.7 Holy + 0.3 Magic",
     requirements: { holyScaling: 0.3 },
+    category: "WA",
   },
   {
     name: "Holy Phalanx",
@@ -411,6 +413,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     baseDamage: "8 Healing",
     scaling: "Same as weapon",
     requirements: { waterScaling: 0.3 },
+    category: "WA",
   },
   {
     name: "Splash",

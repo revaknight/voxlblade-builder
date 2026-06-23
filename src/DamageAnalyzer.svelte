@@ -991,7 +991,7 @@
     if (_waHealSeq) {
       _waHealSeq.forEach((h) => {
         result.push({
-          group: 'Heal',
+          group: 'WA',
           index: result.length,
           count: h.count,
           base: h.n,
@@ -1012,7 +1012,7 @@
         ? getDraconicColorDmgMultiplier($build.draconicColor)
         : 1
       const _rawBase = entry.typedHits_m2[0].rawVal
-      const _preColorBase = _colorMult !== 1 ? Math.round((_rawBase / _colorMult) * 100) / 100 : _rawBase
+      const _preColorBase = _rawBase
 
       result.push({
         group: 'Perk',
@@ -1039,7 +1039,7 @@
          if (_healSe) {
            const _healVal = Math.round(_healSe.getValue({ perkAmount: entry.perkAmount, draconicColor: _color }) * 100) / 100
            result.push({
-             group: 'Heal',
+             group: 'Perk',
              index: result.length,
              count: 1,
              base: _healVal,
@@ -1056,7 +1056,7 @@
     if (_activeRuneDmgDef && Object.keys(_activeRuneDmgDef.dmgTypes).length > 0) {
       const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false
       result.push({
-        group: _runeIsHeal ? 'Heal' : 'Rune',
+        group: 'Rune',
         index: result.length,
         count: _activeRuneDmgDef.getHits
           ? _activeRuneDmgDef.getHits({ potency: runePotency })
