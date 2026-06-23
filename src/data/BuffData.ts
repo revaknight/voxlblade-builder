@@ -147,7 +147,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   'Draconic Infusion': {
     name: 'Draconic Infusion',
-    color: '#a855f7',
+    color: '#ff6336',
     description: 'All attacks gain draconic damage type. Does not apply to attacks without proc coefficient.',
     dynamicDescription: (_perks, potency) => {
       const bonus = +(potency * 10).toFixed(3)

@@ -320,6 +320,10 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     bubble:   Math.max(1, Math.floor(draconicBaseCDs.bubble * cdr.runeCDR)),
   }
   $: draconicHasCDR = cdr.runeCDR < 1.0 || cdr.runeSetCD != null
+  $: _draconicAirMult = $build.draconicColor === 'air' ? 0.75 : 1
+  $: draconicClawFinalCD   = Math.max(1, Math.floor(draconicBaseCDs.claw   * cdr.runeCDR * _draconicAirMult))
+  $: draconicBubbleFinalCD = Math.max(1, Math.floor(draconicBaseCDs.bubble * cdr.runeCDR * _draconicAirMult))
+  $: draconicClawBubbleHasCDR = draconicHasCDR || $build.draconicColor === 'air'
   $: hasRuneCDR = cdr.runeCDR !== 1.0 || cdr.runeSetCD != null
   $: hasWACDR = cdr.waCDR !== 1.0
 
@@ -2788,10 +2792,10 @@ $: _appWaAvgTotal = (() => {
                 <span class="dab-name">Dragon Claw</span>
                 {#if $build.draconicRuneInfusion === 'claw'}<span class="dab-selected-badge">✦ Selected</span>{/if}
                 <div class="dab-cds">
-                  {#if draconicHasCDR}
+                  {#if draconicClawBubbleHasCDR}
                     <span class="dab-cd-old">{draconicBaseCDs.claw}s</span>
                     <span class="dab-cd-arrow">→</span>
-                    <span class="dab-cd">{draconicFinalCDs.claw}s</span>
+                    <span class="dab-cd">{draconicClawFinalCD}s</span>
                   {:else}
                     <span class="dab-cd">CD: {draconicBaseCDs.claw}s</span>
                   {/if}
@@ -2889,10 +2893,10 @@ $: _appWaAvgTotal = (() => {
                 <span class="dab-name">Dragon Bubble</span>
                 {#if $build.draconicRuneInfusion === 'bubble'}<span class="dab-selected-badge">✦ Selected</span>{/if}
                 <div class="dab-cds">
-                  {#if draconicHasCDR}
+                  {#if draconicClawBubbleHasCDR}
                     <span class="dab-cd-old">{draconicBaseCDs.bubble}s</span>
                     <span class="dab-cd-arrow">→</span>
-                    <span class="dab-cd">{draconicFinalCDs.bubble}s</span>
+                    <span class="dab-cd">{draconicBubbleFinalCD}s</span>
                   {:else}
                     <span class="dab-cd">CD: {draconicBaseCDs.bubble}s</span>
                   {/if}
@@ -4427,66 +4431,244 @@ $: _appWaAvgTotal = (() => {
   margin-left: 4px;
   font-weight: 600;
 }
+:root {
+  /* Draconic Theme */
+  --draco-primary: #ff6336;
+  --draco-primary-rgb: 255, 99, 54;
+
+  --draco-text: #ff9b7d;
+  --draco-text-strong: #ffb29d;
+
+  --draco-bg-1: rgba(var(--draco-primary-rgb), .16);
+  --draco-bg-2: rgba(var(--draco-primary-rgb), .10);
+  --draco-bg-3: rgba(var(--draco-primary-rgb), .06);
+  --draco-bg-4: rgba(var(--draco-primary-rgb), .04);
+
+  --draco-border-soft: rgba(var(--draco-primary-rgb), .15);
+  --draco-border: rgba(var(--draco-primary-rgb), .25);
+  --draco-border-strong: rgba(var(--draco-primary-rgb), .40);
+
+  --draco-shadow:
+    0 0 0 1px rgba(var(--draco-primary-rgb), .30),
+    0 4px 14px rgba(var(--draco-primary-rgb), .18);
+  --draco-text: #ff9b7d;
+  --draco-text-strong: #ffb29d;
+}
 /* ── DRACONIC RUNE ── */
+
 .sg-draconic-rune-cell {
-  background: linear-gradient(135deg,rgba(168,85,247,.14),rgba(168,85,247,.06));
-  border-color: rgba(168,85,247,.3);
+  background:
+    linear-gradient(
+      135deg,
+      var(--draco-bg-1),
+      var(--draco-bg-3)
+    );
+  border-color: var(--draco-border);
 }
-.sg-draconic-rune-cell .sg-label { color:#c084fc; }
+
+.sg-draconic-rune-cell .sg-label {
+  color: var(--draco-text);
+}
+
 .draco-select-hint {
-  font-size:.65rem; color:#c084fc; font-weight:600; padding:2px 8px;
-  background:rgba(168,85,247,.08); border:1px solid rgba(168,85,247,.2); border-radius:999px;
-  text-transform:none; letter-spacing:0;
+  font-size: .65rem;
+  color: var(--draco-text);
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(var(--draco-primary-rgb), .08);
+  border: 1px solid rgba(var(--draco-primary-rgb), .20);
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: 0;
 }
+
 .sg-draconic-row {
-  background: linear-gradient(135deg,rgba(168,85,247,.1),rgba(168,85,247,.05));
-  border-color: rgba(168,85,247,.25); min-height:unset; padding:10px 12px;
+  background:
+    linear-gradient(
+      135deg,
+      var(--draco-bg-2),
+      var(--draco-bg-3)
+    );
+  border-color: var(--draco-border);
+  min-height: unset;
+  padding: 10px 12px;
 }
-.sg-draconic-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-.sg-draconic-hint { font-size:.62rem; color:var(--ink-muted); opacity:.5; font-style:italic; }
-.sg-draconic-colors { display:flex; flex-wrap:wrap; gap:5px; }
+
+.sg-draconic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sg-draconic-hint {
+  font-size: .62rem;
+  color: var(--ink-muted);
+  opacity: .5;
+  font-style: italic;
+}
+
+.sg-draconic-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
 .draco-color-btn {
-  padding:4px 11px; border-radius:999px; font-size:.7rem; font-weight:700;
-  border:1px solid var(--dc,#888); background:color-mix(in srgb,var(--dc,#888) 12%,transparent);
-  color:var(--dc,#888); cursor:pointer; font-family:var(--font-body);
-  transition:all .15s; opacity:.55;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  border: 1px solid var(--dc, var(--draco-primary));
+  background:
+    color-mix(
+      in srgb,
+      var(--dc, var(--draco-primary)) 12%,
+      transparent
+    );
+  color: var(--dc, var(--draco-primary));
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all .15s;
+  opacity: .55;
 }
-.draco-color-btn:hover { opacity:.85; }
-.draco-color-btn--active { opacity:1; background:color-mix(in srgb,var(--dc,#888) 25%,transparent); box-shadow:0 0 8px color-mix(in srgb,var(--dc,#888) 40%,transparent); }
+
+.draco-color-btn:hover {
+  opacity: .85;
+}
+
+.draco-color-btn--active {
+  opacity: 1;
+  background:
+    color-mix(
+      in srgb,
+      var(--dc, var(--draco-primary)) 25%,
+      transparent
+    );
+  box-shadow:
+    0 0 8px
+    color-mix(
+      in srgb,
+      var(--dc, var(--draco-primary)) 40%,
+      transparent
+    );
+}
 
 .draconic-panel {
-  border-color:rgba(168,85,247,.2);
-  background:linear-gradient(160deg,var(--surface) 60%,rgba(168,85,247,.04) 100%);
+  border-color: rgba(var(--draco-primary-rgb), .20);
+  background:
+    linear-gradient(
+      160deg,
+      var(--surface) 60%,
+      var(--draco-bg-4) 100%
+    );
 }
-.draconic-panel-header { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-.draconic-panel-title { font-size:.72rem; text-transform:uppercase; letter-spacing:.16em; font-weight:700; color:#a855f7; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.draco-color-badge { font-size:.65rem; font-weight:700; padding:2px 9px; border-radius:999px; border:1px solid; }
 
-.draconic-abilities { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+.draconic-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.draconic-panel-title {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-weight: 700;
+  color: var(--draco-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.draco-color-badge {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.draconic-abilities {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
 .draconic-ability-card {
-  background:var(--surface2); border:1px solid rgba(168,85,247,.15);
-  border-radius:var(--radius-sm); padding:12px; display:flex; flex-direction:column; gap:7px;
+  background: var(--surface2);
+  border: 1px solid var(--draco-border-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
-.draconic-ability-card--infusion { border-color:rgba(56,189,248,.2); background:linear-gradient(135deg,var(--surface2),rgba(56,189,248,.05)); }
+
+.draconic-ability-card--infusion {
+  border-color: rgba(56,189,248,.20);
+  background:
+    linear-gradient(
+      135deg,
+      var(--surface2),
+      rgba(56,189,248,.05)
+    );
+}
+
 .draconic-ability-card--selectable {
-  cursor:pointer; text-align:left; font-family:var(--font-body); width:100%;
-  transition:border-color .15s, background .15s, opacity .15s, transform .15s;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  width: 100%;
+  transition:
+    border-color .15s,
+    background .15s,
+    opacity .15s,
+    transform .15s;
 }
-.draconic-ability-card--selectable:hover { border-color:rgba(168,85,247,.4); transform:translateY(-1px); }
+
+.draconic-ability-card--selectable:hover {
+  border-color: var(--draco-border-strong);
+  transform: translateY(-1px);
+}
+
 .draconic-ability-card--selected {
-  border-color:#a855f7 !important;
-  background:linear-gradient(135deg,rgba(168,85,247,.16),rgba(168,85,247,.06)) !important;
-  box-shadow:0 0 0 1px rgba(168,85,247,.3), 0 4px 14px rgba(168,85,247,.18);
+  border-color: var(--draco-primary) !important;
+  background:
+    linear-gradient(
+      135deg,
+      var(--draco-bg-1),
+      var(--draco-bg-3)
+    ) !important;
+  box-shadow: var(--draco-shadow);
 }
-.draconic-ability-card--unselected { opacity:.55; }
-.draconic-ability-card--unselected:hover { opacity:.85; }
+
+.draconic-ability-card--unselected {
+  opacity: .55;
+}
+
+.draconic-ability-card--unselected:hover {
+  opacity: .85;
+}
+
 .dab-selected-badge {
-  font-size:.6rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
-  padding:2px 7px; border-radius:999px;
-  background:rgba(168,85,247,.18); border:1px solid rgba(168,85,247,.4); color:#c084fc;
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(var(--draco-primary-rgb), .18);
+  border: 1px solid rgba(var(--draco-primary-rgb), .40);
+  color: var(--draco-text);
 }
+
 .dab-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
-.dab-name { font-size:.88rem; font-weight:700; color:#c084fc; }
+.dab-name { font-size:.88rem; font-weight:700; color: var(--draco-text-strong); }
 .dab-cds { display:flex; align-items:center; gap:5px; }
 .dab-cd { font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.25); color:#34d399; }
 .dab-cd-old { font-size:.62rem; color:var(--ink-muted); text-decoration:line-through; opacity:.4; }
@@ -4499,7 +4681,7 @@ $: _appWaAvgTotal = (() => {
   .dab-stat-v--dmg { color:var(--accent2); font-size:.95rem; text-shadow:0 0 8px rgba(245,158,11,.35); }
   .dab-stat-v--poise { color:#f472b6; font-weight:800; }
 
-.dab-notes { font-size:.68rem; color:var(--accent3); opacity:.65; font-style:italic; line-height:1.4; letter-spacing:.02em; }
+.dab-notes { font-size:.68rem; color:var(--draco-text); opacity:.65; font-style:italic; line-height:1.4; letter-spacing:.02em; }
 .modal-stat-group-label--dmg {
   color: var(--weapon-blade);
   opacity: 0.75;

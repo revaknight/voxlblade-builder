@@ -52,12 +52,12 @@
     const color   = $build.draconicColor
 
     const COLOR_EFFECTS: Record<string, string> = {
-      air:   `+${perkAmt * 10}% Attack Speed · +${perkAmt * 20}% Knockback (per 0.1 potency)`,
+      air:   `+${perkAmt * 10}% Attack Speed · +${perkAmt * 20}% Knockback `,
       fire:  `100% chance to apply Burn (proc-affected) · +${perkAmt * 15}% applied Burn potency`,
       hex:   `+${perkAmt * 5}% applied debuff potency · +${perkAmt * 15}% debuff duration`,
-      holy:  `+${perkAmt * 10}% healing (per 0.1 potency) · +${perkAmt * 5}% applied buff potency`,
+      holy:  `+${perkAmt * 10}% healing  · +${perkAmt * 5}% applied buff potency`,
       water: `Immune to debuffs · Pulse every ${Math.max(1, 8 - perkAmt)}s (heal 0.1 · 1.0 Water scaling · cleanses)`,
-      earth: `+${perkAmt * 15}% Poise damage · +${Math.round(perkAmt * 0.15 * 1000) / 1000} Stun Resistance (per 0.1 potency)`,
+      earth: `+${perkAmt * 15}% Poise damage · +${Math.round(perkAmt * 0.15 * 1000) / 1000} Stun Resistance `,
     }
 
     const colorLabel  = color ? color.charAt(0).toUpperCase() + color.slice(1) : ''
@@ -74,11 +74,65 @@
     }] satisfies GrantedBuff[]
   })()
 
+  $: draconicHexDebuffs = (() => {
+    const ability = $build.draconicRuneInfusion
+    if ($build.draconicColor !== 'hex') return []
+    if (ability !== 'claw' && ability !== 'bubble') return []
+
+    const perkAmt  = $result.perks['Draconic Blood'] ?? 0
+    const abilityLabel = ability === 'claw' ? 'Dragon Claw' : 'Dragon Bubble'
+    const srcName  = `${abilityLabel} (Hex)`
+    const poolCond = `${abilityLabel} · Hex · 3 random chances from pool`
+
+    return [
+      { buffName: 'Weakness', potency: Math.round(perkAmt * 0.1 * 1000) / 1000, duration: 5, condition: `${abilityLabel} · Hex · on hit (guaranteed)`, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Bleed',    potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Burn',     potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Poison',   potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Shatter',  potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Slowness', potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+      { buffName: 'Weakness', potency: 0.5, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const },
+    ] satisfies GrantedBuff[]
+  })()
+
   $: activeBuffs = [
     ...baseActiveBuffs,
     ...trueBalanceBuffs,
     ...draconicInfusionBuff,
+    ...draconicHexDebuffs,
   ]
+
+  // Dragon Infusion color modifiers applied to display values
+  $: _infPerkAmt = $result.perks['Draconic Blood'] ?? 0
+  $: _infActive  = $build.draconicRuneInfusion === 'infusion'
+  $: displayBuffs = (() => {
+    if (!_infActive) return activeBuffs
+    const color = $build.draconicColor
+    if (color !== 'hex' && color !== 'holy') return activeBuffs
+
+    return activeBuffs.map(buff => {
+      const def = BUFF_DEFS[buff.buffName]
+      if (!def) return buff
+
+      if (color === 'hex' && def.isDebuff) {
+        const potMult = 1 + _infPerkAmt * 0.05
+        const durMult = 1 + _infPerkAmt * 0.15
+        return {
+          ...buff,
+          potency:  Math.round(buff.potency  * potMult * 1000) / 1000,
+          duration: Math.round(buff.duration * durMult),
+        }
+      }
+      if (color === 'holy' && !def.isDebuff && !def.isNeutral) {
+        const potMult = 1 + _infPerkAmt * 0.05
+        return {
+          ...buff,
+          potency: Math.round(buff.potency * potMult * 1000) / 1000,
+        }
+      }
+      return buff
+    })
+  })()
 
   type GroupedBuff = {
     buffName: string
@@ -89,7 +143,7 @@
   }
 
 $: groupedBuffs = Object.values(
-  activeBuffs.reduce((acc, buff) => {
+  displayBuffs.reduce((acc, buff) => {
     const k = `${buff.buffName}:${String(buff.isSelfDebuff ?? false)}`
     ;(acc[k] ??= []).push(buff)
     return acc
