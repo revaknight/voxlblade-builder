@@ -2511,7 +2511,7 @@ $: _appWaAvgTotal = (() => {
                     role="button" tabindex="0"
                     on:click={cycleDraconicAbility}
                     on:keydown={e => e.key === 'Enter' && cycleDraconicAbility()}
-                    title="Click để cycle Draconic Ability — hoặc chọn trực tiếp ở panel bên dưới">
+                    title="Click to cycle the Draconic Ability — or select it directly in the panel below.">
                     <span class="sg-label">Draconic Rune</span>
                     <span class="sg-value">{selectedDraconicAbility?.label ?? 'Select ability'}</span>
                     <span class="sg-sub">{selectedDraconicAbility ? 'Rune Infusion locked' : 'Click to choose'}</span>
