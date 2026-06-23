@@ -835,6 +835,7 @@
     scalingMult: number
     combatMult: number
     resolvedDmgTypes: Record<string, number>
+    resolvedScalings: Record<string, number>
     dmgTypeMode: 'weapon' | 'fixed' | 'dynamic'
     isActive: boolean
     secondaryEffects: Array<{ label: string; display: string; condition?: string; color: string; isActive: boolean }>
@@ -911,6 +912,7 @@
         scalingMult,
         combatMult,
         resolvedDmgTypes,
+        resolvedScalings,
         dmgTypeMode: def.dmgTypeMode,
         isActive,
         secondaryEffects,
@@ -2076,8 +2078,8 @@
   {/if}
 </div>
 {/if}
-{#if _weaponResult && scalingBreakdown.rows.length > 0 
-  && _activePerkDmgEntries.some(e => (e.dmgTypeMode === 'fixed' && e.scalingMult !== 1) || e.dmgTypeMode === 'weapon')}
+{#if _weaponResult && scalingBreakdown.rows.length > 0
+  && _activePerkDmgEntries.some(e =>(e.dmgTypeMode === 'fixed' ||e.dmgTypeMode === 'dynamic')&& Object.keys(e.resolvedScalings ?? {}).length > 0|| e.dmgTypeMode === 'weapon')}
   <div class="da-section da-section--scaling">
     <div class="da-section-title">📐 Damage Scaling</div>
     <div class="ds-formula-hint">Effective Boost = Σ (Scaling × Boost%) → adds to base as ×(1 + Effective%)</div>
@@ -2093,13 +2095,13 @@
       </div>
 
       {#each _activePerkDmgEntries as entry}
-        {#if entry.dmgTypeMode === 'fixed' && entry.scalingMult !== 1}
+        {#if (entry.dmgTypeMode === 'fixed' ||entry.dmgTypeMode === 'dynamic')&& Object.keys(entry.resolvedScalings ?? {}).length > 0}
           <div class="da-perk-scaling-divider">
             <span class="da-perk-scaling-label">Perk Damage</span>
           </div>
 
           <div class="ds-table ds-table--perk" style="margin-top: 5px; font-size: 0.75rem; opacity: 0.9;">
-            {#each Object.entries(PERK_DMG_DEFS.find(d => d.perkName === entry.perkName)?.scalings ?? {}) as [key, scalingVal]}
+            {#each Object.entries(entry.resolvedScalings ?? {}) as [key, scalingVal]}
               {@const boostKey = SCALING_TO_BOOST[key]}
               {@const boostPct = boostKey ? (stats[boostKey as keyof typeof stats] ?? 0) : 0}
               {@const contrib = Math.round(scalingVal * boostPct * 100) / 100}
