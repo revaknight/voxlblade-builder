@@ -227,32 +227,39 @@
     <div class="bdc-dummy-col">
       <div class="bdc-dummy-wrap">
         <svg viewBox="0 0 54 67" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" class="bdc-svg">
-          <defs>
-            <linearGradient id="bdc-khaki" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#d4b35e"/>
-              <stop offset="100%" stop-color="#b3924a"/>
-            </linearGradient>
-            <linearGradient id="bdc-armGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#8a6f56"/>
-              <stop offset="50%" stop-color="#f0935f"/>
-              <stop offset="100%" stop-color="#8a6f56"/>
-            </linearGradient>
-            <linearGradient id="bdc-torsoGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#c7a657"/>
-              <stop offset="100%" stop-color="#a98c4c"/>
-            </linearGradient>
-          </defs>
-          <rect x="11" y="57" width="32" height="10" fill="url(#bdc-khaki)" stroke="#1a1208" stroke-width="1.2"/>
-          <rect x="21" y="47" width="12" height="11" fill="#7a5f47" stroke="#1a1208" stroke-width="1.2"/>
-          <rect x="0"  y="19" width="54" height="9"  fill="url(#bdc-armGrad)" stroke="#1a1208" stroke-width="1.2"/>
-          <rect x="11" y="17" width="32" height="2"  fill="#8a6f56" stroke="#1a1208" stroke-width="1"/>
-          <rect x="17" y="17" width="20" height="31" fill="url(#bdc-torsoGrad)" stroke="#1a1208" stroke-width="1.2"/>
-          <rect x="17" y="13" width="20" height="4"  fill="#6b6256" stroke="#1a1208" stroke-width="1"/>
-          <rect x="19" y="0"  width="16" height="14" fill="url(#bdc-khaki)" stroke="#1a1208" stroke-width="1.2"/>
-          <rect x="19" y="26" width="16" height="16" fill="#c81d10" stroke="#1a1208" stroke-width="0.8"/>
-          <rect x="22.5" y="29.5" width="9" height="9" fill="#ffe3da"/>
-          <rect x="25"   y="32"   width="4" height="4" fill="#8e2418"/>
-        </svg>
+  <defs>
+    <linearGradient id="bdc-khaki" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4b35e"/>
+      <stop offset="100%" stop-color="#b3924a"/>
+    </linearGradient>
+    <linearGradient id="bdc-armGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8a6f56"/>
+      <stop offset="50%" stop-color="#f0935f"/>
+      <stop offset="100%" stop-color="#8a6f56"/>
+    </linearGradient>
+    <linearGradient id="bdc-torsoGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c7a657"/>
+      <stop offset="100%" stop-color="#a98c4c"/>
+    </linearGradient>
+    <linearGradient id="bdc-cloakGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a3c3c"/>
+      <stop offset="100%" stop-color="#3d2828"/>
+    </linearGradient>
+  </defs>
+  <rect class="bdc-cloak-collar" x="12" y="15" width="30" height="4" fill="#8a6f56" stroke="#1a1208" stroke-width="1"/>
+  <g class="bdc-cloak-sway">
+    <rect x="12" y="22" width="30" height="34" fill="#8a6f56" stroke="#1a1208" stroke-width="1.2"/>
+  </g>
+  <rect x="11" y="57" width="32" height="10" fill="url(#bdc-khaki)" stroke="#1a1208" stroke-width="1.2"/>
+  <rect x="21" y="47" width="12" height="11" fill="#7a5f47" stroke="#1a1208" stroke-width="1.2"/>
+  <rect x="0"  y="19" width="54" height="9"  fill="url(#bdc-armGrad)" stroke="#1a1208" stroke-width="1.2"/>
+  <rect x="17" y="17" width="20" height="31" fill="url(#bdc-torsoGrad)" stroke="#1a1208" stroke-width="1.2"/>
+  <rect x="17" y="13" width="20" height="4"  fill="#6b6256" stroke="#1a1208" stroke-width="1"/>
+  <rect x="19" y="0"  width="16" height="14" fill="url(#bdc-khaki)" stroke="#1a1208" stroke-width="1.2"/>
+  <rect x="19" y="24" width="16" height="16" fill="#c81d10" stroke="#1a1208" stroke-width="0.8"/>
+  <rect x="22.5" y="27.5" width="9" height="9" fill="#ffe3da"/>
+  <rect x="25"   y="30"   width="4" height="4" fill="#8e2418"/>
+</svg>
 
         <div class="bdc-dummy-label">Training Dummy</div>
         <div class="bdc-no-hp">∞ No HP</div>
@@ -894,5 +901,15 @@
 .bdc-hit-type-chunk--heal {
   border-color: rgba(74,222,128,.35) !important;
   box-shadow: inset 0 0 6px rgba(74,222,128,.15);
+}
+.bdc-cloak-sway {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: bdc-cloak-sway 1.8s ease-in-out infinite;
+}
+@keyframes bdc-cloak-sway {
+  0%   { transform: rotate(10deg); }
+  50%  { transform: rotate(14deg); }
+  100% { transform: rotate(10deg); }
 }
 </style>
