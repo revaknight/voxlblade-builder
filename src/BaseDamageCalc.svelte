@@ -909,7 +909,7 @@
 }
 @keyframes bdc-cloak-sway {
   0%   { transform: rotate(10deg); }
-  50%  { transform: rotate(14deg); }
+  50%  { transform: rotate(12deg); }
   100% { transform: rotate(10deg); }
 }
 </style>

@@ -23,6 +23,9 @@
   import StatFilter from './StatFilter.svelte'
   import WeaponStatFilter from './WeaponStatFilter.svelte'
   import BuffList from './BuffList.svelte'
+  import DidYouMean from './DidYouMean.svelte'
+  import { checkWA, getUnmetReqs, passesAtLeastOneScaling } from './data/Weaponartcheck'
+  import SuggestDrop from './SuggestDrop.svelte'
   
 
   $: {
@@ -1128,77 +1131,6 @@ $: highestDamageType = (() => {
   }
 
   // ── Weapon Art helpers ─────────────────────────────────────────────────────
-
-  function passesAtLeastOneScaling(
-    req: WeaponArt['requirements'],
-    scaleMap: Record<string, string>
-  ): boolean {
-    if (!req.atLeastOneScaling) return true
-
-    return Object.entries(req.atLeastOneScaling).some(([reqKey, minVal]) => {
-      const scalingKey = scaleMap[reqKey as keyof typeof scaleMap]
-
-      return (
-        scalingKey != null &&
-        (_waScalings[scalingKey] ?? 0) >= (minVal ?? 0)
-      )
-    })
-  }
-  function checkWA(
-    wa: WeaponArt,
-    scalings: Record<string, number>,
-    stats: Record<string, number>,
-    finalWeaponType: string,
-    _isMonk: boolean,
-    bladeName: string,
-    handleName: string
-  ): boolean {
-    const req = wa.requirements
-
-    if (wa.isMonk && !_isMonk) return false
-    
-
-    if (req.guild === 'Monk' && !_isMonk) return false
-
-    if (req.bothParts) {
-      const has = req.bothParts.every(p => p === bladeName || p === handleName)
-      if (!has) return false
-    }
-
-    const scaleMap: Record<string, string> = {
-      physicalScaling: 'physical', magicScaling: 'magic',
-      fireScaling: 'fire', waterScaling: 'water', earthScaling: 'earth',
-      airScaling: 'air', hexScaling: 'hex', holyScaling: 'holy',
-      dexterityScaling: 'dexterity', summonScaling: 'summon'
-    }
-    if (!passesAtLeastOneScaling(req, scaleMap))
-      return false
-    
-    const isScalingExempt = req.scalingExemptWeaponTypes?.includes(finalWeaponType) ?? false;
-
-    if (!isScalingExempt) {
-      if (!passesAtLeastOneScaling(req, scaleMap))
-        return false
-      for (const [reqKey, scalingKey] of Object.entries(scaleMap)) {
-        const needed = (req as any)[reqKey];
-        if (needed != null && (_waScalings[scalingKey] ?? 0) < needed) return false;
-      }
-    }
-
-    if (req.physicalDefense != null && (stats.physicalDefense ?? 0) < req.physicalDefense) return false
-    if (req.magicBoost != null && (stats.magicBoost ?? 0) < req.magicBoost) return false
-    if (req.holyBoost != null && (stats.holyBoost ?? 0) < req.holyBoost) return false
-    if (req.summonBoost != null && (stats.summonBoost ?? 0) < req.summonBoost) return false
-    if (req.heatResistance != null && (stats.heatResistance ?? 0) < req.heatResistance) return false
-    if (req.tenacity != null && (stats.tenacity ?? 0) < req.tenacity) return false
-
-    if (req.weaponType && req.weaponType.length > 0) {
-      if (!req.weaponType.some(t => t === finalWeaponType)) return false
-    }
-
-    return true
-  }
-
   $: _waScalings = weaponResult?.baseScalings ?? {} as Record<string, number>
   $: _waStats = weaponResult?.stats ?? {} as Record<string, number>
   $: _waWeaponType = weaponResult?.finalWeaponType ?? ''
@@ -1225,63 +1157,7 @@ $: highestDamageType = (() => {
   $: waAvailable = checkWA(selectedWA, _waScalings, _waStats, _waWeaponType, isMonk, _waBlade, _waHandle)
   $: waReq = selectedWA.requirements
 
-  $: waUnmetReqs = (() => {
-    const req = waReq
-    if (!req) return []
-    const unmet: string[] = []
-    
-    if (req.guild && !isMonk) unmet.push(`Guild: ${req.guild}`)
-    if (req.weaponType?.length && !req.weaponType.some(t => t === _waWeaponType))
-      unmet.push(`Weapon: ${req.weaponType.join(' / ')}`)
-      
-    const scaleMapLabels: Array<[string, string, string]> = [
-      ['physicalScaling', 'physical', 'Physical'],
-      ['magicScaling', 'magic', 'Magic'],
-      ['fireScaling', 'fire', 'Fire'],
-      ['waterScaling', 'water', 'Water'],
-      ['earthScaling', 'earth', 'Earth'],
-      ['airScaling', 'air', 'Air'],
-      ['hexScaling', 'hex', 'Hex'],
-      ['holyScaling', 'holy', 'Holy'],
-      ['dexterityScaling', 'dexterity', 'Dexterity'],
-      ['summonScaling', 'summon', 'Summon'],
-    ]
-
-    const isScalingExempt = req.scalingExemptWeaponTypes?.includes(_waWeaponType) ?? false
-
-    if (!isScalingExempt) {
-      for (const [reqKey, scalingKey, label] of scaleMapLabels) {
-        const needed = (req as any)[reqKey]
-        if (needed != null && (_waScalings[scalingKey] ?? 0) < needed)
-          unmet.push(`${label} Scaling ≥ ${needed}`)
-      }
-
-      if (req.atLeastOneScaling) {
-        const passes = Object.entries(req.atLeastOneScaling).some(([reqKey, minVal]) => {
-          const entry = scaleMapLabels.find(([rk]) => rk === reqKey)
-          return entry != null && (_waScalings[entry[1]] ?? 0) >= (minVal ?? 0)
-        })
-        if (!passes) {
-          const parts = Object.entries(req.atLeastOneScaling).map(([reqKey, minVal]) => {
-            const entry = scaleMapLabels.find(([rk]) => rk === reqKey)
-            return `${entry?.[2] ?? reqKey} Scaling ≥ ${minVal}`
-          })
-          unmet.push(`At least one of: ${parts.join(' / ')}`)
-        }
-      }
-    }
-
-    if (req.magicBoost != null && (_waStats.magicBoost ?? 0) < req.magicBoost) unmet.push(`Magic Boost ≥ +${req.magicBoost}%`)
-    if (req.holyBoost != null && (_waStats.holyBoost ?? 0) < req.holyBoost) unmet.push(`Holy Boost ≥ +${req.holyBoost}%`)
-    if (req.summonBoost != null && (_waStats.summonBoost ?? 0) < req.summonBoost) unmet.push(`Summon Boost ≥ +${req.summonBoost}%`)
-    if (req.heatResistance != null && (_waStats.heatResistance ?? 0) < req.heatResistance) unmet.push(`Heat Resistance ≥ ${req.heatResistance}%`)
-    if (req.tenacity != null && (_waStats.tenacity ?? 0) < req.tenacity) unmet.push(`Tenacity ≥ ${req.tenacity}`)
-    if (req.physicalDefense != null && (_waStats.physicalDefense ?? 0) < req.physicalDefense) unmet.push(`Physical Defense ≥ +${req.physicalDefense}%`)
-    if (req.bothParts && !req.bothParts.every(p => p === _waBlade || p === _waHandle))
-      unmet.push(`Cần cả: ${req.bothParts.join(' + ')}`)
-      
-    return unmet
-  })()
+  $: waUnmetReqs = getUnmetReqs(selectedWA, _waScalings, _waStats, _waWeaponType, isMonk, _waBlade, _waHandle)
 
 // ── Weapon stat groups ──────────────────────────────────────────────────────
 const DMG_TYPE_KEYS = new Set(['physicalType','magicType','fireType','waterType','earthType','airType','hexType','holyType','trueType','summonType'])
@@ -1366,17 +1242,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <div class="modal-list">
           {#each searchedRaces as r}
@@ -1393,24 +1264,12 @@ $: _appWaAvgTotal = (() => {
               {/if}
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'guild'}
@@ -1418,17 +1277,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1473,24 +1327,12 @@ $: _appWaAvgTotal = (() => {
               {/each}
             </div>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'armor-helmet' || activeModal === 'armor-chestplate' || activeModal === 'armor-leggings'}
@@ -1500,17 +1342,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1555,24 +1392,12 @@ $: _appWaAvgTotal = (() => {
               </button>
             {/if}
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'infusion-helmet' || activeModal === 'infusion-chestplate' || activeModal === 'infusion-leggings'}
@@ -1582,17 +1407,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1635,24 +1455,12 @@ $: _appWaAvgTotal = (() => {
               </button>
             {/if}
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'ring'}
@@ -1660,17 +1468,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1702,24 +1505,12 @@ $: _appWaAvgTotal = (() => {
               </div>
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'infusion-ring'}
@@ -1727,17 +1518,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1768,24 +1554,12 @@ $: _appWaAvgTotal = (() => {
               </div>
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'rune'}
@@ -1793,17 +1567,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1837,24 +1606,12 @@ $: _appWaAvgTotal = (() => {
               </div>
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'blade'}
@@ -1862,17 +1619,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -1961,24 +1713,12 @@ $: _appWaAvgTotal = (() => {
               {/if}
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'handle'}
@@ -1986,17 +1726,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -2068,24 +1803,12 @@ $: _appWaAvgTotal = (() => {
               {/if}
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'glove'}
@@ -2093,17 +1816,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -2164,24 +1882,12 @@ $: _appWaAvgTotal = (() => {
               {/if}
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-            <div class="dym-block">
-              <span class="dym-label">Did you mean?</span>
-              <div class="dym-chips">
-                {#each didYouMean as s}
-                  <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-                    on:click={() => { modalSearch = s.label }}>
-                    {#if s.type === 'perk'}
-                      <span class="perk-icon">💡</span>
-                    {/if}
-                    {@html highlight(s.label, modalSearch)}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          {:else if noExactResults}
-            <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-          {/if}
+          <DidYouMean
+  {noExactResults}
+  {didYouMean}
+  {modalSearch}
+  on:select={(e) => { modalSearch = e.detail }}
+/>
         </div>
 
       {:else if activeModal === 'essence'}
@@ -2189,17 +1895,12 @@ $: _appWaAvgTotal = (() => {
         <div class="search-wrap">
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          {#if showSuggestions && modalSuggestions.length > 0}
-            <div class="suggest-drop">
-              {#each modalSuggestions as s}
-                <button class="suggest-item" class:suggest-item--perk={s.type==='perk'}
-                  on:mousedown|preventDefault={() => applySuggestion(s.label, s.type)}>
-                  <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-                  <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
-                </button>
-              {/each}
-            </div>
-          {/if}
+          <SuggestDrop
+  show={showSuggestions}
+  suggestions={modalSuggestions}
+  {modalSearch}
+  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+/>
         </div>
         <TagFilter
           {selectedTags}
@@ -3039,33 +2740,33 @@ $: _appWaAvgTotal = (() => {
         <span class="cdr-cd-new">{cdr.runeSetCD}s</span>
       </div>
       {#each cdr.runeBreakdown as step, i}
-    {@const prevCD = i === 0 ? cdr.runeSetCD : cdr.runeSetCD * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-    {@const nextCD = cdr.runeSetCD * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-    {@const isLast = i === cdr.runeBreakdown.length - 1}
-    <div class="cdr-calc-row">
-      <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-      <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-      <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-      <span class="cdr-arrow">=</span>
-      <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-    </div>
-    {#if isLast}
-      {@const floored = Math.floor(nextCD)}
-      {@const capped = Math.max(1, floored)}
-      <div class="cdr-calc-row cdr-calc-row--floor">
-        <span class="cdr-floor-label">floor</span>
-        <span class="cdr-arrow">→</span>
-        {#if capped > floored}
-          <span class="cdr-cd-new" style="text-decoration:line-through;opacity:.35">{floored}s</span>
-          <span class="cdr-arrow">→</span>
-          <span class="cdr-cd-new" style="color:var(--accent2)">1s</span>
-          <span class="cdr-cap-label">(min)</span>
-        {:else}
-          <span class="cdr-cd-new">{floored}s</span>
+        {@const prevCD = i === 0 ? cdr.runeSetCD : cdr.runeSetCD * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
+        {@const nextCD = cdr.runeSetCD * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
+        {@const isLast = i === cdr.runeBreakdown.length - 1}
+        <div class="cdr-calc-row">
+          <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
+          <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
+          <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
+          <span class="cdr-arrow">=</span>
+          <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
+        </div>
+        {#if isLast}
+          {@const floored = Math.floor(nextCD)}
+          {@const capped = Math.max(1, floored)}
+          <div class="cdr-calc-row cdr-calc-row--floor">
+            <span class="cdr-floor-label">floor</span>
+            <span class="cdr-arrow">→</span>
+            {#if capped > floored}
+              <span class="cdr-cd-new" style="text-decoration:line-through;opacity:.35">{floored}s</span>
+              <span class="cdr-arrow">→</span>
+              <span class="cdr-cd-new" style="color:var(--accent2)">1s</span>
+              <span class="cdr-cap-label">(min)</span>
+            {:else}
+              <span class="cdr-cd-new">{floored}s</span>
+            {/if}
+          </div>
         {/if}
-      </div>
-    {/if}
-  {/each}
+      {/each}
       {:else}
       {#each cdr.runeBreakdown as step, i}
         {@const prevCD = i === 0 ? rune.cooldown : rune.cooldown * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
@@ -4702,41 +4403,6 @@ $: _appWaAvgTotal = (() => {
 /* ── Search suggestions ── */
 .search-wrap { position: relative; margin-bottom: 12px; }
 .search-wrap .modal-search-input { margin-bottom: 0; }
-.suggest-drop {
-  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
-  background: var(--surface); border: 1px solid rgba(167,139,250,.4);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 8px 24px rgba(0,0,0,.5);
-  overflow-y: auto;
-  max-height: 260px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(167,139,250,.3) transparent;
-  animation: iepSlide .12s ease;
-}
-.suggest-drop::-webkit-scrollbar { width: 4px; }
-.suggest-drop::-webkit-scrollbar-thumb { background: rgba(167,139,250,.3); border-radius: 2px; }
-.suggest-item {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%; text-align: left; padding: 8px 12px;
-  background: none; border: none; border-bottom: 1px solid var(--border);
-  color: var(--ink); font-family: var(--font-body); font-size: .84rem;
-  cursor: pointer; transition: background .1s;
-}
-.suggest-label { flex: 1; min-width: 0; }
-.suggest-item:last-child { border-bottom: none; }
-.suggest-item:hover { background: var(--surface3); }
-.suggest-item--perk { color: var(--accent2); }
-.suggest-type {
-  font-size: .55rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: .14em; padding: 1px 5px; border-radius: 3px;
-  flex-shrink: 0;
-  background: rgba(167,139,250,.12); border: 1px solid rgba(167,139,250,.2); color: var(--accent3);
-}
-.suggest-item--perk .suggest-type {
-  background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.22); color: var(--accent2);
-}
-
-
 .modal-search-input {
   width: 100%;
   background: var(--surface3);
