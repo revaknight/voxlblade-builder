@@ -127,8 +127,8 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     color: '#1cf8ff',
     description: 'Take x% less damage and gain y flat reduction to magic damage.',
     dynamicDescription: (perks, potency) => {
-      const x = +(potency * 50).toFixed(3)
-      const y = +(potency * 3).toFixed(3)
+      const x = +(potency * 50).toFixed(4)
+      const y = +(potency * 3).toFixed(4)
       return `Take ${x}% less damage and gain ${y} flat reduction to magic damage.`
     },
     effectPerTenthPotency: 0.1,
@@ -139,7 +139,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     color: '#fde047',
     description: "Deal x% of your damage as bonus holy damage that counts as the applier's damage.",
     dynamicDescription: (_perks, potency) => {
-      const pct = +(potency * 50).toFixed(3)
+      const pct = +(potency * 50).toFixed(4)
       return `Deal ${pct}% of your damage as bonus holy damage that counts as the applier's damage.`
     },
     effectPerTenthPotency: 5,
@@ -150,7 +150,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     color: '#ff6336',
     description: 'All attacks gain draconic damage type. Does not apply to attacks without proc coefficient.',
     dynamicDescription: (_perks, potency) => {
-      const bonus = +potency.toFixed(3)
+      const bonus = +potency.toFixed(4)
       return `All attacks gain +${bonus} draconic damage type. Lasts 20s. Does not apply without proc coefficient.`
     },
     effectPerTenthPotency: 0.1,
@@ -473,8 +473,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Vassals Croak': (amount, allPerks) => {
     const swarm = allPerks['Swarm'] ?? 0
     const maxStacks = Math.floor(15 + swarm)
-    const minRage = Math.round((0.1 + 0.01 * 1 * amount) * 1000) / 1000
-    const maxRage = Math.round((0.1 + 0.01 * maxStacks * amount) * 1000) / 1000
+    const minRage = Math.round((0.1 + 0.01 * 1 * amount) * 10000) / 10000
+    const maxRage = Math.round((0.1 + 0.01 * maxStacks * amount) * 10000) / 10000
     return [
       {
         buffName: 'Last Croak',
@@ -738,7 +738,7 @@ export function getTrueBalanceBuffs(
 
   return [...grouped.entries()].map(([buffName, data]) => ({
     buffName,
-    potency: Math.round(data.maxPotency * 1000) / 1000,
+    potency: Math.round(data.maxPotency * 10000) / 10000,
     duration: data.maxDuration,
     condition: `True Balance · on ${data.sources.join(' / ')}`,
     sourceName: 'True Balance',
@@ -815,9 +815,9 @@ export function applyBuffPerkModifiers(
     return {
       ...buff,
       duration: Math.round(buff.duration * durationMult),
-      potency: Math.round((buff.potency + bonus) * 1000) / 1000,
+      potency: Math.round((buff.potency + bonus) * 10000) / 10000,
       basePotency: buff.potency,
-      bonusPotency: bonus > 0 ? Math.round(bonus * 1000) / 1000 : undefined,
+      bonusPotency: bonus > 0 ? Math.round(bonus * 10000) / 10000 : undefined,
     }
   })
 }
@@ -834,7 +834,7 @@ export function getBuffDescription(
     ? buff.dynamicDescription(perks, potency)
     : buff.description
 
-  return desc.replace(/x%/g, `${+(potency * 100).toFixed(3)}%`)
+  return desc.replace(/x%/g, `${+(potency * 100).toFixed(4)}%`)
 }
 
 export function getPerkBuffs(perks: Record<string, number>): GrantedBuff[] {
@@ -904,7 +904,7 @@ export function calcBuffEffect(
     return { value: 0, unit: '%', label: '?' }
   }
 
-  const value = Math.round(def.effectPerTenthPotency * potency * 10 * 1000) / 1000
+  const value = Math.round(def.effectPerTenthPotency * potency * 10 * 10000) / 10000
   const sign = def.isDebuff ? '' : '+'
   const label =
     def.effectUnit === '%'

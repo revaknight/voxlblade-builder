@@ -78,7 +78,7 @@
         const durMult = 1 + _infPerkAmt * 0.15
         return {
           ...buff,
-          potency:  Math.round(buff.potency  * potMult * 1000) / 1000,
+          potency:  Math.round(buff.potency  * potMult * 10000) / 10000,
           duration: Math.round(buff.duration * durMult),
         }
       }
@@ -86,7 +86,7 @@
         const potMult = 1 + _infPerkAmt * 0.05
         return {
           ...buff,
-          potency: Math.round(buff.potency * potMult * 1000) / 1000,
+          potency: Math.round(buff.potency * potMult * 10000) / 10000,
         }
       }
       return buff
