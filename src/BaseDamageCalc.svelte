@@ -25,7 +25,7 @@
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
   export let luminescentPct: number = 0
-  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string }> = []
+  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string; potency?: number; effectLabel?: string | null; descLabel?: string | null; damageMult?: number; defReduction?: Partial<Record<string, number>> }> = []
 
 
   const DMG_TYPES = [
@@ -88,6 +88,7 @@
   ]
 
   let activePreset: string | null = null
+  let disabledDebuffs = new Set<string>()
 
   function applyPreset(p: Preset) {
     if (activePreset === p.id) {
@@ -106,6 +107,29 @@
   // ── Armor pen ─────────────────────────────────────────────────────────────
   $: armorPen   = (stats as any)?.armorPenetration ?? 0
   $: penDecimal = armorPen / 100
+
+  // ── Active debuff combat effects ───────────────────────────────────────────
+  // Product of all active damageMult debuffs (e.g. Weakness → attacker deals more)
+  $: _activeDebuffDamageMult = appliedDebuffs
+    .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1)
+    .reduce((acc, d) => Math.round(acc * (d.damageMult ?? 1) * 10000) / 10000, 1)
+
+  // Effective enemy defenses after applying debuff reductions (e.g. Shatter strips armor)
+  $: effectiveDefenses = (() => {
+    const reductions: Record<string, number> = {}
+    for (const d of appliedDebuffs) {
+      if (disabledDebuffs.has(d.name) || !d.defReduction) continue
+      for (const [k, v] of Object.entries(d.defReduction)) {
+        reductions[k] = (reductions[k] ?? 0) + (v ?? 0)
+      }
+    }
+    if (Object.keys(reductions).length === 0) return defenses
+    const out = { ...defenses }
+    for (const [k, v] of Object.entries(reductions)) {
+      out[k] = (out[k] ?? 0) - v
+    }
+    return out
+  })()
 
   function calcArmorMult(defPct: number, pen: number): { mult: number; branch: 'low'|'high' } {
     const def = defPct / 100
@@ -158,17 +182,17 @@
 
       let enemyDefPct = 0
       if (!isHeal && k !== 'true' && k !== 'summon') {
-        enemyDefPct = defenses[k] ?? 0
+        enemyDefPct = effectiveDefenses[k] ?? 0
         if (k === 'air' || k === 'earth') {
-          enemyDefPct += defenses['physical'] ?? 0
+          enemyDefPct += effectiveDefenses['physical'] ?? 0
         } else if (k === 'fire' || k === 'water' || k === 'hex' || k === 'holy') {
-          enemyDefPct += defenses['magic'] ?? 0
+          enemyDefPct += effectiveDefenses['magic'] ?? 0
         }
       }
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = isHeal ? 1 : Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
       const typeBase     = Math.round(hit.base * mult * 100) / 100
-      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * 100) / 100
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * 100) / 100
       const critVal      = Math.round(raw * critDmgMult / 100 * 100) / 100
       return {
         key: k, label: info.label, color: info.color,
@@ -212,7 +236,7 @@
     ...(perkHits.length > 0 ? [{ label: 'Perk', list: perkHits }] : [])
   ]
 
-  // ── Totals (From Claude) ──────────────────────────────────────────────────
+  // ── Totals ──────────────────────────────────────────────────
   function hitTypeSum(hit: ComputedHit, useCrit: boolean): number {
     return Math.round(hit.types.reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * 100) / 100
   }
@@ -271,9 +295,33 @@
         {#if appliedDebuffs.length > 0}
           <div class="bdc-debuff-row">
             {#each appliedDebuffs as d (d.name)}
-              <span class="bdc-debuff-pill" style="--dc:{d.color}" title={d.name}>{d.abbr}</span>
+              {@const isOff = disabledDebuffs.has(d.name)}
+              <button
+                class="bdc-debuff-pill"
+                class:bdc-debuff-pill--off={isOff}
+                style="--dc:{d.color}"
+                title="{d.name}{d.effectLabel ? ` · ${d.effectLabel}` : ''} — click to toggle"
+                on:click={() => {
+                  if (disabledDebuffs.has(d.name)) disabledDebuffs.delete(d.name)
+                  else disabledDebuffs.add(d.name)
+                  disabledDebuffs = new Set(disabledDebuffs)
+                }}
+              >
+                <span class="bdc-dp-abbr">{d.abbr}</span>
+                {#if d.effectLabel}
+                  <span class="bdc-dp-val">{isOff ? '—' : d.effectLabel}</span>
+                {/if}
+              </button>
             {/each}
           </div>
+        {@const activeDescs = appliedDebuffs.filter(d => !disabledDebuffs.has(d.name) && d.descLabel)}
+          {#if activeDescs.length > 0}
+            <div class="bdc-debuff-descs">
+              {#each activeDescs as d}
+                <span class="bdc-debuff-desc" style="--dc:{d.color}">{d.descLabel}</span>
+              {/each}
+            </div>
+          {/if}
         {/if}
       </div>
 
@@ -506,17 +554,48 @@
   max-width: 100px;
 }
 .bdc-debuff-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
   font-size: .58rem;
   font-weight: 800;
   letter-spacing: .03em;
   text-transform: uppercase;
-  padding: 1px 6px;
+  padding: 3px 6px 4px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dc) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--dc) 45%, transparent);
   color: var(--dc);
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s, filter .15s, box-shadow .15s;
+  line-height: 1;
+}
+.bdc-debuff-pill:hover {
+  box-shadow: 0 0 8px color-mix(in srgb, var(--dc) 40%, transparent);
+  border-color: color-mix(in srgb, var(--dc) 70%, transparent);
+}
+.bdc-debuff-pill--off {
+  opacity: 0.28;
+  filter: grayscale(0.75);
+  border-style: dashed;
+}
+.bdc-debuff-pill--off:hover {
+  opacity: 0.5;
+  box-shadow: none;
+}
+.bdc-dp-abbr {
+  line-height: 1;
+}
+.bdc-dp-val {
+  font-size: .48rem;
+  font-weight: 900;
+  color: var(--dc);
+  opacity: 0.8;
+  line-height: 1;
+  letter-spacing: 0;
 }
 
 /* Daily presets */
@@ -941,5 +1020,19 @@
   0%   { transform: rotate(10deg); }
   50%  { transform: rotate(12deg); }
   100% { transform: rotate(10deg); }
+}
+.bdc-debuff-descs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+.bdc-debuff-desc {
+  font-size: .55rem;
+  font-weight: 700;
+  color: var(--dc);
+  opacity: .75;
+  text-align: center;
+  letter-spacing: .03em;
 }
 </style>

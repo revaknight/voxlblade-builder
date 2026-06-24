@@ -5,7 +5,8 @@
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, ONE_HANDED_TYPES, type WeaponBaseDmg } from './lib/types'
-  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
+  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect } from './data/BuffData'
+  import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
   import { getDraconicHexDebuffs } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
@@ -94,14 +95,30 @@
   )
  
   $: _dummyDebuffs = (() => {
-    const seen = new Map<string, string>()
+    const seen = new Map<string, { color: string; potency: number }>()
     for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
       if (b.isSelfDebuff) continue
       const def = BUFF_DEFS[b.buffName]
       if (!def?.isDebuff) continue
-      if (!seen.has(b.buffName)) seen.set(b.buffName, def.color)
+      const existing = seen.get(b.buffName)
+      if (!existing || b.potency > existing.potency) {
+        seen.set(b.buffName, { color: def.color, potency: b.potency })
+      }
     }
-    return [...seen.entries()].map(([name, color]) => ({ name, abbr: name.slice(0, 4), color }))
+    return [...seen.entries()].map(([name, { color, potency }]) => {
+      const combatFx = DEBUFF_COMBAT_EFFECTS[name]
+      const effect = potency > 0 ? calcBuffEffect(name, potency) : null
+      return {
+        name,
+        abbr: name.slice(0, 4),
+        color,
+        potency,
+        effectLabel: effect ? `${effect.value}${effect.unit === '%' ? '%' : ''}` : null,
+        descLabel: combatFx ? combatFx.descFn(potency) : null,
+        damageMult: combatFx?.damageMult ? combatFx.damageMult(potency) : undefined,
+        defReduction: combatFx?.defReduction ? combatFx.defReduction(potency) : undefined,
+      }
+    })
   })()
 
   $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks
@@ -3841,6 +3858,4 @@
 .da-weaponboost-sources {
   font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic;
 }
-
-
 </style>
