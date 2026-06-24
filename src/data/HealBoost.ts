@@ -7,6 +7,8 @@ export interface HealBoostContext {
   level?: number
   draconicColor?: string
   sliderVal?: number
+  guild?: string
+  draconicRuneInfusion?: string
 }
 
 export interface HealBoostDef {
@@ -68,6 +70,26 @@ export const HEAL_SCALING_DEFS: HealBoostDef[] = [
         return { multiplier: 0.5, condition: 'Healing received halved in sunlight' }
       }
       return null
+    },
+  },
+  {
+    sourceName: 'Dragon Infusion',
+    sourceType: 'rune',
+    calcFn: (ctx) => {
+      if (ctx.guild !== 'Draconic') return null
+      if (ctx.draconicRuneInfusion !== 'infusion') return null
+      if (ctx.draconicColor !== 'holy') return null
+      
+      const perkAmt = ctx.perks['Draconic Blood'] ?? 0
+      if (perkAmt <= 0) return null
+      
+      const statusPotency = perkAmt * 0.115
+      const multiplier = 1 + statusPotency
+      
+      return {
+        multiplier: Math.round(multiplier * 10000) / 10000,
+        condition: `Holy Infusion · ${Math.round(statusPotency * 10000) / 100}% status potency`
+      }
     },
   },
 ]

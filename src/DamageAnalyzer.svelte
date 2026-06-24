@@ -36,6 +36,8 @@
     inDarkness: $build.inDarkness,
     level: $build.level,
     draconicColor: $build.draconicColor,
+    guild: $build.guild,
+    draconicRuneInfusion: $build.draconicRuneInfusion,
   }
   $: _healScalingResult = calculateHealBoost(_healScalingCtx)
   $: _healFinalMultiplier = _healScalingResult.finalMultiplier
@@ -376,7 +378,8 @@
     weaponTypes: Record<string, number>,
     bonuses: Record<string, number>
   ): Record<string, number> {
-    if (dtStr === 'Same as weapon') return _applyDmgBonuses(weaponTypes, bonuses)
+    if (dtStr === 'Same as weapon') return weaponTypes
+    
     const types: Record<string, number> = {}
     const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
     let m: RegExpExecArray | null
@@ -740,12 +743,13 @@
   $: _waDmgTypes = (() => {
     const dt = selectedWA.damageType
     if (!dt || dt === 'Same as weapon') {
-      return _applyDmgBonuses(_weaponDmgTypes, _perkDmgTypeBonuses)
+      return _weaponDmgTypes
     }
+    
     if (dt.includes('Highest damage type')) {
       const entries = Object.entries(_weaponDmgTypes)
       if (entries.length === 0) {
-        return _applyDmgBonuses(_weaponDmgTypes, _perkDmgTypeBonuses)
+        return _weaponDmgTypes
       }
       const PRIORITY = ['hex', 'water', 'air', 'true', 'earth', 'magic', 'fire', 'physical', 'holy']
       const [highestKey] = entries.reduce((a, b) => {
@@ -759,10 +763,8 @@
       })
       const total =
         Math.round(entries.reduce((s, [, v]) => s + v, 0) * 100) / 100
-      return _applyDmgBonuses(
-        { [highestKey]: total },
-        _perkDmgTypeBonuses
-      )
+        
+      return { [highestKey]: total }
     }
 
     const types: Record<string, number> = {}
@@ -775,15 +777,11 @@
       types[m[2].toLowerCase()] = parseFloat(m[1])
     }
 
-    const base =
-      Object.keys(types).length > 0
-        ? types
-        : { ..._weaponDmgTypes }
-
-    return _applyDmgBonuses(
-      base,
-      _perkDmgTypeBonuses
-    )
+    if (Object.keys(types).length > 0) {
+      return _applyDmgBonuses(types, _perkDmgTypeBonuses)
+    } else {
+      return { ..._weaponDmgTypes }
+    }
   })()
 
   $: _waScalingMult = (() => {
