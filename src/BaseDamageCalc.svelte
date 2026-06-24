@@ -144,8 +144,8 @@
   }
 
   function fmt(n: number) {
-    const r = Math.round(n * 100) / 100
-    return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/\.?0+$/, '')
+    const r = Math.round(n * 1000) / 1000
+    return Number.isInteger(r) ? String(r) : r.toFixed(3).replace(/\.?0+$/, '')
   }
 
   function fmtMult(n: number) {
@@ -192,9 +192,9 @@
       }
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = isHeal ? 1 : Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
-      const typeBase     = Math.round(hit.base * mult * 100) / 100
-      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * 100) / 100
-      const critVal      = Math.round(raw * critDmgMult / 100 * 100) / 100
+      const typeBase     = Math.round(hit.base * mult * 1000) / 1000
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * 1000) / 1000
+      const critVal      = Math.round(raw * critDmgMult / 100 * 1000) / 1000
       return {
         key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
@@ -208,9 +208,9 @@
       if (baseSum > 0) {
         const holyDefPct  = (defenses['holy'] ?? 0) + (defenses['magic'] ?? 0)
         const holyDefMult = Math.round(calcArmorMult(holyDefPct, penDecimal).mult * 10000) / 10000
-        const lumTypeBase = Math.round(baseSum * luminescentPct * 100) / 100
-        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 100) / 100
-        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 100) / 100
+        const lumTypeBase = Math.round(baseSum * luminescentPct * 1000) / 1000
+        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 1000) / 1000
+        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 1000) / 1000
         types.push({
           key: 'holy', label: 'Holy', color: DMG_TYPE_MAP.get('holy')?.color ?? '#facc15',
           typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
@@ -238,11 +238,12 @@
   ]
 
   // ── Totals ──────────────────────────────────────────────────
-  function hitTypeSum(hit: ComputedHit, useCrit: boolean): number {
-    return Math.round(hit.types.reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * 100) / 100
+  function hitTypeSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
+    const sum = hit.types.reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    return Math.round(sum * (includeCount ? hit.count : 1) * 100) / 100
   }
   function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {
-    return Math.round(list.reduce((s, h) => s + hitTypeSum(h, useCrit) * h.count, 0) * 100) / 100
+    return Math.round(list.reduce((s, h) => s + h.types.reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * h.count, 0) * 100) / 100
   }
 </script>
 
@@ -394,6 +395,7 @@
                 <div class="bdc-hit-list-rows">
                   {#each grp.list as hit}
                     {@const hSum = hitTypeSum(hit, showCritValues)}
+                    {@const hSumWithCount = hitTypeSum(hit, showCritValues, true)}
                     {@const multiType = hit.types.length > 1}
                     {@const hitForceCrit = hit.types.some(t => t.forceCrit)}  
                     <div class="bdc-hit-row" class:bdc-hit-row--finisher={hit.isFinisher}>
@@ -419,7 +421,7 @@
                                 <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
                               {/if}
                               {#if hit.group === 'Rune' && draconicRunesBonus[t.label.toLowerCase()]}
-                                <span class="bdc-dr-badge" title="Draconic Runes: +{draconicRunesBonus[t.label.toLowerCase()].toFixed(2)} {t.label} damage type">✦ +{draconicRunesBonus[t.label.toLowerCase()].toFixed(2)}</span>
+                                <span class="bdc-dr-badge" title="Draconic Runes: +{draconicRunesBonus[t.label.toLowerCase()].toFixed(4)} {t.label} damage type">✦ +{draconicRunesBonus[t.label.toLowerCase()].toFixed(2)}</span>
                               {/if}
                             </div>
                             <div class="bdc-hit-type-formula">
@@ -466,7 +468,7 @@
                         <span class="bdc-hit-type-sum-sep">=</span>
                           <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues || hitForceCrit}>
                           {#if showCritValues || hitForceCrit}<CritIcon size={11}/>{/if}
-                          {fmt(hSum * hit.count)}
+                          {fmt(hSumWithCount)}
                         </span>
                         
                         {#if hit.isFinisher}<span class="bdc-hit-fin">✦</span>{/if}

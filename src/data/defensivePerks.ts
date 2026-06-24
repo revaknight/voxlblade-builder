@@ -57,7 +57,7 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     perkName: 'Air Pressure',
     drPctPerStack: 10,
     label: 'Air Pressure (Max Potency)',
-    conditionLabel: 'Calculate at maximum accumulation, assuming 10 potency per perk level.',
+    conditionLabel: 'Air Pressure (Max Potency)',
   },
   {
     perkName: 'Valor',

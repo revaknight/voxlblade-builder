@@ -212,8 +212,8 @@
   }>
 
   function fmtNum(n: number): string {
-    const r = Math.round(n * 100) / 100
-    return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/\.?0+$/, '')
+    const r = Math.round(n * 1000) / 1000
+    return Number.isInteger(r) ? String(r) : r.toFixed(3).replace(/\.?0+$/, '')
   }
 
   function calcGroupMultiplier(entries: Array<{ rawMultiplier: number }>): number {
@@ -992,8 +992,8 @@
 
       const buildTypedHits = (baseDmg: number) =>
       Object.entries(resolvedDmgTypes).map(([k, mult]) => ({
-        rawVal: Math.round(baseDmg * 100) / 100,
-        val: Math.round(baseDmg * mult * 100) / 100,
+        rawVal: Math.round(baseDmg * 1000) / 1000,
+        val: Math.round(baseDmg * mult * 1000) / 1000,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
         label: k.charAt(0).toUpperCase() + k.slice(1),
       }))
@@ -1172,7 +1172,7 @@
         count: entry.perkName === 'Springblast' ? springblastFinisherHits : (entry.hits ?? 1),
         base: _preColorBase,
         scalingMult: entry.scalingMult,
-        combatMult: entry.combatMult,
+        combatMult: entry.perkName === 'Draconic Blood' ? _m2CombatMult : entry.combatMult,
         isFinisher: entry.isFinisher ?? false,
         dmgTypes: entry.resolvedDmgTypes,
         label: entry.displayName,
