@@ -1,4 +1,6 @@
 import type { BuildState } from '../lib/types';
+import { calculateHealScaling, type HealScalingContext } from './healScaling';
+
 export interface RuneDmgCtx {
   potency: number
   sliderVal?: number
@@ -31,6 +33,30 @@ export interface RuneDmgDef {
   isHealOnly?: boolean
   slider?: RuneSliderDef
   shield?: RuneShieldDef
+}
+
+export function calculateRuneHealScaling(
+  runeDef: RuneDmgDef,
+  ctx: {
+    perks: Record<string, number>
+    emotionalState?: 'buffs' | 'debuffs' | 'both'
+    inDarkness: boolean
+    level?: number
+    sliderVal?: number
+  }
+): number {
+  if (!runeDef.isHealOnly) return 1.0
+  
+  const healCtx: HealScalingContext = {
+    perks: ctx.perks,
+    emotionalState: ctx.emotionalState,
+    inDarkness: ctx.inDarkness,
+    level: ctx.level,
+    sliderVal: ctx.sliderVal,
+  }
+  
+  const result = calculateHealScaling(healCtx, 'rune')
+  return result.finalMultiplier
 }
 
 export const RUNE_DMG_DEFS: RuneDmgDef[] = [

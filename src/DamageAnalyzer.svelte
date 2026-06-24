@@ -17,7 +17,8 @@
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
-  import { applyDraconicRunesBonus, getDraconicRunesBonus } from './data/draconicRunes'
+  import { applyDraconicRunesBonus, getDraconicRunesBonus, applyDraconicBonuses, getDraconicBonuses } from './data/draconicRunes'
+  import { calculateHealScaling, type HealScalingContext } from './data/healScaling'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -27,6 +28,17 @@
   
   $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered, $build.inDarkness)
   $: _vampireStacks = perks['Vampire'] ?? 0
+
+  // Heal scaling calculation using healScaling.ts
+  $: _healScalingCtx = {
+    perks,
+    emotionalState: $build.emotionalState,
+    inDarkness: $build.inDarkness,
+    level: $build.level,
+    draconicColor: $build.draconicColor,
+  }
+  $: _healScalingResult = calculateHealScaling(_healScalingCtx)
+  $: _healFinalMultiplier = _healScalingResult.finalMultiplier
 
   $: _defenseRows = _DEF_TYPE_LIST.map(type => {
       const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
@@ -911,10 +923,14 @@
           ? (def.getDmgTypes?.({ draconicColor: $build.draconicColor }) ?? {})
           : (def.dmgTypes ?? {})
 
-      // Apply Draconic Runes bonus to rune damage
+      // Apply Draconic Runes + Dragon Infusion bonuses to rune damage
       const resolvedDmgTypes = def.isRune
-        ? applyDraconicRunesBonus(baseDmgTypes, {
+        ? applyDraconicBonuses(baseDmgTypes, {
             draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+            draconicColor: $build.draconicColor || 'physical',
+          }, {
+            isActive: $build.draconicRuneInfusion === 'infusion',
+            buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
             draconicColor: $build.draconicColor || 'physical',
           })
         : baseDmgTypes
@@ -1058,7 +1074,7 @@
           count: h.count,
           base: h.n,
           scalingMult: _waScalingMult,
-          combatMult: boosts.healFinalMultiplier,
+          combatMult: _healFinalMultiplier,
           isFinisher: false,
           dmgTypes: { heal: 1.0 },
           label: selectedWA.name,
@@ -1093,32 +1109,39 @@
       })
       if (entry.perkName === 'Draconic Blood') {
          const _color = $build.draconicColor
-         const _healSe = (PERK_DMG_DEFS.find(d => d.perkName === 'Draconic Blood' && d.label === entry.displayName)
-           ?.secondaryEffects ?? []).find(se =>
-             (_color === 'holy'  && se.label === 'Heal (Holy)') ||
-             (_color === 'water' && se.label === 'Heal (Water)')
-           )
-         if (_healSe) {
-           const _healVal = Math.round(_healSe.getValue({ perkAmount: entry.perkAmount, draconicColor: _color }) * 100) / 100
-           result.push({
-             group: entry.perkName === 'Draconic Blood' ? 'Rune' : 'Perk',
-             index: result.length,
-             count: 1,
-             base: _healVal,
-             scalingMult: entry.scalingMult,
-             combatMult: boosts.healFinalMultiplier,
-             isFinisher: false,
-             dmgTypes: { heal: 1.0 },
-             label: `${entry.displayName} Heal`,
-             isHeal: true,
-           })
-         }
+         const healSourceName = entry.displayName === 'Dragon Claw' 
+          ? (_color === 'holy' ? 'Dragon Claw (Holy)' : _color === 'water' ? 'Dragon Claw (Water)' : null)
+          : entry.displayName === 'Dragon Bubble'
+          ? (_color === 'holy' ? 'Dragon Bubble (Holy)' : _color === 'water' ? 'Dragon Bubble (Water)' : null)
+          : null
+        
+        if (healSourceName) {
+          const healEntry = _healScalingResult.entries.find(e => e.sourceName === healSourceName)
+          if (healEntry && healEntry.rawMultiplier > 0) {
+            result.push({
+              group: 'Rune',
+              index: result.length,
+              count: 1,
+              base: healEntry.rawMultiplier,
+              scalingMult: 1.0,
+              combatMult: _healFinalMultiplier,
+              isFinisher: false,
+              dmgTypes: { heal: 1.0 },
+              label: `${entry.displayName} Heal`,
+              isHeal: true,
+            })
+          }
+        }
        }
     }
     if (_activeRuneDmgDef && Object.keys(_activeRuneDmgDef.dmgTypes).length > 0) {
       const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false
-      const _runeDmgTypesWithBonus = applyDraconicRunesBonus(_activeRuneDmgDef.dmgTypes, {
+      const _runeDmgTypesWithBonus = applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
         draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+        draconicColor: $build.draconicColor || 'physical',
+      }, {
+        isActive: $build.draconicRuneInfusion === 'infusion',
+        buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
         draconicColor: $build.draconicColor || 'physical',
       })
       result.push({
@@ -1130,10 +1153,29 @@
         base: _activeRuneDmgDef.getBaseDamage({ potency: runePotency }),
         scalingMult: _computePerkScalingMult(_activeRuneDmgDef.scalings),
         dmgTypes: _runeDmgTypesWithBonus,
-        combatMult: _runeIsHeal ? boosts.healFinalMultiplier : _runeCombatMult,
+        combatMult: _runeIsHeal ? _healFinalMultiplier : _runeCombatMult,
         isFinisher: false,
         label: _activeRuneDmgDef.runeName,
         isHeal: _runeIsHeal,
+      })
+    }
+
+    // Water draconic color pulse heal (Dragon Infusion)
+    if ($build.draconicRuneInfusion === 'infusion' && $build.draconicColor === 'water' && (perks['Draconic Blood'] ?? 0) > 0) {
+      const perkAmount = perks['Draconic Blood'] ?? 0
+      const pulseInterval = Math.max(1, 8 - perkAmount)
+      const waterScaling = _computePerkScalingMult({ water: 1.0 })
+      result.push({
+        group: 'Rune',
+        index: result.length,
+        count: 1,
+        base: 0.1,
+        scalingMult: waterScaling,
+        dmgTypes: { heal: 1.0 },
+        combatMult: boosts.healFinalMultiplier,
+        isFinisher: false,
+        label: `Water Pulse (every ${pulseInterval}s)`,
+        isHeal: true,
       })
     }
     return result
@@ -1324,17 +1366,17 @@
       {/if}
     </div>
   {/if}
-  {#if boosts.healEntries.length > 0}
+  {#if _healScalingResult.entries.length > 0}
     <div class="da-boost-row" style="margin-top:8px">
       <span class="da-heal-label">✦ Heal</span>
-      {#each boosts.healEntries as entry}
+      {#each _healScalingResult.entries as entry}
         <div class="da-boost-chip da-boost-chip--heal" title={entry.condition ?? ''}>
           <span class="da-bc-name">{entry.sourceName}</span>
           <span class="da-bc-val" style="color:#4ade80">×{+entry.rawMultiplier.toFixed(3)}</span>
         </div>
         <span class="da-chain-op">×</span>
       {/each}
-      <span class="da-chain-result" style="color:#4ade80">= ×{+boosts.healFinalMultiplier.toFixed(4)}</span>
+      <span class="da-chain-result" style="color:#4ade80">= ×{+_healFinalMultiplier.toFixed(4)}</span>
     </div>
   {/if}
 </div>
@@ -1758,21 +1800,33 @@
         {@const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false}
         {@const _draconicRunesStacks = perks['Draconic Runes'] ?? 0}
         {@const _draconicColor = $build.draconicColor || 'physical'}
-        {@const _draconicRunesBonus = _draconicRunesStacks > 0 ? { [_draconicColor]: 0.05 * _draconicRunesStacks } : {}}
-        {@const _runeDmgTypesWithBonus = (() => {
-          const base = { ..._activeRuneDmgDef.dmgTypes }
-          for (const [type, bonus] of Object.entries(_draconicRunesBonus)) {
-            base[type] = (base[type] ?? 0) + bonus
-          }
-          return base
-        })()}
+        {@const _dragonInfusionActive = $build.draconicRuneInfusion === 'infusion'}
+        {@const _dragonInfusionPotency = Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000}
+        {@const _draconicBonuses = getDraconicBonuses({
+          draconicRunesStacks: _draconicRunesStacks,
+          draconicColor: _draconicColor,
+        }, {
+          isActive: _dragonInfusionActive,
+          buffPotency: _dragonInfusionPotency,
+          draconicColor: _draconicColor,
+        })}
+        {@const _runeDmgTypesWithBonus = applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
+          draconicRunesStacks: _draconicRunesStacks,
+          draconicColor: _draconicColor,
+        }, {
+          isActive: _dragonInfusionActive,
+          buffPotency: _dragonInfusionPotency,
+          draconicColor: _draconicColor,
+        })}
         
         <div class="da-wbd-section">
           <div class="da-wbd-row-label da-wbd-row-label--rune">
             <span class="da-wbd-lbl-badge da-wbd-lbl-badge--rune">Rune</span>
             <span class="da-wbd-lbl-text">{_activeRuneDmgDef.runeName}</span>
-            {#if _draconicRunesStacks > 0}
-              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">+{(0.05 * _draconicRunesStacks).toFixed(2)} {_draconicColor.charAt(0).toUpperCase() + _draconicColor.slice(1)}</span>
+            {#if Object.keys(_draconicBonuses).length > 0}
+              {@const totalBonus = Object.values(_draconicBonuses).reduce((a, b) => a + b, 0)}
+              {@const bonusTypes = Object.keys(_draconicBonuses).map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' + ')}
+              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">+{totalBonus.toFixed(2)} {bonusTypes}</span>
             {/if}
           </div>
           <div class="da-hits-row">
@@ -2359,8 +2413,12 @@
   rageMult={_effectiveRageMult}
   rageAffectedTypes={_effectiveRageAffectedTypes}
   luminescentPct={_luminescentPct}
-  draconicRunesBonus={getDraconicRunesBonus({
+  draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+    draconicColor: $build.draconicColor || 'physical',
+  }, {
+    isActive: $build.draconicRuneInfusion === 'infusion',
+    buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
     draconicColor: $build.draconicColor || 'physical',
   })}
   showCritToggle={_showCrit}
