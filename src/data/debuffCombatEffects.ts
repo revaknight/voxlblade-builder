@@ -1,3 +1,5 @@
+const ROOT_DEF_TYPES = ['physical', 'magic'] as const
+
 export interface DebuffCombatEffect {
   descFn: (potency: number) => string
   damageMult?: (potency: number) => number
@@ -14,6 +16,9 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
 
   Shatter: {
     descFn: (p: number) => `Lose ${Math.round(p * 100)} Armor`,
-    defReduction: (p: number) => ({ physical: Math.round(p * 100) }),
+    defReduction: (p: number) => {
+      const amt = Math.round(p * 100)
+      return ROOT_DEF_TYPES.reduce((acc, t) => ({ ...acc, [t]: amt }), {} as Partial<Record<string, number>>)
+    },
   },
 }
