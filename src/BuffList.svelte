@@ -82,7 +82,7 @@
           duration: Math.round(buff.duration * durMult),
         }
       }
-      if (color === 'holy' && !def.isDebuff && !def.isNeutral) {
+      if (color === 'holy' && !def.isDebuff && !def.isNeutral && buff.buffName !== 'Draconic Infusion') {
         const potMult = 1 + _infPerkAmt * 0.05
         return {
           ...buff,

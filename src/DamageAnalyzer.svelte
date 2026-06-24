@@ -212,8 +212,8 @@
   }>
 
   function fmtNum(n: number): string {
-    const r = Math.round(n * 1000) / 1000
-    return Number.isInteger(r) ? String(r) : r.toFixed(3).replace(/\.?0+$/, '')
+    const r = Math.round(n * 10000) / 10000
+    return Number.isInteger(r) ? String(r) : r.toFixed(4).replace(/\.?0+$/, '')
   }
 
   function calcGroupMultiplier(entries: Array<{ rawMultiplier: number }>): number {
@@ -333,16 +333,18 @@
     type?: string
     getType?: (ctx: { draconicColor: string }) => string
     amountPerStack: number
+    getAmountPerStack?: (ctx: { draconicColor: string }) => number
     condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string }) => boolean
   }
 
   const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
-    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },    
+    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
     {
       perkName: 'Draconic Blood',
       getType: ctx => ctx.draconicColor || 'physical',
       amountPerStack: 0.1,
+      getAmountPerStack: ctx => ctx.draconicColor === 'holy' ? 0.115 : 0.1,
       condition: ctx => ctx.draconicRuneInfusion === 'infusion',
     },
   ]
@@ -355,7 +357,8 @@
       if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion })) continue
       const type = def.getType ? def.getType({ draconicColor: $build.draconicColor }) : def.type
       if (!type) continue
-      bonus[type] = Math.round(((bonus[type] ?? 0) + amt * def.amountPerStack) * 100) / 100
+      const amountPerStack = def.getAmountPerStack ? def.getAmountPerStack({ draconicColor: $build.draconicColor }) : def.amountPerStack
+      bonus[type] = Math.round(((bonus[type] ?? 0) + amt * amountPerStack) * 1000) / 1000
     }
     return bonus
   })()
@@ -364,7 +367,7 @@
     if (Object.keys(bonuses).length === 0) return base
     const out = { ...base }
     for (const [k, v] of Object.entries(bonuses)) {
-      out[k] = Math.round(((out[k] ?? 0) + v) * 100) / 100
+      out[k] = Math.round(((out[k] ?? 0) + v) * 1000) / 1000
     }
     return out
   }
@@ -973,7 +976,7 @@
             draconicColor: $build.draconicColor || 'physical',
           }, {
             isActive: $build.draconicRuneInfusion === 'infusion',
-            buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
+            buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
             draconicColor: $build.draconicColor || 'physical',
           })
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
@@ -992,8 +995,8 @@
 
       const buildTypedHits = (baseDmg: number) =>
       Object.entries(resolvedDmgTypes).map(([k, mult]) => ({
-        rawVal: Math.round(baseDmg * 1000) / 1000,
-        val: Math.round(baseDmg * mult * 1000) / 1000,
+        rawVal: Math.round(baseDmg * 10000) / 10000,
+        val: Math.round(baseDmg * mult * 10000) / 10000,
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
         label: k.charAt(0).toUpperCase() + k.slice(1),
       }))
@@ -1189,7 +1192,7 @@
         draconicColor: $build.draconicColor || 'physical',
       }, {
         isActive: $build.draconicRuneInfusion === 'infusion',
-        buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
+        buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
         draconicColor: $build.draconicColor || 'physical',
       })
       result.push({
@@ -1846,7 +1849,7 @@
         {@const _draconicRunesStacks = perks['Draconic Runes'] ?? 0}
         {@const _draconicColor = $build.draconicColor || 'physical'}
         {@const _dragonInfusionActive = $build.draconicRuneInfusion === 'infusion'}
-        {@const _dragonInfusionPotency = Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000}
+        {@const _dragonInfusionPotency = Math.round((perks['Draconic Blood'] ?? 0) * (_draconicColor === 'holy' ? 0.115 : 0.1) * 1000) / 1000}
         {@const _draconicBonuses = getDraconicBonuses({
           draconicRunesStacks: _draconicRunesStacks,
           draconicColor: _draconicColor,
@@ -2104,7 +2107,7 @@
           <span style="color:{row.color}">{row.label ??(row.key.charAt(0).toUpperCase()+ row.key.slice(1))}</span>
         </div>
         <div class="ds-col ds-col--val">
-          <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 1000) / 1000}</span>
+          <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
         </div>
         <div class="ds-col ds-col--op">×</div>
         <div class="ds-col ds-col--boost">

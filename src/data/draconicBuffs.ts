@@ -19,8 +19,8 @@ export function getDraconicInfusionBuff(
     if (draconicRuneInfusion !== 'infusion') return []
 
     const perkAmt = draconicBloodPerkAmt
-    const potency = Math.round(perkAmt * 0.1 * 1000) / 1000
     const color   = draconicColor
+    const potency = Math.round(perkAmt * (color === 'holy' ? 0.115 : 0.1) * 1000) / 1000
 
     const colorLabel = color ? color.charAt(0).toUpperCase() + color.slice(1) : ''
     const effectFn    = color ? DRACONIC_INFUSION_COLOR_EFFECTS[color] : undefined

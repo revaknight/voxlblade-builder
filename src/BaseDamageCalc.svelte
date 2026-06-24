@@ -144,8 +144,8 @@
   }
 
   function fmt(n: number) {
-    const r = Math.round(n * 1000) / 1000
-    return Number.isInteger(r) ? String(r) : r.toFixed(3).replace(/\.?0+$/, '')
+    const r = Math.round(n * 10000) / 10000
+    return Number.isInteger(r) ? String(r) : r.toFixed(4).replace(/\.?0+$/, '')
   }
 
   function fmtMult(n: number) {
@@ -192,9 +192,9 @@
       }
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = isHeal ? 1 : Math.round(calcArmorMult(enemyDefPct, penDecimal).mult * 10000) / 10000
-      const typeBase     = Math.round(hit.base * mult * 1000) / 1000
-      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * 1000) / 1000
-      const critVal      = Math.round(raw * critDmgMult / 100 * 1000) / 1000
+      const typeBase     = Math.round(hit.base * mult * 10000) / 10000
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * 10000) / 10000
+      const critVal      = Math.round(raw * critDmgMult / 100 * 10000) / 10000
       return {
         key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
@@ -208,9 +208,9 @@
       if (baseSum > 0) {
         const holyDefPct  = (defenses['holy'] ?? 0) + (defenses['magic'] ?? 0)
         const holyDefMult = Math.round(calcArmorMult(holyDefPct, penDecimal).mult * 10000) / 10000
-        const lumTypeBase = Math.round(baseSum * luminescentPct * 1000) / 1000
-        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 1000) / 1000
-        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 1000) / 1000
+        const lumTypeBase = Math.round(baseSum * luminescentPct * 10000) / 10000
+        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 10000) / 10000
+        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000
         types.push({
           key: 'holy', label: 'Holy', color: DMG_TYPE_MAP.get('holy')?.color ?? '#facc15',
           typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
