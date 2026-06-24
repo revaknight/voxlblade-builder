@@ -11,6 +11,8 @@
     getWeaponArtBuffs,
     type GrantedBuff,
   } from './data/BuffData'
+  import { getDraconicInfusionBuff, getDraconicHexDebuffs } from './data/draconicBuffs'
+
 
   $: wardingPct = ($result.stats.warding ?? 0) / 100
   $: wardingDebuffMult = wardingPct > 0 ? 1 / (1 + wardingPct) : 1
@@ -44,56 +46,13 @@
     activeDebuffs
   )
   
-  $: draconicInfusionBuff = (() => {
-    if ($build.draconicRuneInfusion !== 'infusion') return []
+  $: draconicInfusionBuff = getDraconicInfusionBuff(
+    $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+  )
 
-    const perkAmt = $result.perks['Draconic Blood'] ?? 0
-    const potency = Math.round(perkAmt * 0.1 * 1000) / 1000
-    const color   = $build.draconicColor
-
-    const COLOR_EFFECTS: Record<string, string> = {
-      air:   `+${perkAmt * 10}% Attack Speed · +${perkAmt * 20}% Knockback `,
-      fire:  `100% chance to apply Burn (proc-affected) · +${perkAmt * 15}% applied Burn potency`,
-      hex:   `+${perkAmt * 5}% applied debuff potency · +${perkAmt * 15}% debuff duration`,
-      holy:  `+${perkAmt * 10}% healing  · +${perkAmt * 5}% applied buff potency`,
-      water: `Immune to debuffs · Pulse every ${Math.max(1, 8 - perkAmt)}s (heal 0.1 · 1.0 Water scaling · cleanses)`,
-      earth: `+${perkAmt * 15}% Poise damage · +${Math.round(perkAmt * 0.15 * 1000) / 1000} Stun Resistance `,
-    }
-
-    const colorLabel  = color ? color.charAt(0).toUpperCase() + color.slice(1) : ''
-    const colorEffect = color && COLOR_EFFECTS[color] ? `${colorLabel}: ${COLOR_EFFECTS[color]}` : 'No Dragon Blooded color → Physical damage type'
-
-    return [{
-      buffName:   'Draconic Infusion',
-      isSelfDebuff: false,
-      potency,
-      duration:   20,
-      condition:  `Dragon Infusion active · ${colorEffect}`,
-      sourceName: 'Dragon Infusion',
-      sourceType: 'rune' as const,
-    }] satisfies GrantedBuff[]
-  })()
-
-  $: draconicHexDebuffs = (() => {
-    const ability = $build.draconicRuneInfusion
-    if ($build.draconicColor !== 'hex') return []
-    if (ability !== 'claw' && ability !== 'bubble') return []
-
-    const perkAmt  = $result.perks['Draconic Blood'] ?? 0
-    const abilityLabel = ability === 'claw' ? 'Dragon Claw' : 'Dragon Bubble'
-    const srcName  = `${abilityLabel} (Hex)`
-    const poolCond = `${abilityLabel} · Hex · 3 random chances from pool`
-
-    return [
-      { buffName: 'Weakness', potency: Math.round(perkAmt * 0.1 * 1000) / 1000, duration: 5, condition: `${abilityLabel} · Hex · on hit (guaranteed)`, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Bleed',    potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Burn',     potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Poison',   potency: 0,   duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Shatter',  potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Slowness', potency: 0.2, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-      { buffName: 'Weakness', potency: 0.5, duration: 5, condition: poolCond, sourceName: srcName, sourceType: 'rune' as const, isSelfDebuff: false },
-    ] satisfies GrantedBuff[]
-  })()
+  $: draconicHexDebuffs = getDraconicHexDebuffs(
+    $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+  )
 
   $: activeBuffs = [
     ...baseActiveBuffs,
@@ -242,7 +201,7 @@ $: groupedBuffs = Object.values(
       </div>
     {:else}
       <div class="bl-list">
-        {#each list as group (group.buffName)}
+        {#each list as group (`${group.buffName}:${group.isSelfDebuff}`)}
           {@const def = BUFF_DEFS[group.buffName]}
           {@const isSelf = group.isSelfDebuff}
           {@const effectivePotency = isSelf && wardingDebuffMult < 1

@@ -25,6 +25,8 @@
   export let rageMult: number = 1
   export let rageAffectedTypes: Set<string> = new Set()
   export let luminescentPct: number = 0
+  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string }> = []
+
 
   const DMG_TYPES = [
     { id: 'physical', label: 'Physical', color: '#fb923c' },
@@ -266,6 +268,13 @@
         {#if armorPen > 0}
           <div class="bdc-pen-badge">🗡 {fmt(armorPen)} Pen</div>
         {/if}
+        {#if appliedDebuffs.length > 0}
+          <div class="bdc-debuff-row">
+            {#each appliedDebuffs as d (d.name)}
+              <span class="bdc-debuff-pill" style="--dc:{d.color}" title={d.name}>{d.abbr}</span>
+            {/each}
+          </div>
+        {/if}
       </div>
 
       <div class="bdc-presets">
@@ -487,6 +496,27 @@
   color: #e5e5e5;
   letter-spacing: .06em;
   white-space: nowrap;
+}
+
+.bdc-debuff-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100px;
+}
+.bdc-debuff-pill {
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dc) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dc) 45%, transparent);
+  color: var(--dc);
+  white-space: nowrap;
+  cursor: default;
 }
 
 /* Daily presets */

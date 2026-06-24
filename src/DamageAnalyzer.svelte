@@ -5,7 +5,8 @@
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, ONE_HANDED_TYPES, type WeaponBaseDmg } from './lib/types'
-  import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
+  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from './data/BuffData'
+  import { getDraconicHexDebuffs } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
   import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive } from './data/Perkbasedmg'
@@ -88,6 +89,20 @@
     )
   })()
   $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
+  $: _draconicHexDebuffsForDummy = getDraconicHexDebuffs(
+    $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+  )
+ 
+  $: _dummyDebuffs = (() => {
+    const seen = new Map<string, string>()
+    for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
+      if (b.isSelfDebuff) continue
+      const def = BUFF_DEFS[b.buffName]
+      if (!def?.isDebuff) continue
+      if (!seen.has(b.buffName)) seen.set(b.buffName, def.color)
+    }
+    return [...seen.entries()].map(([name, color]) => ({ name, abbr: name.slice(0, 4), color }))
+  })()
 
   $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks
   $: _critMult = crit.critDamageMultiplier / 100  
@@ -2244,6 +2259,7 @@
   rageAffectedTypes={_effectiveRageAffectedTypes}
   luminescentPct={_luminescentPct}
   showCritToggle={_showCrit}
+  appliedDebuffs={_dummyDebuffs}
   bind:showCritValues
 />
 </div>
