@@ -17,6 +17,7 @@
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
+  import { applyDraconicRunesBonus, getDraconicRunesBonus } from './data/draconicRunes'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -904,11 +905,19 @@
                      : def.isM1  ? _m1CombatMult
                      : _perkCombatMult
 
-      const resolvedDmgTypes = def.dmgTypeMode === 'weapon'
+      const baseDmgTypes = def.dmgTypeMode === 'weapon'
         ? _weaponDmgTypes
         : def.dmgTypeMode === 'dynamic'
           ? (def.getDmgTypes?.({ draconicColor: $build.draconicColor }) ?? {})
           : (def.dmgTypes ?? {})
+
+      // Apply Draconic Runes bonus to rune damage
+      const resolvedDmgTypes = def.isRune
+        ? applyDraconicRunesBonus(baseDmgTypes, {
+            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+            draconicColor: $build.draconicColor || 'physical',
+          })
+        : baseDmgTypes
 
       const resolvedScalings = def.scalingMode === 'weapon'
         ? _weaponResult?.scalings ?? {}
@@ -1108,6 +1117,10 @@
     }
     if (_activeRuneDmgDef && Object.keys(_activeRuneDmgDef.dmgTypes).length > 0) {
       const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false
+      const _runeDmgTypesWithBonus = applyDraconicRunesBonus(_activeRuneDmgDef.dmgTypes, {
+        draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+        draconicColor: $build.draconicColor || 'physical',
+      })
       result.push({
         group: 'Rune',
         index: result.length,
@@ -1116,7 +1129,7 @@
           : (_activeRuneDmgDef.hits ?? 1),
         base: _activeRuneDmgDef.getBaseDamage({ potency: runePotency }),
         scalingMult: _computePerkScalingMult(_activeRuneDmgDef.scalings),
-        dmgTypes: _activeRuneDmgDef.dmgTypes,      
+        dmgTypes: _runeDmgTypesWithBonus,
         combatMult: _runeIsHeal ? boosts.healFinalMultiplier : _runeCombatMult,
         isFinisher: false,
         label: _activeRuneDmgDef.runeName,
@@ -1742,7 +1755,41 @@
           : (_activeRuneDmgDef.hits ?? 1)}
         {@const _runeBase = _activeRuneDmgDef.getBaseDamage({ potency: runePotency })}
         {@const _runeScalingMult = _computePerkScalingMult(_activeRuneDmgDef.scalings)}
+        {@const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false}
+        {@const _draconicRunesStacks = perks['Draconic Runes'] ?? 0}
+        {@const _draconicColor = $build.draconicColor || 'physical'}
+        {@const _draconicRunesBonus = _draconicRunesStacks > 0 ? { [_draconicColor]: 0.05 * _draconicRunesStacks } : {}}
+        {@const _runeDmgTypesWithBonus = (() => {
+          const base = { ..._activeRuneDmgDef.dmgTypes }
+          for (const [type, bonus] of Object.entries(_draconicRunesBonus)) {
+            base[type] = (base[type] ?? 0) + bonus
+          }
+          return base
+        })()}
         
+        <div class="da-wbd-section">
+          <div class="da-wbd-row-label da-wbd-row-label--rune">
+            <span class="da-wbd-lbl-badge da-wbd-lbl-badge--rune">Rune</span>
+            <span class="da-wbd-lbl-text">{_activeRuneDmgDef.runeName}</span>
+            {#if _draconicRunesStacks > 0}
+              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">+{(0.05 * _draconicRunesStacks).toFixed(2)} {_draconicColor.charAt(0).toUpperCase() + _draconicColor.slice(1)}</span>
+            {/if}
+          </div>
+          <div class="da-hits-row">
+            <div class="da-hit-card">
+              {#each Object.entries(_runeDmgTypesWithBonus) as [type, mult], ti}
+                {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
+                <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">
+                  <span class="da-hit-num" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">{fmtNum(_runeBase * mult)}</span>
+                  <span class="da-hit-type">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                </div>
+              {/each}
+              {#if _runeHits > 1}
+                <span class="da-hit-repeat">×{_runeHits}<span class="da-hit-repeat-label">hits</span></span>
+              {/if}
+            </div>
+          </div>
+        </div>
         {/if}
     </div>
   {/each} {#if _draconicBloodEntry}
@@ -1755,7 +1802,7 @@
       <div class="da-wbd-card-divider"></div>
       <div class="da-wbd-section">
         <div class="da-hits-row">
-          <div class="da-hit-card" class:da-hit-card--finisher={_draconicBloodEntry.guardbreak}>
+          <div class="da-hit-card">
             {#each _draconicBloodEntry.typedHits_m2 as t, ti}
               {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
               <div class="da-hit-chunk" style="--tc:{t.color}">
@@ -1763,7 +1810,7 @@
                 <span class="da-hit-type">{t.label}</span>
               </div>
             {/each}
-            {#if _draconicBloodEntry.guardbreak}<span class="da-finisher-crown">✦</span>{/if}
+            {#if _draconicBloodEntry.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb" style="align-self:center">GB</span>{/if}
           </div>
         </div>
       </div>
@@ -2312,6 +2359,10 @@
   rageMult={_effectiveRageMult}
   rageAffectedTypes={_effectiveRageAffectedTypes}
   luminescentPct={_luminescentPct}
+  draconicRunesBonus={getDraconicRunesBonus({
+    draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+    draconicColor: $build.draconicColor || 'physical',
+  })}
   showCritToggle={_showCrit}
   appliedDebuffs={_dummyDebuffs}
   bind:showCritValues
@@ -2987,6 +3038,10 @@
   margin-bottom: 5px;
   flex-wrap: wrap;
 }
+.da-wbd-row-label--rune .da-wbd-lbl-text {
+  color: #38bdf8;
+  opacity: 0.7;
+}
 .da-wbd-lbl-badge {
   font-size: .58rem;
   font-weight: 900;
@@ -3010,6 +3065,11 @@
   background: rgba(167,139,250,.16);
   border: 1px solid rgba(167,139,250,.35);
   color: var(--accent3);
+}
+.da-wbd-lbl-badge--rune {
+  background: rgba(56,189,248,.16);
+  border: 1px solid rgba(56,189,248,.35);
+  color: #38bdf8;
 }
 .da-wbd-lbl-text {
   font-size: .6rem;

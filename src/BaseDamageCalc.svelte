@@ -7,6 +7,7 @@
   export let activeFinalMult: number = 1
   export let showCritValues: boolean = false
   export let showCritToggle: boolean = false
+  export let draconicRunesBonus: Record<string, number> = {}
 
   boosts
   disabledBoosts
@@ -416,6 +417,9 @@
                               <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
                               {#if t.isLuminescent}
                                 <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
+                              {/if}
+                              {#if hit.group === 'Rune' && draconicRunesBonus[t.label.toLowerCase()]}
+                                <span class="bdc-dr-badge" title="Draconic Runes: +{draconicRunesBonus[t.label.toLowerCase()].toFixed(2)} {t.label} damage type">✦ +{draconicRunesBonus[t.label.toLowerCase()].toFixed(2)}</span>
                               {/if}
                             </div>
                             <div class="bdc-hit-type-formula">
@@ -925,6 +929,17 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
+}
+.bdc-dr-badge {
+  font-size: .5rem;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(192,132,252,.12);
+  border: 1px solid rgba(192,132,252,.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
 }
 .bdc-hit-type-formula {
   display: flex;

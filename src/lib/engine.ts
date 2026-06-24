@@ -34,7 +34,7 @@ export const handles: WeaponHandle[] = handlesRaw as WeaponHandle[]
 export const gloves: MonkGlove[]     = glovesRaw as MonkGlove[]
 export const essences: MonkEssence[] = essencesRaw as MonkEssence[]
 
-import { BOOST_DEF_MAP } from '../data/Boost'
+import { BOOST_DEFS, type BoostContext } from '../data/Boost'
 import type { BoostEntry, BoostResult } from './types'
 
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
@@ -99,153 +99,6 @@ export function isMonkGuild(guildName: string): boolean {
   return guildName === "Monk"
 }
 
-// ─── Boost helpers ────────────────────────────────────────────────────────────
-
-interface SpecialBoostOpts {
-  naturalCritChance: number
-  jumpBoost:         number
-  summonCount:       number
-  ragePotency:       number
-  bouncePotency:     number
-  inDarkness:        boolean
-}
-
-function applySpecialBoosts(
-  perks:   Record<string, number>,
-  dmgMap:  Map<string, BoostEntry>,
-  healMap: Map<string, BoostEntry>,
-  opts:    SpecialBoostOpts,
-): void {
-  const { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency, inDarkness } = opts
-
-  const primalStacks = perks['Primal'] ?? 0
-  if (primalStacks > 0 && naturalCritChance > 0) {
-    dmgMap.set('Primal', {
-      sourceName:    'Primal',
-      rawMultiplier: Math.round((1 + (naturalCritChance * primalStacks) / 100) * 10000) / 10000,
-      condition:     `${naturalCritChance.toFixed(1)}% nat. crit × ${primalStacks} stack`,
-      type:          'dmg',
-    })
-  }
-
-  const springPoweredStacks = perks['Spring Powered'] ?? 0
-  if (springPoweredStacks > 0 && jumpBoost > 0) {
-    dmgMap.set('Spring Powered', {
-      sourceName:    'Spring Powered',
-      rawMultiplier: Math.round((1 + jumpBoost * 0.0075 * springPoweredStacks) * 10000) / 10000,
-      condition:     `${jumpBoost} jump boost × ${springPoweredStacks} stack × 0.75%`,
-      type:          'dmg',
-    })
-  }
-
-  if ((perks['Thief Training'] ?? 0) > 0) {
-    dmgMap.set('Thief Training (behind)', {
-      sourceName:    'Thief Training (behind)',
-      rawMultiplier: 1.20,
-      condition:     'attacking from behind',
-      type:          'dmg',
-    })
-    dmgMap.set('Thief Training (would-crit bonus)', {
-      sourceName:    'Thief Training (would-crit bonus)',
-      rawMultiplier: 1.30,
-      condition:     'if attack would have crit without perk',
-      type:          'dmg',
-    })
-  }
-
-  const oceansRageStacks = perks['Oceans Rage'] ?? 0
-  if (oceansRageStacks > 0) {
-    healMap.set('Oceans Rage', {
-      sourceName:    'Oceans Rage',
-      rawMultiplier: Math.round((1 + oceansRageStacks * 0.1) * 10000) / 10000,
-      condition:     `${oceansRageStacks} stack × 10% outgoing heal`,
-      type:          'heal',
-    })
-  }
-
-  const vassalsCroakStacks = perks['Vassals Croak'] ?? 0
-  if (vassalsCroakStacks > 0 && summonCount > 0) {
-    const clampedCount = Math.floor(summonCount)
-    dmgMap.set('Vassals Croak', {
-      sourceName:    'Vassals Croak',
-      rawMultiplier: Math.round((1 + 0.02 * clampedCount * vassalsCroakStacks) * 10000) / 10000,
-      condition:     `${clampedCount} summons × ${vassalsCroakStacks} stack × 2%`,
-      type:          'dmg',
-    })
-  }
-
-  const frenzyStacks = perks['Frenzy'] ?? 0
-  if (frenzyStacks > 0 && ragePotency > 0) {
-    const frenzyPct = (0.05 + 0.1667 * ragePotency) * frenzyStacks
-    dmgMap.set('Frenzy', {
-      sourceName:    'Frenzy',
-      rawMultiplier: Math.round((1 + frenzyPct) * 10000) / 10000,
-      condition:     `Rage active · potency ${Math.round(ragePotency * 1000) / 1000}`,
-      type:          'dmg',
-    })
-  }
-  const ragingBounceStacks = perks['Raging Bounce'] ?? 0
-  if (ragingBounceStacks > 0 && bouncePotency > 0) {
-    const bouncePct = 0.70 * bouncePotency * ragingBounceStacks
-    dmgMap.set('Raging Bounce', {
-      sourceName:    'Raging Bounce',
-      rawMultiplier: Math.round((1 + bouncePct) * 10000) / 10000,
-      condition:     `Bounce active · potency ${Math.round(bouncePotency * 1000) / 1000}`,
-      type:          'dmg',
-    })
-  }
-const guidingWindsStacks = perks['Guiding Winds'] ?? 0
-
-if (guidingWindsStacks > 0) {
-  dmgMap.set('Guiding Winds', {
-    sourceName: 'Guiding Winds',
-    rawMultiplier: 1 + 0.40 * guidingWindsStacks,
-    condition: 'Moving (at max)',
-    type: 'dmg',
-    appliesTo: ['m1', 'm2', 'perk'],
-  })
-
-  dmgMap.set('Guiding Winds WA/Rune', {
-    sourceName: 'Guiding Winds (WA/Rune)',
-    rawMultiplier: 1 + 0.30 * guidingWindsStacks,
-    condition: 'Moving (at max)',
-    type: 'dmg',
-    appliesTo: ['wa', 'rune'],
-  })
-}
-
-const civilianStacks = perks['Civilian'] ?? 0
-
-if (civilianStacks > 0) {
-  dmgMap.set('Civilian', {
-    sourceName: 'Civilian',
-    rawMultiplier: 1 + 0.40 * civilianStacks,
-    condition: 'Weapon unequipped 3s+',
-    type: 'dmg',
-    appliesTo: ['rune'],
-  })
-}
-const vampireStacks = perks['Vampire'] ?? 0
-  if (vampireStacks > 0) {
-    const fullPct = vampireStacks / 15 // 1/15 = 6.667%, ×3 = 20%
-    const dmgPct  = inDarkness ? fullPct : fullPct / 2
-    dmgMap.set('Vampire', {
-      sourceName:    'Vampire',
-      rawMultiplier: Math.round((1 + dmgPct) * 10000) / 10000,
-      condition:     inDarkness ? 'In darkness' : 'In sunlight (dmg boost halved)',
-      type:          'dmg',
-    })
-    if (!inDarkness) {
-      healMap.set('Vampire (Sunlight)', {
-        sourceName:    'Vampire (Sunlight)',
-        rawMultiplier: 0.5,
-        condition:     'Healing received halved in sunlight',
-        type:          'heal',
-      })
-    }
-  }
-}
-
 export function calcBoosts(
   perks:             Record<string, number>,
   emotionalState?:   string,
@@ -276,25 +129,60 @@ export function calcBoosts(
     type:          'heal',
   })
 
-  for (const perkName in perks) {
-    if (!Object.prototype.hasOwnProperty.call(perks, perkName)) continue
-    const perkAmount = perks[perkName]
-    if (perkAmount <= 0) continue
-    const def = BOOST_DEF_MAP.get(perkName)
-    if (!def || def.isLevel) continue
-    if (perkName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
-    const entry: BoostEntry = {
-      sourceName:    perkName,
-      rawMultiplier: 1 + def.multiplierPerPerk * perkAmount,
-      condition:     def.condition,
-      type:          def.type,
-    }
-    if (def.type === 'dmg') dmgMap.set(perkName, entry)
-    else                    healMap.set(perkName, entry)
+  const ctx: BoostContext = {
+    perks,
+    naturalCritChance,
+    jumpBoost,
+    summonCount,
+    ragePotency,
+    bouncePotency,
+    inDarkness,
+    emotionalState,
+    level,
   }
 
-  applySpecialBoosts(perks, dmgMap, healMap, { naturalCritChance, jumpBoost, summonCount, ragePotency, bouncePotency, inDarkness })
-  
+  for (const def of BOOST_DEFS) {
+    if (def.isLevel) continue
+
+    // Handle complex boosts with calcFn
+    if (def.calcFn) {
+      const result = def.calcFn(ctx)
+      if (result) {
+        const entry: BoostEntry = {
+          sourceName:    def.sourceName,
+          rawMultiplier: result.multiplier,
+          condition:     result.condition,
+          type:          def.type,
+          appliesTo:     def.appliesTo,
+        }
+        if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
+        else                      healMap.set(def.sourceName, entry)
+      }
+      continue
+    }
+
+    // Handle simple boosts with multiplierPerPerk
+    if (def.multiplierPerPerk !== undefined) {
+      const perkAmount = perks[def.sourceName] ?? 0
+      if (perkAmount <= 0) continue
+
+      // Special case for Emotional heal boost
+      if (def.sourceName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') {
+        continue
+      }
+
+      const entry: BoostEntry = {
+        sourceName:    def.sourceName,
+        rawMultiplier: 1 + def.multiplierPerPerk * perkAmount,
+        condition:     def.condition,
+        type:          def.type,
+        appliesTo:     def.appliesTo,
+      }
+      if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
+      else                      healMap.set(def.sourceName, entry)
+    }
+  }
+
   if (raceName && hpFillPct != null) {
     const raceEffect = getActiveRaceEffect(raceName, hpFillPct)
     if (raceEffect?.dmgBoostMultiplier) {
