@@ -1872,7 +1872,7 @@
             {#if Object.keys(_draconicBonuses).length > 0}
               {@const totalBonus = Object.values(_draconicBonuses).reduce((a, b) => a + b, 0)}
               {@const bonusTypes = Object.keys(_draconicBonuses).map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' + ')}
-              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">+{totalBonus.toFixed(2)} {bonusTypes}</span>
+              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">{String(totalBonus).replace(/(?:\.0+|(\.\d+?)0+)$/, '$1')} {bonusTypes}</span>
             {/if}
           </div>
           <div class="da-hits-row">
@@ -2585,7 +2585,7 @@
     draconicColor: $build.draconicColor || 'physical',
   }, {
     isActive: $build.draconicRuneInfusion === 'infusion',
-    buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
+    buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
     draconicColor: $build.draconicColor || 'physical',
   })}
   showCritToggle={_showCrit}
