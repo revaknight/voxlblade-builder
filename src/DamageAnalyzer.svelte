@@ -652,6 +652,41 @@
     ? Math.round(_healFinalMultiplier * _waHealScalingBreakdown.multiplier * 10000) / 10000
     : _healFinalMultiplier
 
+  // Perk heal scaling breakdown (e.g., Dragon Claw Heal)
+  $: _perkHealScalingBreakdown = (() => {
+    if (!_draconicBloodEntry) return null
+    const _color = $build.draconicColor
+    if (!_color || (_color !== 'holy' && _color !== 'water')) return null
+    
+    const healSe = (PERK_DMG_DEFS.find(d => d.perkName === 'Draconic Blood' && d.label === _draconicBloodEntry.displayName)
+      ?.secondaryEffects ?? []).find(se =>
+        (_color === 'holy'  && se.label === 'Base Heal (Holy)') ||
+        (_color === 'water' && se.label === 'Base Heal (Water)')
+      )
+    
+    if (!healSe) return null
+    
+    const scalings = { [_color]: 1.0 }
+    const rows: ScalingRow[] = []
+    for (const [key, scalingVal] of Object.entries(scalings)) {
+      if (!scalingVal) continue
+      const boostKey = SCALING_TO_BOOST[key]
+      if (!boostKey) continue
+      const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
+      const contribution = Math.round(scalingVal * boostPct * 100) / 100
+      rows.push({ key, scalingVal, boostKey, boostPct, contribution, color: SCALING_COLORS[key] ?? '#e8e4da' })
+    }
+    if (!rows.length) return null
+    
+    const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 100) / 100
+    return { 
+      rows, 
+      totalEffectivePct, 
+      multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000,
+      label: `${_draconicBloodEntry.displayName} Heal`
+    }
+  })()
+
   const SCALING_TO_BOOST_KEY: Record<string, string> = {
     physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',
     water: 'waterBoost', earth: 'earthBoost', air: 'airBoost',
@@ -941,7 +976,7 @@
             buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * 0.1 * 1000) / 1000,
             draconicColor: $build.draconicColor || 'physical',
           })
-        : baseDmgTypes
+        : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
 
       const resolvedScalings = def.scalingMode === 'weapon'
         ? _weaponResult?.scalings ?? {}
@@ -2419,7 +2454,7 @@
 </div>
 {/if}
 
-{#if _healScalingResult.entries.length > 0 || _waHealScalingBreakdown}
+{#if _healScalingResult.entries.length > 0 || _waHealScalingBreakdown || _perkHealScalingBreakdown}
 <div class="da-section da-section--scaling" style="border-color:rgba(74,222,128,.2);background:linear-gradient(160deg,var(--surface,#141715) 60%,rgba(74,222,128,.03) 100%)">
   <div class="da-section-title" style="color:#4ade80">✦ Heal Scaling</div>
 
@@ -2480,6 +2515,62 @@
     {#if _waHealScalingBreakdown.rows.some(r => r.boostPct === 0)}
       <p class="ds-warn">⚠ Some WA heal scalings have no matching boost stat — those contribute 0%</p>
     {/if}
+  {/if}
+
+  <!-- Perk heal scaling subsection (e.g., Dragon Claw Heal) -->
+  {#if _perkHealScalingBreakdown}
+    <div class="ds-wa-subsection" style="margin-top:{_waHealScalingBreakdown ? '12px' : '0'}">
+      <div class="ds-wa-header">
+        <span class="ds-sub-badge" style="background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.35);color:#38bdf8">Perk</span>
+        <span class="ds-wa-name" style="color:#38bdf8">{_perkHealScalingBreakdown.label}</span>
+      </div>
+      <div class="ds-table">
+        <div class="ds-head">
+          <div class="ds-col ds-col--type">Scaling</div>
+          <div class="ds-col ds-col--val">Scaling Val</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost">Your Boost</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--contrib">Contribution</div>
+        </div>
+        {#each _perkHealScalingBreakdown.rows as row}
+          <div class="ds-row">
+            <div class="ds-col ds-col--type">
+              <span class="ds-dot" style="background:{row.color}"></span>
+              <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
+            </div>
+            <div class="ds-col ds-col--val">
+              <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+            </div>
+            <div class="ds-col ds-col--op">×</div>
+            <div class="ds-col ds-col--boost">
+              {#if row.boostPct !== 0}
+                <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
+              {:else}
+                <span class="ds-boost ds-boost--zero">+0%</span>
+              {/if}
+            </div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0}
+                style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
+                {row.contribution > 0 ? '+' : ''}{row.contribution}%
+              </span>
+            </div>
+          </div>
+        {/each}
+        <div class="ds-row ds-row--total" style="background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.18)">
+          <div class="ds-col ds-col--type ds-total-label" style="color:#38bdf8">Total</div>
+          <div class="ds-col ds-col--val"></div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost"></div>
+          <div class="ds-col ds-col--op">=</div>
+          <div class="ds-col ds-col--contrib">
+            <span class="ds-total-pct" style="color:#38bdf8;text-shadow:0 0 10px rgba(56,189,248,.4)">×{+_perkHealScalingBreakdown.multiplier.toFixed(4)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   {/if}
 </div>
 {/if}
