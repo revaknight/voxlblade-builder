@@ -90,7 +90,7 @@
   })()
   $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
   $: _draconicHexDebuffsForDummy = getDraconicHexDebuffs(
-    $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+    $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
   )
  
   $: _dummyDebuffs = (() => {

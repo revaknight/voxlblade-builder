@@ -8,7 +8,7 @@
     calcWeapon, calcMonkWeapon, isMonkGuild,
     type CDRResult
   } from './lib/engine'
-  import { setEnchantment } from './lib/store'
+  import { setEnchantment, setGuild } from './lib/store'
   import type { EnchantSlot, StatMap, StatPrefix, ScalingKey } from './lib/types'
   import { enchantments, getEnchant as ge, isExclusiveEnchant } from './lib/engine'
   import EnchantSelect from './lib/EnchantSelect.svelte'
@@ -1075,7 +1075,7 @@ $: highestDamageType = (() => {
         build.update(s => ({...s, race: label})); closeModal()
       } else if (activeModal === 'guild') {
         const g = guilds.find(g => g.name === label)
-        if (g) build.update(s => ({...s, guild: label, guildRank: s.guild === label ? s.guildRank : 3, race: label === 'Draconic' ? 'DRAGON BLOODED' : s.race}))
+        if (g) setGuild(label, $build.guild === label ? $build.guildRank : 3)
         closeModal()
       } else if (activeModal === 'armor-helmet') {
         build.update(s => ({...s, helmet: label})); closeModal()
@@ -1293,18 +1293,18 @@ $: _appWaAvgTotal = (() => {
         <StatFilter on:change={onStatFilterChange} />
         <div class="modal-list">
           <button class="modal-item" class:modal-item--active={$build.guild === ''}
-            on:click={() => { build.update(s => ({...s, guild: '', guildRank: 1})); closeModal() }}>
+            on:click={() => { setGuild('', 1); closeModal() }}>
             <span class="modal-item-name">— None —</span>
           </button>
           {#each searchedGuilds as g}
             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
             <div class="modal-item" class:modal-item--active={$build.guild === g.name}
-              on:click={() => {build.update(s => ({...s, guild: g.name, guildRank: s.guild === g.name ? s.guildRank : 3, race: g.name === 'Draconic' ? 'DRAGON BLOODED' : s.race,draconicColor: g.name === 'Draconic' && !s.draconicColor ? 'air' : s.draconicColor,})); closeModal() }}>
+              on:click={() => { setGuild(g.name, $build.guild === g.name ? $build.guildRank : 3); closeModal() }}>
               <span class="modal-item-name">{@html highlight(g.name, modalSearch)}</span>
               <div class="modal-rank-row">
                 {#each g.ranks as rank}
                   <button class="rank-btn" class:rank-btn--active={$build.guild === g.name && $build.guildRank === rank.rank}
-                    on:click|stopPropagation={() => { build.update(s => ({...s, guild: g.name, guildRank: rank.rank,draconicColor: g.name === 'Draconic' && !s.draconicColor ? 'air' : s.draconicColor,})); closeModal() }}>
+                    on:click|stopPropagation={() => { setGuild(g.name, rank.rank); closeModal() }}>
                     Rank {rank.rank}
                   </button>
                 {/each}
@@ -2269,7 +2269,7 @@ $: _appWaAvgTotal = (() => {
                   <span class="sg-value">{$build.guild || '—'}</span>
                   {#if $build.guild}<span class="sg-sub">Rank {$build.guildRank}</span>{/if}
                   {#if $build.guild}
-                    <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, guild: '', guildRank: 1}))} title="Clear">✕</button>
+                    <button class="sg-clear" on:click|stopPropagation={() => setGuild('', 1)} title="Clear">✕</button>
                   {/if}
                 </div>
               </div>

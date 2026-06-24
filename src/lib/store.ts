@@ -83,3 +83,17 @@ export function setEnchantment(slot: EnchantSlot, index: 0 | 1 | 2, value: strin
 export function clearBuild() {
   build.set({ ...DEFAULT_BUILD })
 }
+
+export function setGuild(guildName: string, guildRank: number) {
+  build.update(s => {
+    const isDraconic = guildName === 'Draconic'
+    return {
+      ...s,
+      guild: guildName,
+      guildRank,
+      race: isDraconic ? 'DRAGON BLOODED' : s.race,
+      draconicColor: isDraconic ? (s.draconicColor || 'air') : '',
+      draconicRuneInfusion: isDraconic ? s.draconicRuneInfusion : '',
+    }
+  })
+}
