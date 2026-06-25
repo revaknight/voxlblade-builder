@@ -77,7 +77,7 @@ const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
 /** Áp dụng cấp độ nâng cấp: tối ưu vòng lặp tĩnh tránh sinh rác bộ nhớ */
 export function applyUpgrade(stats: StatMap, level: number): StatMap {
   if (level <= 0) return { ...stats }
-  const mult = 1 + level * 0.1
+  const mult = 1 + level * (UPGRADE_MULTIPLIER - 1)
   const result: StatMap = {}
   
   for (let i = 0; i < STAT_KEYS.length; i++) {

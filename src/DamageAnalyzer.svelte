@@ -18,7 +18,9 @@
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
   import { applyDraconicRunesBonus, getDraconicRunesBonus, applyDraconicBonuses, getDraconicBonuses } from './data/draconicRunes'
+  import { HOLY_INFUSION_POTENCY_MULTIPLIER } from './data/HealBoost'
   import { calculateHealBoost, type HealBoostContext } from './data/HealBoost'
+  import { roundMultiplier } from './lib/utils'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -143,13 +145,13 @@
       const isDespair = buff.buffName === 'Despair'
       
       if (color === 'hex' && def.isDebuff && !isSelfDebuff) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
+        return { ...buff, potency: roundMultiplier(buff.potency * potMult) }
       }
       if (color === 'hex' && def.isDebuff && isSelfDebuff && isDespair) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
+        return { ...buff, potency: roundMultiplier(buff.potency * potMult) }
       }
       if (color === 'holy' && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
+        return { ...buff, potency: roundMultiplier(buff.potency * potMult) }
       }
       
       return buff
@@ -220,7 +222,7 @@
   })()
 
   $: _rageMult = _ragePotency > 0
-    ? Math.round((1 + _ragePotency) * 10000) / 10000
+    ? roundMultiplier(1 + _ragePotency)
     : 1
 
   let rageDisabled = false
@@ -269,7 +271,7 @@
   }>
 
   function fmtNum(n: number): string {
-    const r = Math.round(n * 10000) / 10000
+    const r = roundMultiplier(n)
     return Number.isInteger(r) ? String(r) : r.toFixed(4).replace(/\.?0+$/, '')
   }
 
@@ -401,7 +403,7 @@
       perkName: 'Draconic Blood',
       getType: ctx => ctx.draconicColor || 'physical',
       amountPerStack: 0.1,
-      getAmountPerStack: ctx => ctx.draconicColor === 'holy' ? 0.115 : 0.1,
+      getAmountPerStack: ctx => ctx.draconicColor === 'holy' ? HOLY_INFUSION_POTENCY_MULTIPLIER : 0.1,
       condition: ctx => ctx.draconicRuneInfusion === 'infusion',
     },
   ]
@@ -511,14 +513,14 @@
   $: activeEntries = boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName))
   $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
   $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
-  $: activeFinalMultRounded = Math.round(activeFinalMult * 10000) / 10000
+  $: activeFinalMultRounded = roundMultiplier(activeFinalMult)
 
   function _categoryMult(type: BoostAttackType): number {
-    return Math.round(
+    return roundMultiplier(
       activeEntries
         .filter(e => !(e as any).appliesTo || (e as any).appliesTo.includes(type))
         .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
-      * 10000) / 10000
+    )
   }
 
   $: _m1CombatMult   = (void activeEntries, _categoryMult('m1'))
@@ -552,7 +554,7 @@
       const allChips   = boosts.dmgEntries.filter(e => (e as any).appliesTo?.includes(key))
       const activeChips = allChips.filter(e => !disabledBoosts.has(e.sourceName))
       const specMult   = activeChips.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
-      const totalMult  = Math.round(_universalActiveMult * specMult * 10000) / 10000
+      const totalMult  = roundMultiplier(_universalActiveMult * specMult)
       const sigKey     = allChips.map(e => e.sourceName).join('|')
 
       const existing = groups.find(g => g.allChips.map(e => e.sourceName).join('|') === sigKey)
@@ -611,7 +613,7 @@
       rows.push({ key, scalingVal, boostKey, boostPct, contribution, color: SCALING_COLORS[key] ?? '#e8e4da' })
     }
     const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 100) / 100
-    const multiplier = Math.round((1 + totalEffectivePct / 100) * 10000) / 10000
+    const multiplier = roundMultiplier(1 + totalEffectivePct / 100)
     return { rows, totalEffectivePct, multiplier }
   })()
 
@@ -644,7 +646,7 @@
       if (!rows.length) return null
       const totalContribution = rows.reduce((sum, row) => sum + row.contribution, 0)
       const avgEffectivePct = Math.round((totalContribution / rows.length) * 100) / 100
-      const multiplier = Math.round((1 + avgEffectivePct / 100) * 10000) / 10000
+      const multiplier = roundMultiplier(1 + avgEffectivePct / 100)
       return {
         rows,
         totalEffectivePct: avgEffectivePct,
@@ -672,7 +674,7 @@
     if (!rows.length) return null
     const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 100) / 100
     return { rows, totalEffectivePct,
-      multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000,
+      multiplier: roundMultiplier(1 + totalEffectivePct / 100),
       isPerHit: false }
   })()
   $: runeScalingBreakdown = (() => {
@@ -692,7 +694,7 @@
     if (!rows.length) return null
 
     const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 100) / 100
-    const multiplier = Math.round((1 + totalEffectivePct / 100) * 10000) / 10000
+    const multiplier = roundMultiplier(1 + totalEffectivePct / 100)
     return { rows, totalEffectivePct, multiplier }
   })()
 
@@ -711,14 +713,14 @@
     }
     if (!rows.length) return null
     const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 100) / 100
-    return { rows, totalEffectivePct, multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000 }
+    return { rows, totalEffectivePct, multiplier: roundMultiplier(1 + totalEffectivePct / 100) }
   })()
 
   $: waScalingSameAsWeapon = selectedWA.scaling === 'Same as weapon'
   $: waScalingIsHealOnly = !_waHitsSeq && !!_waHealSeq
   $: _waHealScalingBreakdown = (waScalingIsHealOnly && waScalingBreakdown) ? waScalingBreakdown : null
   $: _healDisplayMult = _waHealScalingBreakdown
-    ? Math.round(_healFinalMultiplier * _waHealScalingBreakdown.multiplier * 10000) / 10000
+    ? roundMultiplier(_healFinalMultiplier * _waHealScalingBreakdown.multiplier)
     : _healFinalMultiplier
 
   // Perk heal scaling breakdown (e.g., Dragon Claw Heal)
@@ -751,7 +753,7 @@
     return { 
       rows, 
       totalEffectivePct, 
-      multiplier: Math.round((1 + totalEffectivePct / 100) * 10000) / 10000,
+      multiplier: roundMultiplier(1 + totalEffectivePct / 100),
       label: `${_draconicBloodEntry.displayName} Heal`
     }
   })()
@@ -772,7 +774,7 @@
       const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
       totalEffectivePct += scalingVal * boostPct
     }
-    return Math.round((1 + totalEffectivePct / 100) * 10000) / 10000
+    return roundMultiplier(1 + totalEffectivePct / 100)
   })()
 
   $: selectedWA = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt) ?? WEAPON_ARTS[0]
@@ -858,7 +860,7 @@
       const typeName = /dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()
       totalPct += parseFloat(m[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
     }
-    return Math.round((1 + totalPct / 100) * 10000) / 10000
+    return roundMultiplier(1 + totalPct / 100)
   })()
 
   $: _waTyped = (() => {
@@ -881,7 +883,7 @@
           const typeName = /dex/i.test(scM[2]) ? 'dexterity' : scM[2].toLowerCase()
           totalPct += parseFloat(scM[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
         }
-        hitScalingMult = Math.round((1 + totalPct / 100) * 10000) / 10000
+        hitScalingMult = roundMultiplier(1 + totalPct / 100)
       } else if (hitScalingStr === 'Same as weapon') {
         hitScalingMult = _scalingMult
       }
@@ -988,7 +990,7 @@
       if (!boostKey) continue
       totalPct += val * ((stats as Record<string, number>)[boostKey] ?? 0)
     }
-    return Math.round((1 + totalPct / 100) * 10000) / 10000
+    return roundMultiplier(1 + totalPct / 100)
   }
 
   interface PerkDmgComputedEntry {
@@ -1037,7 +1039,7 @@
             draconicColor: $build.draconicColor || 'physical',
           }, {
             isActive: $build.draconicRuneInfusion === 'infusion',
-            buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
+            buffPotency: roundMultiplier((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? HOLY_INFUSION_POTENCY_MULTIPLIER : 0.1)),
             draconicColor: $build.draconicColor || 'physical',
           })
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
@@ -1056,8 +1058,8 @@
 
       const buildTypedHits = (baseDmg: number) =>
       Object.entries(resolvedDmgTypes).map(([k, mult]) => ({
-        rawVal: Math.round(baseDmg * 10000) / 10000,
-        val: Math.round(baseDmg * mult * 10000) / 10000,
+        rawVal: roundMultiplier(baseDmg),
+        val: roundMultiplier(baseDmg * mult),
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
         label: k.charAt(0).toUpperCase() + k.slice(1),
       }))
@@ -1177,7 +1179,7 @@
           let t = 0, m: RegExpExecArray | null
           while ((m = re.exec(hss)) !== null)
             t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
-          sc = Math.round((1 + t / 100) * 10000) / 10000
+          sc = roundMultiplier(1 + t / 100)
         } else if (hss === 'Same as weapon') sc = _scalingMult
           const hitDt = selectedWA.hitDamageTypes?.length
            ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)
@@ -1269,7 +1271,7 @@
         draconicColor: $build.draconicColor || 'physical',
       }, {
         isActive: $build.draconicRuneInfusion === 'infusion',
-        buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
+        buffPotency: roundMultiplier((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? HOLY_INFUSION_POTENCY_MULTIPLIER : 0.1)),
         draconicColor: $build.draconicColor || 'physical',
       })
       result.push({
@@ -1934,7 +1936,7 @@
         {@const _draconicRunesStacks = perks['Draconic Runes'] ?? 0}
         {@const _draconicColor = $build.draconicColor || 'physical'}
         {@const _dragonInfusionActive = $build.draconicRuneInfusion === 'infusion'}
-        {@const _dragonInfusionPotency = Math.round((perks['Draconic Blood'] ?? 0) * (_draconicColor === 'holy' ? 0.115 : 0.1) * 1000) / 1000}
+        {@const _dragonInfusionPotency = Math.round((perks['Draconic Blood'] ?? 0) * (_draconicColor === 'holy' ? HOLY_INFUSION_POTENCY_MULTIPLIER : 0.1) * 1000) / 1000}
         {@const _draconicBonuses = getDraconicBonuses({
           draconicRunesStacks: _draconicRunesStacks,
           draconicColor: _draconicColor,
@@ -2188,7 +2190,7 @@
           <span style="color:{row.color}">{row.label ??(row.key.charAt(0).toUpperCase()+ row.key.slice(1))}</span>
         </div>
         <div class="ds-col ds-col--val">
-          <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+          <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
         </div>
         <div class="ds-col ds-col--op">×</div>
         <div class="ds-col ds-col--boost">
@@ -2261,7 +2263,7 @@
               <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
             </div>
             <div class="ds-col ds-col--val">
-              <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
             </div>
             <div class="ds-col ds-col--op">×</div>
             <div class="ds-col ds-col--boost">
@@ -2565,7 +2567,7 @@
               <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
             </div>
             <div class="ds-col ds-col--val">
-              <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
             </div>
             <div class="ds-col ds-col--op">×</div>
             <div class="ds-col ds-col--boost">
@@ -2624,7 +2626,7 @@
               <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
             </div>
             <div class="ds-col ds-col--val">
-              <span class="ds-num" style="color:{row.color}">{Math.round(row.scalingVal * 10000) / 10000}</span>
+              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
             </div>
             <div class="ds-col ds-col--op">×</div>
             <div class="ds-col ds-col--boost">
@@ -2668,7 +2670,7 @@
     draconicColor: $build.draconicColor || 'physical',
   }, {
     isActive: $build.draconicRuneInfusion === 'infusion',
-    buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? 0.115 : 0.1) * 10000) / 10000,
+    buffPotency: Math.round((perks['Draconic Blood'] ?? 0) * ($build.draconicColor === 'holy' ? HOLY_INFUSION_POTENCY_MULTIPLIER : 0.1) * 10000) / 10000,
     draconicColor: $build.draconicColor || 'physical',
   })}
   showCritToggle={_showCrit}

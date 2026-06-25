@@ -1,3 +1,5 @@
+import { roundMultiplier } from '../lib/utils'
+
 export interface BuffDefinition {
   name: string
   color: string
@@ -497,8 +499,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Vassals Croak': (amount, allPerks) => {
     const swarm = allPerks['Swarm'] ?? 0
     const maxStacks = Math.floor(15 + swarm)
-    const minRage = Math.round((0.1 + 0.01 * 1 * amount) * 10000) / 10000
-    const maxRage = Math.round((0.1 + 0.01 * maxStacks * amount) * 10000) / 10000
+    const minRage = roundMultiplier(0.1 + 0.01 * 1 * amount)
+    const maxRage = roundMultiplier(0.1 + 0.01 * maxStacks * amount)
     return [
       {
         buffName: 'Last Croak',
@@ -762,7 +764,7 @@ export function getTrueBalanceBuffs(
 
   return [...grouped.entries()].map(([buffName, data]) => ({
     buffName,
-    potency: Math.round(data.maxPotency * 10000) / 10000,
+    potency: roundMultiplier(data.maxPotency),
     duration: data.maxDuration,
     condition: `True Balance · on ${data.sources.join(' / ')}`,
     sourceName: 'True Balance',
@@ -875,13 +877,13 @@ export function applyBuffPerkModifiers(
     }
   
     if (bonus === 0 && durationMult === 1 && debuffPotencyMult === 1 && debuffFlatBonus === 0) return buff
-    const finalPotency = Math.round(((buff.potency + bonus) * debuffPotencyMult + debuffFlatBonus) * 10000) / 10000
+    const finalPotency = roundMultiplier((buff.potency + bonus) * debuffPotencyMult + debuffFlatBonus)
     return {
       ...buff,
       duration: Math.round(buff.duration * durationMult),
       potency: finalPotency,
       basePotency: buff.potency,
-      bonusPotency: finalPotency !== buff.potency ? Math.round((finalPotency - buff.potency) * 10000) / 10000 : undefined,
+      bonusPotency: finalPotency !== buff.potency ? roundMultiplier(finalPotency - buff.potency) : undefined,
     }
   })
 }
@@ -968,7 +970,7 @@ export function calcBuffEffect(
     return { value: 0, unit: '%', label: '?' }
   }
 
-  const value = Math.round(def.effectPerTenthPotency * potency * 10 * 10000) / 10000
+  const value = roundMultiplier(def.effectPerTenthPotency * potency * 10)
   const sign = def.isDebuff ? '' : '+'
   const label =
     def.effectUnit === '%'

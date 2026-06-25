@@ -1,3 +1,5 @@
+import { roundMultiplier } from '../lib/utils'
+
 export type WeaponHitScope = 'm1Finisher' | 'm2'
 
 export interface WeaponConditionalBoost {
@@ -40,5 +42,5 @@ export function getWeaponConditionalBoost(
     mult *= 1 + def.multiplierPerPerk * amt
     labels.push(def.perkName)
   }
-  return { mult: Math.round(mult * 10000) / 10000, labels }
+  return { mult: roundMultiplier(mult), labels }
 }

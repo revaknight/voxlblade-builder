@@ -22,6 +22,9 @@ import essencesRaw from '../data/essences.json'
 import { calcCrit } from './crit'
 import type { CritResult } from './crit'
 import { getActiveRaceEffect } from '../data/raceEffects'
+import { roundMultiplier } from './utils'
+
+export const MONK_RANK_MULTIPLIER = 0.25
 
 export const races: Race[]           = racesRaw as Race[]
 export const guilds: Guild[]         = guildsRaw as Guild[]
@@ -115,7 +118,7 @@ export function calcBoosts(
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
 
-  const lvlMult = Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 10000) / 10000
+  const lvlMult = roundMultiplier(1 + Math.max(0, Math.min(80, level)) / 80)
   dmgMap.set('Level Damage', {
     sourceName:    'Level Damage',
     rawMultiplier: lvlMult,
@@ -206,8 +209,8 @@ export function calcBoosts(
   return {
     dmgEntries,
     healEntries,
-    dmgFinalMultiplier:  Math.round(dmgFinal  * 10000) / 10000,
-    healFinalMultiplier: Math.round(healFinal * 10000) / 10000,
+    dmgFinalMultiplier:  roundMultiplier(dmgFinal),
+    healFinalMultiplier: roundMultiplier(healFinal),
   }
 }
 
@@ -218,7 +221,7 @@ export function applyMonkGuildBonus(
   glovePerks: Array<{ name: string; amount: number }>,
   monkRank:   number,
 ): { stats: StatMap; perkBonus: number } {
-  const statMult      = 1 + Math.max(0, monkRank - 1) * 0.25
+  const statMult      = 1 + Math.max(0, monkRank - 1) * MONK_RANK_MULTIPLIER
   const boostedStats: StatMap = {}
   for (let i = 0; i < STAT_KEYS.length; i++) {
     const k = STAT_KEYS[i]
@@ -797,7 +800,7 @@ export function calcMonkWeapon(gloveName: string, essenceName: string, shrineAct
 
   const monkPerkBonus = Math.max(0, monkRank - 1)
   if (monkPerkBonus > 0 && glove) {
-    const monkPct        = monkPerkBonus * 0.25
+    const monkPct        = monkPerkBonus * MONK_RANK_MULTIPLIER
     const baseGloveStats = glove.stats as StatMap
     const shrineMult     = shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
 
@@ -885,8 +888,8 @@ export function calcCDR(
   for (let i = 0; i < waSteps.length; i++) wCDR *= waSteps[i].multiplier
 
   return {
-    runeCDR:       Math.round(rCDR * 10000) / 10000,
-    waCDR:         Math.round(wCDR * 10000) / 10000,
+    runeCDR:       roundMultiplier(rCDR),
+    waCDR:         roundMultiplier(wCDR),
     runeSetCD,
     runeBreakdown: runeSteps,
     waBreakdown:   waSteps,
@@ -914,7 +917,7 @@ function accumulateMonkWeapon(
   const glove = getGlove(state.monkGlove)
   if (glove) {
     const monkPerkBonus  = Math.max(0, state.guildRank - 1)
-    const monkPct        = monkPerkBonus * 0.25
+    const monkPct        = monkPerkBonus * MONK_RANK_MULTIPLIER
     const gloveStats:    StatMap = {}
     const baseGloveStats = glove.stats as StatMap
 

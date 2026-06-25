@@ -1,5 +1,8 @@
 import type { StatMap, StatKey } from '../lib/types'
 
+export const WEIGHT_DISTRIBUTION_SPLIT_RATIO = 0.5
+export const WEIGHT_DISTRIBUTION_MULTIPLIER = 0.1
+
 const OFFENSIVE_BOOSTS: StatKey[] = [
   'physicalBoost', 'magicBoost', 'fireBoost', 'waterBoost',
   'earthBoost', 'airBoost', 'hexBoost', 'holyBoost', 'dexterityBoost',
@@ -159,8 +162,8 @@ const PERK_REGISTRY: Record<string, PerkHandler> = {
 
   'Weight Distribution': (s, Amount) => {
     const total = get(s, 'dexterityBoost') + get(s, 'physicalBoost')
-    const split = total * 0.5
-    const multiplier = 1 + 0.1 * Amount
+    const split = total * WEIGHT_DISTRIBUTION_SPLIT_RATIO
+    const multiplier = 1 + WEIGHT_DISTRIBUTION_MULTIPLIER * Amount
 
     s['dexterityBoost'] = split * multiplier
     s['physicalBoost'] = split * multiplier

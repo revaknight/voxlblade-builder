@@ -1,3 +1,4 @@
+import { roundMultiplier } from './utils'
 
 export function calcDefMultiplier(defPct: number): number {
   if (!defPct) return 1
@@ -36,11 +37,11 @@ export function resolveDefenseSources(sources: DefenseSource[]): DefenseBreakdow
 
   for (const s of sources) {
     if (s.isFlat) {
-      flatSources.push({ ...s, mult: Math.round((1 - s.defPct / 100) * 10000) / 10000, trueDrPct: s.defPct })
+      flatSources.push({ ...s, mult: roundMultiplier(1 - s.defPct / 100), trueDrPct: s.defPct })
     } else {
       percentSources.push({
         ...s,
-        mult: Math.round(calcDefMultiplier(s.defPct) * 10000) / 10000,
+        mult: roundMultiplier(calcDefMultiplier(s.defPct)),
         trueDrPct: calcTrueDrPercent(s.defPct),
       })
     }
@@ -54,9 +55,9 @@ export function resolveDefenseSources(sources: DefenseSource[]): DefenseBreakdow
   return {
     percentSources,
     flatSources,
-    percentMultiplier: Math.round(percentMultiplier * 10000) / 10000,
-    flatMultiplier: Math.round(flatMultiplier * 10000) / 10000,
-    finalMultiplier: Math.round(percentMultiplier * flatMultiplier * 10000) / 10000,
+    percentMultiplier: roundMultiplier(percentMultiplier),
+    flatMultiplier: roundMultiplier(flatMultiplier),
+    finalMultiplier: roundMultiplier(percentMultiplier * flatMultiplier),
   }
 }
 

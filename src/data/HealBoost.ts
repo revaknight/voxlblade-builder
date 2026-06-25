@@ -1,3 +1,7 @@
+import { roundMultiplier } from '../lib/utils'
+
+export const HOLY_INFUSION_POTENCY_MULTIPLIER = 0.115
+
 export type HealSource = 'perk' | 'rune' | 'weaponArt' | 'passive'
 
 export interface HealBoostContext {
@@ -54,7 +58,7 @@ export const HEAL_SCALING_DEFS: HealBoostDef[] = [
       const stacks = ctx.perks['Oceans Rage'] ?? 0
       if (stacks > 0) {
         return {
-          multiplier: Math.round((1 + stacks * 0.1) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + stacks * 0.1),
           condition: `${stacks} stack × 10% outgoing heal`,
         }
       }
@@ -83,11 +87,11 @@ export const HEAL_SCALING_DEFS: HealBoostDef[] = [
       const perkAmt = ctx.perks['Draconic Blood'] ?? 0
       if (perkAmt <= 0) return null
       
-      const statusPotency = perkAmt * 0.115
+      const statusPotency = perkAmt * HOLY_INFUSION_POTENCY_MULTIPLIER
       const multiplier = 1 + statusPotency
       
       return {
-        multiplier: Math.round(multiplier * 10000) / 10000,
+        multiplier: roundMultiplier(multiplier),
         condition: `Holy Infusion · ${Math.round(statusPotency * 10000) / 100}% status potency`
       }
     },
@@ -114,7 +118,7 @@ export function calculateHealBoost(
   
   // Calculate level healing
   const level = ctx.level ?? 0
-  const lvlMult = Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 10000) / 10000
+  const lvlMult = roundMultiplier(1 + Math.max(0, Math.min(80, level)) / 80)
   entriesMap.set('Level Healing', {
     rawMultiplier: lvlMult,
     condition: `LV0 → ×1.0 · LV80 → ×2.0`,
@@ -149,7 +153,7 @@ export function calculateHealBoost(
       
       const multiplier = 1 + def.multiplierPerPerk * perkAmount
       entriesMap.set(def.sourceName, {
-        rawMultiplier: Math.round(multiplier * 10000) / 10000,
+        rawMultiplier: roundMultiplier(multiplier),
         condition: def.condition,
         sourceType: def.sourceType
       })
@@ -168,7 +172,7 @@ export function calculateHealBoost(
   
   return {
     entries,
-    finalMultiplier: Math.round(finalMultiplier * 10000) / 10000
+    finalMultiplier: roundMultiplier(finalMultiplier)
   }
 }
 

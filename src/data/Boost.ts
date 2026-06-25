@@ -1,3 +1,5 @@
+import { roundMultiplier } from '../lib/utils'
+
 export type BoostAttackType = 'm1' | 'm2' | 'wa' | 'rune' | 'perk'
 
 export interface BoostContext {
@@ -48,7 +50,7 @@ export const BOOST_DEFS: BoostDef[] = [
       const stacks = ctx.perks['Primal'] ?? 0
       if (stacks > 0 && ctx.naturalCritChance > 0) {
         return {
-          multiplier: Math.round((1 + (ctx.naturalCritChance * stacks) / 100) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + (ctx.naturalCritChance * stacks) / 100),
           condition: `${ctx.naturalCritChance.toFixed(1)}% nat. crit × ${stacks} stack`,
         }
       }
@@ -62,7 +64,7 @@ export const BOOST_DEFS: BoostDef[] = [
       const stacks = ctx.perks['Spring Powered'] ?? 0
       if (stacks > 0 && ctx.jumpBoost > 0) {
         return {
-          multiplier: Math.round((1 + ctx.jumpBoost * 0.0075 * stacks) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + ctx.jumpBoost * 0.0075 * stacks),
           condition: `${ctx.jumpBoost} jump boost × ${stacks} stack × 0.75%`,
         }
       }
@@ -97,7 +99,7 @@ export const BOOST_DEFS: BoostDef[] = [
       if (stacks > 0 && ctx.summonCount > 0) {
         const clampedCount = Math.floor(ctx.summonCount)
         return {
-          multiplier: Math.round((1 + 0.02 * clampedCount * stacks) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + 0.02 * clampedCount * stacks),
           condition: `${clampedCount} summons × ${stacks} stack × 2%`,
         }
       }
@@ -112,7 +114,7 @@ export const BOOST_DEFS: BoostDef[] = [
       if (stacks > 0 && ctx.ragePotency > 0) {
         const frenzyPct = (0.05 + 0.1667 * ctx.ragePotency) * stacks
         return {
-          multiplier: Math.round((1 + frenzyPct) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + frenzyPct),
           condition: `Rage active · potency ${Math.round(ctx.ragePotency * 1000) / 1000}`,
         }
       }
@@ -127,7 +129,7 @@ export const BOOST_DEFS: BoostDef[] = [
       if (stacks > 0 && ctx.bouncePotency > 0) {
         const bouncePct = 0.70 * ctx.bouncePotency * stacks
         return {
-          multiplier: Math.round((1 + bouncePct) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + bouncePct),
           condition: `Bounce active · potency ${Math.round(ctx.bouncePotency * 1000) / 1000}`,
         }
       }
@@ -179,7 +181,7 @@ export const BOOST_DEFS: BoostDef[] = [
         const fullPct = stacks / 15
         const dmgPct = ctx.inDarkness ? fullPct : fullPct / 2
         return {
-          multiplier: Math.round((1 + dmgPct) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + dmgPct),
           condition: ctx.inDarkness ? 'In darkness' : 'In sunlight (dmg boost halved)',
         }
       }
@@ -213,7 +215,7 @@ export const BOOST_DEFS: BoostDef[] = [
       const stacks = ctx.perks['Oceans Rage'] ?? 0
       if (stacks > 0) {
         return {
-          multiplier: Math.round((1 + stacks * 0.1) * 10000) / 10000,
+          multiplier: roundMultiplier(1 + stacks * 0.1),
           condition: `${stacks} stack × 10% outgoing heal`,
         }
       }

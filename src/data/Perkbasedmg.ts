@@ -1,5 +1,19 @@
 import { getDraconicColorDmgMultiplier } from '../data/draconicColorEffects'
 
+export const DRAGON_CLAW_BASE_DAMAGE = 25
+export const DRAGON_CLAW_DAMAGE_PER_STACK = 2.5
+export const DRAGON_CLAW_HOLY_HEAL_BASE = 5
+export const DRAGON_CLAW_HOLY_HEAL_PER_STACK = 0.5
+export const DRAGON_CLAW_WATER_HEAL_BASE = 1.923
+export const DRAGON_CLAW_WATER_HEAL_PER_STACK = 0.1923
+
+export const DRAGON_BUBBLE_BASE_DAMAGE = 20
+export const DRAGON_BUBBLE_DAMAGE_PER_STACK = 2
+export const DRAGON_BUBBLE_HOLY_HEAL_BASE = 4
+export const DRAGON_BUBBLE_HOLY_HEAL_PER_STACK = 0.4
+export const DRAGON_BUBBLE_WATER_HEAL_BASE = 1.538
+export const DRAGON_BUBBLE_WATER_HEAL_PER_STACK = 0.1538
+
 export interface PerkDmgCtx {
   perkAmount: number
   finisherHits?: number
@@ -208,7 +222,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     perkName: 'Draconic Blood',
     label: 'Dragon Claw',
     condition: 'Draconic Rune Infusion · Dragon Claw selected',
-    getBaseDamage: ({ perkAmount }) => 25 + 2.5 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => DRAGON_CLAW_BASE_DAMAGE + DRAGON_CLAW_DAMAGE_PER_STACK * perkAmount,
     dmgTypeMode: 'dynamic',
     getDmgTypes: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
     scalingMode: 'dynamic',
@@ -227,13 +241,13 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       },
       {
         label: 'Base Heal (Holy)',
-        getValue: ({ perkAmount }) => 5 + 0.5 * perkAmount,
+        getValue: ({ perkAmount }) => DRAGON_CLAW_HOLY_HEAL_BASE + DRAGON_CLAW_HOLY_HEAL_PER_STACK * perkAmount,
         tone: 'utility',
         showIf: ({ draconicColor }) => draconicColor === 'holy',
       },
       {
         label: 'Base Heal (Water)',
-        getValue: ({ perkAmount }) => Math.round((1.923 + 0.1923 * perkAmount) * 1000) / 1000,
+        getValue: ({ perkAmount }) => Math.round((DRAGON_CLAW_WATER_HEAL_BASE + DRAGON_CLAW_WATER_HEAL_PER_STACK * perkAmount) * 1000) / 1000,
         tone: 'utility',
         showIf: ({ draconicColor }) => draconicColor === 'water',
       },
@@ -244,7 +258,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     perkName: 'Draconic Blood',
     label: 'Dragon Bubble',
     condition: 'Draconic Rune Infusion · Dragon Bubble selected',
-    getBaseDamage: ({ perkAmount }) => 20 + 2 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => DRAGON_BUBBLE_BASE_DAMAGE + DRAGON_BUBBLE_DAMAGE_PER_STACK * perkAmount,
     dmgTypeMode: 'dynamic',
     getDmgTypes: ({ draconicColor }) => ({ [draconicColor || 'physical']: 1.0 }),
     scalingMode: 'dynamic',
@@ -263,13 +277,13 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       },
       {
         label: 'Base Heal (Holy)',
-        getValue: ({ perkAmount }) => 4 + 0.4 * perkAmount,
+        getValue: ({ perkAmount }) => DRAGON_BUBBLE_HOLY_HEAL_BASE + DRAGON_BUBBLE_HOLY_HEAL_PER_STACK * perkAmount,
         tone: 'utility',
         showIf: ({ draconicColor }) => draconicColor === 'holy',
       },
       {
         label: 'Base Heal (Water)',
-        getValue: ({ perkAmount }) => Math.round((1.538 + 0.1538 * perkAmount) * 1000) / 1000,
+        getValue: ({ perkAmount }) => Math.round((DRAGON_BUBBLE_WATER_HEAL_BASE + DRAGON_BUBBLE_WATER_HEAL_PER_STACK * perkAmount) * 1000) / 1000,
         tone: 'utility',
         showIf: ({ draconicColor }) => draconicColor === 'water',
       },

@@ -1,108 +1,54 @@
-# Voxlblade Builder
+# Ponytail Mode
 
-## Stack
+## Philosophy
 
-* Svelte
-* TypeScript
+Prefer the simplest solution that works.
 
----
+Avoid complexity unless necessary.
 
-## General Rules
+Every line of code must justify its existence.
 
-* Prefer simple solutions.
-* No new dependencies unless absolutely necessary.
-* Preserve existing architecture.
-* Produce minimal diffs.
-* Explain root cause before proposing changes.
-* Avoid unnecessary refactors.
-* Keep styling consistent with existing theme.
-* Prefer native JavaScript APIs.
-* Prefer Svelte reactive statements over duplicated state.
-* Avoid creating files for small utilities.
+## Debugging
 
----
+When debugging:
 
-## Before Making Changes
+1. Identify root cause.
+2. Verify root cause in source code.
+3. Explain exact failing code path.
+4. Patch the smallest possible area.
+5. Do not rewrite unrelated systems.
+6. Do not suggest architecture changes unless necessary.
 
-Always:
+## Dependencies
 
-1. Read the entire relevant file.
-2. Search for all usages of affected variables, functions, and types.
-3. Verify imports exist before using them.
-4. Verify referenced variables actually exist.
-5. Verify the change will not break reactive dependencies.
-6. Do not assume file structure without searching.
+- Do not add dependencies unless impossible to solve otherwise.
+- Prefer built-in APIs.
+- Prefer existing project code.
 
----
+## Refactoring
 
-## Bug Fixing Protocol
+- Do not rewrite working code.
+- Do not perform large refactors.
+- Preserve existing architecture.
+- Fix only the affected area.
 
-1. Find root cause.
-2. Explain root cause briefly.
-3. Show exact code changes.
-4. Do not modify unrelated code.
-5. Keep behavior unchanged unless requested.
+## Anti AI-Code
 
----
+Never:
 
-## Svelte Rules
+- create helper files for one-time use
+- create abstractions used once
+- add dependencies for small tasks
+- replace working code with equivalent code
+- rewrite files to match personal preference
 
-* Prefer reactive statements over duplicated state.
-* Do not convert reactive statements to stores unless necessary.
-* Preserve existing component APIs.
-* Avoid introducing derived state when a computed value is sufficient.
-* Keep current event flow and bindings unless required by the fix.
+## Output
 
----
+When proposing changes:
 
-## TypeScript Rules
-
-* No `any`.
-* Prefer narrowing over casting.
-* Avoid type assertions unless unavoidable.
-* Reuse existing interfaces and types whenever possible.
-* Preserve strict typing.
-
----
-
-## Output Rules
-
-* Give complete code blocks.
-* Never use placeholders such as:
-
-  * `// existing code...`
-  * `// rest unchanged`
-  * `...`
-* Include all modified lines.
-* Clearly identify which file is being changed.
-
----
-
-## Refactoring Rules
-
-Do NOT refactor unless explicitly requested.
-
-Do NOT:
-
-* rename files
-* move files
-* split files
-* merge files
-* change architecture
-
-unless the user specifically asks for it.
-
----
-
-## Performance Rules
-
-* Avoid duplicate calculations.
-* Reuse existing computed values.
-* Prefer computed values over duplicated state.
-* Do not introduce caching unless profiling indicates a need.
-
----
-
-## Project Goal
-
-Maintain stability of the existing Voxlblade Builder codebase while making the smallest safe change necessary to solve the requested problem.
+1. Explain root cause.
+2. Show exact code changes.
+3. Keep diff minimal.
+4. Do not touch unrelated code.
+5. Give complete code blocks.
+6. Do not use placeholders such as "...existing code..."

@@ -5,7 +5,7 @@
     getGuild, getArmorPart, getRing, getRune, getEnchant, getPerk,
     getBlade, getHandle, getGlove, getEssence,
     formatStat, formatLabel, applyEnchantmentsToSlot, applyInfusion,
-    calcWeapon, calcMonkWeapon, isMonkGuild,
+    calcWeapon, calcMonkWeapon, isMonkGuild, MONK_RANK_MULTIPLIER,
     type CDRResult
   } from './lib/engine'
   import { setEnchantment, setGuild } from './lib/store'
@@ -15,6 +15,15 @@
   import { getEnchantTooltipText } from './lib/enchantTooltip'
   import { applyUpgrade, UPGRADE_MAX } from './lib/types'
   import { WEAPON_ARTS, type WeaponArt } from './data/weaponArts'
+  import {
+    DRAGON_CLAW_BASE_DAMAGE, DRAGON_CLAW_DAMAGE_PER_STACK,
+    DRAGON_CLAW_HOLY_HEAL_BASE, DRAGON_CLAW_HOLY_HEAL_PER_STACK,
+    DRAGON_CLAW_WATER_HEAL_BASE, DRAGON_CLAW_WATER_HEAL_PER_STACK,
+    DRAGON_BUBBLE_BASE_DAMAGE, DRAGON_BUBBLE_DAMAGE_PER_STACK,
+    DRAGON_BUBBLE_HOLY_HEAL_BASE, DRAGON_BUBBLE_HOLY_HEAL_PER_STACK,
+    DRAGON_BUBBLE_WATER_HEAL_BASE, DRAGON_BUBBLE_WATER_HEAL_PER_STACK
+  } from './data/Perkbasedmg'
+  import { DRACONIC_COLOR_ATTACK_STATS } from './data/draconicColorEffects'
   import BuildSaves from './BuildSaves.svelte'
   import EmotionalTracker from './EmotionalTracker.svelte'
   import LevelBar from './LevelBar.svelte'
@@ -68,7 +77,7 @@
     brawnyAmt: number,
     statMultiplier: number = 1
   ): number {
-    const convRate = Math.min(brawnyAmt * 1, 1.0)
+    const convRate = Math.min(brawnyAmt, 1.0)
     const s: Record<string, number> = { ...armorStats }
     const OFFENSIVE = ['physicalBoost','magicBoost','fireBoost','waterBoost','earthBoost','airBoost','hexBoost','holyBoost','dexterityBoost']
     let gained = 0
@@ -248,14 +257,12 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
   $: cdr = $result.cdr
   $: isDraconic = $build.guild === 'Draconic'
 
-  const DRACO_COLORS = [
-    { id: 'fire',  label: 'Red',    color: '#ef4444', stat: 'fire'  },
-    { id: 'air',   label: 'White',  color: '#e5e7eb', stat: 'air'   },
-    { id: 'earth', label: 'Green',  color: '#22c55e', stat: 'earth' },
-    { id: 'water', label: 'Blue',     color: '#3b82f6', stat: 'water' },
-    { id: 'holy',  label: 'Yellow', color: '#eab308', stat: 'holy'  },
-    { id: 'hex',   label: 'Purple', color: '#a855f7', stat: 'hex'   },
-  ]
+  const DRACO_COLORS = DRACONIC_COLOR_ATTACK_STATS.map(c => ({
+    id: c.color,
+    label: c.label,
+    color: c.colorHex,
+    stat: c.stat
+  }))
 
   $: dracoColor = DRACO_COLORS.find(c => c.id === $build.draconicColor) ?? null
   $: isDragonBlooded = $build.race === 'DRAGON BLOODED'
@@ -278,12 +285,12 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     build.update(s => ({ ...s, draconicRuneInfusion: ids[(idx + 1) % ids.length] }))
   }
 
-  function dragonClawDmg(perkAmt: number) { return 25 + 2.5 * perkAmt }
-  function dragonClawHealHoly(perkAmt: number) { return 5 + 0.5 * perkAmt }
-  function dragonClawHealWater(perkAmt: number) { return +(1.923 + 0.1923 * perkAmt).toFixed(3) }
-  function dragonBubbleDmg(perkAmt: number) { return 20 + 2 * perkAmt }
-  function dragonBubbleHealHoly(perkAmt: number) { return 4 + 0.4 * perkAmt }
-  function dragonBubbleHealWater(perkAmt: number) { return +(1.538 + 0.1538 * perkAmt).toFixed(3) }
+  function dragonClawDmg(perkAmt: number) { return DRAGON_CLAW_BASE_DAMAGE + DRAGON_CLAW_DAMAGE_PER_STACK * perkAmt }
+  function dragonClawHealHoly(perkAmt: number) { return DRAGON_CLAW_HOLY_HEAL_BASE + DRAGON_CLAW_HOLY_HEAL_PER_STACK * perkAmt }
+  function dragonClawHealWater(perkAmt: number) { return +(DRAGON_CLAW_WATER_HEAL_BASE + DRAGON_CLAW_WATER_HEAL_PER_STACK * perkAmt).toFixed(3) }
+  function dragonBubbleDmg(perkAmt: number) { return DRAGON_BUBBLE_BASE_DAMAGE + DRAGON_BUBBLE_DAMAGE_PER_STACK * perkAmt }
+  function dragonBubbleHealHoly(perkAmt: number) { return DRAGON_BUBBLE_HOLY_HEAL_BASE + DRAGON_BUBBLE_HOLY_HEAL_PER_STACK * perkAmt }
+  function dragonBubbleHealWater(perkAmt: number) { return +(DRAGON_BUBBLE_WATER_HEAL_BASE + DRAGON_BUBBLE_WATER_HEAL_PER_STACK * perkAmt).toFixed(3) }
 
   $: draconicPerkAmt = (() => {
     const p = $result.perks['Draconic Blood'] ?? 0
@@ -346,7 +353,7 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
   $: monkGloveStatMult = (() => {
     if (!isMonk) return 1
     // rank 1 = 1.0, rank 2 = 1.25, rank 3 = 1.5
-    return 1 + Math.max(0, $build.guildRank - 1) * 0.25
+    return 1 + Math.max(0, $build.guildRank - 1) * MONK_RANK_MULTIPLIER
   })()
 
   // ── Enchant helpers ────────────────────────────────────────────────────────
