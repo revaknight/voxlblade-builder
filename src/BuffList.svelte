@@ -33,39 +33,11 @@
 
   $: weaponArtBuffs = getWeaponArtBuffs($build.selectedWeaponArt)
 
-  $: baseActiveBuffs = (() => {
-    const buffs = applyBuffPerkModifiers(
-      [...itemBuffs, ...perkBuffs, ...weaponArtBuffs],
-      $result.perks,
-      $build.rune || undefined
-    )
-    const _infActive = $build.draconicRuneInfusion === 'infusion'
-    const color = $build.draconicColor
-    if (!_infActive || (color !== 'hex' && color !== 'holy')) {
-      return buffs
-    }
-    const _infPerkAmt = $result.perks['Draconic Blood'] ?? 0
-    const potMult = 1 + _infPerkAmt * 0.05
-
-    return buffs.map(buff => {
-      const def = BUFF_DEFS[buff.buffName]
-      if (!def) return buff
-      const isSelfDebuff = buff.isSelfDebuff || def.isSelfDebuff
-      const isDespair = buff.buffName === 'Despair'
-      
-      if (color === 'hex' && def.isDebuff && !isSelfDebuff) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
-      }
-      if (color === 'hex' && def.isDebuff && isSelfDebuff && isDespair) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
-      }
-      if (color === 'holy' && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
-        return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
-      }
-      
-      return buff
-    })
-  })()
+  $: baseActiveBuffs = applyBuffPerkModifiers(
+    [...itemBuffs, ...perkBuffs, ...weaponArtBuffs],
+    $result.perks,
+    $build.rune || undefined
+  )
 
   $: activeDebuffs = baseActiveBuffs.filter(b => BUFF_DEFS[b.buffName]?.isDebuff)
 
