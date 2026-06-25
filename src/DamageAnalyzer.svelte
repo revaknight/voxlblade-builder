@@ -26,7 +26,29 @@
   $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
   
-  $: _activeDefensivePerkSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered, $build.inDarkness)
+  $: _activeDefensivePerkSources = (() => {
+    const baseSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered, $build.inDarkness)
+    let potMult = 1
+    
+    const bastionStacks = perks['Bastion Bless'] ?? 0
+    if (bastionStacks > 0) {
+      potMult += 0.1 * bastionStacks
+    }
+    
+    const _infActive = $build.draconicRuneInfusion === 'infusion'
+    const color = $build.draconicColor
+    if (_infActive && color === 'holy') {
+      const _infPerkAmt = perks['Draconic Blood'] ?? 0
+      potMult *= 1 + _infPerkAmt * 0.05
+    }
+    
+    if (potMult === 1) return baseSources
+    
+    return baseSources.map(s => ({
+      ...s,
+      defPct: Math.round(s.defPct * potMult * 100) / 100
+    }))
+  })()
   $: _vampireStacks = perks['Vampire'] ?? 0
 
   // Heal scaling calculation using healScaling.ts
@@ -1036,7 +1058,23 @@
       const isActive = isHpGateActive(def.hpGate, _hpFillPct, perkAmount)
 
       const secondaryEffects = (def.secondaryEffects ?? []).filter(se => !se.showIf || se.showIf({ draconicColor: $build.draconicColor })).map(se => {
-        const raw = Math.round(se.getValue({ perkAmount, draconicColor: $build.draconicColor }) * 100) / 100
+        let raw = Math.round(se.getValue({ perkAmount, draconicColor: $build.draconicColor }) * 100) / 100
+        
+        if (se.tone === 'defense') {
+          let potMult = 1
+          const bastionStacks = perks['Bastion Bless'] ?? 0
+          if (bastionStacks > 0) {
+            potMult += 0.1 * bastionStacks
+          }
+          const _infActive = $build.draconicRuneInfusion === 'infusion'
+          const color = $build.draconicColor
+          if (_infActive && color === 'holy') {
+            const _infPerkAmt = perks['Draconic Blood'] ?? 0
+            potMult *= 1 + _infPerkAmt * 0.05
+          }
+          raw = Math.round(raw * potMult * 100) / 100
+        }
+        
         return {
           label: se.label,
           display: (se.format ?? String)(raw),
@@ -2021,10 +2059,6 @@
               {#each entry.typedHits_m2 as t, ti}
                 {#if ti > 0}<span class="da-hit-plus">+</span>{/if}
                 <div class="da-hit-chunk" style="--tc:{t.color}" class:da-hit-chunk--rage={t.rageApplied}>
-                  {#if t.val !== t.rawVal}
-                    <span class="da-hit-raw">{fmtNum(t.rawVal)}</span>
-                    <span class="da-hit-arrow">→</span>
-                  {/if}
                   <span class="da-hit-num" class:da-hit-num--crit={showCritValues} style="--tc:{t.color}">
                     {fmtNum(showCritValues ? Math.round(t.val * _critMult * 100) / 100 : t.val)}
                   </span>
