@@ -158,10 +158,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     potencyCapped: true,
   },
-  'Blood Lust': {
-    name: 'Blood Lust',
+  'Bloodlust': {
+    name: 'Bloodlust',
     color: '#ff0044',
-    description: 'Blood Lust effect.',
+    description: 'Gain x% attack speed gain more upon hitting an opponent.',
+    dynamicDescription: (_perks, potency) => {
+      const pct = +(potency * 20).toFixed(4)
+      return `Gain ${pct}% attack speed gain more upon hitting an opponent.`
+    },
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     potencyCapped: true,
@@ -444,6 +448,17 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Wrathful Crits': (amount) => [{ 
     buffName: 'Rage', potency: 0.1 * amount, duration: 5 + 2 * amount, condition: 'On critical hit', sourceName: 'Wrathful Crits', sourceType: 'perk' 
   }],
+
+  'Blood Lust': (amount) => [
+    {
+      buffName: 'Bloodlust',
+      potency: 2.5 * amount,
+      duration: 7 * amount,
+      condition: 'Hitting a bleeding target · +0.1 per hit · max 2.5 per perk',
+      sourceName: 'Blood Lust',
+      sourceType: 'perk',
+    },
+  ],
 
   'Blessing': (amount) => {
     const condition = `${7.5 * amount}% chance on heal`
