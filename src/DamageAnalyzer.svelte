@@ -110,8 +110,15 @@
   })()
 
   $: _defenseRows = _DEF_TYPE_LIST.map(type => {
-      const baseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
-      const sources: DefenseSource[] = baseArmorDefPct !== 0 ? [{ name: 'Base Armor', defPct: baseArmorDefPct }] : []
+      const _rawBaseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
+      const _shatterReduction = type !== 'true' ? (_selfDebuffDefenseEffects[type] ?? 0) : 0
+      const baseArmorDefPct = Math.round((_rawBaseArmorDefPct - _shatterReduction) * 1000) / 1000
+      const sources: DefenseSource[] = (baseArmorDefPct !== 0 || _shatterReduction > 0) ? [{
+        name: 'Base Armor',
+        defPct: baseArmorDefPct,
+        condition: _shatterReduction > 0 ? `Includes Shatter (Self): -${_shatterReduction}%` : undefined
+      }] : []
+
       for (const s of _activeDefensivePerkSources) {
         sources.push({ name: s.name, defPct: s.defPct, isFlat: s.isFlat, condition: s.condition })
       }
@@ -133,11 +140,6 @@
           defPct,
           condition: isMagicType ? `Take ${flatDmg} less magic damage` : undefined
         })
-      }
-      // Apply self-debuff defense reduction (e.g., Shatter) - skip True damage
-      if (type !== 'true' && _selfDebuffDefenseEffects[type]) {
-        const defPct = -_selfDebuffDefenseEffects[type]
-        sources.push({ name: 'Shatter (Self)', defPct, condition: 'Self-debuff' })
       }
       return { type, color: DMG_TYPE_COLORS[type] ?? '#e8e4da', ...resolveDefenseSources(sources) }
     }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
