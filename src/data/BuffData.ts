@@ -121,6 +121,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     statKey: 'airDefense',
+    potencyCapped: true,
   },
   'Magic Reinforce': {
     name: 'Magic Reinforce',
@@ -155,6 +156,15 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     },
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
+    potencyCapped: true,
+  },
+  'Blood Lust': {
+    name: 'Blood Lust',
+    color: '#ff0044',
+    description: 'Blood Lust effect.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    potencyCapped: true,
   },
 
   //Debuffs

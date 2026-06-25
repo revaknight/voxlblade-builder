@@ -59,7 +59,7 @@
       if (color === 'hex' && def.isDebuff && isSelfDebuff && isDespair) {
         return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
       }
-      if (color === 'holy' && !def.isDebuff && !def.isNeutral && buff.buffName !== 'Draconic Infusion') {
+      if (color === 'holy' && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
         return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
       }
       
@@ -126,7 +126,7 @@
           duration: Math.round(buff.duration * durMult),
         }
       }
-      if (color === 'holy' && !def.isDebuff && !def.isNeutral && buff.buffName !== 'Draconic Infusion') {
+      if (color === 'holy' && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
         const potMult = 1 + _infPerkAmt * 0.05
         return {
           ...buff,

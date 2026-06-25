@@ -44,14 +44,16 @@
     
     if (potMult === 1) return baseSources
     
-    return baseSources.map(s => ({
-      ...s,
-      defPct: Math.round(s.defPct * potMult * 100) / 100
-    }))
+    return baseSources.map(s => {
+      if (s.potencyCapped) return s
+      return {
+        ...s,
+        defPct: Math.round(s.defPct * potMult * 100) / 100
+      }
+    })
   })()
   $: _vampireStacks = perks['Vampire'] ?? 0
 
-  // Heal scaling calculation using healScaling.ts
   $: _healScalingCtx = {
     perks,
     emotionalState: $build.emotionalState,
@@ -146,7 +148,7 @@
       if (color === 'hex' && def.isDebuff && isSelfDebuff && isDespair) {
         return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
       }
-      if (color === 'holy' && !def.isDebuff && !def.isNeutral && buff.buffName !== 'Draconic Infusion') {
+      if (color === 'holy' && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
         return { ...buff, potency: Math.round(buff.potency * potMult * 10000) / 10000 }
       }
       

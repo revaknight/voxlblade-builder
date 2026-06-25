@@ -3,6 +3,7 @@ export interface DefensivePerkSourceContext {
   adaptivePlateTriggered: boolean
   inDarkness: boolean
 }
+
 export interface DefensivePerkSource {
   perkName: string
   drPctPerStack: number
@@ -14,6 +15,7 @@ export interface DefensivePerkSource {
   minPerkForAlways?: number
   matchedOnly?: boolean
   dependsOn?: (ctx: DefensivePerkSourceContext) => boolean
+  potencyCapped?: boolean // <-- Bổ sung thuộc tính này vào cấu hình gốc
 }
 
 export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
@@ -58,6 +60,7 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     drPctPerStack: 10,
     label: 'Air Pressure (Max Potency)',
     conditionLabel: 'Air Pressure (Max Potency)',
+    potencyCapped: true, // <-- Đánh dấu Air Pressure không nhận hệ số buff hiệu lực (potMult)
   },
   {
     perkName: 'Valor',
@@ -74,13 +77,14 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     dependsOn: ctx => ctx.inDarkness,
   },
 ]
+
 export function getActiveDefensivePerkSources(
   perks: Record<string, number>,
   hpFillPct: number = 100,
   adaptivePlateTriggered: boolean = false,
   inDarkness: boolean = true,
-): Array<{ name: string; defPct: number; isFlat?: boolean; condition: string }> {
-  const out: Array<{ name: string; defPct: number; isFlat?: boolean; condition: string }> = []
+): Array<{ name: string; defPct: number; isFlat?: boolean; condition: string; potencyCapped?: boolean }> { // <-- Cập nhật kiểu trả về của mảng ở đây
+  const out: Array<{ name: string; defPct: number; isFlat?: boolean; condition: string; potencyCapped?: boolean }> = [] // <-- Cập nhật kiểu khởi tạo ở đây
   const ctx: DefensivePerkSourceContext = { hpFillPct, adaptivePlateTriggered, inDarkness }
 
   for (const def of DEFENSIVE_PERK_SOURCES) {
@@ -100,7 +104,14 @@ export function getActiveDefensivePerkSources(
     if (def.maxDrPct != null) defPct = Math.min(defPct, def.maxDrPct)
     defPct = Math.round(defPct * 100) / 100
 
-    out.push({ name: def.label, defPct, isFlat: def.isFlat, condition: def.conditionLabel })
+    // Đẩy thuộc tính potencyCapped từ cấu hình ra bên ngoài kết quả phân tích
+    out.push({ 
+      name: def.label, 
+      defPct, 
+      isFlat: def.isFlat, 
+      condition: def.conditionLabel,
+      potencyCapped: def.potencyCapped // <-- Thêm dòng này
+    })
   }
   return out
 }
