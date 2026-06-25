@@ -1,35 +1,36 @@
 <script lang="ts">
   import { createEventDispatcher, tick } from 'svelte'
+  import { UI_COLORS } from './lib/uiConstants'
 
   export let selectedTags: Set<string>
-  export let hideTags: string[] = [] 
+  export let hideTags: string[] = []
 
   const dispatch = createEventDispatcher()
 
   const TAG_GROUPS: Array<{ label: string; color: string; tags: string[] }> = [
     {
       label: 'Combat',
-      color: '#fb923c',
+      color: UI_COLORS.combat,
       tags: ["Attack Speed","Damage Boost","Crit","Crit Damage","Finisher","RNG","Guardbreak","Poise","Defensive","Offensive", "Mobility"],
     },
     {
       label: 'Support',
-      color: '#4ade80',
+      color: UI_COLORS.support,
       tags: ["Healing","Heal Boost","Cleanse","Cooldown Reduction"],
     },
     {
       label: 'Status',
-      color: '#f87171',
+      color: UI_COLORS.status,
       tags: ["Bleed Potency","Burn Potency","Poison Potency","Buff","Debuff"],
     },
     {
       label: 'Weapon Art/Rune',
-      color: '#38bdf8',
+      color: UI_COLORS.cantrip,
       tags:  ["Weapon Art","Weapon Art Activated","Rune","Rune Activated"],
     },
     {
       label: 'Special',
-      color: '#a78bfa',
+      color: UI_COLORS.special,
       tags: ["Summoner","Stance Change","Self-Damage","Self-Debuff","Stat Boost"],
     },
   ]

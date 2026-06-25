@@ -1,6 +1,5 @@
 import { roundMultiplier } from '../lib/utils'
-
-export type BoostAttackType = 'm1' | 'm2' | 'wa' | 'rune' | 'perk'
+import type { BoostAttackType } from '../lib/types'
 
 export interface BoostContext {
   perks: Record<string, number>

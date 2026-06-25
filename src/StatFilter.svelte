@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import { ELEMENTAL_BOOST_STATS, NEGATIVE_ELEMENTAL_BOOST_STATS } from './lib/stats/elementalBoosts'
   import { createFilterActions } from './lib/stats/filterActions'
+  import { UI_COLORS } from './lib/uiConstants'
 
   const dispatch = createEventDispatcher<{
     change: {
@@ -11,9 +12,9 @@
   }>()
 
   const STAT_GROUPS = [
-    { label: 'Boost', color: '#fb923c', stats: ELEMENTAL_BOOST_STATS },
+    { label: 'Boost', color: UI_COLORS.combat, stats: ELEMENTAL_BOOST_STATS },
     {
-      label: 'Defense', color: '#38bdf8',
+      label: 'Defense', color: UI_COLORS.water,
       stats: [
         { key: 'physicalDefense', label: 'Phys Def'   },
         { key: 'magicDefense',    label: 'Magic Def'  },
@@ -31,7 +32,7 @@
       ],
     },
     {
-      label: 'Utility', color: '#4ade80',
+      label: 'Utility', color: UI_COLORS.support,
       stats: [
         { key: 'speedBoost',       label: 'Speed'     },
         { key: 'attackSpeed',      label: 'Atk Speed' },
@@ -41,9 +42,9 @@
   ]
 
   const NEG_STAT_GROUPS = [
-    { label: 'Boost', color: '#f87171', stats: NEGATIVE_ELEMENTAL_BOOST_STATS },
+    { label: 'Boost', color: UI_COLORS.status, stats: NEGATIVE_ELEMENTAL_BOOST_STATS },
     {
-      label: 'Defense', color: '#fca5a5',
+      label: 'Defense', color: UI_COLORS.statusNegative,
       stats: [
         { key: 'neg:physicalDefense', label: 'Phys Def'   },
         { key: 'neg:magicDefense',    label: 'Magic Def'  },
@@ -61,7 +62,7 @@
       ],
     },
     {
-      label: 'Utility', color: '#86efac',
+      label: 'Utility', color: UI_COLORS.supportNegative,
       stats: [
         { key: 'neg:speedBoost',  label: 'Speed'     },
         { key: 'neg:attackSpeed', label: 'Atk Speed' },
@@ -73,7 +74,7 @@
   const STAT_LABEL_MAP = new Map<string, string>()
   const STAT_COLOR_MAP = new Map<string, string>()
 
-  function initMaps(groups: typeof STAT_GROUPS) {
+  function initMaps(groups: Array<{ label: string; color: string; stats: { key: string; label: string }[] }>) {
     for (const g of groups) {
       for (const s of g.stats) {
         STAT_LABEL_MAP.set(s.key, s.label)

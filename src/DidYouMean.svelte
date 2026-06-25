@@ -1,17 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
+  import { highlightText } from './lib/utils'
 
   export let noExactResults: boolean = false
   export let didYouMean: Array<{ label: string; type: 'name' | 'perk'; score?: number }> = []
   export let modalSearch: string = ''
 
   const dispatch = createEventDispatcher<{ select: string }>()
-
-  function highlight(text: string, query: string): string {
-    if (!query.trim()) return text
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="modal-hl">$1</mark>')
-  }
 </script>
 
 {#if noExactResults && didYouMean.length > 0}
@@ -24,7 +19,7 @@
           {#if s.type === 'perk'}
             <span class="perk-icon">💡</span>
           {/if}
-          {@html highlight(s.label, modalSearch)}
+          {@html highlightText(s.label, modalSearch)}
         </button>
       {/each}
     </div>

@@ -2,13 +2,14 @@
   import { createEventDispatcher } from 'svelte'
   import { ELEMENTAL_BOOST_STATS } from './lib/stats/elementalBoosts'
   import { createFilterActions } from './lib/stats/filterActions'
+  import { UI_COLORS } from './lib/uiConstants'
 
   const dispatch = createEventDispatcher<{ change: Map<string, 'include' | 'exclude'> }>()
   export let value: Map<string, 'include' | 'exclude'> = new Map()
 
   const DMG_TYPE_GROUP = {
     label: 'Damage Type',
-    color: '#fb923c',
+    color: UI_COLORS.combat,
     stats: [
       { key: 'trueType',     label: 'True'     },
       { key: 'physicalType', label: 'Physical' },
@@ -25,7 +26,7 @@
 
   const SCALING_GROUP = {
     label: 'Scaling',
-    color: '#a78bfa',
+    color: UI_COLORS.weaponArtRune,
     stats: [
       { key: 'dexterityScaling', label: 'Dexterity' },
       { key: 'physicalScaling',  label: 'Physical'  },
@@ -42,7 +43,7 @@
 
   const BOOST_GROUP = {
     label: 'Boost / Stats',
-    color: '#4ade80',
+    color: UI_COLORS.support,
     stats: [    
       ...ELEMENTAL_BOOST_STATS,
       { key: 'protection',      label: 'Protection'},

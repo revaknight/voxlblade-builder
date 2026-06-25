@@ -1,16 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
+  import { highlightText } from './lib/utils'
+
   const dispatch = createEventDispatcher<{ select: { label: string; type: 'name' | 'perk' } }>()
 
   export let show: boolean
   export let suggestions: Array<{ label: string; type: 'name' | 'perk' }>
   export let modalSearch: string
-
-  function highlight(text: string, query: string): string {
-    if (!query.trim()) return text
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="modal-hl">$1</mark>')
-  }
 </script>
 
 {#if show && suggestions.length > 0}
@@ -22,7 +18,7 @@
         on:mousedown|preventDefault={() => dispatch('select', { label: s.label, type: s.type })}
       >
         <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-        <span class="suggest-label">{@html highlight(s.label, modalSearch)}</span>
+        <span class="suggest-label">{@html highlightText(s.label, modalSearch)}</span>
       </button>
     {/each}
   </div>

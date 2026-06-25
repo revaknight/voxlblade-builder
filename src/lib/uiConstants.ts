@@ -32,6 +32,10 @@ export const UI_COLORS = {
   wet: '#3b82f6',
   earthen: '#22c55e',
   magical: '#a78bfa',
+
+  // Negative stat colors
+  statusNegative: '#fca5a5',
+  supportNegative: '#86efac',
 } as const
 
 export const SOURCE_LABELS = {
