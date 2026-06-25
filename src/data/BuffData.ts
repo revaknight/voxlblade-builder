@@ -772,6 +772,24 @@ const MODIFIERS_BY_BUFF = BUFF_POTENCY_MODIFIERS.reduce((acc, mod) => {
   return acc
 }, {} as Record<string, BuffPotencyModifier[]>)
 
+
+interface GenericDebuffModifier {
+  perkName: string
+  potencyMultiplierPerStack: number
+  flatPotencyBonus: number
+  durationMultiplierPerStack: number
+}
+
+const GENERIC_DEBUFF_MODIFIERS: GenericDebuffModifier[] = [
+  {
+    perkName: 'Endless Despair',
+    potencyMultiplierPerStack: 0.35,
+    flatPotencyBonus: 0.1,
+    durationMultiplierPerStack: 0.75,
+  },
+]
+
+
 const BUFFS_BY_ITEM_SOURCE = ITEM_BUFF_MAP.reduce((acc, buff) => {
   (acc[buff.sourceName] ??= []).push(buff)
   return acc
@@ -788,6 +806,7 @@ export function applyBuffPerkModifiers(
   return buffs.map(buff => {
     let bonus = 0
     let durationMult = 1
+    const def = BUFF_DEFS[buff.buffName]
     const modifiers = MODIFIERS_BY_BUFF[buff.buffName]
     if (modifiers) {
       for (const mod of modifiers) {
@@ -795,7 +814,6 @@ export function applyBuffPerkModifiers(
         const stacks = perks[mod.label] ?? 0
         if (stacks <= 0) continue
         
-        const def = BUFF_DEFS[buff.buffName]
         const isSelfDebuff = buff.isSelfDebuff || def?.isSelfDebuff
         const isContained = mod.label === 'Contained'
         const isDespair = buff.buffName === 'Despair'
@@ -812,20 +830,34 @@ export function applyBuffPerkModifiers(
     }
     const bastionStacks = perks['Bastion Bless'] ?? 0
     if (bastionStacks > 0 && !buff.isSelfDebuff) {
-      const def = BUFF_DEFS[buff.buffName]
       if (def && !def.isDebuff && !def.isNeutral && !def.potencyCapped) {
         bonus += 0.1 * bastionStacks * buff.potency
       }
     }
-
-    if (bonus === 0 && durationMult === 1) return buff
-
+    let debuffPotencyMult = 1
+    let debuffFlatBonus = 0
+    if (def?.isDebuff) {
+      const isSelfDebuff = buff.isSelfDebuff || def.isSelfDebuff
+      const isDespair = buff.buffName === 'Despair'
+      if (!isSelfDebuff || isDespair) {
+        for (const gm of GENERIC_DEBUFF_MODIFIERS) {
+          const stacks = perks[gm.perkName] ?? 0
+          if (stacks <= 0) continue
+          debuffPotencyMult *= 1 + gm.potencyMultiplierPerStack * stacks
+          debuffFlatBonus += gm.flatPotencyBonus
+          durationMult *= 1 + gm.durationMultiplierPerStack * stacks
+        }
+      }
+    }
+  
+    if (bonus === 0 && durationMult === 1 && debuffPotencyMult === 1 && debuffFlatBonus === 0) return buff
+    const finalPotency = Math.round(((buff.potency + bonus) * debuffPotencyMult + debuffFlatBonus) * 10000) / 10000
     return {
       ...buff,
       duration: Math.round(buff.duration * durationMult),
-      potency: Math.round((buff.potency + bonus) * 10000) / 10000,
+      potency: finalPotency,
       basePotency: buff.potency,
-      bonusPotency: bonus > 0 ? Math.round(bonus * 10000) / 10000 : undefined,
+      bonusPotency: finalPotency !== buff.potency ? Math.round((finalPotency - buff.potency) * 10000) / 10000 : undefined,
     }
   })
 }

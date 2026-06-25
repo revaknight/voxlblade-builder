@@ -78,8 +78,12 @@
     $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
   )
 
-  $: draconicHexDebuffs = getDraconicHexDebuffs(
-    $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+  $: draconicHexDebuffs = applyBuffPerkModifiers(
+    getDraconicHexDebuffs(
+      $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+    ),
+    $result.perks,
+    $build.rune || undefined
   )
 
   $: activeBuffs = [
