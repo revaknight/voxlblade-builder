@@ -391,7 +391,7 @@
     }
 
     if ((_weaponPerks['Cosmic Ray'] ?? 0) > 0) {
-      return { type: 'Cosmic Ray', m2Only: true }
+      return { type: 'Cosmic Ray', m2Only: true, m2NoLock: true }
     }
     if ((_weaponPerks['Mine'] ?? 0) > 0) {
       return { type: 'Mine', m2Only: true, m2NoLock: true }
