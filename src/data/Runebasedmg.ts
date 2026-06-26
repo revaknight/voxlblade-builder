@@ -90,4 +90,13 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
         maxPotency: 5,
         potencyLabel: 'Beenades potency',
     },
+    {
+    runeName: 'Boostshroom Rune',
+    condition: 'On activation (up to every ~2s · 20s duration)',
+    getBaseDamage: () => 3,
+    dmgTypes: { hex: 1.0 },
+    scalings: { hex: 1.0 },
+    hits: 1,
+    note: 'Boostshroom lasts 20s and can be activated multiple times (~2s internal CD per player). Can be triggered by other players — damage still counts as yours.',
+  },
 ]

@@ -345,13 +345,21 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
     sourceType: 'rune',
   },
   {
-  buffName: 'Ancient Shield',
-  potency: 20,
-  duration: 15,
-  condition: 'On cast · potency = 20 + 4 × buffs consumed (allies also receive)',
-  sourceName: 'Ancient Cleric Rune',
-  sourceType: 'rune',
-},
+    buffName: 'Ancient Shield',
+    potency: 20,
+    duration: 15,
+    condition: 'On cast · potency = 20 + 4 × buffs consumed (allies also receive)',
+    sourceName: 'Ancient Cleric Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Poison',
+    potency: 0,
+    duration: 5,
+    condition: 'On hit',
+    sourceName: 'Boostshroom Rune',
+    sourceType: 'rune',
+  },
 ]
 
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]
