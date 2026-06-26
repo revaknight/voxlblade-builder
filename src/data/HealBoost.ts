@@ -85,7 +85,7 @@ export const HEAL_SCALING_DEFS: HealBoostDef[] = [
     calcFn: (ctx) => {
       const stacks = ctx.perks['Frenzy'] ?? 0
       if (stacks > 0 && (ctx.ragePotency ?? 0) > 0) {
-        return { multiplier: 0.5, condition: 'Healing received halved while Rage is active · regardless of perk amount' }
+        return { multiplier: 0.5, condition: 'Healing received halved while Rage is active' }
       }
       return null
     },
