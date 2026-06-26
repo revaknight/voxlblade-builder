@@ -1343,7 +1343,7 @@
         count: entry.perkName === 'Springblast' ? springblastFinisherHits : (entry.hits ?? 1),
         base: _preColorBase,
         scalingMult: entry.scalingMult,
-        combatMult: entry.perkName === 'Draconic Blood' ? _m2CombatMult : entry.combatMult,
+        combatMult: entry.combatMult,
         isFinisher: entry.isFinisher ?? false,
         dmgTypes: entry.resolvedDmgTypes,
         baseDmgTypes: entry.baseDmgTypes,

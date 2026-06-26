@@ -3,7 +3,7 @@ const ALL_DEF_TYPES = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'he
 export interface DebuffCombatEffect {
   descFn: (potency: number) => string
   damageMult?: (potency: number) => number
-  defReduction?: (potency: number) => Partial<Record<string, number>>
+  defReduction?: (potency: number) => Partial<Record<typeof ALL_DEF_TYPES[number], number>>
 }
 
 export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
@@ -19,7 +19,10 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
     descFn: (p: number) => `Lose ${(p * 100).toFixed(2)} Armor`,
     defReduction: (p: number) => {
       const amt = p * 100
-      return ALL_DEF_TYPES.reduce((acc, t) => ({ ...acc, [t]: amt }), {} as Partial<Record<string, number>>)
+      return {
+        physical: amt,
+        magic: amt,
+      }
     },
   },
 }
