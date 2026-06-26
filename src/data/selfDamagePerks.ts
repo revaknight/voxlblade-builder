@@ -26,17 +26,20 @@ export function calcSelfDamage(
   perkAmount: number,
   preBoostDamageDealt: number,
   enemiesHit: number = 1,
+  defenseMultipliers: Record<string, number> = {},
 ): { total: number; byType: Record<string, number> } {
   if (perkAmount <= 0 || preBoostDamageDealt <= 0) return { total: 0, byType: {} }
 
   const base = preBoostDamageDealt * def.selfDmgPct
   const perkDrMult = calcDefMultiplier(def.drPctPerStack * perkAmount)
   const multiTargetMult = calcDefMultiplier(100 * Math.max(0, enemiesHit - 1))
-  const total = Math.round(base * perkDrMult * multiTargetMult * 10000) / 10000
+  const baseTotal = Math.round(base * perkDrMult * multiTargetMult * 10000) / 10000
 
   const byType: Record<string, number> = {}
   for (const [type, mult] of Object.entries(def.dmgTypes)) {
-    byType[type] = Math.round(total * mult * 10000) / 10000
+    const defMult = defenseMultipliers[type] ?? 1
+    byType[type] = Math.round(baseTotal * mult * defMult * 10000) / 10000
   }
+  const total = Math.round(Object.values(byType).reduce((sum, v) => sum + v, 0) * 10000) / 10000
   return { total, byType }
 }

@@ -1412,13 +1412,21 @@
   $: _undeadMightDef = SELF_DAMAGE_PERK_DEFS.find(d => d.perkName === 'Undead Might')
   $: _undeadMightAmt = perks['Undead Might'] ?? 0
 
+  $: _defenseMultipliers = (() => {
+    const mults: Record<string, number> = {}
+    for (const row of _defenseRows) {
+      mults[row.type] = row.finalMultiplier
+    }
+    return mults
+  })()
+
   $: _undeadMightSelfDmgBySource = (_undeadMightDef?.appliesTo ?? [])
     .map((key): SelfDamageDisplaySource | null => {
       const group = SELF_DAMAGE_APPLIES_TO_GROUP[key]
       if (!group) return null
       const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, group)
       if (_undeadMightAmt <= 0 || preBoostDmg <= 0) return null
-      const result = calcSelfDamage(_undeadMightDef!, _undeadMightAmt, preBoostDmg, enemiesHitUndeadMight)
+      const result = calcSelfDamage(_undeadMightDef!, _undeadMightAmt, preBoostDmg, enemiesHitUndeadMight, _defenseMultipliers)
       const label = group === 'WA'
         ? selectedWA.name
         : (_activeRuneDmgDef?.runeName ?? _draconicBloodEntry?.displayName ?? 'Rune')
