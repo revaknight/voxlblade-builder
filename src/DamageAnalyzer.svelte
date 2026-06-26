@@ -568,6 +568,11 @@
   type BoostAttackType = 'm1' | 'm2' | 'perk' | 'rune' | 'wa';
   $: activeEntries = boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName))
   $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName))
+
+  $: _levelMult = (() => {
+    const levelEntry = boosts.dmgEntries.find(e => e.sourceName === 'Level Damage')
+    return levelEntry ? levelEntry.rawMultiplier : 1
+  })()
   
   $: _selfDebuffDamageMult = (() => {
     if (disableWeakness) return 1
@@ -1084,6 +1089,7 @@
     scalingMult: number
     combatMult: number
     resolvedDmgTypes: Record<string, number>
+    baseDmgTypes: Record<string, number>
     resolvedScalings: Record<string, number>
     dmgTypeMode: 'weapon' | 'fixed' | 'dynamic'
     isActive: boolean
@@ -1120,6 +1126,9 @@
             draconicColor: $build.draconicColor || 'physical',
           })
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
+
+      // Store base damage types without Draconic Runes bonus for self damage calculation
+      const baseDmgTypesForSelfDmg = def.isRune ? baseDmgTypes : resolvedDmgTypes
 
       const resolvedScalings = def.scalingMode === 'weapon'
         ? _weaponResult?.scalings ?? {}
@@ -1189,6 +1198,7 @@
         scalingMult,
         combatMult,
         resolvedDmgTypes,
+        baseDmgTypes: baseDmgTypesForSelfDmg,
         resolvedScalings,
         dmgTypeMode: def.dmgTypeMode,
         isActive,
@@ -1208,6 +1218,7 @@
     combatMult: number
     isFinisher: boolean
     dmgTypes: Record<string, number>
+    baseDmgTypes?: Record<string, number>
     label?: string
     isHeal?: boolean
     forceCrit?: boolean
@@ -1334,6 +1345,7 @@
         combatMult: entry.perkName === 'Draconic Blood' ? _m2CombatMult : entry.combatMult,
         isFinisher: entry.isFinisher ?? false,
         dmgTypes: entry.resolvedDmgTypes,
+        baseDmgTypes: entry.baseDmgTypes,
         label: entry.displayName,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
@@ -1404,8 +1416,9 @@
     return hits
       .filter(h => h.group === group && !h.isHeal)
       .reduce((sum, h) => {
-        const typeMultSum = Object.values(h.dmgTypes).reduce((s, m) => s + m, 0)
-        return sum + h.base * typeMultSum * h.scalingMult * h.count
+        const dmgTypesForCalc = h.baseDmgTypes ?? h.dmgTypes
+        const typeMultSum = Object.values(dmgTypesForCalc).reduce((s, m) => s + m, 0)
+        return sum + h.base * typeMultSum * h.scalingMult * _levelMult * h.count
       }, 0)
   }
 
