@@ -20,6 +20,7 @@
   import { applyDraconicRunesBonus, getDraconicRunesBonus, applyDraconicBonuses, getDraconicBonuses } from './data/draconicRunes'
   import { calculateHealBoost } from './data/HealBoost'
   import { roundMultiplier } from './lib/utils'
+  import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage } from './data/selfDamagePerks'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -1384,9 +1385,46 @@
         isHeal: true,
       })
     }
+    // NEW
     return result
   })()
-  
+
+  interface SelfDamageDisplaySource {
+    group: 'WA' | 'Rune'
+    label: string
+    result: { total: number; byType: Record<string, number> }
+  }
+
+  const SELF_DAMAGE_APPLIES_TO_GROUP: Record<string, 'WA' | 'Rune'> = { wa: 'WA', rune: 'Rune' }
+
+  let enemiesHitUndeadMight = 1
+  $: if (!Number.isFinite(enemiesHitUndeadMight) || enemiesHitUndeadMight < 1) enemiesHitUndeadMight = 1
+
+  function _sumPreBoostHitDamage(hits: BDCHit[], group: 'WA' | 'Rune'): number {
+    return hits
+      .filter(h => h.group === group && !h.isHeal)
+      .reduce((sum, h) => {
+        const typeMultSum = Object.values(h.dmgTypes).reduce((s, m) => s + m, 0)
+        return sum + h.base * typeMultSum * h.scalingMult * h.count
+      }, 0)
+  }
+
+  $: _undeadMightDef = SELF_DAMAGE_PERK_DEFS.find(d => d.perkName === 'Undead Might')
+  $: _undeadMightAmt = perks['Undead Might'] ?? 0
+
+  $: _undeadMightSelfDmgBySource = (_undeadMightDef?.appliesTo ?? [])
+    .map((key): SelfDamageDisplaySource | null => {
+      const group = SELF_DAMAGE_APPLIES_TO_GROUP[key]
+      if (!group) return null
+      const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, group)
+      if (_undeadMightAmt <= 0 || preBoostDmg <= 0) return null
+      const result = calcSelfDamage(_undeadMightDef!, _undeadMightAmt, preBoostDmg, enemiesHitUndeadMight)
+      const label = group === 'WA'
+        ? selectedWA.name
+        : (_activeRuneDmgDef?.runeName ?? _draconicBloodEntry?.displayName ?? 'Rune')
+      return { group, label, result }
+    })
+    .filter((s): s is SelfDamageDisplaySource => s !== null)
 
 </script>
 
@@ -2279,6 +2317,70 @@
 {/if}
 
 </div><!-- end da-wbd-outer -->
+
+{#if _undeadMightAmt > 0}
+<div class="da-section da-section--selfdmg">
+  <div class="da-section-title">Self Damage</div>
+
+  <div class="da-selfdmg-row">
+    <span class="da-selfdmg-label">Enemies Hit</span>
+    <input
+      type="number"
+      min="1"
+      step="1"
+      bind:value={enemiesHitUndeadMight}
+      class="da-selfdmg-input"
+      aria-label="Enemies Hit"
+    />
+  </div>
+
+  {#if _undeadMightSelfDmgBySource.length === 0}
+    <p class="da-empty-hint">No current Weapon Art or Rune damage to scale Self Damage from.</p>
+  {:else}
+    <div class="da-pbd-list">
+      {#each _undeadMightSelfDmgBySource as src (src.group)}
+        <div class="da-pbd-card">
+          <div class="da-pbd-head">
+            <span class="da-pbd-name">Undead Might (Self Damage)</span>
+            <span class="da-pbd-amt">+{fmtNum(_undeadMightAmt)}</span>
+          </div>
+          <div class="da-pbd-badges">
+            <span class="da-pbd-badge" class:da-pbd-badge--wa={src.group === 'WA'} class:da-pbd-badge--rune={src.group === 'Rune'}>
+              {src.group}
+            </span>
+          </div>
+          <div class="da-pbd-condition">
+            From {src.label}{enemiesHitUndeadMight > 1 ? ` · split across ${enemiesHitUndeadMight} enemies hit` : ''}
+          </div>
+
+          <div class="da-pbd-dmg-row">
+            <span class="da-pbd-ctx-label">Total Self Damage</span>
+            <div class="da-hits-row">
+              <div class="da-hit-card">
+                <div class="da-hit-chunk" style="--tc:var(--neg, #f87171)">
+                  <span class="da-hit-num" style="--tc:var(--neg, #f87171)">{fmtNum(src.result.total)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="da-hits-row">
+            <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS.hex}">
+              <span class="da-hit-num" style="--tc:{DMG_TYPE_COLORS.hex}">{fmtNum(src.result.byType.hex ?? 0)}</span>
+              <span class="da-hit-type">Hex</span>
+            </div>
+            <span class="da-hit-plus">+</span>
+            <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS.earth}">
+              <span class="da-hit-num" style="--tc:{DMG_TYPE_COLORS.earth}">{fmtNum(src.result.byType.earth ?? 0)}</span>
+              <span class="da-hit-type">Earth</span>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+</div>
+{/if}
 <!-- ══════════════════ DAMAGE SCALING ══════════════════ -->
 {#if _weaponResult && scalingBreakdown.rows.length > 0}
 <div class="da-section da-section--scaling">
@@ -4489,7 +4591,46 @@
   font-size: .75rem; font-weight: 800;
   color: #fbbf24; font-family: 'Courier New', monospace;
 }
+
 .da-weaponboost-sources {
   font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic;
 }
+
+.da-section--selfdmg {
+  border-color: rgba(248,113,113,.18);
+  background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(248,113,113,.03) 100%);
+}
+.da-selfdmg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.22);
+  border-radius: 7px;
+  width: fit-content;
+}
+.da-selfdmg-label {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--neg, #f87171);
+  opacity: .8;
+}
+.da-selfdmg-input {
+  font-family: 'Courier New', monospace;
+  font-size: .9rem;
+  font-weight: 800;
+  color: var(--neg, #f87171);
+  background: none;
+  border: none;
+  outline: none;
+  width: 40px;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.da-selfdmg-input::-webkit-inner-spin-button,
+.da-selfdmg-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
