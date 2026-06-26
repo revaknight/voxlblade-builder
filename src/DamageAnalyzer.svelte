@@ -72,18 +72,19 @@
   $: wardingDebuffMult = Math.max(0, 1 - wardingPct)
   $: _healFinalMultiplier = (() => {
     const baseMult = _activeHealEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
-    // Apply Anti Heal reduction from self-debuffs
-    if (!disableAntiHeal && _healScalingCtx.activeBuffs) {
-      const antiHealBuffs = _healScalingCtx.activeBuffs.filter(b => b.buffName === 'Anti Heal' && b.isSelfDebuff && b.potency > 0)
-      if (antiHealBuffs.length > 0) {
-        const maxPotency = Math.max(...antiHealBuffs.map(b => b.potency))
-        const effectivePotency = wardingDebuffMult !== 1
-          ? Math.round(maxPotency * wardingDebuffMult * 1000) / 1000
-          : maxPotency
-        return roundMultiplier(baseMult / (1 + effectivePotency))
-      }
-    }
     return baseMult
+  })()
+
+  $: _antiHealSelfMult = (() => {
+    if (disableAntiHeal) return 1
+    if (!_healScalingCtx.activeBuffs) return 1
+    const antiHealBuffs = _healScalingCtx.activeBuffs.filter(b => b.buffName === 'Anti Heal' && b.isSelfDebuff && b.potency > 0)
+    if (antiHealBuffs.length === 0) return 1
+    const maxPotency = Math.max(...antiHealBuffs.map(b => b.potency))
+    const effectivePotency = wardingDebuffMult !== 1
+      ? Math.round(maxPotency * wardingDebuffMult * 1000) / 1000
+      : maxPotency
+    return 1 / (1 + effectivePotency)
   })()
 
   $: _selfDebuffDefenseEffects = (() => {
@@ -1355,14 +1356,16 @@
     }
     if (_activeRuneDmgDef && Object.keys(_activeRuneDmgDef.dmgTypes).length > 0) {
       const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false
-      const _runeDmgTypesWithBonus = applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
-        draconicRunesStacks: perks['Draconic Runes'] ?? 0,
-        draconicColor: $build.draconicColor || 'physical',
-      }, {
-        isActive: $build.draconicRuneInfusion === 'infusion',
-        buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
-        draconicColor: $build.draconicColor || 'physical',
-      })
+      const _runeDmgTypesWithBonus = _runeIsHeal
+        ? _activeRuneDmgDef.dmgTypes
+        : applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
+            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+            draconicColor: $build.draconicColor || 'physical',
+          }, {
+            isActive: $build.draconicRuneInfusion === 'infusion',
+            buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+            draconicColor: $build.draconicColor || 'physical',
+          })
       result.push({
         group: 'Rune',
         index: result.length,
@@ -2118,20 +2121,22 @@
           buffPotency: _dragonInfusionPotency,
           draconicColor: _draconicColor,
         })}
-        {@const _runeDmgTypesWithBonus = applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
-          draconicRunesStacks: _draconicRunesStacks,
-          draconicColor: _draconicColor,
-        }, {
-          isActive: _dragonInfusionActive,
-          buffPotency: _dragonInfusionPotency,
-          draconicColor: _draconicColor,
-        })}
+        {@const _runeDmgTypesWithBonus = _runeIsHeal
+          ? _activeRuneDmgDef.dmgTypes
+          : applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
+              draconicRunesStacks: _draconicRunesStacks,
+              draconicColor: _draconicColor,
+            }, {
+              isActive: _dragonInfusionActive,
+              buffPotency: _dragonInfusionPotency,
+              draconicColor: _draconicColor,
+            })}
         
         <div class="da-wbd-section">
           <div class="da-wbd-row-label da-wbd-row-label--rune">
             <span class="da-wbd-lbl-badge da-wbd-lbl-badge--rune">Rune</span>
             <span class="da-wbd-lbl-text">{_activeRuneDmgDef.runeName}</span>
-            {#if Object.keys(_draconicBonuses).length > 0}
+            {#if !_runeIsHeal && Object.keys(_draconicBonuses).length > 0}
               {@const totalBonus = Object.values(_draconicBonuses).reduce((a, b) => a + b, 0)}
               {@const bonusTypes = Object.keys(_draconicBonuses).map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' + ')}
               <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">{+totalBonus.toFixed(4)} {bonusTypes}</span>
@@ -2903,6 +2908,7 @@
   rageAffectedTypes={_effectiveRageAffectedTypes}
   luminescentPct={_luminescentPct}
   selfDebuffDamageMult={_selfDebuffDamageMult}
+  antiHealSelfMult={_antiHealSelfMult}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,
     draconicColor: $build.draconicColor || 'physical',

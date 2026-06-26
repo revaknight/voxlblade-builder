@@ -9,6 +9,7 @@
   export let showCritToggle: boolean = false
   export let draconicRunesBonus: Record<string, number> = {}
   export let selfDebuffDamageMult: number = 1
+  export let antiHealSelfMult: number = 1
 
   boosts
   disabledBoosts
@@ -194,7 +195,7 @@
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult      = isHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
       const typeBase     = Math.round(hit.base * mult * 10000) / 10000
-      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * selfDebuffDamageMult * 10000) / 10000
+      const raw          = Math.round(typeBase * hit.scalingMult * rageMultUsed * hit.combatMult * weaponBoostMult * defMult * (isHeal ? 1 : _activeDebuffDamageMult) * (isHeal ? 1 : selfDebuffDamageMult) * (isHeal ? antiHealSelfMult : 1) * 10000) / 10000
       const critVal      = Math.round(raw * critDmgMult / 100 * 10000) / 10000
       return {
         key: k, label: info.label, color: info.color,
@@ -442,9 +443,13 @@
                                 <span class="bdc-mini-chip bdc-mini-chip--combat" title="Combat multipliers">{Number(t.combatMult.toFixed(4))}</span>
                               {/if}
 
-                              {#if selfDebuffDamageMult !== 1}
+                              {#if selfDebuffDamageMult !== 1 && !t.isHeal}
                                 <span class="bdc-mini-op">×</span>
                                 <span class="bdc-mini-chip bdc-mini-chip--selfdebuff" title="Self-Debuff multiplier (Weakness)">{Number(selfDebuffDamageMult.toFixed(4))}</span>
+                              {/if}
+                              {#if antiHealSelfMult !== 1 && t.isHeal}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--selfdebuff" title="Anti Heal (Self)">{Number(antiHealSelfMult.toFixed(4))}</span>
                               {/if}
                               {#if t.weaponBoostMult !== 1}
                                 <span class="bdc-mini-op">×</span>
