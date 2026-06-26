@@ -11,7 +11,7 @@
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
   import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive } from './data/Perkbasedmg'
-  import { resolveDefenseSources, calcBaseArmorDefPct, type DefenseSource } from './lib/defense'
+  import { resolveDefenseSources, calcBaseArmorDefPct, DEF_GROUP, type DefenseSource } from './lib/defense'
   import { getActiveRaceEffect } from './data/raceEffects'
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
@@ -112,15 +112,25 @@
     return effects
   })()
 
+  $: _statsAfterSelfDebuffDef = (() => {
+    if (Object.keys(_selfDebuffDefenseEffects).length === 0) return stats as Record<string, number>
+    const out = { ...(stats as Record<string, number>) }
+    for (const [k, v] of Object.entries(_selfDebuffDefenseEffects)) {
+      out[k] = (out[k] ?? 0) - (v ?? 0)
+    }
+    return out
+  })()
+
   $: _defenseRows = _DEF_TYPE_LIST.map(type => {
-      const _rawBaseArmorDefPct = calcBaseArmorDefPct(type, stats as Record<string, number>)
-      const _shatterReduction = type !== 'true' ? (_selfDebuffDefenseEffects[type] ?? 0) : 0
-      const baseArmorDefPct = Math.round((_rawBaseArmorDefPct - _shatterReduction) * 1000) / 1000
+      const baseArmorDefPct = calcBaseArmorDefPct(type, _statsAfterSelfDebuffDef)
+      const _shatterReduction = type !== 'true'
+        ? (DEF_GROUP[type] ?? []).reduce((sum, statKey) => sum + (_selfDebuffDefenseEffects[statKey] ?? 0), 0)
+        : 0
       const sources: DefenseSource[] = (baseArmorDefPct !== 0 || _shatterReduction > 0) ? [{
-        name: 'Base Armor',
-        defPct: baseArmorDefPct,
-        condition: _shatterReduction > 0 ? `Includes Shatter (Self): -${_shatterReduction}%` : undefined
-      }] : []
+         name: 'Base Armor',
+         defPct: baseArmorDefPct,
+        condition: _shatterReduction > 0 ? `Includes Shatter (Self): -${Math.round(_shatterReduction * 1000) / 1000}%` : undefined
+       }] : []
 
       for (const s of _activeDefensivePerkSources) {
         sources.push({ name: s.name, defPct: s.defPct, isFlat: s.isFlat, condition: s.condition })

@@ -121,7 +121,7 @@ export function getActiveDefensivePerkSources(
       defPct, 
       isFlat: def.isFlat, 
       condition: def.conditionLabel,
-      potencyCapped: def.potencyCapped // <-- Thêm dòng này
+      potencyCapped: def.potencyCapped
     })
   }
   return out

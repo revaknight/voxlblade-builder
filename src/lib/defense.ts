@@ -61,7 +61,7 @@ export function resolveDefenseSources(sources: DefenseSource[]): DefenseBreakdow
   }
 }
 
-const DEF_GROUP: Record<string, string[]> = {
+export const DEF_GROUP: Record<string, string[]> = {
   physical: ['physicalDefense'],
   air:      ['airDefense', 'physicalDefense'],
   earth:    ['earthDefense', 'physicalDefense'],

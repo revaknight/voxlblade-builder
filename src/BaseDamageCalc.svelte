@@ -124,7 +124,9 @@
     for (const d of appliedDebuffs) {
       if (disabledDebuffs.has(d.name) || !d.defReduction) continue
       for (const [k, v] of Object.entries(d.defReduction)) {
-        reductions[k] = (reductions[k] ?? 0) + (v ?? 0)
+        // Map defense stat keys to damage type keys
+        const typeKey = k.replace('Defense', '')
+        reductions[typeKey] = (reductions[typeKey] ?? 0) + (v ?? 0)
       }
     }
     if (Object.keys(reductions).length === 0) return defenses

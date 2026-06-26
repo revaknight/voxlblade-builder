@@ -1,10 +1,10 @@
-const ALL_DEF_TYPES = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'hex', 'holy'] as const
+const ALL_DEF_STAT_KEYS = ['physicalDefense', 'magicDefense', 'fireDefense', 'waterDefense','earthDefense', 'airDefense', 'hexDefense', 'holyDefense',] as const
 
-export interface DebuffCombatEffect {
-  descFn: (potency: number) => string
-  damageMult?: (potency: number) => number
-  defReduction?: (potency: number) => Partial<Record<typeof ALL_DEF_TYPES[number], number>>
-}
+ export interface DebuffCombatEffect {
+   descFn: (potency: number) => string
+   damageMult?: (potency: number) => number
+  defReduction?: (potency: number) => Partial<Record<typeof ALL_DEF_STAT_KEYS[number], number>>
+ }
 
 export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
   Weakness: {
@@ -20,8 +20,8 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
     defReduction: (p: number) => {
       const amt = p * 100
       return {
-        physical: amt,
-        magic: amt,
+        physicalDefense: amt,
+        magicDefense: amt,
       }
     },
   },
