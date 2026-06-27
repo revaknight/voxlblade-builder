@@ -514,11 +514,15 @@
 
 /* Override section title inside bdc-root */
 .bdc-root :global(.da-section-title) {
+  text-transform: uppercase;
+  font-weight: 800;
   font-size: .7rem;
   letter-spacing: .2em;
   color: #b3924a;
   border-bottom-color: rgba(204,153,88,.15);
   margin-bottom: 14px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, .06));
+  padding-bottom: 8px;
 }
 
 .bdc-layout {
