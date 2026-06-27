@@ -150,6 +150,24 @@ function weaponMatchesFilter(item: any): boolean {
     build.update(s => ({...s, [key]: (s[key] + 1) % (UPGRADE_MAX + 1)}))
   }
 
+  function adjustStoredCorruption(delta: number) {
+    build.update(s => ({
+      ...s,
+      storedCorruptionAmount: Math.max(0, Math.floor((s.storedCorruptionAmount ?? 0) + delta)),
+    }))
+  }
+ 
+  function clampStoredCorruption() {
+    build.update(s => ({
+      ...s,
+      storedCorruptionAmount: Math.max(0, Math.floor(s.storedCorruptionAmount ?? 0)),
+    }))
+  }
+
+  $: storedCorruptionAmt = $build.storedCorruptionAmount ?? 0
+  $: storedCorruptionDurationMult = Math.round((1 + storedCorruptionAmt * 0.1) * 100) / 100
+  $: storedCorruptionDmgTakenPct = Math.round(storedCorruptionAmt * 5 * 100) / 100
+
     import { tick, onMount } from 'svelte'
 
   type AppTab = 'overview' | 'analyze'
@@ -2478,16 +2496,48 @@ $: _appWaAvgTotal = (() => {
                       <EmotionalTracker />
                     {/if}
                     {#if name === 'Cursed'}
-                      <label class="stored-corruption-label">
-                        Stored Corruption Amount:
-                        <input 
-                          type="number" 
-                          min="0" 
-                          bind:value={$build.storedCorruptionAmount} 
-                          class="stored-corruption-input"
-                        />
-                      </label>
-                    {/if}
+                       <div class="corruption-widget">
+                         <div class="corruption-head">
+                           <div class="corruption-head-text">
+                            <span class="corruption-title">Stored Corruption</span>
+                            <span class="corruption-sub">Absorbed by destroying Binded Corruptions</span>
+                          </div>
+                          <div class="corruption-stepper">
+                            <button
+                               type="button"
+                               class="corruption-step-btn"
+                               on:click={() => adjustStoredCorruption(-1)}
+                               aria-label="Decrease Stored Corruption"
+                             >−</button>
+                            <input
+                               type="number"
+                               min="0"
+                               step="1"
+                               class="corruption-input"
+                               aria-label="Stored Corruption Amount"
+                               bind:value={$build.storedCorruptionAmount}
+                               on:change={clampStoredCorruption}
+                            />
+                            <button
+                               type="button"
+                               class="corruption-step-btn"
+                               on:click={() => adjustStoredCorruption(1)}
+                               aria-label="Increase Stored Corruption"
+                            >+</button>
+                          </div>
+                         </div>
+                         <div class="corruption-effects">
+                           <span class="corruption-effect-chip corruption-effect-chip--dur" title="Debuff duration multiplier">
+                             <span class="ce-label">Debuff Dur.</span>
+                             <span class="ce-val">×{storedCorruptionDurationMult}</span>
+                           </span>
+                           <span class="corruption-effect-chip corruption-effect-chip--dmg" title="Increase to damage taken">
+                             <span class="ce-label">Dmg Taken</span>
+                             <span class="ce-val">+{storedCorruptionDmgTakenPct}%</span>
+                           </span>
+                         </div>
+                       </div>
+                     {/if}
                   </div>
                 {/each}
               </div>
@@ -3474,9 +3524,51 @@ $: _appWaAvgTotal = (() => {
   .rank-btn { padding:4px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface3); color:var(--ink-muted); font-size:.75rem; font-weight:600; cursor:pointer; transition:all .12s; }
   .rank-btn:hover { border-color:rgba(74,222,128,.35); color:var(--accent); }
   .rank-btn--active { border-color:var(--accent); background:rgba(74,222,128,.12); color:var(--accent); }
-  .stored-corruption-label { display:flex; align-items:center; gap:6px; font-size:.67rem; font-weight:600; color:var(--ink-muted); }
-  .stored-corruption-input { width:60px; padding:3px 6px; border-radius:4px; border:1px solid var(--border); background:var(--surface2); color:var(--ink); font-size:.7rem; font-weight:600; }
-  .stored-corruption-input:focus { outline:none; border-color:var(--accent); }
+  .corruption-widget {
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(168,85,247,.03));
+    border: 1px solid rgba(168,85,247,.22);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .corruption-head { display: flex; align-items: center; gap: 8px; }
+  .corruption-head-text { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 0; }
+  .corruption-title { font-size: .74rem; font-weight: 800; color: #c084fc; letter-spacing: .02em; }
+  .corruption-sub { font-size: .6rem; color: var(--ink-muted); opacity: .55; font-style: italic; }
+  .corruption-stepper {
+    display: flex; align-items: center;
+    background: var(--surface3); border: 1px solid rgba(168,85,247,.25);
+    border-radius: 7px; overflow: hidden; flex-shrink: 0;
+  }
+   .corruption-step-btn {
+     width: 24px; height: 26px; display: flex; align-items: center; justify-content: center;
+     background: rgba(168,85,247,.08); border: none; color: #c084fc;
+     font-size: .85rem; font-weight: 700; cursor: pointer; line-height: 1;
+     transition: background .12s; font-family: var(--font-body);
+   }
+   .corruption-step-btn:hover { background: rgba(168,85,247,.22); }
+   .corruption-step-btn:active { background: rgba(168,85,247,.32); }
+   .corruption-input {
+     width: 42px; text-align: center; background: transparent;
+     border: none; border-left: 1px solid rgba(168,85,247,.2); border-right: 1px solid rgba(168,85,247,.2);
+     color: var(--ink); font-family: 'Courier New', monospace; font-size: .85rem; font-weight: 800;
+     padding: 4px 0; -moz-appearance: textfield; appearance: textfield;
+   }
+   .corruption-input::-webkit-inner-spin-button,
+   .corruption-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+   .corruption-input:focus { outline: none; background: rgba(168,85,247,.08); }
+   .corruption-effects { display: flex; flex-wrap: wrap; gap: 6px; }
+   .corruption-effect-chip {
+     display: flex; align-items: center; gap: 5px;
+     padding: 3px 9px; border-radius: 999px; font-size: .65rem; font-weight: 700; border: 1px solid;
+   }
+   .corruption-effect-chip--dur { background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.28); color: #c084fc; }
+   .corruption-effect-chip--dmg { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.28); color: var(--neg); }
+   .ce-label { opacity: .7; text-transform: uppercase; letter-spacing: .06em; font-size: .58rem; }
+   .ce-val { font-family: 'Courier New', monospace; font-weight: 800; }
   .inf-label { font-size:.6rem; color:var(--infusion); font-weight:600; opacity:.7; }
 
   /* ── Tooltip ── */
