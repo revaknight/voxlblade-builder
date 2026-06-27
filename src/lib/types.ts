@@ -181,6 +181,7 @@ export interface BuildState {
   race: string
   guild: string
   guildRank: number
+  storedCorruptionAmount: number
   helmet: string
   chestplate: string
   leggings: string

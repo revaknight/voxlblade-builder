@@ -347,7 +347,7 @@ const ENCHANT_EFFECT_PERK_NAMES = new Set(
 const PERK_EFFECTIVENESS_EXEMPT = new Set([
   ...ENCHANT_EFFECT_PERK_NAMES,
   "Cursed", "Luminescent Fervor", "Valor", "Spirit Commune",
-  "Channeled Weapon", "Quickcast", "Thief Training", "Vampire", "Heal Boost",
+  "Channeled Weapon", "Quickcast", "Thief Training", "Vampire", "Heal Boost", "Stored Corruption",
 ])
 
 export function applyPerkEffectiveness(
@@ -1031,6 +1031,11 @@ function accumulateEquipment(state: BuildState): { stats: StatMap; perks: Record
   if (guild) {
     const rank = getGuildRank(guild, state.guildRank)
     if (rank) { addStats(rank.stats); addPerks(rank.perks) }
+    
+    // Add Stored Corruption perk amount if Cursed guild
+    if (guild.name === 'Cursed' && state.storedCorruptionAmount > 0) {
+      addPerkMap({ 'Stored Corruption': state.storedCorruptionAmount })
+    }
   }
 
   const armorSlots: Array<[string, ArmorPart["type"], EnchantSlot, 'upgradeHelmet' | 'upgradeChestplate' | 'upgradeLeggings']> = [

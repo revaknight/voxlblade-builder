@@ -631,6 +631,15 @@
     ]
   },
   {
+    "name": "Stored Corruption",
+    "description": "Increases the duration of Debuffs you inflict and receive. Additionally, all Damage you receive is granted a small Multiplier.",
+    "tags": [
+      "Debuff",
+      "Self-Debuff",
+      "Guild"
+    ]
+  },
+  {
     "name": "Cursed Bark",
     "description": "Gain a small chance to inflict a random Debuff against Attackers, guaranteed if you are not Blocking. Gain Damage Reduction against opponents with Debuffs that scales on the amount of unique ones on them.",
     "tags": [

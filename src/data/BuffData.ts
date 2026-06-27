@@ -858,6 +858,12 @@ const GENERIC_DEBUFF_MODIFIERS: GenericDebuffModifier[] = [
     flatPotencyBonus: 0.1,
     durationMultiplierPerStack: 0.75,
   },
+  {
+    perkName: 'Stored Corruption',
+    potencyMultiplierPerStack: 0,
+    flatPotencyBonus: 0,
+    durationMultiplierPerStack: 0.1,
+  },
 ]
 
 

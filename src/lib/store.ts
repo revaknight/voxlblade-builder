@@ -8,6 +8,7 @@ const DEFAULT_BUILD: BuildState = {
   race: races[0]?.name ?? "",
   guild: "",
   guildRank: 1,
+  storedCorruptionAmount: 0,
   helmet: "",
   chestplate: "",
   leggings: "",

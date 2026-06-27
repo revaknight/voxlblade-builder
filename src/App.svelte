@@ -2477,6 +2477,17 @@ $: _appWaAvgTotal = (() => {
                     {#if name === 'Emotional'}
                       <EmotionalTracker />
                     {/if}
+                    {#if name === 'Cursed'}
+                      <label class="stored-corruption-label">
+                        Stored Corruption Amount:
+                        <input 
+                          type="number" 
+                          min="0" 
+                          bind:value={$build.storedCorruptionAmount} 
+                          class="stored-corruption-input"
+                        />
+                      </label>
+                    {/if}
                   </div>
                 {/each}
               </div>
@@ -3463,6 +3474,9 @@ $: _appWaAvgTotal = (() => {
   .rank-btn { padding:4px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface3); color:var(--ink-muted); font-size:.75rem; font-weight:600; cursor:pointer; transition:all .12s; }
   .rank-btn:hover { border-color:rgba(74,222,128,.35); color:var(--accent); }
   .rank-btn--active { border-color:var(--accent); background:rgba(74,222,128,.12); color:var(--accent); }
+  .stored-corruption-label { display:flex; align-items:center; gap:6px; font-size:.67rem; font-weight:600; color:var(--ink-muted); }
+  .stored-corruption-input { width:60px; padding:3px 6px; border-radius:4px; border:1px solid var(--border); background:var(--surface2); color:var(--ink); font-size:.7rem; font-weight:600; }
+  .stored-corruption-input:focus { outline:none; border-color:var(--accent); }
   .inf-label { font-size:.6rem; color:var(--infusion); font-weight:600; opacity:.7; }
 
   /* ── Tooltip ── */

@@ -87,6 +87,12 @@ export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     dependsOn: ctx => ctx.rageActive,
     potencyCapped: true,
   },
+  {
+    perkName: 'Stored Corruption',
+    drPctPerStack: -5,
+    label: 'Stored Corruption',
+    conditionLabel: 'Increases damage taken by 5% per 1 of this perk',
+  },
 ]
 
 export function getActiveDefensivePerkSources(
