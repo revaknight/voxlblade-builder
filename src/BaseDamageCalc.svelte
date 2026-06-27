@@ -613,7 +613,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 3px;
-  max-width: 100px;
+  max-width: 150px;
 }
 .bdc-debuff-pill {
   display: flex;
