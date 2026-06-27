@@ -159,6 +159,13 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
   },
+  'Lightning Cloak': {
+    name: 'Lightning Cloak',
+    color: '#AAFFDB',
+    description: 'Gain 20% movement speed. Attacks trigger chain lightning dealing 1/3 of hit damage as Air+Magic to up to 4 additional targets.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+  },
   'Bloodlust': {
     name: 'Bloodlust',
     color: '#ff0044',
@@ -358,6 +365,14 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
     duration: 5,
     condition: 'On hit',
     sourceName: 'Boostshroom Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Lightning Cloak',
+    potency: 1.0,
+    duration: 5,
+    condition: 'Hold & release right before hitting enemy · hit crits',
+    sourceName: 'Thunderous Charge Rune',
     sourceType: 'rune',
   },
 ]

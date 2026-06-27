@@ -1,5 +1,8 @@
 <script lang="ts">
   import CritIcon from './CritIcon.svelte'
+  import { resolveDamageTypes } from './lib/damageTypeResolve'
+
+  export let perkDmgTypeBonuses: Record<string, number> = {}
   export let boosts: any
   export let crit: any
   export let stats: any
@@ -10,16 +13,19 @@
   export let draconicRunesBonus: Record<string, number> = {}
   export let selfDebuffDamageMult: number = 1
   export let antiHealSelfMult: number = 1
+  export let lightningCloakPct: number = 0
 
   boosts
   disabledBoosts
   activeFinalMult
   selfDebuffDamageMult
+  lightningCloakPct
 
   export let weaponHits: Array<{
     group: string; index: number; count: number
     base: number; scalingMult: number; combatMult: number; isFinisher: boolean
     dmgTypes: Record<string, number>
+    baseDmgTypes?: Record<string, number>
     label?: string
     weaponBoostMult?: number
     weaponBoostLabel?: string
@@ -166,6 +172,7 @@
     raw: number; critVal: number
     isHeal: boolean
     isLuminescent?: boolean
+    isChainLightning?: boolean
     forceCrit: boolean
     isCritExempt?: boolean
   }
@@ -177,6 +184,27 @@
 
   $: critChance  = crit?.effectiveCritChance ?? 0
   $: critDmgMult = crit?.critDamageMultiplier ?? 100
+
+  function defPctForType(k: string): number {
+    if (k === 'true' || k === 'summon') return 0
+    let pct = effectiveDefenses[k] ?? 0
+    if (k === 'air' || k === 'earth') pct += effectiveDefenses['physical'] ?? 0
+    else if (k === 'fire' || k === 'water' || k === 'hex' || k === 'holy') pct += effectiveDefenses['magic'] ?? 0
+    return pct
+  }
+
+  function computePreMitigationBase(hit: {
+    base: number
+    scalingMult?: number
+    combatMult?: number
+    weaponBoostMult?: number
+    dmgTypes: Record<string, number>
+    baseDmgTypes?: Record<string, number>
+  }): number {
+    const baseTypes = hit.baseDmgTypes ?? hit.dmgTypes
+    const baseSum = Object.values(baseTypes).reduce((s, m) => s + hit.base * m, 0)
+    return baseSum * (hit.scalingMult ?? 1) * (hit.combatMult ?? 1) * (hit.weaponBoostMult ?? 1)
+  }
 
   $: computedHits = weaponHits.map((hit): ComputedHit => {
     const isHeal = hit.isHeal ?? false
@@ -208,20 +236,58 @@
       }
     })
     if (!isHeal && luminescentPct > 0) {
-      const baseSum = types.reduce((s, t) => s + t.raw, 0)
-      if (baseSum > 0) {
-        const holyDefPct  = (defenses['holy'] ?? 0) + (defenses['magic'] ?? 0)
-        const holyDefMult = calcArmorMult(holyDefPct, penDecimal).mult
-        const lumTypeBase = Math.round(baseSum * luminescentPct * 10000) / 10000
-        const lumRaw      = Math.round(lumTypeBase * holyDefMult * 10000) / 10000
-        const lumCrit     = Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000
-        types.push({
-          key: 'holy', label: 'Holy', color: DMG_TYPE_MAP.get('holy')?.color ?? '#facc15',
-          typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
-          rageApplied: false, rageMultUsed: 1, weaponBoostMult: 1,
-          defMult: holyDefMult, enemyDefPct: holyDefPct,
-          raw: lumRaw, critVal: lumCrit, isHeal: false, isLuminescent: true, isCritExempt: true, forceCrit: false,
-        })
+      const preMitSum  = computePreMitigationBase(hit)
+      const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
+
+      if (preMitBase > 0) {
+        const lumAmount = Math.round(preMitBase * luminescentPct * 10000) / 10000
+        const lumResolvedTypes = resolveDamageTypes({ holy: 1.0 }, perkDmgTypeBonuses)
+
+        for (const [k, mult] of Object.entries(lumResolvedTypes)) {
+          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+          const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
+          const rageMultUsed = rageApplied ? rageMult : 1
+          const lumDefPct  = defPctForType(k)
+          const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
+          const lumTypeBase = Math.round(lumAmount * mult * 10000) / 10000
+          const lumRaw       = Math.round(lumTypeBase * rageMultUsed * lumDefMult * 10000) / 10000
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
+            rageApplied, rageMultUsed, weaponBoostMult: 1,
+            defMult: lumDefMult, enemyDefPct: lumDefPct,
+            raw: lumRaw, critVal: Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, isLuminescent: true, forceCrit: false,
+          })
+        }
+      }
+    }
+    
+    if (!isHeal && lightningCloakPct > 0) {
+      const preMitSum  = computePreMitigationBase(hit)
+      const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
+
+      if (preMitBase > 0) {
+        const cloakTotal = Math.round(preMitBase * lightningCloakPct * 10000) / 10000
+        const lcResolvedTypes = resolveDamageTypes({ air: 0.5, magic: 0.5 }, perkDmgTypeBonuses)
+
+        for (const [k, mult] of Object.entries(lcResolvedTypes)) {
+          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+          const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
+          const rageMultUsed = rageApplied ? rageMult : 1
+          const lcDefPct  = defPctForType(k)
+          const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
+          const lcTypeBase = Math.round(cloakTotal * mult * 10000) / 10000
+          const lcRaw       = Math.round(lcTypeBase * rageMultUsed * lcDefMult * 10000) / 10000
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: lcTypeBase, scalingMult: 1, combatMult: 1,
+            rageApplied, rageMultUsed, weaponBoostMult: 1,
+            defMult: lcDefMult, enemyDefPct: lcDefPct,
+            raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, isChainLightning: true, forceCrit: false,
+          })
+        }
       }
     }
     return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types }
@@ -413,7 +479,7 @@
                             class:bdc-hit-type-chunk--rage={t.rageApplied}
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
-                            class:bdc-hit-type-chunk--luminescent={t.isLuminescent}
+                            class:bdc-hit-type-chunk--luminescent={t.isLuminescent || t.isChainLightning}
                             class:bdc-hit-type-chunk--crit={(showCritValues && !t.isCritExempt) || t.forceCrit}>
                             <div class="bdc-hit-type-top">
                               {#if (showCritValues && !t.isCritExempt) || t.forceCrit}
@@ -423,6 +489,9 @@
                               <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
                               {#if t.isLuminescent}
                                 <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
+                              {/if}
+                              {#if t.isChainLightning}
+                                <span class="bdc-lum-badge bdc-chain-badge" title="Lightning Cloak: 1/3 of hit damage as Air+Magic chain lightning (up to 4 targets)">Chain</span>
                               {/if}
                               {#if hit.group === 'Rune' && draconicRunesBonus[t.label.toLowerCase()]}
                                 <span class="bdc-dr-badge" title="Draconic Bonus: +{+(draconicRunesBonus[t.label.toLowerCase()] || 0).toFixed(4)} {t.label} damage type">
@@ -1025,6 +1094,18 @@
   color: #c084fc;
   background: rgba(192,132,252,.12);
   border: 1px solid rgba(192,132,252,.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.bdc-chain-badge {
+  font-size: .5rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: #AAFFDB;
+  background: rgba(170,255,219,.12);
+  border: 1px solid rgba(170,255,219,.3);
   padding: 1px 5px;
   border-radius: 3px;
   text-transform: uppercase;

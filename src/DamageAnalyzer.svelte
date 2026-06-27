@@ -21,6 +21,7 @@
   import { calculateHealBoost } from './data/HealBoost'
   import { roundMultiplier } from './lib/utils'
   import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage } from './data/selfDamagePerks'
+  import { resolveDamageTypes } from './lib/damageTypeResolve'
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -262,6 +263,8 @@
   $: stats = $result.stats
   $: perks = $result.perks
   $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
+  $: _lightningCloakActive = _allActiveBuffs.some(b => b.buffName === 'Lightning Cloak')
+  $: _lightningCloakPct = _lightningCloakActive ? (1 / 3) : 0
 
   $: _activeRageBuffs = _allActiveBuffs.filter(b => b.buffName === 'Rage')
   $: _activeReinforcePotency      = _allActiveBuffs.reduce((m, b) => b.buffName === 'Reinforce'       ? Math.max(m, b.potency) : m, 0)
@@ -489,13 +492,9 @@
   })()
 
   function _applyDmgBonuses(base: Record<string, number>, bonuses: Record<string, number>): Record<string, number> {
-    if (Object.keys(bonuses).length === 0) return base
-    const out = { ...base }
-    for (const [k, v] of Object.entries(bonuses)) {
-      out[k] = Math.round(((out[k] ?? 0) + v) * 10000) / 10000
-    }
-    return out
+    return resolveDamageTypes(base, bonuses)
   }
+
   function _resolveHitDmgTypes(
     dtStr: string,
     weaponTypes: Record<string, number>,
@@ -511,6 +510,20 @@
     }
     return _applyDmgBonuses(types, bonuses)
   }
+  function _resolveHitDmgTypesBase(
+    dtStr: string,
+    weaponTypesBase: Record<string, number>
+  ): Record<string, number> {
+    if (dtStr === 'Same as weapon') return weaponTypesBase
+  
+    const types: Record<string, number> = {}
+    const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
+    let m: RegExpExecArray | null
+    while ((m = re.exec(dtStr)) !== null) {
+      types[m[2].toLowerCase()] = parseFloat(m[1])
+    }
+    return types
+  }
 
   $: _weaponDmgTypes = (() => {
     const base: Record<string, number> = { ...(_weaponResult?.damageTypes ?? {}) }
@@ -519,6 +532,9 @@
       base['earth'] = Math.round(((base['earth'] ?? 0) + stoneWeapon * 0.3) * 10000) / 10000
     }
     return _applyDmgBonuses(base, _perkDmgTypeBonuses)
+  })()
+  $: _weaponDmgTypesBase = (() => {
+    return { ...(_weaponResult?.damageTypes ?? {}) }
   })()
 
   $: _gunDmgTypes = (() => {
@@ -942,6 +958,30 @@
       return { ..._weaponDmgTypes }
     }
   })()
+  
+  $: _waDmgTypesBase = (() => {
+    const dt = selectedWA.damageType
+    if (!dt || dt === 'Same as weapon') {
+      return _weaponDmgTypesBase
+    }
+  
+    if (dt.includes('Highest damage type')) {
+      return _waDmgTypes
+    }
+  
+    const types: Record<string, number> = {}
+    const re = /([\d.]+)\s*(Physical|Magic|Fire|Water|Earth|Air|Hex|Holy|True|Summon)/gi
+    let m: RegExpExecArray | null
+    while ((m = re.exec(dt)) !== null) {
+      types[m[2].toLowerCase()] = parseFloat(m[1])
+    }
+  
+    if (Object.keys(types).length > 0) {
+      return types
+    } else {
+      return _weaponDmgTypesBase
+    }
+  })()
 
   $: _waScalingMult = (() => {
     const sc = selectedWA.scaling
@@ -1253,6 +1293,7 @@
           result.push({
             group: 'M1', index: i, count, base, scalingMult: _scalingMult, combatMult: _m1CombatMult,
             isFinisher: finisherHit, dmgTypes: m1Types,
+            baseDmgTypes: _weaponDmgTypesBase,
             ...(wb && wb.mult !== 1 ? { weaponBoostMult: wb.mult, weaponBoostLabel: wb.labels.join(', ') } : {}),
           })
         })
@@ -1265,6 +1306,7 @@
           result.push({
             group: 'M2', index: i, count, base, scalingMult: _scalingMult, combatMult: _m2CombatMult,
             isFinisher: true, dmgTypes: m2Types,
+            baseDmgTypes: _weaponDmgTypesBase,
             ...(_m2WeaponBoost.mult !== 1 ? { weaponBoostMult: _m2WeaponBoost.mult, weaponBoostLabel: _m2WeaponBoost.labels.join(', ') } : {}),
           })
         })
@@ -1281,14 +1323,20 @@
             t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
           sc = roundMultiplier(1 + t / 100)
         } else if (hss === 'Same as weapon') sc = _scalingMult
-          const hitDt = selectedWA.hitDamageTypes?.length
-           ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)
-           : _waDmgTypes
-         result.push({
-           group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
-           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
-           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
-         })
+        const hitDt = selectedWA.hitDamageTypes?.length
+         ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)
+         : _waDmgTypes
+         
+        const hitDtBase = selectedWA.hitDamageTypes?.length
+         ? _resolveHitDmgTypesBase(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypesBase)
+         : _waDmgTypesBase
+         
+        result.push({
+          group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
+          isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
+          baseDmgTypes: hitDtBase,
+          ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
+        })
       })
     }
     if (_waHealSeq) {
@@ -2926,11 +2974,13 @@
 {/if}
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
+  perkDmgTypeBonuses={_perkDmgTypeBonuses}
   rageMult={_effectiveRageMult}
   rageAffectedTypes={_effectiveRageAffectedTypes}
   luminescentPct={_luminescentPct}
   selfDebuffDamageMult={_selfDebuffDamageMult}
   antiHealSelfMult={_antiHealSelfMult}
+  lightningCloakPct={_lightningCloakPct}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,
     draconicColor: $build.draconicColor || 'physical',

@@ -99,4 +99,13 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     hits: 1,
     note: 'Boostshroom lasts 20s and can be activated multiple times (~2s internal CD per player). Can be triggered by other players — damage still counts as yours.',
   },
+  {
+    runeName: 'Thunderous Charge Rune',
+    condition: 'On cast (dash through enemies)',
+    getBaseDamage: () => 20,
+    dmgTypes: { air: 0.5, magic: 0.5 },
+    scalings: { air: 1.0, magic: 1.0 },
+    hits: 1,
+    note: 'Hold & release right before hitting an enemy to crit and gain Lightning Cloak for 5s. An enemy does not need to be present to trigger Lightning Cloak.',
+  },
 ]
