@@ -2057,7 +2057,7 @@ $: _appWaAvgTotal = (() => {
         </div>
         <div class="summary-actions">
           <button class="clear-all-btn" on:click={handleClearBuild} title="Clear all selections">
-            ✕ Clear
+            ✕ Clear All
           </button>
           {#if _undoVisible}
             <button class="undo-btn" on:click={handleUndo} title="Undo clear">
@@ -2349,7 +2349,7 @@ $: _appWaAvgTotal = (() => {
                     </button>
                     {#if iepHasEnchants}
                       <button class="iep-clear-btn" on:click={() => clearEnchants(iepSlot)}>
-                        Clear all
+                        Clear
                       </button>
                       <button class="iep-apply-all-btn" on:click={() => applyEnchantToAll(iepSlot)}
                         title="Apply this enchantment setup to all slots">
