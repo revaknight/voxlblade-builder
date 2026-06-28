@@ -383,6 +383,22 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
     sourceName: 'Winter Woof Mount Rune',
     sourceType: 'rune',
   },
+  {
+    buffName: 'Slowness',
+    potency: 0,
+    duration: 12,
+    condition: 'On Weapon Art hit',
+    sourceName: 'Glacial Snapper Mount Rune',
+    sourceType: 'rune',
+  },
+    {
+    buffName: 'Bleed',
+    potency: 0,
+    duration: 4,
+    condition: 'On Weapon Art hit',
+    sourceName: 'Glacial Snapper Mount Rune',
+    sourceType: 'rune',
+  },
 ]
 
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]

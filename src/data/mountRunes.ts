@@ -65,6 +65,22 @@ export const MOUNT_RUNE_DEFS: MountRuneDef[] = [
       setCooldown: 25,
     },
   },
+  {
+    runeName: 'Glacial Snapper Mount Rune',
+    mountLabel: 'Glacial Snapper',
+    m1: {
+      getBaseDamage: () => 15,
+      getDmgTypes: () => ({ water: 0.5, physical: 0.5 }),
+      getScalings: () => ({ summon: 0.5 }),
+    },
+    wa: {
+      getHits: () => [30],
+      getDmgTypes: () => ({ water: 0.5, physical: 0.5 }),
+      getScalings: () => ({ summon: 0.5 }),
+      guardbreak: true,
+      setCooldown: 25,
+    },
+  },
 ]
 
 export const MOUNT_RUNE_MAP = Object.fromEntries(MOUNT_RUNE_DEFS.map(d => [d.runeName, d]))
