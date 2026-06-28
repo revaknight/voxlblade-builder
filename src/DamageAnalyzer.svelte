@@ -1350,7 +1350,7 @@
     if (_activeMountRuneDef && mountActive) {
         const m1Def = _activeMountRuneDef.m1
         result.push({
-          group: 'Rune', index: 0, count: 1,
+          group: 'M1', index: 0, count: 1,
           base: m1Def.getBaseDamage(),
           scalingMult: _computePerkScalingMult(m1Def.getScalings()),
           combatMult: _runeCombatMult,
