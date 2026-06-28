@@ -14,6 +14,7 @@
   export let selfDebuffDamageMult: number = 1
   export let antiHealSelfMult: number = 1
   export let lightningCloakPct: number = 0
+  export let m1Label: string = 'M1'
 
   boosts
   disabledBoosts
@@ -300,7 +301,7 @@
   $: perkHits = computedHits.filter(h => h.group !== 'M1' && h.group !== 'M2' && h.group !== 'WA' && h.group !== 'Rune')
 
   $: hitGroups = [
-    { label: 'M1', list: m1Hits },
+    { label: m1Label, list: m1Hits },
     { label: 'M2', list: m2Hits },
     { label: 'WA', list: waHits },
     ...(runeHits.length > 0 ? [{ label: 'Rune', list: runeHits }] : []),
@@ -312,9 +313,7 @@
     const sum = hit.types.reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     return Math.round(sum * (includeCount ? hit.count : 1) * 100) / 100
   }
-  function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {
-    return Math.round(list.reduce((s, h) => s + h.types.reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * h.count, 0) * 100) / 100
-  }
+  function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {return Math.round(list.filter(h => !h.isHeal).reduce((s, h) =>s +h.types.reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count,0) * 100) / 100}
 </script>
 
 <div class="bdc-root da-section">

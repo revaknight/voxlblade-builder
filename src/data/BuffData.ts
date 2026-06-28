@@ -375,6 +375,14 @@ export const ITEM_BUFF_MAP: GrantedBuff[] = [
     sourceName: 'Thunderous Charge Rune',
     sourceType: 'rune',
   },
+  {
+    buffName: 'Shatter',
+    potency: 0.2,
+    duration: 10,
+    condition: 'On Weapon Art hit',
+    sourceName: 'Winter Woof Mount Rune',
+    sourceType: 'rune',
+  },
 ]
 
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]

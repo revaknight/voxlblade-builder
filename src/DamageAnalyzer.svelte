@@ -16,6 +16,7 @@
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
+  import { MOUNT_RUNE_DEFS } from './data/mountRunes'
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
   import { applyDraconicRunesBonus, getDraconicRunesBonus, applyDraconicBonuses, getDraconicBonuses } from './data/draconicRunes'
   import { calculateHealBoost } from './data/HealBoost'
@@ -807,6 +808,23 @@
     const multiplier = roundMultiplier(1 + totalEffectivePct / 100)
     return { rows, totalEffectivePct, multiplier }
   })()
+  $: _mountRuneScalingBreakdown = (() => {
+    if (!_activeMountRuneDef || !mountActive) return null
+    const scalings = _activeMountRuneDef.m1.getScalings()
+    if (!scalings || Object.keys(scalings).length === 0) return null
+    const rows: ScalingRow[] = []
+    for (const [key, scalingVal] of Object.entries(scalings)) {
+      if (!scalingVal) continue
+      const boostKey = SCALING_TO_BOOST[key]
+      if (!boostKey) continue
+      const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
+      const contribution = Math.round(scalingVal * boostPct * 1000) / 1000
+      rows.push({ key, scalingVal, boostKey, boostPct, contribution, color: SCALING_COLORS[key] ?? '#e8e4da' })
+    }
+    if (!rows.length) return null
+    const totalEffectivePct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
+    return { rows, totalEffectivePct, multiplier: roundMultiplier(1 + totalEffectivePct / 100) }
+  })()
 
   $: _draconicScalingBreakdown = (() => {
     if (!_draconicBloodEntry) return null
@@ -1098,6 +1116,11 @@
   $: _activeRuneDmgDef = RUNE_DMG_DEFS.find(d => d.runeName === $build.rune) ?? null
   $: runePotency = _activeRuneDmgDef?.maxPotency ?? 0
 
+  // ── Mount Runes (override M1 + WA while riding) ──────────────────────────
+  $: _activeMountRuneDef = MOUNT_RUNE_DEFS.find(d => d.runeName === $build.rune) ?? null
+  let mountActive = false
+  $: if (!_activeMountRuneDef && mountActive) mountActive = false
+
   // ── Perk Base Damage ───────────────────────────────────────────────────────
   let springblastFinisherHits = 1
 
@@ -1284,7 +1307,7 @@
       const gunLabel = (row as any).gunLabel as string | undefined
       const m1Types = (gunLabel && !(row as any).m2Only)   ? _gunDmgTypes : _weaponDmgTypes
       const m2Types = (gunLabel && !(row as any).m2NoLock) ? _gunDmgTypes : _weaponDmgTypes
-      if (row.m1) {
+      if (row.m1 && !(_activeMountRuneDef && mountActive)) {
         row.m1.forEach((h: any, i: number) => {
           const base = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
@@ -1298,7 +1321,7 @@
           })
         })
       }
-      if (row.m2) {
+      if (row.m2 && !(_activeMountRuneDef && mountActive)) {
         row.m2.forEach((h: any, i: number) => {
           const rawBase = typeof h === 'number' ? h : h.n
           const count = typeof h === 'number' ? 1 : h.count
@@ -1312,7 +1335,31 @@
         })
       }
     }
-    if (_waHitsSeq && Object.keys(_waDmgTypes).length > 0) {
+    if (_activeMountRuneDef && mountActive) {
+        const m1Def = _activeMountRuneDef.m1
+        result.push({
+          group: 'M1', index: 0, count: 1,
+          base: m1Def.getBaseDamage(),
+          scalingMult: _computePerkScalingMult(m1Def.getScalings()),
+          combatMult: _m1CombatMult,
+          isFinisher: false,
+          dmgTypes: m1Def.getDmgTypes(),
+          label: `${_activeMountRuneDef.mountLabel} (Mounted)`,
+        })
+        if (m1Def.healFlat) {
+          result.push({
+            group: 'M1', index: 1, count: 1,
+            base: m1Def.healFlat,
+            scalingMult: 1,
+            combatMult: _healFinalMultiplier,
+            isFinisher: false,
+            dmgTypes: { heal: 1.0 },
+            label: `${_activeMountRuneDef.mountLabel} Heal`,
+            isHeal: true,
+          })
+        }
+    }
+    if (_waHitsSeq && Object.keys(_waDmgTypes).length > 0 && !(_activeMountRuneDef && mountActive)) {
       _waHitsSeq.forEach((h, i) => {
         const hss = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
         let sc = _waScalingMult
@@ -1339,7 +1386,7 @@
         })
       })
     }
-    if (_waHealSeq) {
+    if (_waHealSeq && !(_activeMountRuneDef && mountActive)) {
       _waHealSeq.forEach((h) => {
         result.push({
           group: 'WA',
@@ -1355,6 +1402,20 @@
         })
       })
     }
+
+    if (_activeMountRuneDef && mountActive) {
+      const waDef = _activeMountRuneDef.wa
+      result.push({
+        group: 'WA', index: result.length, count: 1,
+        base: waDef.getBaseDamage(),
+        scalingMult: _computePerkScalingMult(waDef.getScalings()),
+        combatMult: _waCombatMult,
+        isFinisher: false,
+        dmgTypes: waDef.getDmgTypes(),
+        label: `${_activeMountRuneDef.mountLabel} WA (Mounted)`,
+      })
+    }
+
     for (const entry of _activePerkDmgEntries) {
       if (!entry.isActive) continue 
 
@@ -2728,7 +2789,7 @@
   </div>
 {/if}
 
-{#if runeScalingBreakdown || _draconicScalingBreakdown}
+{#if runeScalingBreakdown || _draconicScalingBreakdown || _mountRuneScalingBreakdown}
 <div class="da-section da-section--scaling">
   <div class="da-section-title">📐 Rune Damage Scaling</div>
 
@@ -2847,6 +2908,57 @@
       </div>
       <span class="ds-result-eq">1 + {_draconicScalingBreakdown.totalEffectivePct}% =</span>
       <span class="ds-result-val">×{+_draconicScalingBreakdown.multiplier.toFixed(4)}</span>
+    </div>
+  {/if}
+  {#if _mountRuneScalingBreakdown}
+    <div class="ds-wa-subsection" style="margin-top:{(runeScalingBreakdown || _draconicScalingBreakdown) ? '12px' : '0'}">
+      <div class="ds-wa-header">
+        <span class="ds-sub-badge" style="background:rgba(251,146,60,.16);border-color:rgba(251,146,60,.35);color:#fb923c">Mount</span>
+        <span class="ds-wa-name" style="color:#fb923c">{_activeMountRuneDef?.mountLabel} (M1 · WA)</span>
+      </div>
+      <div class="ds-table">
+        <div class="ds-head">
+          <div class="ds-col ds-col--type">Scaling</div>
+          <div class="ds-col ds-col--val">Scaling Val</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost">Your Boost</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--contrib">Contribution</div>
+        </div>
+        {#each _mountRuneScalingBreakdown.rows as row}
+          <div class="ds-row">
+            <div class="ds-col ds-col--type">
+              <span class="ds-dot" style="background:{row.color}"></span>
+              <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+            </div>
+            <div class="ds-col ds-col--val"><span class="ds-num" style="color:{row.color}">{row.scalingVal}</span></div>
+            <div class="ds-col ds-col--op">×</div>
+            <div class="ds-col ds-col--boost">
+              <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
+            </div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-contrib" style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
+                {row.contribution > 0 ? '+' : ''}{row.contribution}%
+              </span>
+            </div>
+          </div>
+        {/each}
+        <div class="ds-row ds-row--total">
+          <div class="ds-col ds-col--type ds-total-label">Total</div>
+          <div class="ds-col ds-col--val"></div><div class="ds-col ds-col--op"></div><div class="ds-col ds-col--boost"></div>
+          <div class="ds-col ds-col--op">=</div>
+          <div class="ds-col ds-col--contrib"><span class="ds-total-pct">+{_mountRuneScalingBreakdown.totalEffectivePct}%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ds-result-row">
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+        <span class="ds-result-label">Scaling Multiplier</span>
+        <span class="ds-applies-to">Mount M1 · Mount WA</span>
+      </div>
+      <span class="ds-result-eq">1 + {_mountRuneScalingBreakdown.totalEffectivePct}% =</span>
+      <span class="ds-result-val">×{+_mountRuneScalingBreakdown.multiplier.toFixed(4)}</span>
     </div>
   {/if}
 </div>
@@ -2981,6 +3093,7 @@
   selfDebuffDamageMult={_selfDebuffDamageMult}
   antiHealSelfMult={_antiHealSelfMult}
   lightningCloakPct={_lightningCloakPct}
+  m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,
     draconicColor: $build.draconicColor || 'physical',
@@ -2993,6 +3106,24 @@
   appliedDebuffs={_dummyDebuffs}
   bind:showCritValues
 />
+
+{#if _activeMountRuneDef}
+  <div class="da-section da-section--mount">
+    <div class="da-section-title">{_activeMountRuneDef.mountLabel} Mount</div>
+    <div class="ap-toggle-row">
+      <span class="ap-toggle-label">{_activeMountRuneDef.mountLabel}</span>
+      <button class="ap-toggle-btn" class:ap-toggle-btn--on={mountActive}
+        on:click={() => mountActive = !mountActive}>
+        {mountActive ? '🐺 Mounted' : '🚶 On Foot'}
+      </button>
+    </div>
+    {#if mountActive}
+      <p class="da-empty-hint">
+        WA Guardbreaks · applies {_activeMountRuneDef.wa.secondaryEffects?.[0]?.display ?? ''} Shatter · sets WA CD to {_activeMountRuneDef.wa.setCooldown}s (CD override not wired into CDR system yet)
+      </p>
+    {/if}
+  </div>
+{/if}
 </div>
 
 <style>
