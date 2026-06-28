@@ -39,7 +39,6 @@
     {"name":"Taunting Rune","description":"Taunt nearby enemies!","upgrade":0,"stats":{"physicalDefense":10},"cooldown":20,"perkName":"Dominating","perkAmount":1},
     {"name":"Thunderous Charge Rune","description":"Turn into a lightning form and dash through your enemies! Hold and let go of the rune key right as you hit an enemy to strengthen it.","upgrade":0,"stats":{"airBoost":8,"magicBoost":8},"cooldown":25},
     {"name":"Toad Slam Rune","description":"Slam into the floor and become enraged","upgrade":0,"stats":{"physicalBoost":5,"jumpBoost":5},"cooldown":40},
-    {"name":"Voxlmas Glacial Snapper Mount Rune","description":"Cast to mount a glacial snapper. Gain additional defense and your LMBs and weapon art are modified while riding.","upgrade":0,"stats":{"summonBoost":10},"cooldown":10,"perkName":"Mounted Defense","perkAmount":1},
     {"name":"Weakening Roar Rune","description":"Unleash a mighty roar to weaken those around you!","upgrade":0,"stats":{"hexBoost":10},"cooldown":20},
     {"name":"Winter Woof Mount Rune","description":"Cast to mount a winter woof. Your LMBs and weapon art is modified while riding.","upgrade":0,"stats":{"summonBoost":10},"cooldown":10}
 ]
