@@ -1,0 +1,477 @@
+import type { StatKey, StatMap, ArmorPart, EnchantSlot, BuildState } from '../types'
+import { STAT_KEYS, applyUpgrade } from '../types'
+import { CDR_PERK_DATA } from '../../data/cdr'
+import { applyStatBoostPerks } from '../../data/statboost'
+import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from '../../data/BuffData'
+import { getActiveRaceEffect } from '../../data/raceEffects'
+import { BOOST_DEFS, type BoostContext } from '../../data/Boost'
+import type { BoostEntry, BoostResult } from '../types'
+import { calcCrit } from '../crit'
+import type { CritResult } from '../crit'
+import { roundMultiplier } from '../utils'
+import { round2 } from './_utils'
+import {
+  getRace, getGuild, getGuildRank, getArmorPart, getRing, getRune,
+  getBlade, getHandle, getGlove, getEssence, isMonkGuild,
+} from './data'
+import { applyEnchantmentsToSlot, applyPerkEffectiveness, applyInfusion } from './enchant'
+import { applyShrineToStats, SHRINE_MULTIPLIERS } from './shrine'
+import { MONK_RANK_MULTIPLIER } from './weapon'
+
+// ─── CDR ──────────────────────────────────────────────────────────────────────
+
+export interface CDRStep   { source: string; pct: number; multiplier: number; isMultiply?: boolean }
+export interface CDRResult { runeCDR: number; waCDR: number; runeSetCD?: number; runeBreakdown: CDRStep[]; waBreakdown: CDRStep[] }
+
+function calcCDR(
+  perks:                  Record<string, number>,
+  raceCooldownModifiers?: Record<string, number>,
+  activeRuneName?:        string,
+  activeRaceName?:        string,
+  emotionalState?:        'buffs' | 'debuffs' | 'both',
+  cdrToggles?:            Record<string, boolean>,
+): CDRResult {
+  const runeSteps: CDRStep[] = []
+  const waSteps:   CDRStep[] = []
+
+  const emotionalAmt = perks["Emotional"] ?? 0
+  if (emotionalAmt > 0 && emotionalState === 'buffs') {
+    const totalPct = 0.5 * emotionalAmt
+    waSteps.push({ source: "Emotional (Only Buffs)", pct: Math.round(totalPct * 100), multiplier: 1 / (1 + totalPct) })
+  }
+
+  let runeSetCD: number | undefined = undefined
+
+  for (const perkName in perks) {
+    if (!Object.prototype.hasOwnProperty.call(perks, perkName)) continue
+    const perkAmount = perks[perkName]
+    const data       = CDR_PERK_DATA[perkName]
+    if (!data || perkAmount <= 0) continue
+
+    if (data.toggleable && cdrToggles?.[perkName] === false) continue
+
+    const passesFilter = data.runeFilter == null || (activeRuneName != null && data.runeFilter.includes(activeRuneName))
+    if (data.runeSetCD != null && passesFilter) runeSetCD = data.runeSetCD
+
+    if (data.runePct && passesFilter) {
+      const totalPct = data.runePct * perkAmount
+      runeSteps.push({ source: perkName, pct: Math.round(totalPct * 100), multiplier: 1 / (1 + totalPct) })
+    }
+    if (data.runeMultiplier) {
+      const m = data.runeMultiplier(perkAmount)
+      runeSteps.push({ source: perkName, pct: Math.round((m - 1) * 100), multiplier: m, isMultiply: true })
+    }
+    if (data.waPct) {
+      const totalPct = data.waPct * perkAmount
+      waSteps.push({ source: perkName, pct: Math.round(totalPct * 100), multiplier: 1 / (1 + totalPct) })
+    }
+    if (data.waMultiplier) {
+      const m = data.waMultiplier(perkAmount)
+      waSteps.push({ source: perkName, pct: Math.round((1 - m) * 100), multiplier: m, isMultiply: true })
+    }
+  }
+
+  if (raceCooldownModifiers) {
+    if (raceCooldownModifiers["RuneCDR"] != null) {
+      const m = raceCooldownModifiers["RuneCDR"]
+      runeSteps.push({ source: `${activeRaceName} (Race)`, pct: Math.round((1 - m) * 100), multiplier: m, isMultiply: true })
+    }
+    if (raceCooldownModifiers["weaponArtCDR"] != null) {
+      const m = raceCooldownModifiers["weaponArtCDR"]
+      waSteps.push({ source: `${activeRaceName} (Race)`, pct: Math.round((1 - m) * 100), multiplier: m, isMultiply: true })
+    }
+  }
+
+  let rCDR = 1.0
+  for (let i = 0; i < runeSteps.length; i++) rCDR *= runeSteps[i].multiplier
+  let wCDR = 1.0
+  for (let i = 0; i < waSteps.length; i++) wCDR *= waSteps[i].multiplier
+
+  return {
+    runeCDR:       roundMultiplier(rCDR),
+    waCDR:         roundMultiplier(wCDR),
+    runeSetCD,
+    runeBreakdown: runeSteps,
+    waBreakdown:   waSteps,
+  }
+}
+
+// ─── Boosts ───────────────────────────────────────────────────────────────────
+
+function calcBoosts(
+  perks:             Record<string, number>,
+  emotionalState?:   string,
+  level:             number = 80,
+  naturalCritChance: number = 0,
+  jumpBoost:         number = 0,
+  summonCount:       number = 0,
+  ragePotency:       number = 0,
+  bouncePotency:     number = 0,
+  raceName?:         string,
+  hpFillPct?:        number,
+  inDarkness:        boolean = true,
+): BoostResult {
+  const dmgMap  = new Map<string, BoostEntry>()
+  const healMap = new Map<string, BoostEntry>()
+
+  const lvlMult = roundMultiplier(1 + Math.max(0, Math.min(80, level)) / 80)
+  dmgMap.set('Level Damage', {
+    sourceName:    'Level Damage',
+    rawMultiplier: lvlMult,
+    condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
+    type:          'dmg',
+  })
+  healMap.set('Level Healing', {
+    sourceName:    'Level Healing',
+    rawMultiplier: lvlMult,
+    condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
+    type:          'heal',
+  })
+
+  const ctx: BoostContext = {
+    perks, naturalCritChance, jumpBoost, summonCount,
+    ragePotency, bouncePotency, inDarkness, emotionalState, level,
+  }
+
+  for (const def of BOOST_DEFS) {
+    if (def.isLevel) continue
+
+    if (def.calcFn) {
+      const result = def.calcFn(ctx)
+      if (result) {
+        const entry: BoostEntry = {
+          sourceName:    def.sourceName,
+          rawMultiplier: result.multiplier,
+          condition:     result.condition,
+          type:          def.type,
+          appliesTo:     def.appliesTo,
+        }
+        if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
+        else                      healMap.set(def.sourceName, entry)
+      }
+      continue
+    }
+
+    if (def.multiplierPerPerk !== undefined) {
+      const perkAmount = perks[def.sourceName] ?? 0
+      if (perkAmount <= 0) continue
+
+      if (def.sourceName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
+
+      const entry: BoostEntry = {
+        sourceName:    def.sourceName,
+        rawMultiplier: 1 + def.multiplierPerPerk * perkAmount,
+        condition:     def.condition,
+        type:          def.type,
+        appliesTo:     def.appliesTo,
+      }
+      if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
+      else                      healMap.set(def.sourceName, entry)
+    }
+  }
+
+  if (raceName && hpFillPct != null) {
+    const raceEffect = getActiveRaceEffect(raceName, hpFillPct)
+    if (raceEffect?.dmgBoostMultiplier) {
+      dmgMap.set(raceEffect.label, {
+        sourceName:    raceEffect.label,
+        rawMultiplier: raceEffect.dmgBoostMultiplier,
+        condition:     raceEffect.condition,
+        type:          'dmg',
+      })
+    }
+  }
+
+  const dmgEntries  = [...dmgMap.values()]
+  const healEntries = [...healMap.values()]
+
+  let dmgFinal = 1.0
+  for (let i = 0; i < dmgEntries.length; i++) dmgFinal *= dmgEntries[i].rawMultiplier
+  let healFinal = 1.0
+  for (let i = 0; i < healEntries.length; i++) healFinal *= healEntries[i].rawMultiplier
+
+  return {
+    dmgEntries,
+    healEntries,
+    dmgFinalMultiplier:  roundMultiplier(dmgFinal),
+    healFinalMultiplier: roundMultiplier(healFinal),
+  }
+}
+
+// ─── Build result ─────────────────────────────────────────────────────────────
+
+export interface BuildResult { stats: StatMap; perks: Record<string, number>; cdr: CDRResult; boosts: BoostResult; crit: CritResult }
+
+// ─── Equipment accumulation ───────────────────────────────────────────────────
+
+function accumulateMonkWeapon(
+  state:    BuildState,
+  perks:    Record<string, number>,
+  addStats: (s: StatMap | undefined | null) => void,
+  addPerks: (list: Array<{ name: string; amount: number }> | undefined) => void,
+): void {
+  const glove = getGlove(state.monkGlove)
+  if (glove) {
+    const monkPerkBonus  = Math.max(0, state.guildRank - 1)
+    const monkPct        = monkPerkBonus * MONK_RANK_MULTIPLIER
+    const gloveStats:    StatMap = {}
+    const baseGloveStats = glove.stats as StatMap
+
+    for (let i = 0; i < STAT_KEYS.length; i++) {
+      const k = STAT_KEYS[i]
+      const v = baseGloveStats[k]
+      if (v == null) continue
+      if (v <= 0) { gloveStats[k] = v; continue }
+      const shrineMult = state.shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
+      gloveStats[k] = round2(v * shrineMult + v * monkPct)
+    }
+    addStats(gloveStats)
+    if (glove.perkName) perks[glove.perkName] = (perks[glove.perkName] ?? 0) + (glove.perkAmount ?? 1)
+    if ((glove as any).perks) {
+      const gp = (glove as any).perks
+      for (let i = 0; i < gp.length; i++) {
+        perks[gp[i].name] = (perks[gp[i].name] ?? 0) + gp[i].amount + (i === 0 ? Math.max(0, state.guildRank - 1) : 0)
+      }
+    }
+  }
+
+  const essence = getEssence(state.monkEssence)
+  if (essence) {
+    const _monkPct  = Math.max(0, state.guildRank - 1) * MONK_RANK_MULTIPLIER
+    const _baseEss  = essence.stats as StatMap
+    if (_monkPct > 0) {
+      const _boostedEss: StatMap = {}
+      for (let i = 0; i < STAT_KEYS.length; i++) {
+        const k = STAT_KEYS[i]
+        const v = _baseEss[k]
+        if (v == null) continue
+        const _sm = state.shrineActive ? (SHRINE_MULTIPLIERS[essence.tier] ?? 1.0) : 1.0
+        _boostedEss[k] = v > 0 ? round2(v * _sm + v * _monkPct) : round2(v * _sm)
+      }
+      addStats(_boostedEss)
+    } else {
+      addStats(state.shrineActive ? applyShrineToStats(_baseEss, essence.tier) : _baseEss)
+    }
+    if (essence.perkName) perks[essence.perkName] = (perks[essence.perkName] ?? 0) + (essence.perkAmount ?? 1)
+    if ((essence as any).perks) addPerks((essence as any).perks)
+  }
+}
+
+function accumulateStandardWeapon(
+  state:    BuildState,
+  perks:    Record<string, number>,
+  addStats: (s: StatMap | undefined | null) => void,
+  addPerks: (list: Array<{ name: string; amount: number }> | undefined) => void,
+): void {
+  const blade = getBlade(state.weaponBlade)
+  if (blade) {
+    addStats(state.shrineActive ? applyShrineToStats(blade.stats as StatMap, blade.tier) : blade.stats as StatMap)
+    if (blade.perkName) perks[blade.perkName] = (perks[blade.perkName] ?? 0) + (blade.perkAmount ?? 1)
+    if ((blade as any).perks) addPerks((blade as any).perks)
+  }
+  const handle = getHandle(state.weaponHandle)
+  if (handle) {
+    addStats(state.shrineActive ? applyShrineToStats(handle.stats as StatMap, handle.tier) : handle.stats as StatMap)
+    if (handle.perkName) perks[handle.perkName] = (perks[handle.perkName] ?? 0) + (handle.perkAmount ?? 1)
+    if ((handle as any).perks) addPerks((handle as any).perks)
+  }
+}
+
+function accumulateEquipment(state: BuildState): { stats: StatMap; perks: Record<string, number> } {
+  const stats: StatMap                = {}
+  const perks: Record<string, number> = {}
+
+  const addStats = (s: StatMap | undefined | null) => {
+    if (!s) return
+    for (let i = 0; i < STAT_KEYS.length; i++) {
+      const k = STAT_KEYS[i]
+      if (s[k] != null) stats[k] = (stats[k] ?? 0) + (s[k] ?? 0)
+    }
+  }
+  const addPerks = (list: Array<{ name: string; amount: number }> | undefined) => {
+    if (!list) return
+    for (let i = 0; i < list.length; i++) {
+      perks[list[i].name] = (perks[list[i].name] ?? 0) + list[i].amount
+    }
+  }
+  const addPerkMap = (map: Record<string, number>) => {
+    for (const k in map) {
+      if (Object.prototype.hasOwnProperty.call(map, k)) perks[k] = (perks[k] ?? 0) + map[k]
+    }
+  }
+
+  addStats(getRace(state.race)?.statModifiers)
+
+  const guild = getGuild(state.guild)
+  if (guild) {
+    const rank = getGuildRank(guild, state.guildRank)
+    if (rank) { addStats(rank.stats); addPerks(rank.perks) }
+
+    if (guild.name === 'Cursed' && state.storedCorruptionAmount > 0) {
+      addPerkMap({ 'Stored Corruption': state.storedCorruptionAmount })
+    }
+  }
+
+  const armorSlots: Array<[string, ArmorPart["type"], EnchantSlot, 'upgradeHelmet' | 'upgradeChestplate' | 'upgradeLeggings']> = [
+    [state.helmet,     "Helmet",     "helmet",     "upgradeHelmet"],
+    [state.chestplate, "Chestplate", "chestplate", "upgradeChestplate"],
+    [state.leggings,   "Leggings",   "leggings",   "upgradeLeggings"],
+  ]
+  for (let i = 0; i < armorSlots.length; i++) {
+    const [armorName, partType, enchSlot, upgradeKey] = armorSlots[i]
+    if (!armorName) continue
+    const part = getArmorPart(armorName, partType)
+    if (!part) continue
+    const slotResult = applyEnchantmentsToSlot(
+      applyUpgrade(part.stats as StatMap, state[upgradeKey] ?? 0),
+      part.perkName ? { [part.perkName]: 1 } : {},
+      state.enchantments[enchSlot],
+    )
+    addStats(slotResult.stats)
+    addPerkMap(slotResult.perks)
+  }
+
+  if (state.ring) {
+    const ring = getRing(state.ring)
+    if (ring) {
+      const slotResult = applyEnchantmentsToSlot(
+        applyUpgrade(ring.stats, state.upgradeRing ?? 0),
+        ring.perkName ? { [ring.perkName]: ring.perkAmount ?? 1 } : {},
+        state.enchantments.ring,
+      )
+      addStats(slotResult.stats)
+      addPerkMap(slotResult.perks)
+    }
+  }
+
+  if (state.rune) {
+    const rune = getRune(state.rune)
+    if (rune) {
+      const slotResult = applyEnchantmentsToSlot(
+        applyUpgrade(rune.stats, state.upgradeRune ?? 0),
+        rune.perkName ? { [rune.perkName]: rune.perkAmount ?? 1 } : {},
+        state.enchantments.rune,
+      )
+      addStats(slotResult.stats)
+      addPerkMap(slotResult.perks)
+    }
+  }
+
+  if (isMonkGuild(state.guild)) {
+    accumulateMonkWeapon(state, perks, addStats, addPerks)
+  } else {
+    accumulateStandardWeapon(state, perks, addStats, addPerks)
+  }
+
+  const infusionSlots: Array<[string, ArmorPart["type"] | "Ring"]> = [
+    [state.infusionHelmet,     "Helmet"],
+    [state.infusionChestplate, "Chestplate"],
+    [state.infusionLeggings,   "Leggings"],
+    [state.infusionRing,       "Ring"],
+  ]
+  for (let i = 0; i < infusionSlots.length; i++) {
+    const [infName, infType] = infusionSlots[i]
+    if (!infName) continue
+    const part = infType === "Ring" ? getRing(infName) : getArmorPart(infName, infType)
+    if (part) {
+      const inf = applyInfusion(part.stats as StatMap, part.perkName ? { [part.perkName]: (part as any).perkAmount ?? 1 } : {})
+      addStats(inf.stats)
+      addPerkMap(inf.perks)
+    }
+  }
+
+  return { stats, perks }
+}
+
+function finalizePerks(rawPerks: Record<string, number>): Record<string, number> {
+  let finalPerks: Record<string, number> = {}
+  for (const k in rawPerks) {
+    if (Object.prototype.hasOwnProperty.call(rawPerks, k)) {
+      const rounded = round2(rawPerks[k])
+      if (rounded !== 0) finalPerks[k] = rounded
+    }
+  }
+
+  const cursedStacks            = finalPerks["Cursed"] ?? 0
+  const perkEffectivenessStacks = finalPerks["Perk Effectiveness"] ?? 0
+  if (perkEffectivenessStacks > 0 || cursedStacks > 0) {
+    finalPerks = applyPerkEffectiveness(finalPerks, perkEffectivenessStacks, cursedStacks)
+    for (const k in finalPerks) {
+      if (Object.prototype.hasOwnProperty.call(finalPerks, k)) finalPerks[k] = round2(finalPerks[k])
+    }
+  }
+
+  if (finalPerks["Buckler"] != null) finalPerks["Parry"] = (finalPerks["Parry"] ?? 0) + finalPerks["Buckler"]
+
+  return finalPerks
+}
+
+function deriveResults(
+  rawStats:   StatMap,
+  finalPerks: Record<string, number>,
+  state:      BuildState,
+): BuildResult {
+  const finalStats: StatMap = {}
+  for (let i = 0; i < STAT_KEYS.length; i++) {
+    const k = STAT_KEYS[i]
+    if (rawStats[k] != null) {
+      const rounded = round2(rawStats[k] ?? 0)
+      if (rounded !== 0) finalStats[k] = rounded
+    }
+  }
+
+  const cdr = calcCDR(
+    finalPerks,
+    getRace(state.race)?.cooldownModifiers,
+    state.rune || undefined,
+    state.race || undefined,
+    state.emotionalState,
+    state.cdrToggles,
+  )
+
+  const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
+  if ((finalPerks['Gladiatorial Rage'] ?? 0) > 0) {
+    const BOOST_KEYS: StatKey[] = ['dexterityBoost','physicalBoost','magicBoost','fireBoost','waterBoost','earthBoost','airBoost','hexBoost','holyBoost']
+    let highestBoost = 0
+    for (let i = 0; i < BOOST_KEYS.length; i++) {
+      const bV = boostedStats[BOOST_KEYS[i]] ?? 0
+      if (bV > highestBoost) highestBoost = bV
+    }
+    const armorPen = round2(highestBoost / 15)
+    if (armorPen > 0) boostedStats['armorPenetration'] = (boostedStats['armorPenetration'] ?? 0) + armorPen
+  }
+
+  const crit = calcCrit(boostedStats, finalPerks)
+
+  const _itemBuffs = getActiveBuildBuffs({
+    rune: state.rune, ring: state.ring, infusionRing: state.infusionRing,
+    helmet: state.helmet, chestplate: state.chestplate, leggings: state.leggings,
+    weaponBlade: state.weaponBlade, weaponHandle: state.weaponHandle,
+    monkGlove: state.monkGlove, race: state.race,
+  })
+  const _allBuffs = applyBuffPerkModifiers(
+    [..._itemBuffs, ...getPerkBuffs(finalPerks), ...getWeaponArtBuffs(state.selectedWeaponArt)],
+    finalPerks,
+    state.rune || undefined,
+  )
+
+  const _rageBuffs  = _allBuffs.filter(b => b.buffName === 'Rage')
+  const ragePotency = _rageBuffs.length > 0 ? Math.max(..._rageBuffs.map(b => b.potency)) : 0
+
+  const _bounceBuffs  = _allBuffs.filter(b => b.buffName === 'Bounce')
+  const bouncePotency = _bounceBuffs.length > 0 ? Math.max(..._bounceBuffs.map(b => b.potency)) : 0
+
+  const boosts = calcBoosts(
+    finalPerks, state.emotionalState, state.level ?? 80,
+    crit.naturalCritChance, boostedStats.jumpBoost ?? 0,
+    state.summonCount ?? 0, ragePotency, bouncePotency,
+    state.race, state.hpFill ?? 100, state.inDarkness ?? true,
+  )
+  return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
+}
+
+export function calcBuild(state: BuildState): BuildResult {
+  const { stats, perks } = accumulateEquipment(state)
+  const finalPerks       = finalizePerks(perks)
+  return deriveResults(stats, finalPerks, state)
+}
