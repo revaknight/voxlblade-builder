@@ -6,7 +6,7 @@
 
   export let show: boolean
   export let suggestions: Array<{ label: string; type: 'name' | 'perk' }>
-  export let modalSearch: string
+  export let searchQuery: string
 </script>
 
 {#if show && suggestions.length > 0}
@@ -18,7 +18,7 @@
         on:mousedown|preventDefault={() => dispatch('select', { label: s.label, type: s.type })}
       >
         <span class="suggest-type">{s.type === 'perk' ? 'Perk' : 'Name'}</span>
-        <span class="suggest-label">{@html highlightText(s.label, modalSearch)}</span>
+        <span class="suggest-label">{@html highlightText(s.label, searchQuery)}</span>
       </button>
     {/each}
   </div>

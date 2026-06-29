@@ -28,7 +28,7 @@ export const MONK_RANK_MULTIPLIER = 0.25
 
 export const races: Race[]           = racesRaw as Race[]
 export const guilds: Guild[]         = guildsRaw as Guild[]
-export const perks: Perk[]           = perksRaw as Perk[]
+const perks: Perk[]           = perksRaw as Perk[]
 export const rings: Ring[]           = ringsRaw as Ring[]
 export const runes: Rune[]           = runesRaw as Rune[]
 export const enchantments: Enchantment[] = enchantmentsRaw as Enchantment[]
@@ -71,12 +71,12 @@ const ESSENCE_MAP = Object.fromEntries(essences.map(e => [e.name, e]))
 
 export const armors: Armor[] = Object.values(ARMOR_MAP)
 
-export function getRace(name: string): Race | undefined       { return RACE_MAP[name] }
+function getRace(name: string): Race | undefined       { return RACE_MAP[name] }
 export function getPerk(name: string)                         { return PERK_MAP[name] }
 export function getEnchant(name: string)                      { return ENCHANT_MAP[name] }
 export function getRing(name: string)                         { return RING_MAP[name] }
 export function getRune(name: string)                         { return RUNE_MAP[name] }
-export function getArmor(name: string): Armor | undefined     { return ARMOR_MAP[name] }
+function getArmor(name: string): Armor | undefined     { return ARMOR_MAP[name] }
 export function getBlade(name: string)                        { return BLADE_MAP[name] }
 export function getHandle(name: string)                       { return HANDLE_MAP[name] }
 export function getGlove(name: string)                        { return GLOVE_MAP[name] }
@@ -92,7 +92,7 @@ export function getArmorPart(name: string, type: ArmorPart["type"]) {
   return undefined
 }
 
-export function getGuildRank(guild: Guild, rank: number): GuildRank | undefined {
+function getGuildRank(guild: Guild, rank: number): GuildRank | undefined {
   for (let i = 0; i < guild.ranks.length; i++) {
     if (guild.ranks[i].rank === rank) return guild.ranks[i]
   }
@@ -103,7 +103,7 @@ export function isMonkGuild(guildName: string): boolean {
   return guildName === "Monk"
 }
 
-export function calcBoosts(
+function calcBoosts(
   perks:             Record<string, number>,
   emotionalState?:   string,
   level:             number = 80,
@@ -217,7 +217,7 @@ export function calcBoosts(
 
 // ─── Monk guild bonus ─────────────────────────────────────────────────────────
 
-export function applyMonkGuildBonus(
+function applyMonkGuildBonus(
   stats:      StatMap,
   glovePerks: Array<{ name: string; amount: number }>,
   monkRank:   number,
@@ -350,7 +350,7 @@ const PERK_EFFECTIVENESS_EXEMPT = new Set([
   "Channeled Weapon", "Quickcast", "Thief Training", "Vampire", "Heal Boost", "Stored Corruption",
 ])
 
-export function applyPerkEffectiveness(
+function applyPerkEffectiveness(
   perks:                   Record<string, number>,
   perkEffectivenessStacks: number,
   cursedStacks:            number,
@@ -383,11 +383,11 @@ export function applyInfusion(
 
 // ─── Shrine ───────────────────────────────────────────────────────────────────
 
-export const SHRINE_MULTIPLIERS: Record<number, number> = {
+const SHRINE_MULTIPLIERS: Record<number, number> = {
   1: 3.0, 2: 1.7, 3: 1.4, 4: 1.1, 5: 1.0,
 }
 
-export function applyShrineToScalings(scalings: Record<string, number>, tier: number): Record<string, number> {
+function applyShrineToScalings(scalings: Record<string, number>, tier: number): Record<string, number> {
   const mult = SHRINE_MULTIPLIERS[tier] ?? 1.0
   if (mult === 1.0) return { ...scalings }
   const result: Record<string, number> = {}
@@ -397,7 +397,7 @@ export function applyShrineToScalings(scalings: Record<string, number>, tier: nu
   return result
 }
 
-export function applyShrineToStats(stats: StatMap | undefined | null, tier: number): StatMap {
+function applyShrineToStats(stats: StatMap | undefined | null, tier: number): StatMap {
   if (!stats) return {}
   const mult   = SHRINE_MULTIPLIERS[tier] ?? 1.0
   const result: StatMap = {}
@@ -412,7 +412,7 @@ export function applyShrineToStats(stats: StatMap | undefined | null, tier: numb
 
 // ─── Hybrid check ─────────────────────────────────────────────────────────────
 
-export function checkHybrid(
+function checkHybrid(
   part1: { [key: string]: any } | undefined,
   part2: { [key: string]: any } | undefined,
 ): boolean {
@@ -449,7 +449,7 @@ const WEAPON_TYPE_MAP: Record<string, Record<string, string>> = {
   "Pole":          { "Small Blade": "Spear",   "Medium Blade": "Spear",           "Heavy Blade": "Great Spear",      "Hammer Head": "War Hammer" },
 }
 
-export function getWeaponType(handleType: string, bladeType: string): string {
+function getWeaponType(handleType: string, bladeType: string): string {
   return WEAPON_TYPE_MAP[handleType]?.[bladeType] ?? ""
 }
 
@@ -478,7 +478,7 @@ const WEAPON_OVERRIDES: WeaponOverride[] = [
   { perk: "Saw Stance",     bladeTypes:  ["Medium Blade"],                   result: "Chainsaw" },
 ]
 
-export function resolveWeaponType(
+function resolveWeaponType(
   handleType: string,
   bladeType:  string,
   perks:      Record<string, number>,
@@ -505,11 +505,11 @@ const MONK_WEAPON_TYPE_MAP: Record<string, Record<string, string>> = {
   "Essence":      { "Gloves": "Fists", "Shield": "Shield" },
 }
 
-export function getMonkWeaponType(essenceType: string, gloveType: string): string {
+function getMonkWeaponType(essenceType: string, gloveType: string): string {
   return MONK_WEAPON_TYPE_MAP[essenceType]?.[gloveType] ?? "Fists"
 }
 
-export function resolveMonkWeaponType(
+function resolveMonkWeaponType(
   essenceType: string,
   gloveType:   string,
   perks:       Record<string, number>,
@@ -844,7 +844,7 @@ export function calcMonkWeapon(gloveName: string, essenceName: string, shrineAct
 export interface CDRStep   { source: string; pct: number; multiplier: number; isMultiply?: boolean }
 export interface CDRResult { runeCDR: number; waCDR: number; runeSetCD?: number; runeBreakdown: CDRStep[]; waBreakdown: CDRStep[] }
 
-export function calcCDR(
+function calcCDR(
   perks:                  Record<string, number>,
   raceCooldownModifiers?: Record<string, number>,
   activeRuneName?:        string,
@@ -917,11 +917,11 @@ export function calcCDR(
   }
 }
 
-export function applyCD(baseCooldown: number, cdrMultiplier: number): number {
+function applyCD(baseCooldown: number, cdrMultiplier: number): number {
   return Math.max(1, Math.floor(baseCooldown * cdrMultiplier))
 }
 
-export function calcLevelDamageMultiplier(level: number): number {
+function calcLevelDamageMultiplier(level: number): number {
   return Math.round((1 + Math.max(0, Math.min(80, level)) / 80) * 1000) / 1000
 }
 

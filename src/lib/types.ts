@@ -1,4 +1,4 @@
-export const STAT_CONFIG = {
+const STAT_CONFIG = {
   dexterityBoost: "percent", physicalBoost: "percent", airBoost: "percent",
   earthBoost: "percent", fireBoost: "percent", waterBoost: "percent",
   hexBoost: "percent", holyBoost: "percent", magicBoost: "percent",
@@ -70,7 +70,7 @@ export type EnchantSlot = "helmet" | "chestplate" | "leggings" | "ring" | "rune"
 // ── Helpers Tối ưu cho Browser ───────────────────────────────────────────────────
 
 export const UPGRADE_MAX = 5
-export const UPGRADE_MULTIPLIER = 1.1
+const UPGRADE_MULTIPLIER = 1.1
 
 const round2 = (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
 
@@ -237,7 +237,7 @@ export const DMG_TYPE_COLORS: Record<string, string> = {
   hex: '#e879f9', holy: '#facc15', true: '#ffffff', summon: '#c084fc',
 };
 
-export const ONE_HANDED_TYPES = new Set([
+const ONE_HANDED_TYPES = new Set([
   'Dagger','1-Handed Sword','Unbalanced Sword','Mallet','Rapier',
   'Dual Swords','Dual Wielding Daggers','Dual Unbalanced Swords','Dual Mallets','Dual Kamas',
   'Shield','Lance','Chainsaw',

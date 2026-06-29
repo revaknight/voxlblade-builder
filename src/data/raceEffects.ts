@@ -10,7 +10,7 @@ export interface RaceConditionalEffect {
   condition: string
 }
 
-export const RACE_CONDITIONAL_EFFECTS: RaceConditionalEffect[] = [
+const RACE_CONDITIONAL_EFFECTS: RaceConditionalEffect[] = [
   {
     raceName: 'HUMAN',
     hpGate: { hpThreshold: 50, aboveThreshold: false },

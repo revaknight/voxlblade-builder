@@ -2,7 +2,7 @@ import { roundMultiplier } from '../lib/utils'
 
 export type WeaponHitScope = 'm1Finisher' | 'm2'
 
-export interface WeaponConditionalBoost {
+interface WeaponConditionalBoost {
   perkName: string
   multiplierPerPerk: number
   weaponTypes: string[]
@@ -10,7 +10,7 @@ export interface WeaponConditionalBoost {
   condition: string
 }
 
-export const WEAPON_CONDITIONAL_BOOSTS: WeaponConditionalBoost[] = [
+const WEAPON_CONDITIONAL_BOOSTS: WeaponConditionalBoost[] = [
   {
     perkName: 'Aggressive Personality',
     multiplierPerPerk: 0.25,

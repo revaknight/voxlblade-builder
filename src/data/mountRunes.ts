@@ -83,7 +83,7 @@ export const MOUNT_RUNE_DEFS: MountRuneDef[] = [
   },
 ]
 
-export const MOUNT_RUNE_MAP = Object.fromEntries(MOUNT_RUNE_DEFS.map(d => [d.runeName, d]))
-export function getMountRuneDef(runeName: string): MountRuneDef | undefined {
+const MOUNT_RUNE_MAP = Object.fromEntries(MOUNT_RUNE_DEFS.map(d => [d.runeName, d]))
+function getMountRuneDef(runeName: string): MountRuneDef | undefined {
   return MOUNT_RUNE_MAP[runeName]
 }

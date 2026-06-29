@@ -2,14 +2,14 @@ export function calcSummonStat(base: number, summonBoostPct: number, level: numb
   return Math.round(base * (1 + (summonBoostPct / 100) * (1 + level / 80)) * 100) / 100
 }
 
-export interface SummonAttack {
+interface SummonAttack {
   label: string
   baseDmg: number
   dmgType: string
   guardbreak?: boolean
 }
 
-export interface SummonDef {
+interface SummonDef {
   name: string
   count: number
   baseHp?: number
@@ -20,7 +20,7 @@ export interface SummonDef {
   notes?: string[]
 }
 
-export const SUMMON_DEFS: SummonDef[] = [
+const SUMMON_DEFS: SummonDef[] = [
   {
     name: "Mage Bomber",
     count: 2,
@@ -52,12 +52,12 @@ export const WA_SUMMON_MAP: Record<string, string> = {
 }
 
 // ── 3. Perks ảnh hưởng summon ────────────────────────────────────────────────
-export type SummonPerkMode =
+type SummonPerkMode =
   | 'spawn_only'
   | 'adaptive'
   | 'passive'
 
-export interface SummonPerkDef {
+interface SummonPerkDef {
   perkName: string
   description: string
   mode: SummonPerkMode
@@ -67,7 +67,7 @@ export interface SummonPerkDef {
   notes?: string
 }
 
-export const SUMMON_PERK_DEFS: SummonPerkDef[] = [
+const SUMMON_PERK_DEFS: SummonPerkDef[] = [
   {
     perkName: "Swarm",
     description: "Increases max summon count by 1 per stack",

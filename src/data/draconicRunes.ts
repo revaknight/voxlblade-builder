@@ -9,7 +9,7 @@ export interface DragonInfusionContext {
   draconicColor: string
 }
 
-export function applyDraconicRunesBonus(
+function applyDraconicRunesBonus(
   dmgTypes: Record<string, number>,
   ctx: DraconicRunesContext
 ): Record<string, number> {
@@ -29,7 +29,7 @@ export function applyDraconicRunesBonus(
 }
 
 
-export function getDraconicRunesBonus(
+function getDraconicRunesBonus(
   ctx: DraconicRunesContext
 ): Record<string, number> {
   const { draconicRunesStacks, draconicColor } = ctx
@@ -44,7 +44,7 @@ export function getDraconicRunesBonus(
   return { [color]: bonus }
 }
 
-export function applyDragonInfusionBonus(
+function applyDragonInfusionBonus(
   dmgTypes: Record<string, number>,
   ctx: DragonInfusionContext
 ): Record<string, number> {
@@ -63,7 +63,7 @@ export function applyDragonInfusionBonus(
   return result
 }
 
-export function getDragonInfusionBonus(
+function getDragonInfusionBonus(
   ctx: DragonInfusionContext
 ): Record<string, number> {
   const { isActive, buffPotency, draconicColor } = ctx

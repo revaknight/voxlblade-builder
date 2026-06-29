@@ -1,13 +1,13 @@
 import type { WeaponArt } from '../data/weaponArts'
 
-export const SCALE_MAP: Record<string, string> = {
+const SCALE_MAP: Record<string, string> = {
   physicalScaling: 'physical', magicScaling: 'magic',
   fireScaling: 'fire', waterScaling: 'water', earthScaling: 'earth',
   airScaling: 'air', hexScaling: 'hex', holyScaling: 'holy',
   dexterityScaling: 'dexterity', summonScaling: 'summon'
 }
 
-export const SCALE_MAP_LABELS: Array<[string, string, string]> = [
+const SCALE_MAP_LABELS: Array<[string, string, string]> = [
   ['physicalScaling', 'physical', 'Physical'],
   ['magicScaling', 'magic', 'Magic'],
   ['fireScaling', 'fire', 'Fire'],
@@ -20,7 +20,7 @@ export const SCALE_MAP_LABELS: Array<[string, string, string]> = [
   ['summonScaling', 'summon', 'Summon'],
 ]
 
-export function passesAtLeastOneScaling(
+function passesAtLeastOneScaling(
   req: WeaponArt['requirements'],
   waScalings: Record<string, number>
 ): boolean {

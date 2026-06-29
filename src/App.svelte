@@ -31,9 +31,10 @@
   import TagFilter from './TagFilter.svelte'
   import StatFilter from './StatFilter.svelte'
   import WeaponStatFilter from './WeaponStatFilter.svelte'
+  import WeaponStatsDisplay from './WeaponStatsDisplay.svelte'
   import BuffList from './BuffList.svelte'
   import DidYouMean from './DidYouMean.svelte'
-  import { checkWA, getUnmetReqs, passesAtLeastOneScaling } from './data/Weaponartcheck'
+  import { checkWA, getUnmetReqs } from './data/Weaponartcheck'
   import SuggestDrop from './SuggestDrop.svelte'
   import { getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'
   import { CDR_PERK_DATA } from './data/cdr'
@@ -1285,11 +1286,11 @@ $: _appWaAvgTotal = (() => {
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
           <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  {modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
+            show={showSuggestions}
+            suggestions={modalSuggestions}
+            searchQuery={modalSearch}
+            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          />
         </div>
         <div class="modal-list">
           {#each searchedRaces as r}
@@ -1307,11 +1308,11 @@ $: _appWaAvgTotal = (() => {
             </button>
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  {modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'guild'}
@@ -1320,11 +1321,11 @@ $: _appWaAvgTotal = (() => {
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
           <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  {modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
+            show={showSuggestions}
+            suggestions={modalSuggestions}
+            searchQuery={modalSearch}
+            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          />
         </div>
         <TagFilter
           {selectedTags}
@@ -1370,11 +1371,11 @@ $: _appWaAvgTotal = (() => {
             </div>
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  {modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'armor-helmet' || activeModal === 'armor-chestplate' || activeModal === 'armor-leggings'}
@@ -1385,11 +1386,11 @@ $: _appWaAvgTotal = (() => {
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
           <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  {modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
+            show={showSuggestions}
+            suggestions={modalSuggestions}
+            searchQuery={modalSearch}
+            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          />
         </div>
         <TagFilter
           {selectedTags}
@@ -1435,11 +1436,11 @@ $: _appWaAvgTotal = (() => {
             {/if}
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  {modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'infusion-helmet' || activeModal === 'infusion-chestplate' || activeModal === 'infusion-leggings'}
@@ -1452,7 +1453,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1500,7 +1501,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1513,7 +1514,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1550,7 +1551,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1563,7 +1564,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1599,7 +1600,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1612,7 +1613,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1651,7 +1652,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1662,11 +1663,11 @@ $: _appWaAvgTotal = (() => {
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
           <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  {modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
+            show={showSuggestions}
+            suggestions={modalSuggestions}
+            searchQuery={modalSearch}
+            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          />
         </div>
         <TagFilter
           {selectedTags}
@@ -1699,57 +1700,7 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-type-badge modal-type-badge--blade">{b.bladeType}</span>
                 {#if b.attackSpeed != null}<span class="modal-cd-badge">{b.attackSpeed}x spd</span>{/if}
               </div>
-              {#if true}
-                {@const ws = splitWeaponStats(b.stats ?? {})}
-
-                {#if ws.dmgTypes.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--dmg">
-                      Dmg Type
-                    </span>
-
-                    <div class="modal-item-stats">
-                      {#each ws.dmgTypes as [k, v]}
-                        <span class="modal-stat-pill modal-stat-pill--dmgtype">
-                          {prettyKey(k, 'Type')}: {v}×
-                        </span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-
-                {#if ws.scalings.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--scaling">
-                      Scaling
-                    </span>
-
-                    <div class="modal-item-stats">
-                      {#each ws.scalings as [k, v]}
-                        <span class="modal-stat-pill modal-stat-pill--scaling">
-                          {prettyKey(k, 'Scaling')}: {v}
-                        </span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-
-                {#if ws.boosts.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label">
-                      Stats
-                    </span>
-
-                    <div class="modal-item-stats">
-                      {#each ws.boosts as [k, v]}
-                        <span class="modal-stat-pill" class:neg={(v as number) < 0}>
-                          {formatLabel(k)}: {formatStat(k, v as number)}
-                        </span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-              {/if}              
+              <WeaponStatsDisplay stats={b.stats ?? {}} />
               {#if bAny.perks?.length}
                 {#each bAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
@@ -1758,7 +1709,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1771,7 +1722,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1806,51 +1757,18 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-type-badge modal-type-badge--handle">{h.handleType}</span>
                 {#if h.attackSpeed != null}<span class="modal-cd-badge">{h.attackSpeed}x spd</span>{/if}
               </div>
-              {#if true}
-                {@const ws = splitWeaponStats(h.stats ?? {})}
-                {#if ws.dmgTypes.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
-                    <div class="modal-item-stats">
-                      {#each ws.dmgTypes as [k, v]}
-                        <span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-                {#if ws.scalings.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
-                    <div class="modal-item-stats">
-                      {#each ws.scalings as [k, v]}
-                        <span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-
-                {#if ws.boosts.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label">Stats</span>
-                    <div class="modal-item-stats">
-                      {#each ws.boosts as [k, v]}
-                        <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
-              {/if}              
+              <WeaponStatsDisplay stats={h.stats ?? {}} />
               {#if hAny.perks?.length}
                 {#each hAny.perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  {modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'glove'}
@@ -1861,7 +1779,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  {modalSearch}
+  searchQuery={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1892,44 +1810,18 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-tier-badge modal-tier-badge--glove">T{g.tier}</span>
                 {#if g.attackSpeed != null}<span class="modal-cd-badge">{g.attackSpeed}x spd</span>{/if}
               </div>
-              {#if true}
-                {@const ws = splitWeaponStats(g.stats ?? {})}
-                {#if ws.dmgTypes.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
-                    <div class="modal-item-stats">
-                      {#each ws.dmgTypes as [k, v]}<span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-                {#if ws.scalings.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
-                    <div class="modal-item-stats">
-                      {#each ws.scalings as [k, v]}<span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-                {#if ws.boosts.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label">Stats</span>
-                    <div class="modal-item-stats">
-                      {#each ws.boosts as [k, v]}<span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-              {/if}
+              <WeaponStatsDisplay stats={g.stats ?? {}} />
               {#if (g as any).perks?.length}
                 {#each (g as any).perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  {modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'essence'}
@@ -1938,11 +1830,11 @@ $: _appWaAvgTotal = (() => {
           <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
             on:focus={onSearchFocus} on:blur={onSearchBlur} />
           <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  {modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
+            show={showSuggestions}
+            suggestions={modalSuggestions}
+            searchQuery={modalSearch}
+            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          />
         </div>
         <TagFilter
           {selectedTags}
@@ -1970,56 +1862,18 @@ $: _appWaAvgTotal = (() => {
                 <span class="modal-tier-badge modal-tier-badge--essence">T{e.tier}</span>
                 {#if e.attackSpeed != null}<span class="modal-cd-badge">{e.attackSpeed}x spd</span>{/if}
               </div>
-              {#if true}
-                {@const ws = splitWeaponStats(e.stats ?? {})}
-                {#if ws.dmgTypes.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--dmg">Dmg Type</span>
-                    <div class="modal-item-stats">
-                      {#each ws.dmgTypes as [k, v]}<span class="modal-stat-pill modal-stat-pill--dmgtype">{prettyKey(k, 'Type')}: {v}×</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-                {#if ws.scalings.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label modal-stat-group-label--scaling">Scaling</span>
-                    <div class="modal-item-stats">
-                      {#each ws.scalings as [k, v]}<span class="modal-stat-pill modal-stat-pill--scaling">{prettyKey(k, 'Scaling')}: {v}</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-                {#if ws.boosts.length}
-                  <div class="modal-stat-group">
-                    <span class="modal-stat-group-label">Stats</span>
-                    <div class="modal-item-stats">
-                      {#each ws.boosts as [k, v]}<span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>{/each}
-                    </div>
-                  </div>
-                {/if}
-              {/if}
+              <WeaponStatsDisplay stats={e.stats ?? {}} />
               {#if (e as any).perks?.length}
                 {#each (e as any).perks as p}<span class="modal-perk-tag">{@html highlight(p.name, modalSearch)} +{p.amount}</span>{/each}
               {/if}
             </button>
           {/each}
-          {#if noExactResults && didYouMean.length > 0}
-  <div class="dym-block">
-    <span class="dym-label">Did you mean?</span>
-    <div class="dym-chips">
-      {#each didYouMean as s}
-        <button class="dym-chip" class:dym-chip--perk={s.type==='perk'}
-          on:click={() => { modalSearch = s.label }}>
-          {#if s.type === 'perk'}
-            <span class="perk-icon">💡</span>
-          {/if}
-          {@html highlight(s.label, modalSearch)}
-        </button>
-      {/each}
-    </div>
-  </div>
-{:else if noExactResults}
-  <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
-{/if}
+          <DidYouMean
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
       {/if}
 
@@ -3506,14 +3360,6 @@ $: _appWaAvgTotal = (() => {
   .modal-stat-pill--inf { background:rgba(56,189,248,.1); border-color:rgba(56,189,248,.2); color:var(--infusion); }
   .modal-perk-tag { font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.22); color:var(--accent2); width:fit-content; }
   .modal-cd-badge { font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.22); color:var(--weapon-handle); width:fit-content; }
-  .modal-stat-group { display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
-  .modal-stat-group-label {
-    font-size:.55rem; font-weight:800; text-transform:uppercase; letter-spacing:.14em;
-    color:var(--ink-muted); opacity:.45; flex-shrink:0; width:40px; text-align:right;
-    padding-top:2px;
-  }
-  .modal-stat-pill--dmgtype { background:rgba(251,146,60,.1); border-color:rgba(251,146,60,.22); color:var(--weapon-blade); }
-  .modal-stat-pill--scaling { background:rgba(167,139,250,.1); border-color:rgba(167,139,250,.22); color:var(--accent3); }
   .modal-tier-badge { font-size:.62rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.25); color:var(--weapon-blade); }
   .modal-tier-badge--handle { background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.25); color:var(--weapon-handle); }
   .modal-tier-badge--glove { background:rgba(232,121,249,.12); border-color:rgba(232,121,249,.25); color:var(--monk-glove); }
@@ -4526,23 +4372,6 @@ $: _appWaAvgTotal = (() => {
   .dab-stat-v--poise { color:#f472b6; font-weight:800; }
 
 .dab-notes { font-size:.68rem; color:var(--draco-text); opacity:.65; font-style:italic; line-height:1.4; letter-spacing:.02em; }
-.modal-stat-group-label--dmg {
-  color: var(--weapon-blade);
-  opacity: 0.75;
-}
-
-.modal-stat-group-label--scaling {
-  color: var(--accent3);
-  opacity: 0.75;
-}
-
-.modal-stat-pill--dmgtype {
-  border-color: var(--weapon-blade);
-}
-
-.modal-stat-pill--scaling {
-  border-color: var(--accent3);
-}
 /* ── Search suggestions ── */
 .search-wrap { position: relative; margin-bottom: 12px; }
 .search-wrap .modal-search-input { margin-bottom: 0; }
@@ -4576,67 +4405,6 @@ $: _appWaAvgTotal = (() => {
   font-style: normal;
 }
 
-/* ── Did You Mean ── */
-.dym-block {
-  margin-top: 8px;
-  padding: 10px 12px;
-  background: rgba(167,139,250,.07);
-  border: 1px solid rgba(167,139,250,.22);
-  border-radius: var(--radius-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  animation: iepSlide .15s ease;
-}
-.dym-label {
-  font-size: .6rem;
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  font-weight: 800;
-  color: var(--accent3);
-  opacity: .7;
-}
-.dym-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.dym-chip {
-  font-size: .78rem;
-  font-weight: 600;
-  padding: 4px 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(167,139,250,.3);
-  background: rgba(167,139,250,.1);
-  color: var(--accent3);
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: all .12s;
-}
-.dym-chip:hover {
-  background: rgba(167,139,250,.22);
-  border-color: rgba(167,139,250,.55);
-}
-.dym-chip--perk {
-  border-color: rgba(245,158,11,.3);
-  background: rgba(245,158,11,.09);
-  color: var(--accent2);
-}
-.dym-chip--perk:hover {
-  background: rgba(245,158,11,.2);
-  border-color: rgba(245,158,11,.55);
-}
-.dym-empty {
-  margin-top: 8px;
-  padding: 10px 12px;
-  font-size: .8rem;
-  color: var(--ink-muted);
-  font-style: italic;
-  background: var(--surface3);
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--border);
-}
-.dym-empty strong { color: var(--ink); font-style: normal; }
 .cdr-mult--increase { color: var(--neg); }
 .summary-title-row {
   display: flex;

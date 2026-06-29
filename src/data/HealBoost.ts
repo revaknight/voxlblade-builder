@@ -1,7 +1,7 @@
 import { roundMultiplier } from '../lib/utils'
 import { getEffectiveDraconicInfusionPotency } from './draconicBuffs'
 
-export const HOLY_INFUSION_POTENCY_MULTIPLIER = 0.115
+const HOLY_INFUSION_POTENCY_MULTIPLIER = 0.115
 
 export type HealSource = 'perk' | 'rune' | 'weaponArt' | 'passive'
 
@@ -18,7 +18,7 @@ export interface HealBoostContext {
   activeBuffs?: Array<{ buffName: string; potency: number; isSelfDebuff?: boolean }>
 }
 
-export interface HealBoostDef {
+interface HealBoostDef {
   sourceName: string
   sourceType: HealSource
   
@@ -33,7 +33,7 @@ export interface HealBoostDef {
   activeIf?: (ctx: HealBoostContext) => boolean
 }
 
-export const HEAL_SCALING_DEFS: HealBoostDef[] = [
+const HEAL_SCALING_DEFS: HealBoostDef[] = [
   { 
     sourceName: 'Level Healing', 
     multiplierPerPerk: 0, 
@@ -113,7 +113,7 @@ export const HEAL_SCALING_DEFS: HealBoostDef[] = [
   },
 ]
 
-export const HEAL_SCALING_DEF_MAP = new Map(HEAL_SCALING_DEFS.map(d => [d.sourceName, d]))
+const HEAL_SCALING_DEF_MAP = new Map(HEAL_SCALING_DEFS.map(d => [d.sourceName, d]))
 
 export interface HealBoostResult {
   entries: Array<{
@@ -202,7 +202,7 @@ export function calculateHealBoost(
   }
 }
 
-export function getHealScalingMultiplier(
+function getHealScalingMultiplier(
   ctx: HealBoostContext,
   appliesToType?: HealSource
 ): number {

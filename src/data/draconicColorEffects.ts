@@ -30,6 +30,6 @@ export function getDraconicColorDmgMultiplier(color: string): number {
   return DRACONIC_COLOR_MAP.get(color)?.dmgMultiplier ?? 1
 }
 
-export function getDraconicColorAttackStats(color: string): DraconicColorAttackStats | undefined {
+function getDraconicColorAttackStats(color: string): DraconicColorAttackStats | undefined {
   return DRACONIC_COLOR_MAP.get(color)
 }

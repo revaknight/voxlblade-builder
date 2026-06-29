@@ -1,11 +1,11 @@
-export interface DefensivePerkSourceContext {
+interface DefensivePerkSourceContext {
   hpFillPct: number
   adaptivePlateTriggered: boolean
   inDarkness: boolean
   rageActive: boolean
 }
 
-export interface DefensivePerkSource {
+interface DefensivePerkSource {
   perkName: string
   drPctPerStack: number
   fixedDefPct?: number
@@ -20,7 +20,7 @@ export interface DefensivePerkSource {
   potencyCapped?: boolean
 }
 
-export const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
+const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
   {
     perkName: 'Barbskin',
     drPctPerStack: 20,

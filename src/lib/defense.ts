@@ -1,12 +1,12 @@
 import { roundMultiplier } from './utils'
 
-export function calcDefMultiplier(defPct: number): number {
+function calcDefMultiplier(defPct: number): number {
   if (!defPct) return 1
   const def = defPct / 100
   return def > 0 ? 1 / (1 + def) : 1 + Math.abs(def)
 }
 
-export function calcTrueDrPercent(defPct: number): number {
+function calcTrueDrPercent(defPct: number): number {
   const def = defPct / 100
   return Math.round((def / (1 + Math.max(def, 0))) * 10000) / 100
 }

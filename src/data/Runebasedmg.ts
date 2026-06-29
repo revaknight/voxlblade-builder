@@ -35,7 +35,7 @@ export interface RuneDmgDef {
   shield?: RuneShieldDef
 }
 
-export function calculateRuneHealScaling(
+function calculateRuneHealScaling(
   runeDef: RuneDmgDef,
   ctx: {
     perks: Record<string, number>

@@ -322,7 +322,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
 }
 
-export const ITEM_BUFF_MAP: GrantedBuff[] = [
+const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Rage',
     potency: 0.3,
@@ -711,7 +711,7 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   ],
 }
 
-export const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
+const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
   'Warrior Stomp': [
     { buffName: 'Rage', potency: 0.3, duration: 10, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
     { buffName: 'Taunt', potency: 1.0, duration: 15, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
@@ -786,7 +786,7 @@ export function getWeaponArtBuffs(weaponArtName: string): GrantedBuff[] {
   return WEAPON_ART_BUFF_MAP[weaponArtName] ?? []
 }
 
-export const TRUE_BALANCE_DEBUFF_MAP: Record<string, {
+const TRUE_BALANCE_DEBUFF_MAP: Record<string, {
   buffName: string
   getPotency: (perkAmount: number) => number
   getDuration: (perkAmount: number) => number
@@ -1047,7 +1047,7 @@ export function getActiveBuildBuffs(build: {
 }
 // ─── Race buffs ───────────────────────────────────────────────────────────────
 
-export const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
+const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
   'BUNIKIN': [
     {
       buffName: 'Critical Boost',
@@ -1060,7 +1060,7 @@ export const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
   ],
 }
 
-export function getRaceBuffs(race: string): GrantedBuff[] {
+function getRaceBuffs(race: string): GrantedBuff[] {
   return RACE_BUFF_MAP[race] ?? []
 }
 

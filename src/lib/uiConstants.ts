@@ -38,7 +38,7 @@ export const UI_COLORS = {
   supportNegative: '#86efac',
 } as const
 
-export const SOURCE_LABELS = {
+const SOURCE_LABELS = {
   rune: 'Rune',
   perk: 'Perk',
   weaponArt: 'W. Art',
@@ -46,7 +46,7 @@ export const SOURCE_LABELS = {
   cantrip: 'cantrip',
 } as const
 
-export const STAT_LABELS = {
+const STAT_LABELS = {
   physicalDefense: 'Phys Def',
   magicDefense: 'Mag Def',
   fireDefense: 'Fire Def',
@@ -69,7 +69,7 @@ export const STAT_LABELS = {
   summonBoost: 'Summon',
 } as const
 
-export const TAG_LABELS = {
+const TAG_LABELS = {
   combat: 'Combat',
   support: 'Support',
   status: 'Status',

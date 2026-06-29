@@ -4,7 +4,7 @@
 
   export let noExactResults: boolean = false
   export let didYouMean: Array<{ label: string; type: 'name' | 'perk'; score?: number }> = []
-  export let modalSearch: string = ''
+  export let searchQuery: string = ''
 
   const dispatch = createEventDispatcher<{ select: string }>()
 </script>
@@ -19,13 +19,13 @@
           {#if s.type === 'perk'}
             <span class="perk-icon">💡</span>
           {/if}
-          {@html highlightText(s.label, modalSearch)}
+          {@html highlightText(s.label, searchQuery)}
         </button>
       {/each}
     </div>
   </div>
 {:else if noExactResults}
-  <p class="dym-empty">No results for "<strong>{modalSearch}</strong>"</p>
+  <p class="dym-empty">No results for "<strong>{searchQuery}</strong>"</p>
 {/if}
 
 <style>

@@ -226,4 +226,4 @@ export const BOOST_DEFS: BoostDef[] = [
   },
 ]
 
-export const BOOST_DEF_MAP = new Map(BOOST_DEFS.map(d => [d.sourceName, d]))
+const BOOST_DEF_MAP = new Map(BOOST_DEFS.map(d => [d.sourceName, d]))
