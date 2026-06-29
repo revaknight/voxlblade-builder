@@ -16,7 +16,7 @@ const ENCHANT_MAP = Object.fromEntries(enchantments.map(e => [e.name, e]))
 const RING_MAP    = Object.fromEntries(rings.map(r => [r.name, r]))
 const RUNE_MAP    = Object.fromEntries(runes.map(r => [r.name, r]))
 
-export const ARMOR_MAP = Object.fromEntries(armorsRaw.map((a: any) => [
+const ARMOR_MAP = Object.fromEntries(armorsRaw.map((a: any) => [
   a.name,
   {
     name: a.name,

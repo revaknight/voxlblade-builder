@@ -1,7 +1,6 @@
-// Public surface of the engine — all importers unchanged.
-export * from './engine/data'
-export * from './engine/shrine'
-export * from './engine/enchant'
-export * from './engine/weapon'
-export * from './engine/build'
-export * from './engine/format'
+export * from './data'
+export * from './shrine'
+export * from './enchant'
+export * from './weapon'
+export * from './build'
+export * from './format'
