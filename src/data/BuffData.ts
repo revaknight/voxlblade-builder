@@ -375,6 +375,14 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     sourceType: 'rune',
   },
   {
+    buffName: 'Poison',
+    potency: 0,
+    duration: 5,
+    condition: 'On hit',
+    sourceName: 'Sporeling Toss Rune',
+    sourceType: 'rune',
+  },
+  {
     buffName: 'Lightning Cloak',
     potency: 1.0,
     duration: 5,

@@ -2,6 +2,12 @@ export function calcSummonStat(base: number, summonBoostPct: number, level: numb
   return Math.round(base * (1 + (summonBoostPct / 100) * (1 + level / 80)) * 100) / 100
 }
 
+export const BASE_SUMMON_CAP = 15
+
+export function calcMaxSummonCount(perks: Record<string, number>): number {
+  return BASE_SUMMON_CAP + Math.floor(perks['Swarm'] ?? 0)
+}
+
 interface SummonAttack {
   label: string
   baseDmg: number

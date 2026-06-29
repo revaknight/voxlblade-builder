@@ -210,6 +210,7 @@ export interface BuildState {
   hpFill: number
   summonCount: number
   buffsConsumed: number
+  sporelingsSummoned: number
   inDarkness: boolean
   cdrToggles: Record<string, boolean>
 }

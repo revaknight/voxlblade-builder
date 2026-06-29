@@ -9,7 +9,7 @@
   import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect } from './data/BuffData'
   import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
   import { getDraconicHexDebuffs, getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'  
-  import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat } from './data/SummonData'
+  import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat, calcMaxSummonCount } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
   import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive } from './data/Perkbasedmg'
   import { resolveDefenseSources, calcBaseArmorDefPct, DEF_GROUP, type DefenseSource } from './lib/defense'
@@ -1142,10 +1142,21 @@
     return selectedWeaponData.m2Charge.formula(dmg, weaponCharge)
   }
 
-  $: maxSummons = 15 + Math.floor(perks['Swarm'] ?? 0);
-
+  $: maxSummons = calcMaxSummonCount(perks);
   $: _activeRuneDmgDef = RUNE_DMG_DEFS.find(d => d.runeName === $build.rune) ?? null
   $: runePotency = _activeRuneDmgDef?.maxPotency ?? 0
+  $: _runeSliderVal = _activeRuneDmgDef?.slider
+    ? ((($build as any)[_activeRuneDmgDef.slider.buildKey] ?? 0) as number)
+    : 0
+    
+  $: _runeSliderMax = _activeRuneDmgDef?.slider
+    ? (_activeRuneDmgDef.slider.getMax ? _activeRuneDmgDef.slider.getMax({ perks }) : _activeRuneDmgDef.slider.max)
+    : 0
+    
+  $: if (_activeRuneDmgDef?.slider && _runeSliderVal > _runeSliderMax) {
+    const sliderDef = _activeRuneDmgDef.slider
+    build.update(s => ({ ...s, [sliderDef.buildKey]: _runeSliderMax }) as any)
+  }
 
   // ── Mount Runes (override M1 + WA while riding) ──────────────────────────
   $: _activeMountRuneDef = MOUNT_RUNE_DEFS.find(d => d.runeName === $build.rune) ?? null
@@ -1538,9 +1549,9 @@
         group: 'Rune',
         index: result.length,
         count: _activeRuneDmgDef.getHits
-          ? _activeRuneDmgDef.getHits({ potency: runePotency })
+          ? _activeRuneDmgDef.getHits({ potency: runePotency, sliderVal: _runeSliderVal })
           : (_activeRuneDmgDef.hits ?? 1),
-        base: _activeRuneDmgDef.getBaseDamage({ potency: runePotency }),
+        base: _activeRuneDmgDef.getBaseDamage({ potency: runePotency, sliderVal: _runeSliderVal }),
         scalingMult: _computePerkScalingMult(_activeRuneDmgDef.scalings),
         dmgTypes: _runeDmgTypesWithBonus,
         combatMult: _runeIsHeal ? _healFinalMultiplier : _runeCombatMult,
@@ -2320,9 +2331,9 @@
       {/if}
       {#if _activeRuneDmgDef && isActive}
         {@const _runeHits = _activeRuneDmgDef.getHits
-          ? _activeRuneDmgDef.getHits({ potency: runePotency })
+          ? _activeRuneDmgDef.getHits({ potency: runePotency, sliderVal: _runeSliderVal })
           : (_activeRuneDmgDef.hits ?? 1)}
-        {@const _runeBase = _activeRuneDmgDef.getBaseDamage({ potency: runePotency })}
+        {@const _runeBase = _activeRuneDmgDef.getBaseDamage({ potency: runePotency, sliderVal: _runeSliderVal })}
         {@const _runeScalingMult = _computePerkScalingMult(_activeRuneDmgDef.scalings)}
         {@const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false}
         {@const _draconicRunesStacks = perks['Draconic Runes'] ?? 0}
@@ -2349,6 +2360,27 @@
             })}
         
         <div class="da-wbd-section">
+          {#if _activeRuneDmgDef.slider}
+            <div class="da-sb-slider-wrap" style="margin-bottom:6px">
+              <span class="da-sb-slider-label">{_activeRuneDmgDef.slider.label}</span>
+              <input
+                type="range"
+                min={_activeRuneDmgDef.slider.min}
+                max={_runeSliderMax}
+                step={_activeRuneDmgDef.slider.step ?? 1}
+                value={_runeSliderVal}
+                on:input={(e) => {
+                  const sliderDef = _activeRuneDmgDef?.slider
+                  if (!sliderDef) return
+                  const val = +(e.target as HTMLInputElement).value
+                  build.update(s => ({ ...s, [sliderDef.buildKey]: val }) as any)
+                }}
+                class="da-sb-slider"
+                style="--fill:{((_runeSliderVal - _activeRuneDmgDef.slider.min) / (_runeSliderMax - _activeRuneDmgDef.slider.min || 1)) * 100}%"
+              />
+              <span class="da-sb-slider-val">{_runeSliderVal}</span>
+            </div>
+          {/if}
           <div class="da-wbd-row-label da-wbd-row-label--rune">
             <span class="da-wbd-lbl-badge da-wbd-lbl-badge--rune">Rune</span>
             <span class="da-wbd-lbl-text">{_activeRuneDmgDef.runeName}</span>

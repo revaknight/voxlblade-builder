@@ -1,5 +1,6 @@
 import type { BuildState } from '../lib/types';
 import { calculateHealBoost, type HealBoostContext } from './HealBoost';
+import { calcMaxSummonCount } from './SummonData';
 
 export interface RuneDmgCtx {
   potency: number
@@ -12,6 +13,7 @@ export interface RuneSliderDef {
   min: number
   max: number
   step?: number
+  getMax?: (ctx: { perks: Record<string, number> }) => number
 }
 
 export interface RuneShieldDef {
@@ -107,5 +109,22 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     scalings: { air: 1.0, magic: 1.0 },
     hits: 1,
     note: 'Hold & release right before hitting an enemy to crit and gain Lightning Cloak for 5s. An enemy does not need to be present to trigger Lightning Cloak.',
+  },
+  {
+    runeName: 'Sporeling Toss Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 3.5,
+    dmgTypes: { hex: 0.5, physical: 0.5 },
+    scalings: { hex: 1.0, physical: 1.0, summon: 1.0 },
+    getHits: ({ sliderVal = 0 }) => 2 + sliderVal,
+    slider: {
+      buildKey: 'sporelingsSummoned',
+      label: 'Already-summoned Sporelings',
+      min: 0,
+      max: 15,
+      step: 1,
+      getMax: ({ perks }) => calcMaxSummonCount(perks),
+    },
+    note: 'Always tosses 2 fresh Sporelings + however many you already have summoned, capped at your Summon Cap (15 + Swarm) — shared cap with all minions, incl. Boglord Ring/Vassals Croak. /* TODO: verify vs wiki whether the 2 freshly-tossed sporelings count against this same cap */',
   },
 ]

@@ -40,6 +40,7 @@ import Highlight from './Highlight.svelte'
   import SuggestDrop from './SuggestDrop.svelte'
   import { getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'
   import { CDR_PERK_DATA } from './data/cdr'
+  import { calcMaxSummonCount } from './data/SummonData'
   import ModalSearchHeader from './ModalSearchHeader.svelte'
   import CdrStepsCalc from './CdrStepsCalc.svelte'
 
@@ -58,7 +59,7 @@ import Highlight from './Highlight.svelte'
     CDR_PERK_DATA[name].toggleable && ($result.perks[name] ?? 0) > 0
   )
   $: {
-    const _maxSummons = 15 + ($result.perks['Swarm'] ?? 0)
+    const _maxSummons = calcMaxSummonCount($result.perks)
     if ($build.summonCount !== _maxSummons) {
       build.update(s => ({ ...s, summonCount: _maxSummons }))
     }
