@@ -108,6 +108,9 @@
     [...active.keys()]
         .filter(k => !k.startsWith('neg:'))
   )
+
+  $: currentGroups = activeTab === 'positive' ? STAT_GROUPS : NEG_STAT_GROUPS
+  $: currentHiddenSet = activeTab === 'positive' ? hiddenInPositive : hiddenInNegative
 </script>
 
 <div class="sf-root">
@@ -209,77 +212,40 @@
       </span>
     </div>
 
-    {#if activeTab === 'positive'}
-      {#each STAT_GROUPS as group}
-        <div class="sf-group">
-          <span class="sf-group-label" style="color:{group.color}">
-            {group.label}
-          </span>
+    {#each currentGroups as group}
+      <div class="sf-group">
+        <span class="sf-group-label" style="color:{group.color}">
+          {group.label}
+        </span>
 
-          <div class="sf-chips">
-            {#each group.stats as stat}
-              {@const state = active.get(stat.key)}
-              {@const dimmed = hiddenInPositive.has(stat.key)}
-              <button
-                class="sf-chip"
-                class:sf-chip--include={state === 'include'}
-                class:sf-chip--exclude={state === 'exclude'}
-                class:sf-chip--dimmed={dimmed}
-                style="--c:{group.color}"
-                aria-pressed={!!state}
-                aria-label="{stat.label} stat filter. Current: {state ?? 'off'}."
-                disabled={dimmed}
-                on:click={() => toggle(stat.key)}
-                on:contextmenu|preventDefault={() => remove(stat.key)}
-                on:keydown={(e) => handleChipKeyDown(e, stat.key)}
-              >
-                {#if state}
-                  <span class="sf-sign">
-                    {state === 'include' ? '+' : '−'}
-                  </span>
-                {/if}
-                {stat.label}
-              </button>
-            {/each}
-          </div>
+        <div class="sf-chips">
+          {#each group.stats as stat}
+            {@const state = active.get(stat.key)}
+            {@const dimmed = currentHiddenSet.has(activeTab === 'negative' ? stat.key.slice(4) : stat.key)}
+            <button
+              class="sf-chip"
+              class:sf-chip--include={state === 'include'}
+              class:sf-chip--exclude={state === 'exclude'}
+              class:sf-chip--dimmed={dimmed}
+              style="--c:{group.color}"
+              aria-pressed={!!state}
+              aria-label="{activeTab === 'negative' ? 'Negative ' : ''}{stat.label} stat filter. Current: {state ?? 'off'}."
+              disabled={dimmed}
+              on:click={() => toggle(stat.key)}
+              on:contextmenu|preventDefault={() => remove(stat.key)}
+              on:keydown={(e) => handleChipKeyDown(e, stat.key)}
+            >
+              {#if state}
+                <span class="sf-sign">
+                  {state === 'include' ? '+' : '−'}
+                </span>
+              {/if}
+              {stat.label}
+            </button>
+          {/each}
         </div>
-      {/each}
-    {:else}
-      {#each NEG_STAT_GROUPS as group}
-        <div class="sf-group">
-          <span class="sf-group-label" style="color:{group.color}">
-            {group.label}
-          </span>
-
-          <div class="sf-chips">
-            {#each group.stats as stat}
-              {@const state = active.get(stat.key)}
-              {@const dimmed = hiddenInNegative.has(stat.key.slice(4))}
-              <button
-                class="sf-chip"
-                class:sf-chip--include={state === 'include'}
-                class:sf-chip--exclude={state === 'exclude'}
-                class:sf-chip--dimmed={dimmed}
-                style="--c:{group.color}"
-                aria-pressed={!!state}
-                aria-label="Negative {stat.label} stat filter. Current: {state ?? 'off'}."
-                disabled={dimmed}
-                on:click={() => toggle(stat.key)}
-                on:contextmenu|preventDefault={() => remove(stat.key)}
-                on:keydown={(e) => handleChipKeyDown(e, stat.key)}
-              >
-                {#if state}
-                  <span class="sf-sign">
-                    {state === 'include' ? '+' : '−'}
-                  </span>
-                {/if}
-                {stat.label}
-              </button>
-            {/each}
-          </div>
-        </div>
-      {/each}
-    {/if}
+      </div>
+    {/each}
 
   </div>
 {/if}

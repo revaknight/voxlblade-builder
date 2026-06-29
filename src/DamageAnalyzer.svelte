@@ -2,6 +2,7 @@
   import { build, result } from './lib/store'
   import { calcWeapon, calcMonkWeapon, isMonkGuild } from './lib/engine'
   import BaseDamageCalc from './BaseDamageCalc.svelte'
+  import ScalingBreakdownRow from './ScalingBreakdownRow.svelte'
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, type WeaponBaseDmg } from './lib/types'
@@ -2959,23 +2960,7 @@
           <div class="ds-col ds-col--contrib">Contribution</div>
         </div>
         {#each _draconicScalingBreakdown.rows as row}
-          <div class="ds-row">
-            <div class="ds-col ds-col--type">
-              <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
-            </div>
-            <div class="ds-col ds-col--val"><span class="ds-num" style="color:{row.color}">{row.scalingVal}</span></div>
-            <div class="ds-col ds-col--op">×</div>
-            <div class="ds-col ds-col--boost">
-              <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
-            </div>
-            <div class="ds-col ds-col--op">=</div>
-            <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
-                {row.contribution > 0 ? '+' : ''}{row.contribution}%
-              </span>
-            </div>
-          </div>
+          <ScalingBreakdownRow {row} />
         {/each}
         <div class="ds-row ds-row--total">
           <div class="ds-col ds-col--type ds-total-label">Total</div>
@@ -3010,23 +2995,7 @@
           <div class="ds-col ds-col--contrib">Contribution</div>
         </div>
         {#each _mountRuneScalingBreakdown.rows as row}
-          <div class="ds-row">
-            <div class="ds-col ds-col--type">
-              <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
-            </div>
-            <div class="ds-col ds-col--val"><span class="ds-num" style="color:{row.color}">{row.scalingVal}</span></div>
-            <div class="ds-col ds-col--op">×</div>
-            <div class="ds-col ds-col--boost">
-              <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
-            </div>
-            <div class="ds-col ds-col--op">=</div>
-            <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
-                {row.contribution > 0 ? '+' : ''}{row.contribution}%
-              </span>
-            </div>
-          </div>
+          <ScalingBreakdownRow {row} />
         {/each}
         <div class="ds-row ds-row--total">
           <div class="ds-col ds-col--type ds-total-label">Total</div>
@@ -3069,30 +3038,7 @@
           <div class="ds-col ds-col--contrib">Contribution</div>
         </div>
         {#each _waHealScalingBreakdown.rows as row}
-          <div class="ds-row">
-            <div class="ds-col ds-col--type">
-              <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
-            </div>
-            <div class="ds-col ds-col--val">
-              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
-            </div>
-            <div class="ds-col ds-col--op">×</div>
-            <div class="ds-col ds-col--boost">
-              {#if row.boostPct !== 0}
-                <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
-              {:else}
-                <span class="ds-boost ds-boost--zero">+0%</span>
-              {/if}
-            </div>
-            <div class="ds-col ds-col--op">=</div>
-            <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0}
-                style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
-                {row.contribution > 0 ? '+' : ''}{row.contribution}%
-              </span>
-            </div>
-          </div>
+          <ScalingBreakdownRow {row} useRoundMultiplier={true} showZeroBoost={true} />
         {/each}
         <div class="ds-row ds-row--total" style="background:rgba(74,222,128,.07);border-color:rgba(74,222,128,.18)">
           <div class="ds-col ds-col--type ds-total-label" style="color:#4ade80">Total</div>
@@ -3128,30 +3074,7 @@
           <div class="ds-col ds-col--contrib">Contribution</div>
         </div>
         {#each _perkHealScalingBreakdown.rows as row}
-          <div class="ds-row">
-            <div class="ds-col ds-col--type">
-              <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{(row as any).label ?? (row.key.charAt(0).toUpperCase() + row.key.slice(1))}</span>
-            </div>
-            <div class="ds-col ds-col--val">
-              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
-            </div>
-            <div class="ds-col ds-col--op">×</div>
-            <div class="ds-col ds-col--boost">
-              {#if row.boostPct !== 0}
-                <span class="ds-boost" style={row.boostPct < 0 ? 'color:#cf6679;' : ''}>{row.boostPct > 0 ? '+' : ''}{row.boostPct}%</span>
-              {:else}
-                <span class="ds-boost ds-boost--zero">+0%</span>
-              {/if}
-            </div>
-            <div class="ds-col ds-col--op">=</div>
-            <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0}
-                style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color:#cf6679;' : ''}>
-                {row.contribution > 0 ? '+' : ''}{row.contribution}%
-              </span>
-            </div>
-          </div>
+          <ScalingBreakdownRow {row} useRoundMultiplier={true} showZeroBoost={true} />
         {/each}
         <div class="ds-row ds-row--total" style="background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.18)">
           <div class="ds-col ds-col--type ds-total-label" style="color:#38bdf8">Total</div>
@@ -4129,43 +4052,6 @@
   font-weight: 700;
   font-family: 'Courier New', monospace;
   letter-spacing: .02em;
-}
-.wa-avg-total-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: rgba(167,139,250,.08);
-  border: 1px solid rgba(167,139,250,.2);
-  flex-wrap: wrap;
-}
-.wa-atb-left {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.wa-atb-label {
-  font-size: .6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--accent3);
-  opacity: .8;
-}
-.wa-atb-hint {
-  font-size: .58rem;
-  color: var(--ink-muted);
-  opacity: .5;
-}
-.wa-atb-base {
-  font-family: 'Courier New', monospace;
-  font-size: .95rem;
-  font-weight: 800;
-  color: var(--accent3);
-  text-shadow: 0 0 10px rgba(167,139,250,.35);
 }
 .da-wbd-equipped-badge {
   font-size: .55rem;

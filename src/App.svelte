@@ -1,5 +1,6 @@
 <script lang="ts">
   import { build, result, clearBuild } from './lib/store'
+  import DraconicAbilityStats from './DraconicAbilityStats.svelte'
   import {
     races, guilds, armors, rings, runes, blades, handles, gloves, essences,
     getGuild, getArmorPart, getRing, getRune, getEnchant, getPerk,
@@ -39,6 +40,8 @@ import Highlight from './Highlight.svelte'
   import SuggestDrop from './SuggestDrop.svelte'
   import { getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'
   import { CDR_PERK_DATA } from './data/cdr'
+  import ModalSearchHeader from './ModalSearchHeader.svelte'
+  import CdrStepsCalc from './CdrStepsCalc.svelte'
 
   
   function toggleCdrPerk(perkName: string) {
@@ -1312,24 +1315,19 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'guild'}
-        <h2 class="modal-title">Select Guild</h2>        
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-            show={showSuggestions}
-            suggestions={modalSuggestions}
-            suggestQuery={modalSearch}
-            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          />
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Guild"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
-          hideTags={['Stance Change']}
+          on:focus={onSearchFocus}
+          on:blur={onSearchBlur}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
         />
-        <StatFilter on:change={onStatFilterChange} />
         <div class="modal-list">
           <button class="modal-item" class:modal-item--active={$build.guild === ''}
             on:click={() => { setGuild('', 1); closeModal() }}>
@@ -1377,32 +1375,23 @@ $: _appWaAvgTotal = (() => {
       {:else if activeModal === 'armor-helmet' || activeModal === 'armor-chestplate' || activeModal === 'armor-leggings'}
         {@const slotName = activeModal === 'armor-helmet' ? 'Helmet' : activeModal === 'armor-chestplate' ? 'Chestplate' : 'Leggings'}
         {@const storeKey = slotName.toLowerCase() as 'helmet'|'chestplate'|'leggings'}
-        <h2 class="modal-title">Select {slotName}</h2>
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-            show={showSuggestions}
-            suggestions={modalSuggestions}
-            suggestQuery={modalSearch}
-            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          />
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select {slotName}"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
-          hideTags={['Stance Change']}
+          showSortButtons
+          {weaponResult}
+          bind:statFilterSortMode
+          effectiveLabel="boost"
+          on:focus={onSearchFocus}
+          on:blur={onSearchBlur}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
         />
-        <StatFilter on:change={onStatFilterChange} />
-        {#if weaponResult}
-          <div class="armor-sort-row">
-            <span class="armor-sort-label">Sort</span>
-            <button class="armor-sort-btn" class:armor-sort-btn--active={statFilterSortMode === 'highest'} on:click={() => statFilterSortMode = 'highest'}>Highest</button>
-            <button class="armor-sort-btn armor-sort-btn--eff" class:armor-sort-btn--active={statFilterSortMode === 'most-effective'} on:click={() => statFilterSortMode = 'most-effective'} title="Sort by Σ(weapon scaling × boost)">Most Effective</button>
-            <button class="armor-sort-btn armor-sort-btn--brawny" class:armor-sort-btn--active={statFilterSortMode === 'brawny'} on:click={() => statFilterSortMode = 'brawny'} title="Apply Brawny conversion then sort by effective boost">Brawny</button>
-          </div>
-        {/if}
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build[storeKey] === ''}
             on:click={() => { build.update(s => ({...s, [storeKey]: ''})); closeModal() }}>
@@ -1442,32 +1431,23 @@ $: _appWaAvgTotal = (() => {
       {:else if activeModal === 'infusion-helmet' || activeModal === 'infusion-chestplate' || activeModal === 'infusion-leggings'}
         {@const slotName = activeModal === 'infusion-helmet' ? 'Helmet' : activeModal === 'infusion-chestplate' ? 'Chestplate' : 'Leggings'}
         {@const infKey = ('infusion' + slotName) as 'infusionHelmet'|'infusionChestplate'|'infusionLeggings'}
-        <h2 class="modal-title">Select Infusion {slotName}</h2>        
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  suggestQuery={modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Infusion {slotName}"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
-          hideTags={['Stance Change']}
+          showSortButtons
+          {weaponResult}
+          bind:statFilterSortMode
+          effectiveLabel="armor boost"
+          on:focus={onSearchFocus}
+          on:blur={onSearchBlur}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
         />
-        <StatFilter on:change={onStatFilterChange} />
-        {#if weaponResult}
-          <div class="armor-sort-row">
-            <span class="armor-sort-label">Sort</span>
-            <button class="armor-sort-btn" class:armor-sort-btn--active={statFilterSortMode === 'highest'} on:click={() => statFilterSortMode = 'highest'}>Highest</button>
-            <button class="armor-sort-btn armor-sort-btn--eff" class:armor-sort-btn--active={statFilterSortMode === 'most-effective'} on:click={() => statFilterSortMode = 'most-effective'} title="Sort by Σ(weapon scaling × armor boost)">Most Effective</button>
-            <button class="armor-sort-btn armor-sort-btn--brawny" class:armor-sort-btn--active={statFilterSortMode === 'brawny'} on:click={() => statFilterSortMode = 'brawny'} title="Apply Brawny conversion then sort by effective boost">Brawny</button>
-          </div>
-        {/if}
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build[infKey] === ''}
             on:click={() => { build.update(s => ({...s, [infKey]: ''})); closeModal() }}>
@@ -1503,23 +1483,17 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'ring'}
-        <h2 class="modal-title">Select Ring</h2>        
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  suggestQuery={modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Ring"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
         />
-        <StatFilter on:change={onStatFilterChange} />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build.ring === ''}
             on:click={() => { build.update(s => ({...s, ring: ''})); closeModal() }}>
@@ -1553,23 +1527,17 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'infusion-ring'}
-        <h2 class="modal-title">Select Infusion Ring</h2>       
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  suggestQuery={modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Infusion Ring"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
         />
-        <StatFilter on:change={onStatFilterChange} />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build.infusionRing === ''}
             on:click={() => { build.update(s => ({...s, infusionRing: ''})); closeModal() }}>
@@ -1602,24 +1570,19 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'rune'}
-        <h2 class="modal-title">Select Rune</h2>
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  suggestQuery={modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Rune"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
-          hideTags={['Stance Change']}
+          on:focus={onSearchFocus}
+          on:blur={onSearchBlur}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:change={onStatFilterChange}
         />
-        <StatFilter on:change={onStatFilterChange} />
         <div class="modal-list modal-list--compact">
           <button class="modal-item modal-item--sm" class:modal-item--active={$build.rune === ''}
             on:click={() => { build.update(s => ({...s, rune: ''})); closeModal() }}>
@@ -1654,23 +1617,19 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'blade'}
-        <h2 class="modal-title">Select Blade</h2>
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-            show={showSuggestions}
-            suggestions={modalSuggestions}
-            suggestQuery={modalSearch}
-            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          />
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Blade"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
+          useWeaponStatFilter={true}
+          weaponStatFilter={weaponStatFilter}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
         />
-        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={bladeFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1711,23 +1670,19 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'handle'}
-        <h2 class="modal-title">Select Handle</h2>
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-  show={showSuggestions}
-  suggestions={modalSuggestions}
-  suggestQuery={modalSearch}
-  on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-/>
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Handle"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
+          useWeaponStatFilter={true}
+          weaponStatFilter={weaponStatFilter}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
         />
-        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={handleFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1821,23 +1776,19 @@ $: _appWaAvgTotal = (() => {
         </div>
 
       {:else if activeModal === 'essence'}
-        <h2 class="modal-title">Select Essence</h2>
-        <div class="search-wrap">
-          <input class="modal-search-input" type="text" bind:value={modalSearch} placeholder="Search name or perk..."
-            on:focus={onSearchFocus} on:blur={onSearchBlur} />
-          <SuggestDrop
-            show={showSuggestions}
-            suggestions={modalSuggestions}
-            suggestQuery={modalSearch}
-            on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          />
-        </div>
-        <TagFilter
+        <ModalSearchHeader
+          title="Select Essence"
+          bind:modalSearch
+          {showSuggestions}
+          {modalSuggestions}
           {selectedTags}
+          useWeaponStatFilter={true}
+          weaponStatFilter={weaponStatFilter}
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
+          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
+          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
         />
-        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={essenceFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -2442,37 +2393,16 @@ $: _appWaAvgTotal = (() => {
                   <span class="dab-stat-k">Damage</span>
                   <span class="dab-stat-v dab-stat-v--dmg">{dragonClawDmg(draconicPerkAmt)}</span>
                 </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Dmg Type</span>
-                  <span class="dab-stat-v" style={dracoColor ? `color:${dracoColor.color}` : 'color:#fb923c'}>
-                    {dracoColor ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0
-                  </span>
-                </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Scaling</span>
-                  <span class="dab-stat-v" style={dracoColor ? `color:${dracoColor.color}` : 'color:#fb923c'}>
-                    1.0 {dracoColor ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'}
-                  </span>
-                </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Poise Dmg</span>
-                  <span class="dab-stat-v dab-stat-v--poise">60</span>
-                </div>
-                {#if $build.draconicColor === 'holy'}
-                  <div class="dab-stat-row">
-                    <span class="dab-stat-k">Heal (Holy)</span>
-                    <span class="dab-stat-v">{dragonClawHealHoly(draconicPerkAmt)}</span>
-                  </div>
-                  {/if}
-                  {#if $build.draconicColor === 'water'}
-                  <div class="dab-stat-row">
-                    <span class="dab-stat-k">Heal (Water)</span>
-                    <span class="dab-stat-v">{dragonClawHealWater(draconicPerkAmt)}</span>
-                  </div>
-                  <div class="dab-notes">Cleanses</div>
-                  {/if}
-                </div>
+                <DraconicAbilityStats
+                  {dracoColor}
+                  poiseDmg={60}
+                  healHoly={dragonClawHealHoly(draconicPerkAmt)}
+                  healWater={dragonClawHealWater(draconicPerkAmt)}
+                  showHoly={$build.draconicColor === 'holy'}
+                  showWater={$build.draconicColor === 'water'}
+                />
                 <div class="dab-notes">Guardbreaks</div>
+              </div>
               </button>
 
             <!-- Dragon Infusion -->
@@ -2543,35 +2473,14 @@ $: _appWaAvgTotal = (() => {
                   <span class="dab-stat-k">Damage</span>
                   <span class="dab-stat-v dab-stat-v--dmg">{dragonBubbleDmg(draconicPerkAmt)}</span>
                 </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Dmg Type</span>
-                  <span class="dab-stat-v" style={dracoColor ? `color:${dracoColor.color}` : 'color:#fb923c'}>
-                    {dracoColor ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'} 1.0
-                  </span>
-                </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Scaling</span>
-                  <span class="dab-stat-v" style={dracoColor ? `color:${dracoColor.color}` : 'color:#fb923c'}>
-                    1.0 {dracoColor ? dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1) : 'Physical'}
-                  </span>
-                </div>
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Poise Dmg</span>
-                  <span class="dab-stat-v dab-stat-v--poise">45</span>
-                </div>
-                {#if $build.draconicColor === 'holy'}
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Heal (Holy)</span>
-                  <span class="dab-stat-v">{dragonBubbleHealHoly(draconicPerkAmt)}</span>
-                </div>
-                {/if}
-                {#if $build.draconicColor === 'water'}
-                <div class="dab-stat-row">
-                  <span class="dab-stat-k">Heal (Water)</span>
-                  <span class="dab-stat-v">{dragonBubbleHealWater(draconicPerkAmt)}</span>
-                </div>
-                <div class="dab-notes">Cleanses</div>
-                {/if}
+                <DraconicAbilityStats
+                  {dracoColor}
+                  poiseDmg={45}
+                  healHoly={dragonBubbleHealHoly(draconicPerkAmt)}
+                  healWater={dragonBubbleHealWater(draconicPerkAmt)}
+                  showHoly={$build.draconicColor === 'holy'}
+                  showWater={$build.draconicColor === 'water'}
+                />
               </div>
               <div class="dab-notes">Goes through walls · Detonates on contact</div>
             </button>
@@ -2667,72 +2576,11 @@ $: _appWaAvgTotal = (() => {
                                 {/each}
                                 {#each runes.filter(r => r.name === $build.rune).slice(0,1) as rune}
                                   <!-- SAU (Rune CDR block) -->
-  <div class="cdr-steps-calc">
-    {#if cdr.runeSetCD != null}
-      <div class="cdr-calc-row">
-        <span class="cdr-cd-old">{rune.cooldown}s</span>
-        <span class="cdr-arrow">→</span>
-        <span class="cdr-cd-new">{cdr.runeSetCD}s</span>
-      </div>
-      {#each cdr.runeBreakdown as step, i}
-        {@const prevCD = i === 0 ? cdr.runeSetCD : cdr.runeSetCD * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-        {@const nextCD = cdr.runeSetCD * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-        {@const isLast = i === cdr.runeBreakdown.length - 1}
-        <div class="cdr-calc-row">
-          <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-          <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-          <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-          <span class="cdr-arrow">=</span>
-          <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-        </div>
-        {#if isLast}
-          {@const floored = Math.floor(nextCD)}
-          {@const capped = Math.max(1, floored)}
-          <div class="cdr-calc-row cdr-calc-row--floor">
-            <span class="cdr-floor-label">floor</span>
-            <span class="cdr-arrow">→</span>
-            {#if capped > floored}
-              <span class="cdr-cd-new" style="text-decoration:line-through;opacity:.35">{floored}s</span>
-              <span class="cdr-arrow">→</span>
-              <span class="cdr-cd-new" style="color:var(--accent2)">1s</span>
-              <span class="cdr-cap-label">(min)</span>
-            {:else}
-              <span class="cdr-cd-new">{floored}s</span>
-            {/if}
-          </div>
-        {/if}
-      {/each}
-      {:else}
-      {#each cdr.runeBreakdown as step, i}
-        {@const prevCD = i === 0 ? rune.cooldown : rune.cooldown * cdr.runeBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-        {@const nextCD = rune.cooldown * cdr.runeBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-        {@const isLast = i === cdr.runeBreakdown.length - 1}
-        <div class="cdr-calc-row">
-          <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-          <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-          <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-          <span class="cdr-arrow">=</span>
-          <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-        </div>
-        {#if isLast}
-          {@const floored = Math.floor(nextCD)}
-          {@const capped = Math.max(1, floored)}
-          <div class="cdr-calc-row cdr-calc-row--floor">
-            <span class="cdr-floor-label">floor</span>
-            <span class="cdr-arrow">→</span>
-            {#if capped > floored}
-              <span class="cdr-cd-new" style="text-decoration:line-through;opacity:.35">{floored}s</span>
-              <span class="cdr-arrow">→</span>
-              <span class="cdr-cd-new" style="color:var(--accent2)">1s</span>
-              <span class="cdr-cap-label">(min)</span>
-            {:else}
-              <span class="cdr-cd-new">{floored}s</span>
-            {/if}
-          </div>
-        {/if}
-      {/each}
-                            {/if}
-                          </div>
+                                  <CdrStepsCalc
+                                    breakdown={cdr.runeBreakdown}
+                                    baseCd={rune.cooldown}
+                                    setCD={cdr.runeSetCD ?? null}
+                                  />
                                 {/each}
                               </div>
                             {/if}
@@ -2986,36 +2834,7 @@ $: _appWaAvgTotal = (() => {
             </span>
           </div>
         {/each}
-        <div class="cdr-steps-calc">
-          {#each cdr.waBreakdown as step, i}
-          {@const prevCD = i === 0 ? selectedWA.cooldown : selectedWA.cooldown * cdr.waBreakdown.slice(0,i).reduce((a,s)=>a*s.multiplier,1)}
-          {@const nextCD = selectedWA.cooldown * cdr.waBreakdown.slice(0,i+1).reduce((a,s)=>a*s.multiplier,1)}
-          {@const isLast = i === cdr.waBreakdown.length - 1}
-          <div class="cdr-calc-row">
-            <span class="cdr-cd-old">{i === 0 ? prevCD : prevCD.toFixed(2)}s</span>
-            <span class="cdr-arrow">{step.isMultiply ? '×' : '÷'}</span>
-            <span class="cdr-calc-mult">{step.isMultiply ? step.multiplier.toFixed(2) : (1/step.multiplier).toFixed(2)}</span>
-            <span class="cdr-arrow">=</span>
-            <span class="cdr-cd-new">{nextCD.toFixed(2)}s</span>
-          </div>
-          {#if isLast}
-            {@const floored = Math.floor(nextCD)}
-            {@const capped = Math.max(1, floored)}
-            <div class="cdr-calc-row cdr-calc-row--floor">
-              <span class="cdr-floor-label">floor</span>
-              <span class="cdr-arrow">→</span>
-              {#if capped > floored}
-                <span class="cdr-cd-new" style="text-decoration:line-through;opacity:.35">{floored}s</span>
-                <span class="cdr-arrow">→</span>
-                <span class="cdr-cd-new" style="color:var(--accent2)">1s</span>
-                <span class="cdr-cap-label">(min)</span>
-              {:else}
-                <span class="cdr-cd-new">{floored}s</span>
-              {/if}
-            </div>
-          {/if}
-        {/each}
-        </div>
+        <CdrStepsCalc breakdown={cdr.waBreakdown} baseCd={selectedWA.cooldown} />
       </div>
     {/if}
     {#if _appWaAvgTotal}
@@ -3823,10 +3642,6 @@ $: _appWaAvgTotal = (() => {
   .cdr-step { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; padding:2px 4px; }
   .cdr-source { color:var(--ink-muted); }
   .cdr-mult { font-weight:700; color:#34d399; }
-  .cdr-cd-old { font-size:.75rem; color:var(--ink-muted); text-decoration:line-through; opacity:.4; }
-  .cdr-arrow { font-size:.7rem; color:var(--ink-muted); opacity:.35; }
-  .cdr-cd-new { font-size:.95rem; font-weight:800; color:#34d399; }
-
   .empty { color:var(--ink-muted); font-style:italic; font-size:.85rem; padding: 10px;}
 
   
@@ -4060,18 +3875,6 @@ $: _appWaAvgTotal = (() => {
 }.wa-cd-badge--reduced { 
   background: rgba(52,211,153,.2); 
   border-color: rgba(52,211,153,.4); 
-}
-.cdr-calc-row--floor { 
-  padding-top: 4px;
-  border-top: 1px dashed rgba(52,211,153,.2);
-  margin-top: 2px;
-}
-.cdr-floor-label { 
-  font-size: .62rem; 
-  color: var(--ink-muted); 
-  opacity: .5;
-  font-style: italic;
-  letter-spacing: .08em;
 }
 .wa-cd-old {
   text-decoration: line-through;
@@ -4568,94 +4371,6 @@ $: _appWaAvgTotal = (() => {
   white-space:normal;
   overflow-wrap:anywhere;
   line-height:1.15;
-}
-.wa-avg-total-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: rgba(167,139,250,.08);
-  border: 1px solid rgba(167,139,250,.2);
-  flex-wrap: wrap;
-}
-.wa-atb-left {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.wa-atb-label {
-  font-size: .6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--accent3);
-  opacity: .8;
-}
-.wa-atb-hint {
-  font-size: .58rem;
-  color: var(--ink-muted);
-  opacity: .5;
-}
-.wa-atb-base {
-  font-family: 'Courier New', monospace;
-  font-size: .95rem;
-  font-weight: 800;
-  color: var(--accent3);
-  text-shadow: 0 0 10px rgba(167,139,250,.35);
-}
-.cdr-cap-label {
-  font-size: .58rem;
-  color: var(--accent2);
-  font-weight: 700;
-  opacity: .7;
-  letter-spacing: .06em;
-}
-.armor-sort-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-.armor-sort-label {
-  font-size: .62rem;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  font-weight: 700;
-  color: var(--ink-muted);
-  opacity: .6;
-  margin-right: 2px;
-}
-.armor-sort-btn {
-  font-size: .7rem;
-  font-weight: 700;
-  padding: 4px 11px;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface3);
-  color: var(--ink-muted);
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: all .15s;
-}
-.armor-sort-btn:hover { color: var(--ink); border-color: rgba(255,255,255,.2); }
-.armor-sort-btn--active {
-  background: rgba(74,222,128,.12);
-  border-color: rgba(74,222,128,.35);
-  color: var(--accent);
-}
-.armor-sort-btn--eff.armor-sort-btn--active {
-  background: rgba(167,139,250,.14);
-  border-color: rgba(167,139,250,.4);
-  color: var(--accent3);
-}
-.armor-sort-btn--brawny.armor-sort-btn--active {
-  background: rgba(251,146,60,.14);
-  border-color: rgba(251,146,60,.4);
-  color: var(--weapon-blade);
 }
 .armor-eff-score {
   font-size: .65rem;
