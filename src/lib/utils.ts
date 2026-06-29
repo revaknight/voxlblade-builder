@@ -11,7 +11,28 @@ export function roundMultiplier(multiplier: number): number {
 }
 
 export function highlightText(text: string, query: string): string {
-  if (!query.trim()) return text
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="modal-hl">$1</mark>')
+  const q = query.trim()
+  if (!q) return text
+
+  const lowerText = text.toLowerCase()
+  const lowerQuery = q.toLowerCase()
+
+  let result = ''
+  let start = 0
+
+  while (true) {
+    const index = lowerText.indexOf(lowerQuery, start)
+
+    if (index === -1) {
+      result += text.slice(start)
+      break
+    }
+
+    result += text.slice(start, index)
+    result += `<mark class="modal-hl">${text.slice(index, index + q.length)}</mark>`
+
+    start = index + q.length
+  }
+
+  return result
 }
