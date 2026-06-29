@@ -4,12 +4,12 @@
 
   export let noExactResults: boolean = false
   export let didYouMean: Array<{ label: string; type: 'name' | 'perk'; score?: number }> = []
-  export let searchQuery: string = ''
+  export const searchQuery: string = ''
 
   const dispatch = createEventDispatcher<{ select: string }>()
 
-  function highlightParts(label: string, query: string): Array<{ text: string; highlight: boolean }> {
-    return highlightTextParts(label, query)
+  function highlightParts(label: string, q: string): Array<{ text: string; highlight: boolean }> {
+    return highlightTextParts(label, q)
   }
 </script>
 

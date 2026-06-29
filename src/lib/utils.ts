@@ -18,11 +18,11 @@ const htmlEscapeMap: Record<string, string> = {
   "'": '&#39;',
 }
 
-export function escapeHtml(text: string): string {
+function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (char) => htmlEscapeMap[char])
 }
 
-export function highlightText(text: string, query: string): string {
+function highlightText(text: string, query: string): string {
   const q = query.trim()
   if (!q) return escapeHtml(text)
 

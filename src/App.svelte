@@ -1284,7 +1284,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
             show={showSuggestions}
             suggestions={modalSuggestions}
-            searchQuery={modalSearch}
+            query={modalSearch}
             on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           />
         </div>
@@ -1319,7 +1319,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
             show={showSuggestions}
             suggestions={modalSuggestions}
-            searchQuery={modalSearch}
+            query={modalSearch}
             on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           />
         </div>
@@ -1384,7 +1384,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
             show={showSuggestions}
             suggestions={modalSuggestions}
-            searchQuery={modalSearch}
+            query={modalSearch}
             on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           />
         </div>
@@ -1449,7 +1449,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1495,11 +1495,11 @@ $: _appWaAvgTotal = (() => {
             {/if}
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  searchQuery={modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'ring'}
@@ -1510,7 +1510,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1545,11 +1545,11 @@ $: _appWaAvgTotal = (() => {
             </button>
           {/each}
           <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  searchQuery={modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
+            {noExactResults}
+            {didYouMean}
+            searchQuery={modalSearch}
+            on:select={(e) => { modalSearch = e.detail }}
+          />
         </div>
 
       {:else if activeModal === 'infusion-ring'}
@@ -1560,7 +1560,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1596,7 +1596,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1609,7 +1609,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1648,7 +1648,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1661,7 +1661,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
             show={showSuggestions}
             suggestions={modalSuggestions}
-            searchQuery={modalSearch}
+            query={modalSearch}
             on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           />
         </div>
@@ -1670,7 +1670,7 @@ $: _appWaAvgTotal = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={bladeFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1705,7 +1705,7 @@ $: _appWaAvgTotal = (() => {
           <DidYouMean
   {noExactResults}
   {didYouMean}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => { modalSearch = e.detail }}
 />
         </div>
@@ -1718,7 +1718,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1727,7 +1727,7 @@ $: _appWaAvgTotal = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={handleFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1775,7 +1775,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
   show={showSuggestions}
   suggestions={modalSuggestions}
-  searchQuery={modalSearch}
+  query={modalSearch}
   on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
 />
         </div>
@@ -1785,7 +1785,7 @@ $: _appWaAvgTotal = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={gloveFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>
@@ -1828,7 +1828,7 @@ $: _appWaAvgTotal = (() => {
           <SuggestDrop
             show={showSuggestions}
             suggestions={modalSuggestions}
-            searchQuery={modalSearch}
+            query={modalSearch}
             on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
           />
         </div>
@@ -1837,7 +1837,7 @@ $: _appWaAvgTotal = (() => {
           on:toggle={(e) => toggleTag(e.detail)}
           on:clear={clearTags}
         />
-        <WeaponStatFilter value={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
+        <WeaponStatFilter filterValue={weaponStatFilter} on:change={e => weaponStatFilter = e.detail} />
         <div class="modal-filters">
           <select bind:value={essenceFilterTier} class="modal-filter-sel">
             <option value="">All Tiers</option>

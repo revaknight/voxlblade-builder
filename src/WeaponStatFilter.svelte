@@ -5,7 +5,7 @@
   import { UI_COLORS } from './lib/uiConstants'
 
   const dispatch = createEventDispatcher<{ change: Map<string, 'include' | 'exclude'> }>()
-  export let value: Map<string, 'include' | 'exclude'> = new Map()
+  export let filterValue: Map<string, 'include' | 'exclude'> = new Map()
 
   const DMG_TYPE_GROUP = {
     label: 'Damage Type',
@@ -85,7 +85,7 @@
   initLookupMaps()
 
   // ── State ───────────────────────────────────────────────────────────────────
-  let active: Map<string, 'include' | 'exclude'> = new Map(value)
+  let active: Map<string, 'include' | 'exclude'> = new Map(filterValue)
   const { toggle, remove, clear, handleChipKeyDown } = createFilterActions(
     () => active,
     (next) => { active = next },
