@@ -1083,7 +1083,10 @@ $: highestDamageType = (() => {
       const rune = getRune($build.rune)
       if (rune) {
         const bp: Record<string, number> = rune.perkName ? { [rune.perkName]: rune.perkAmount ?? 1 } : {}
-        groups.push({ main: buildSlotCard('Rune', buildEnchantLabel(rune.name, 'rune'), rune.description, rune.stats, bp, 'rune', hasRuneCDR ?[`Base CD: ${rune.cooldown}s → ${formatCD(rune.cooldown, cdr)}`] : [`Cooldown: ${rune.cooldown}s`], $build.upgradeRune ?? 0), infusion: null })
+        const cdExtras = rune.name === 'Foot Dive Rune'
+          ? [`CD: 25s (miss) / 5s (hit)`]
+          : (hasRuneCDR ? [`Base CD: ${rune.cooldown}s → ${formatCD(rune.cooldown, cdr)}`] : [`Cooldown: ${rune.cooldown}s`])
+        groups.push({ main: buildSlotCard('Rune', buildEnchantLabel(rune.name, 'rune'), rune.description, rune.stats, bp, 'rune', cdExtras, $build.upgradeRune ?? 0), infusion: null })
       }
     }
     return groups
@@ -2586,12 +2589,26 @@ $: _appWaAvgTotal = (() => {
                                   </div>
                                 {/each}
                                 {#each runes.filter(r => r.name === $build.rune).slice(0,1) as rune}
-                                  <!-- SAU (Rune CDR block) -->
-                                  <CdrStepsCalc
-                                    breakdown={cdr.runeBreakdown}
-                                    baseCd={rune.cooldown}
-                                    setCD={cdr.runeSetCD ?? null}
-                                  />
+                                  {#if rune.name === 'Foot Dive Rune'}
+                                    <div class="cdr-dual-label">Miss</div>
+                                    <CdrStepsCalc
+                                      breakdown={cdr.runeBreakdown}
+                                      baseCd={25}
+                                      setCD={cdr.runeSetCD ?? null}
+                                    />
+                                    <div class="cdr-dual-label" style="margin-top:6px">Hit</div>
+                                    <CdrStepsCalc
+                                      breakdown={cdr.runeBreakdown}
+                                      baseCd={5}
+                                      setCD={cdr.runeSetCD ?? null}
+                                    />
+                                  {:else}
+                                    <CdrStepsCalc
+                                      breakdown={cdr.runeBreakdown}
+                                      baseCd={rune.cooldown}
+                                      setCD={cdr.runeSetCD ?? null}
+                                    />
+                                  {/if}
                                 {/each}
                               </div>
                             {/if}
@@ -3672,6 +3689,7 @@ $: _appWaAvgTotal = (() => {
   .cdr-title { font-size:.62rem; text-transform:uppercase; letter-spacing:.16em; font-weight:700; color:#34d399; }
   .cdr-step { display:flex; justify-content:space-between; align-items:center; font-size:.75rem; padding:2px 4px; }
   .cdr-source { color:var(--ink-muted); }
+  .cdr-dual-label { font-size:.65rem; font-weight:700; color:var(--ink-muted); opacity:.6; letter-spacing:.08em; text-transform:uppercase; }
   .cdr-mult { font-weight:700; color:#34d399; }
   .empty { color:var(--ink-muted); font-style:italic; font-size:.85rem; padding: 10px;}
 
