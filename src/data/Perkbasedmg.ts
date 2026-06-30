@@ -131,6 +131,17 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     guardbreak: true,
     note: 'Each hit counts as individual M1/M2 and procs related effects.',
   },
+  // ── Dire Buni Spirit ───────────────────────────────────────────────────────
+  {
+    perkName: 'Dire Buni Spirit',
+    condition: 'On RMB (Monk)',
+    getBaseDamage: () => 25,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { physical: 1.0 },
+    scalingMode: 'weapon',
+    guardbreak: true,
+    note: 'Counts as an M1/M2 and will proc related effects.',
+  },
   // ── Bounce Momentum ────────────────────────────────────────────────────────
   {
     perkName: 'Bounce Momentum',

@@ -1,6 +1,7 @@
 <script lang="ts">
   import CritIcon from './CritIcon.svelte'
   import { resolveDamageTypes } from './lib/damageTypeResolve'
+  import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
 
   export let perkDmgTypeBonuses: Record<string, number> = {}
   export let boosts: any
@@ -33,10 +34,7 @@
     isHeal?: boolean
     forceCrit?: boolean
   }> = []
-  export let glyphConduitMult: number = 1
-  export let glyphConduitAffectedTypes: Set<string> = new Set()
-  export let rageMult: number = 1
-  export let rageAffectedTypes: Set<string> = new Set()
+  export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
   export let appliedDebuffs: Array<{ name: string; abbr: string; color: string; potency?: number; effectLabel?: string | null; descLabel?: string | null; damageMult?: number; defReduction?: Partial<Record<string, number>> }> = []
   export let curseRipPerkAmount: number = 0
@@ -172,8 +170,7 @@
   interface ComputedType {
     key: string; label: string; color: string
     typeBase: number; scalingMult: number; combatMult: number
-    rageApplied: boolean; rageMultUsed: number
-    glyphApplied?: boolean; glyphMultUsed?: number
+    applicableBoosts: Array<{ perkName: string; label: string; mult: number }>
     weaponBoostMult: number; weaponBoostLabel?: string
     defMult: number; enemyDefPct: number
     raw: number; critVal: number
@@ -215,14 +212,19 @@
     return baseSum * (hit.scalingMult ?? 1) * (hit.combatMult ?? 1) * (hit.weaponBoostMult ?? 1)
   }
 
+  function getApplicableBoosts(k: string, isHeal: boolean): Array<{ perkName: string; label: string; mult: number }> {
+    if (isHeal) return []
+    return typedBoostEntries
+      .filter(e => e.dmgMult !== 1 && e.types.includes(k))
+      .map(e => ({ perkName: e.perkName, label: e.label, mult: e.dmgMult }))
+  }
+
   $: computedHits = weaponHits.map((hit): ComputedHit => {
     const isHeal = hit.isHeal ?? false
     const types: ComputedType[] = Object.entries(hit.dmgTypes ?? {}).map(([k, mult]) => {
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
-      const rageApplied = !isHeal && rageMult > 1 && rageAffectedTypes.has(k)
-      const rageMultUsed = rageApplied ? rageMult : 1
-      const glyphApplied = !isHeal && glyphConduitMult > 1 && glyphConduitAffectedTypes.has(k)
-      const glyphMultUsed = glyphApplied ? glyphConduitMult : 1
+      const applicableBoosts = getApplicableBoosts(k, isHeal)
+      const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
       let enemyDefPct = 0
       if (!isHeal && k !== 'true' && k !== 'summon') {
@@ -239,7 +241,7 @@
       const typeBase = Math.round(hit.base * mult * 10000) / 10000
 
       const raw = Math.round(
-        typeBase * hit.scalingMult * rageMultUsed * glyphMultUsed *
+        typeBase * hit.scalingMult * typedMultUsed *
         hit.combatMult * weaponBoostMult * defMult *
         (isHeal ? 1 : _activeDebuffDamageMult) * (isHeal ? 1 : selfDebuffDamageMult) *
         (isHeal ? antiHealSelfMult : 1) * 10000
@@ -250,7 +252,7 @@
       return {
         key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
-        rageApplied, rageMultUsed, glyphApplied, glyphMultUsed, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
+        applicableBoosts, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
         defMult, enemyDefPct,
         raw, critVal, isHeal, forceCrit: hit.forceCrit ?? false,
       }
@@ -265,16 +267,17 @@
 
         for (const [k, mult] of Object.entries(lumResolvedTypes)) {
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
-          const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
-          const rageMultUsed = rageApplied ? rageMult : 1
+          const applicableBoosts = getApplicableBoosts(k, false)
+          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
           const lumDefPct  = defPctForType(k)
           const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
           const lumTypeBase = Math.round(lumAmount * mult * 10000) / 10000
-          const lumRaw       = Math.round(lumTypeBase * rageMultUsed * lumDefMult * 10000) / 10000
+          const lumRaw       = Math.round(lumTypeBase * typedMultUsed * lumDefMult * 10000) / 10000
+          
           types.push({
             key: k, label: info.label, color: info.color,
             typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
-            rageApplied, rageMultUsed, weaponBoostMult: 1,
+            applicableBoosts, weaponBoostMult: 1,
             defMult: lumDefMult, enemyDefPct: lumDefPct,
             raw: lumRaw, critVal: Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isLuminescent: true, forceCrit: false,
@@ -293,16 +296,17 @@
 
         for (const [k, mult] of Object.entries(lcResolvedTypes)) {
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
-          const rageApplied  = rageMult > 1 && rageAffectedTypes.has(k)
-          const rageMultUsed = rageApplied ? rageMult : 1
+          const applicableBoosts = getApplicableBoosts(k, false)
+          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
           const lcDefPct  = defPctForType(k)
           const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
           const lcTypeBase = Math.round(cloakTotal * mult * 10000) / 10000
-          const lcRaw       = Math.round(lcTypeBase * rageMultUsed * lcDefMult * 10000) / 10000
+          const lcRaw       = Math.round(lcTypeBase * typedMultUsed * lcDefMult * 10000) / 10000
+          
           types.push({
             key: k, label: info.label, color: info.color,
             typeBase: lcTypeBase, scalingMult: 1, combatMult: 1,
-            rageApplied, rageMultUsed, weaponBoostMult: 1,
+            applicableBoosts, weaponBoostMult: 1,
             defMult: lcDefMult, enemyDefPct: lcDefPct,
             raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isChainLightning: true, forceCrit: false,
@@ -311,7 +315,6 @@
       }
     }
 
-    // ── Curse Rip Lifesteal ─────────────────────────────────────────────────────
     if (!isHeal && curseRipPerkAmount > 0 && curseRipActiveDebuffCount > 0) {
       const preMitSum  = computePreMitigationBase(hit)
       const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
@@ -320,10 +323,11 @@
         const healAmount = Math.round(preMitBase / 60 * 10000) / 10000
         if (healAmount > 0) {
           const healRaw = Math.round(healAmount * curseRipHealMult * antiHealSelfMult * 10000) / 10000
+          
           types.push({
             key: 'heal', label: 'Heal', color: '#4ade80',
             typeBase: healAmount, scalingMult: 1, combatMult: 1,
-            rageApplied: false, rageMultUsed: 1, weaponBoostMult: 1,
+            applicableBoosts: [], weaponBoostMult: 1,
             defMult: 1, enemyDefPct: 0,
             raw: healRaw, critVal: healRaw,
             isHeal: true, isCurseRip: true, forceCrit: false,
@@ -518,7 +522,7 @@
                         {#each hit.types as t, ti}
                           {#if ti > 0}<span class="bdc-hit-plus">+</span>{/if}
                           <div class="bdc-hit-type-chunk" style="--tc:{t.color}"
-                            class:bdc-hit-type-chunk--rage={t.rageApplied}
+                            class:bdc-hit-type-chunk--rage={t.applicableBoosts?.some(b => b.perkName === 'Rage')}
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
                             class:bdc-hit-type-chunk--luminescent={t.isLuminescent || t.isChainLightning}
@@ -550,13 +554,16 @@
                                 <span class="bdc-mini-op">×</span>
                                 <span class="bdc-mini-chip bdc-mini-chip--scaling" title="Scaling">{fmtMult(t.scalingMult)}</span>
                               {/if}
-                              {#if t.rageApplied}
-                                <span class="bdc-mini-op">×</span>
-                                <span class="bdc-mini-chip bdc-mini-chip--rage" title="Rage">💢{fmtMult(t.rageMultUsed)}</span>
-                              {/if}
-                              {#if t.glyphApplied}
-                                <span class="bdc-mini-op">×</span>
-                                <span class="bdc-mini-chip bdc-mini-chip--glyph" title="Glyph Conduit">{fmtMult(t.glyphMultUsed ?? 1)}</span>
+                              {#if t.applicableBoosts && t.applicableBoosts.length > 0}
+                                {#each t.applicableBoosts as boost}
+                                  <span class="bdc-mini-op">×</span>
+                                  <span class="bdc-mini-chip" 
+                                    class:bdc-mini-chip--rage={boost.perkName === 'Rage'} 
+                                    class:bdc-mini-chip--glyph={boost.perkName === 'Glyph Conduit'} 
+                                    title={boost.label}>
+                                    {#if boost.perkName === 'Rage'}💢{/if}{fmtMult(boost.mult)}
+                                  </span>
+                                {/each}
                               {/if}
                               {#if t.combatMult !== 1}
                                 <span class="bdc-mini-op">×</span>

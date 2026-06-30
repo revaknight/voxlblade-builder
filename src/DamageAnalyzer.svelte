@@ -24,6 +24,8 @@
   import { roundMultiplier } from './lib/utils'
   import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage } from './data/selfDamagePerks'
   import { resolveDamageTypes } from './lib/damageTypeResolve'
+  import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
+
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
@@ -32,7 +34,9 @@
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
   
   $: _activeDefensivePerkSources = (() => {
-    const baseSources = getActiveDefensivePerkSources(perks, _hpFillPct, _adaptivePlateTriggered, $build.inDarkness, _ragePotency > 0)
+    const baseSources = getActiveDefensivePerkSources(
+      perks, _hpFillPct, _adaptivePlateTriggered, _effectiveInDarkness, _ragePotency > 0
+    )
     let potMult = 1
     
     const bastionStacks = perks['Bastion Bless'] ?? 0
@@ -57,12 +61,37 @@
       }
     })
   })()
+  $: _photosynthesisStacks = perks['Photosynthesis'] ?? 0
   $: _vampireStacks = perks['Vampire'] ?? 0
+  $: {
+  if (!environmentTouched) {
+    if (_photosynthesisStacks > 0 && prevPhotosynthesis === 0 && _vampireStacks === 0 && $build.inDarkness) {
+      build.update(s => ({
+        ...s,
+        inDarkness: false
+      }))
+    }
+    if (
+      _vampireStacks > 0 &&
+      prevVampire === 0 &&
+      _photosynthesisStacks === 0 &&
+      !$build.inDarkness
+    ) {
+      build.update(s => ({
+        ...s,
+        inDarkness: true
+      }))
+    }
+  }
+  prevPhotosynthesis = _photosynthesisStacks
+  prevVampire = _vampireStacks
+}
+  $: _effectiveInDarkness = $build.inDarkness
 
   $: _healScalingCtx = {
     perks,
     emotionalState: $build.emotionalState,
-    inDarkness: $build.inDarkness,
+    inDarkness: _effectiveInDarkness,
     level: $build.level,
     draconicColor: $build.draconicColor,
     guild: $build.guild,
@@ -70,6 +99,13 @@
     ragePotency: _ragePotency,
     activeBuffs: _allActiveBuffs,
   }
+
+  $: _typedBoostResult = calcTypedDmgBoosts(perks, {
+    perks,
+    activeBuffs: _allActiveBuffs,
+    inSunlight: !_effectiveInDarkness,
+    draconicColor: $build.draconicColor,
+  })
   $: _healScalingResult = calculateHealBoost(_healScalingCtx)
   $: _activeHealEntries = _healScalingResult.entries.filter(e => !disabledHealBoosts.has(e.sourceName))
   $: wardingPct = (stats.warding ?? 0) / 100
@@ -226,6 +262,27 @@
     })
   })()
   $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
+
+  // ── Rage (still needed directly: defensive perk gating, PERK_DMG_DEFS condition, UI toggle row) ──
+  $: _activeRageBuffs = _allActiveBuffs.filter(b => b.buffName === 'Rage')
+  $: _ragePotency = _activeRageBuffs.length > 0
+    ? Math.max(..._activeRageBuffs.map(b => b.potency))
+    : 0
+  $: _rageAffectedTypes = (() => {
+    if (_ragePotency <= 0) return new Set<string>()
+    const types = new Set(['physical'])
+    if ((perks['Mage Rage'] ?? 0) > 0) types.add('magic')
+    if ((perks['Oceans Rage'] ?? 0) > 0) types.add('water')
+    if ((perks['Scourge'] ?? 0) > 0) types.add('true')
+    if ((perks['Cursed Experiment'] ?? 0) > 0) types.add('hex')
+    return types
+  })()
+  $: _rageMult = _ragePotency > 0
+    ? roundMultiplier(1 + _ragePotency)
+    : 1
+
+  $: _typedBoostEntries = _typedBoostResult.activeEntries.filter(e => !(e.perkName === 'Rage' && rageDisabled))
+
   $: _draconicHexDebuffsForDummy = applyBuffPerkModifiers(
     getDraconicHexDebuffs(
       $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
@@ -287,40 +344,13 @@
     return 1 + bonusPct
   })()
 
-  $: _activeRageBuffs = _allActiveBuffs.filter(b => b.buffName === 'Rage')
   $: _activeReinforcePotency      = _allActiveBuffs.reduce((m, b) => b.buffName === 'Reinforce'       ? Math.max(m, b.potency) : m, 0)
   $: _activeMagicReinforcePotency = _allActiveBuffs.reduce((m, b) => b.buffName === 'Magic Reinforce' ? Math.max(m, b.potency) : m, 0)
 
-  $: _ragePotency = _activeRageBuffs.length > 0
-    ? Math.max(..._activeRageBuffs.map(b => b.potency))
-    : 0
-
-  $: _rageAffectedTypes = (() => {
-    if (_ragePotency <= 0) return new Set<string>()
-    const types = new Set(['physical'])
-    if ((perks['Mage Rage'] ?? 0) > 0) types.add('magic')
-    if ((perks['Oceans Rage'] ?? 0) > 0) types.add('water')
-    if ((perks['Scourge'] ?? 0) > 0) types.add('true')
-    if ((perks['Cursed Experiment'] ?? 0) > 0) types.add('hex')
-    return types
-  })()
-
-  $: _rageMult = _ragePotency > 0
-    ? roundMultiplier(1 + _ragePotency)
-    : 1
-
   let rageDisabled = false
-  $: _effectiveRageMult = rageDisabled ? 1 : _rageMult
-  $: _effectiveRageAffectedTypes = rageDisabled ? new Set<string>() : _rageAffectedTypes
-
-  $: _glyphConduitBuffs   = _allActiveBuffs.filter(b => b.buffName === 'Glyph Conduit')
-  $: _glyphConduitPotency = _glyphConduitBuffs.length > 0
-    ? Math.max(..._glyphConduitBuffs.map(b => b.potency))
-    : 0
-  $: _glyphConduitMult = _glyphConduitPotency > 0
-    ? roundMultiplier(1 + _glyphConduitPotency * 2)
-    : 1
-  $: _glyphConduitAffectedTypes = _glyphConduitPotency > 0 ? new Set(['magic']) : new Set<string>()
+  let environmentTouched = false
+  let prevPhotosynthesis = 0
+  let prevVampire = 0
 
   type HitSeq = (number | { n: number; count: number })[]
 
@@ -1857,22 +1887,43 @@
           </button>
         </div>
       {/if}
-  {#if _ragePotency > 0}
-    <div class="da-rage-row" style="margin-top: 8px;">
-      <button
-        class="da-boost-chip"
-        class:da-boost-chip--off={rageDisabled}
-        style="background:rgba(247,2,1,.08);border-color:rgba(247,2,1,.2)"
-        on:click={() => rageDisabled = !rageDisabled}
-      >
-        <span class="da-bc-name">Rage</span>
-        <span class="da-bc-val" style="color:#f70201">{rageDisabled ? '—' : `×${+_rageMult.toFixed(4)}`}</span>
-        <span class="da-bc-cond">{[..._rageAffectedTypes].map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ')}</span>
-        <span class="da-bc-toggle" style={rageDisabled ? '' : 'background:rgba(247,2,1,.15);color:#f70201'}>{rageDisabled ? 'OFF' : 'ON'}</span>
-      </button>
-      <span class="da-rage-sources">{_activeRageBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
-    </div>
-  {/if}
+      {#if _ragePotency > 0 || _vampireStacks > 0}
+        <div class="da-rage-stack" style="margin-top: 8px;">
+          {#if _ragePotency > 0}
+            <div class="da-rage-row">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={rageDisabled}
+                style="background:rgba(247,2,1,.08);border-color:rgba(247,2,1,.2)"
+                on:click={() => rageDisabled = !rageDisabled}
+              >
+                <span class="da-bc-name">Rage</span>
+                <span class="da-bc-val" style="color:#f70201">{rageDisabled ? '—' : `×${+_rageMult.toFixed(4)}`}</span>
+                <span class="da-bc-cond">{[..._rageAffectedTypes].map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ')}</span>
+                <span class="da-bc-toggle" style={rageDisabled ? '' : 'background:rgba(247,2,1,.15);color:#f70201'}>{rageDisabled ? 'OFF' : 'ON'}</span>
+              </button>
+              <span class="da-rage-sources">{_activeRageBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
+            </div>
+          {/if}
+
+          {#if _vampireStacks > 0 || _photosynthesisStacks > 0}
+            <div class="ap-toggle-row">
+              <span class="ap-toggle-label">Environment</span>
+              <button
+                class="ap-toggle-btn da-env-toggle"
+                class:da-env-toggle--dark={$build.inDarkness}
+                class:da-env-toggle--sun={!$build.inDarkness}
+                on:click={() => {
+                  environmentTouched = true
+                  build.update(s => ({ ...s, inDarkness: !s.inDarkness }))
+                }}
+              >
+                {_effectiveInDarkness ? '🌙 Darkness' : '☀ Sunlight'}
+              </button>
+            </div>
+          {/if}
+        </div>
+        {/if}
   {#if _m1FinisherWeaponBoost.mult !== 1 || _m2WeaponBoost.mult !== 1}
     <div class="da-weaponboost-row" style="margin-top: 8px;">
       {#if _m1FinisherWeaponBoost.mult !== 1}
@@ -1944,18 +1995,6 @@
         on:click={() => _adaptivePlateTriggered = !_adaptivePlateTriggered}
       >
         {_adaptivePlateTriggered ? 'Triggered' : 'Idle'}
-      </button>
-    </div>
-  {/if}
-  {#if _vampireStacks > 0}
-    <div class="ap-toggle-row">
-      <span class="ap-toggle-label">Vampire</span>
-      <button
-        class="ap-toggle-btn"
-        class:ap-toggle-btn--on={$build.inDarkness}
-        on:click={() => build.update(s => ({...s, inDarkness: !s.inDarkness}))}
-      >
-        {$build.inDarkness ? '🌙 Darkness' : '☀ Sunlight'}
       </button>
     </div>
   {/if}
@@ -2868,7 +2907,7 @@
                   <span style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
                 </div>
                 <div class="ds-col ds-col--val">
-                  <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal}</span>
+                  <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal.toFixed(4)}</span>
                 </div>
                 <div class="ds-col ds-col--op">×</div>
                 
@@ -3135,8 +3174,7 @@
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
   perkDmgTypeBonuses={_perkDmgTypeBonuses}
-  rageMult={_effectiveRageMult}
-  rageAffectedTypes={_effectiveRageAffectedTypes}
+  typedBoostEntries={_typedBoostEntries}
   luminescentPct={_luminescentPct}
   selfDebuffDamageMult={_selfDebuffDamageMult}
   antiHealSelfMult={_antiHealSelfMult}
@@ -3157,8 +3195,6 @@
   curseRipHealMult={_curseRipHealMult}
   bind:disabledDebuffs
   bind:showCritValues
-  glyphConduitMult={_glyphConduitMult}
-  glyphConduitAffectedTypes={_glyphConduitAffectedTypes}
 />
 
 {#if _activeMountRuneDef}
@@ -4828,6 +4864,29 @@
   color: #f87171;
   box-shadow: 0 0 8px rgba(248,113,113,.18);
 }
+.da-env-toggle {
+  font-weight: 800;
+}
+.da-env-toggle--sun {
+  border-color: rgba(251,191,36,.55);
+  background: linear-gradient(160deg, rgba(251,191,36,.18), rgba(251,146,60,.08));
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(251,191,36,.5);
+  box-shadow: 0 0 10px rgba(251,191,36,.3);
+}
+.da-env-toggle--sun:hover {
+  box-shadow: 0 0 14px rgba(251,191,36,.45);
+}
+.da-env-toggle--dark {
+  border-color: rgba(129,140,248,.5);
+  background: linear-gradient(160deg, rgba(30,27,75,.55), rgba(15,14,38,.5));
+  color: #a5b4fc;
+  text-shadow: 0 0 8px rgba(129,140,248,.5);
+  box-shadow: 0 0 10px rgba(67,56,202,.35) inset, 0 0 8px rgba(129,140,248,.25);
+}
+.da-env-toggle--dark:hover {
+  box-shadow: 0 0 14px rgba(67,56,202,.5) inset, 0 0 12px rgba(129,140,248,.35);
+}
 .da-weaponboost-row {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   padding: 5px 10px; border-radius: 6px;
@@ -4879,4 +4938,18 @@
 }
 .da-selfdmg-input::-webkit-inner-spin-button,
 .da-selfdmg-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.da-rage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.da-rage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(247,2,1,.06);
+  border: 1px solid rgba(247,2,1,.2);
+}
 </style>

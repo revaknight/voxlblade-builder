@@ -127,4 +127,13 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     },
     note: 'Always tosses 2 fresh Sporelings + however many you already have summoned, capped at your Summon Cap (15 + Swarm) — shared cap with all minions, incl. Boglord Ring/Vassals Croak. /* TODO: verify vs wiki whether the 2 freshly-tossed sporelings count against this same cap */',
   },
+  {
+    runeName: 'Foot Dive Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 18,
+    dmgTypes: { physical: 1.0 },
+    scalings: { physical: 1.0, dexterity: 1.0 },
+    hits: 1,
+    note: 'Base cooldown on miss is 25 seconds, when successfully landing this rune the base cooldown is instead 5 seconds',
+  },
 ]
