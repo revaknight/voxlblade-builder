@@ -63,7 +63,7 @@ export interface PerkDmgDef {
   getDmgTypes?: (ctx: { draconicColor: string }) => Record<string, number>
   scalingMode: 'weapon' | 'fixed' | 'none' | 'dynamic'
   scalings?: Record<string, number>
-  getScalings?: (ctx: { draconicColor: string }) => Record<string, number>
+   getScalings?: (ctx: { draconicColor: string; perkAmount?: number }) => Record<string, number>
   isM1?: boolean
   isM2?: boolean
   isFinisher?: boolean
@@ -343,5 +343,19 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       },
     ],
     note: 'Maximum globs depend on WA cooldown. Each glob has small AoE. Cannot proc other effects.',
+  },
+  // ── Melting Slime ──────────────────────────────────────────────────────────
+  {
+    perkName: 'Melting Slime',
+    condition: 'On Sticky DoT tick',
+    getBaseDamage: () => 2.5,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { fire: 0.5, earth: 0.5 },
+    scalingMode: 'dynamic',
+    getScalings: ({ perkAmount }) => ({
+      fire: 0.75 + 0.25 * (perkAmount ?? 1),
+      earth: 1.5 + 0.25 * (perkAmount ?? 1),
+    }),
+    note: 'Fire/Earth DoT · Multi-hit over duration · Poise Damage',
   },
 ]

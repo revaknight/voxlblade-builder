@@ -328,10 +328,10 @@
         color,
         potency,
         effectLabel: effect ? `${effect.value}${effect.unit === '%' ? '%' : ''}` : null,
-        descLabel: combatFx ? combatFx.descFn(potency) : null,
+        descLabel: combatFx ? combatFx.descFn(potency, perks) : null,
         damageMult: combatFx?.damageMult ? combatFx.damageMult(potency) : undefined,
         defReduction: combatFx?.defReduction ? combatFx.defReduction(potency) : undefined,
-        typeDamageMult: combatFx?.typeDamageMult ? combatFx.typeDamageMult(potency) : undefined,
+        typeDamageMult: combatFx?.typeDamageMult ? combatFx.typeDamageMult(potency, perks) : undefined,
       }
     })
   })()
@@ -1296,7 +1296,7 @@
         : def.scalingMode === 'fixed'
           ? (def.scalings ?? {})
           : def.scalingMode === 'dynamic'
-            ? (def.getScalings?.({ draconicColor: $build.draconicColor }) ?? {})
+            ? (def.getScalings?.({ draconicColor: $build.draconicColor, perkAmount }) ?? {})
             : {}
 
       const scalingMult = Object.keys(resolvedScalings).length > 0

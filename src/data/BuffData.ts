@@ -252,6 +252,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Sticky',
     color: '#ff9349',
     description: 'Move x% slower and take 20% more magic damage.',
+    dynamicDescription: (perks, potency) => {
+      const slowPct = Math.round(potency * 10000) / 100
+      const hasMelting = (perks['Melting Slime'] ?? 0) > 0
+      if (hasMelting) {
+        return `Move ${slowPct}% slower, deals fire and poise damage and take 20% more magic, fire and earth damage.`
+      }
+      return `Move ${slowPct}% slower and take 20% more magic damage.`
+    },
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
