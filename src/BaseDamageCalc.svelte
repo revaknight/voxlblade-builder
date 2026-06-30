@@ -219,7 +219,7 @@
       .map(e => ({ perkName: e.perkName, label: e.label, mult: e.dmgMult }))
   }
 
-  $: computedHits = weaponHits.map((hit): ComputedHit => {
+  $: computedHits = typedBoostEntries && weaponHits.map((hit): ComputedHit => {
     const isHeal = hit.isHeal ?? false
     const types: ComputedType[] = Object.entries(hit.dmgTypes ?? {}).map(([k, mult]) => {
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }

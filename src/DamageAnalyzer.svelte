@@ -114,6 +114,12 @@
     const baseMult = _activeHealEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
     return baseMult
   })()
+  $: _healFinalMultiplierNoLevel = (() => {
+    const baseMult = _activeHealEntries
+      .filter(e => e.sourceName !== 'Level Healing')
+      .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
+    return baseMult
+  })()
 
   $: _curseRipHealMult = _activeHealEntries
     .filter(e => e.sourceName !== 'Level Healing')
@@ -281,7 +287,14 @@
     ? roundMultiplier(1 + _ragePotency)
     : 1
 
-  $: _typedBoostEntries = _typedBoostResult.activeEntries.filter(e => !(e.perkName === 'Rage' && rageDisabled))
+  $: _activeGlyphConduitBuffs = _allActiveBuffs.filter(b => b.buffName === 'Glyph Conduit')
+  $: _glyphConduitEntry = _typedBoostResult.activeEntries.find(e => e.perkName === 'Glyph Conduit')
+  $: _glyphConduitMult = _glyphConduitEntry?.dmgMult ?? 1
+
+  $: _typedBoostEntries = _typedBoostResult.activeEntries.filter(e =>
+    !(e.perkName === 'Rage' && rageDisabled) &&
+    !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
+  )
 
   $: _draconicHexDebuffsForDummy = applyBuffPerkModifiers(
     getDraconicHexDebuffs(
@@ -348,6 +361,7 @@
   $: _activeMagicReinforcePotency = _allActiveBuffs.reduce((m, b) => b.buffName === 'Magic Reinforce' ? Math.max(m, b.potency) : m, 0)
 
   let rageDisabled = false
+  let glyphConduitDisabled = false
   let environmentTouched = false
   let prevPhotosynthesis = 0
   let prevVampire = 0
@@ -662,7 +676,7 @@
       rawMultiplier: _curseRipDamageBoost,
       condition: `${_curseRipActiveDebuffCount} unique debuff${_curseRipActiveDebuffCount > 1 ? 's' : ''} · ${_curseRipPerkAmount} stack`,
       type: 'dmg' as const,
-      appliesTo: ['m1', 'm2', 'wa'] as BoostAttackType[],
+      appliesTo: ['m1', 'm2', 'wa', 'rune'] as BoostAttackType[],
     }
   })()
   $: activeEntries = [...boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName)), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : [])]
@@ -712,7 +726,7 @@
 
   $: _hasSpecificBoosts = boosts.dmgEntries.some(e => !!(e as any).appliesTo)
 
-  $: _allUniversalChips = boosts.dmgEntries.filter(e => !(e as any).appliesTo)
+  $: _allUniversalChips = _visibleDmgEntries.filter(e => !(e as any).appliesTo)
 
   $: _universalActiveMult = Math.round(
     _allUniversalChips
@@ -1199,20 +1213,17 @@
 
   // ── Mount Runes (override M1 + WA while riding) ──────────────────────────
   $: _activeMountRuneDef = MOUNT_RUNE_DEFS.find(d => d.runeName === $build.rune) ?? null
-  let mountActive = false
+  let mountActive = true
+  let _prevMountActive = false
   $: if (!_activeMountRuneDef && mountActive) mountActive = false
-  $: {
-    const riderAmt = perks['Rider'] ?? 0
-    if (riderAmt > 0) {
-      if (mountActive) {
-        const next = new Set(disabledBoosts)
-        next.delete('Rider')
-        disabledBoosts = next
-      } else {
-        disabledBoosts = new Set([...disabledBoosts, 'Rider'])
-      }
-    }
+  // Auto-disable Rider when transitioning from mounted → unmounted, but never force-enable
+  $: if (_prevMountActive && !mountActive && (perks['Rider'] ?? 0) > 0) {
+    disabledBoosts = new Set([...disabledBoosts, 'Rider'])
   }
+  $: _prevMountActive = mountActive
+  $: _visibleDmgEntries = boosts.dmgEntries.filter(e =>
+    e.sourceName !== 'Rider' || mountActive
+  )
 
   // ── Perk Base Damage ───────────────────────────────────────────────────────
   let springblastFinisherHits = 1
@@ -1436,7 +1447,14 @@
           scalingMult: _computePerkScalingMult(m1Def.getScalings()),
           combatMult: _runeCombatMult,
           isFinisher: false,
-          dmgTypes: m1Def.getDmgTypes(),
+          dmgTypes: applyDraconicBonuses(m1Def.getDmgTypes(), {
+            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+            draconicColor: $build.draconicColor || 'physical',
+          }, {
+            isActive: $build.draconicRuneInfusion === 'infusion',
+            buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+            draconicColor: $build.draconicColor || 'physical',
+          }),
           label: `${_activeMountRuneDef.mountLabel} (Mounted)`,
         })
         if (m1Def.healFlat) {
@@ -1444,7 +1462,7 @@
             group: 'M1', index: 1, count: 1,
             base: m1Def.healFlat,
             scalingMult: 1,
-            combatMult: _healFinalMultiplier,
+            combatMult: _healFinalMultiplierNoLevel,
             isFinisher: false,
             dmgTypes: { heal: 1.0 },
             label: `${_activeMountRuneDef.mountLabel} Heal`,
@@ -1499,7 +1517,14 @@
     if (_activeMountRuneDef && mountActive) {
       const waDef = _activeMountRuneDef.wa
       const waScalingMult = _computePerkScalingMult(waDef.getScalings())
-      const waDmgTypes = waDef.getDmgTypes()
+      const waDmgTypes = applyDraconicBonuses(waDef.getDmgTypes(), {
+        draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+        draconicColor: $build.draconicColor || 'physical',
+      }, {
+        isActive: $build.draconicRuneInfusion === 'infusion',
+        buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+        draconicColor: $build.draconicColor || 'physical',
+      })
       for (const h of waDef.getHits()) {
         const base = typeof h === 'number' ? h : h.n
         const count = typeof h === 'number' ? 1 : h.count
@@ -1780,7 +1805,7 @@
   <div class="da-section-title">⚔ Combat Multipliers</div>
     {#if !_hasSpecificBoosts}
       <div class="da-boost-row">
-        {#each [...boosts.dmgEntries, ...(_curseRipBoostEntry ? [_curseRipBoostEntry] : [])] as entry}
+        {#each [..._visibleDmgEntries, ...(_curseRipBoostEntry ? [_curseRipBoostEntry] : [])] as entry}
           {@const disabled = entry.sourceName === 'Curse Rip' ? disableCurseRip : disabledBoosts.has(entry.sourceName)}
           {@const effectiveMultiplier = disabled ? 1 : entry.rawMultiplier}
           <button
@@ -1887,10 +1912,10 @@
           </button>
         </div>
       {/if}
-      {#if _ragePotency > 0 || _vampireStacks > 0}
-        <div class="da-rage-stack" style="margin-top: 8px;">
+      {#if _ragePotency > 0 || _vampireStacks > 0 || _photosynthesisStacks > 0}
+        <div class="da-buff-list" style="margin-top: 8px;">
           {#if _ragePotency > 0}
-            <div class="da-rage-row">
+            <span class="da-buff">
               <button
                 class="da-boost-chip"
                 class:da-boost-chip--off={rageDisabled}
@@ -1901,11 +1926,27 @@
                 <span class="da-bc-val" style="color:#f70201">{rageDisabled ? '—' : `×${+_rageMult.toFixed(4)}`}</span>
                 <span class="da-bc-cond">{[..._rageAffectedTypes].map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ')}</span>
                 <span class="da-bc-toggle" style={rageDisabled ? '' : 'background:rgba(247,2,1,.15);color:#f70201'}>{rageDisabled ? 'OFF' : 'ON'}</span>
+                <span class="da-buff-sources">{_activeRageBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
               </button>
-              <span class="da-rage-sources">{_activeRageBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
-            </div>
+            </span>
           {/if}
-
+          {#if _glyphConduitEntry}
+            <span class="da-buff">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={glyphConduitDisabled}
+                style="background:rgba(23,179,254,.08);border-color:rgba(23,179,254,.2)"
+                on:click={() => glyphConduitDisabled = !glyphConduitDisabled}
+              >
+                <span class="da-bc-name">Glyph Conduit</span>
+                <span class="da-bc-val" style="color:#17b3fe">{glyphConduitDisabled ? '—' : `×${+_glyphConduitMult.toFixed(4)}`}</span>
+                <span class="da-bc-cond">Magic</span>
+                <span class="da-bc-toggle" style={glyphConduitDisabled ? '' : 'background:rgba(23,179,254,.15);color:#17b3fe'}>{glyphConduitDisabled ? 'OFF' : 'ON'}</span>
+                <span class="da-buff-sources">{_activeGlyphConduitBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
+              </button>
+            </span>
+          {/if}
+        </div>
           {#if _vampireStacks > 0 || _photosynthesisStacks > 0}
             <div class="ap-toggle-row">
               <span class="ap-toggle-label">Environment</span>
@@ -1922,7 +1963,6 @@
               </button>
             </div>
           {/if}
-        </div>
         {/if}
   {#if _m1FinisherWeaponBoost.mult !== 1 || _m2WeaponBoost.mult !== 1}
     <div class="da-weaponboost-row" style="margin-top: 8px;">
@@ -4208,17 +4248,12 @@
 .da-hit-chunk--rage .da-hit-num {
   text-shadow: 0 0 14px color-mix(in srgb, var(--tc) 80%, #f70201);
 }
-.da-rage-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 5px 10px; border-radius: 6px;
-  background: rgba(247,2,1,.06); border: 1px solid rgba(247,2,1,.2);
-}
 .da-rage-badge {
   font-size: .75rem; font-weight: 800;
   color: #f70201; font-family: 'Courier New', monospace;
 }
 .da-rage-types { font-size: .68rem; color: var(--ink-muted); }
-.da-rage-sources { font-size: .6rem; color: var(--ink-muted); opacity: .5; font-style: italic; margin-left: auto; }
+.da-buff-sources { font-size: .55rem; color: var(--ink-muted); opacity: .45; margin-left: 4px; }
 
 .da-hit-card--finisher {
   position: relative;
@@ -4938,18 +4973,12 @@
 }
 .da-selfdmg-input::-webkit-inner-spin-button,
 .da-selfdmg-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-.da-rage-stack {
+.da-buff-list {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 6px;
 }
-.da-rage-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  background: rgba(247,2,1,.06);
-  border: 1px solid rgba(247,2,1,.2);
+.da-buff {
+  display: inline-flex;
 }
 </style>

@@ -89,13 +89,13 @@ export function calcTypedDmgBoosts(
 
   for (const def of TYPED_DMG_BOOST_DEFS) {
     const perkAmount = perks[def.perkName] ?? 0
-    if (perkAmount <= 0) continue
     if (def.activeIf && !def.activeIf(ctx)) continue
 
     const drivingValue = def.potencySource === 'buff'
       ? getMaxBuffPotency(def.buffName!, ctx.activeBuffs)
       : perkAmount
 
+    if (def.potencySource !== 'buff' && perkAmount <= 0) continue
     if (drivingValue <= 0) continue
 
     const dmgMult = def.getDamageMultiplier ? def.getDamageMultiplier(drivingValue) : 1

@@ -6,6 +6,66 @@
   export let showZeroBoost = false
 </script>
 
+<style>
+  .ds-row {
+    display: grid;
+    grid-template-columns: 120px 80px 20px 90px 20px 100px;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--surface2, #1a1d1b);
+    align-items: center;
+    border: 1px solid transparent;
+    transition: background .1s;
+  }
+  .ds-row:hover { background: var(--surface3, #212420); }
+
+  .ds-col {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .78rem;
+  }
+  .ds-col--op {
+    justify-content: center;
+    font-size: .7rem;
+    color: var(--ink-muted, #8a8d85);
+    opacity: .4;
+    font-weight: 700;
+  }
+  .ds-col--val { justify-content: flex-end; }
+  .ds-col--contrib { justify-content: flex-end; }
+  .ds-col--boost { justify-content: flex-end; }
+
+  .ds-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ds-num {
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+    font-size: .88rem;
+  }
+
+  .ds-boost {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    font-size: .82rem;
+    color: #4ade80;
+  }
+  .ds-boost--zero { color: var(--ink-muted, #8a8d85); opacity: .35; }
+
+  .ds-contrib {
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+    font-size: .88rem;
+  }
+  .ds-contrib--zero { color: var(--ink-muted, #8a8d85); opacity: .35; }
+</style>
+
 <div class="ds-row">
   <div class="ds-col ds-col--type">
     <span class="ds-dot" style="background:{row.color}"></span>
