@@ -146,6 +146,15 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     note: 'Poise damage same as base damage (5 × 3 hits). Does not count as a summon.',
   },
   {
+    runeName: 'Cacitrops Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 4,
+    dmgTypes: { physical: 1.0 },
+    scalings: { physical: 1.0, dexterity: 1.0 },
+    hits: 27,
+    note: 'Damage ticks every ~0.75s over 20.25s. Dodge incoming attacks during casting animation. Every hit applies Bleed for 5s.',
+  },
+  {
     runeName: 'Brainblast Rune',
     condition: 'On cast',
     getBaseDamage: () => 10,

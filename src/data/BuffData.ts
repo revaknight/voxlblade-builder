@@ -448,6 +448,14 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     sourceType: 'rune',
   },
   {
+    buffName: 'Bleed',
+    potency: 0,
+    duration: 5,
+    condition: 'On hit',
+    sourceName: 'Cacitrops Rune',
+    sourceType: 'rune',
+  },
+  {
     buffName: 'Burn',
     potency: 0,
     duration: 5,
