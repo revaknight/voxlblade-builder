@@ -265,7 +265,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     isDebuff: true,
   },
   'Sticky (Melting Slime)': {
-    name: 'Sticky',
+    name: 'Sticky (Melting Slime)',
     color: '#ff9349',
     description: 'Move x% slower and take 20% more magic, fire and earth damage.',
     dynamicDescription: (_perks, potency) => {
@@ -1239,6 +1239,14 @@ const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
       sourceName: 'BUNIKIN',
       sourceType: 'race' as any,
     },
+  ],
+  'DARK ELF': [
+    { buffName: 'Shatter',  potency: 0.2, duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
+    { buffName: 'Bleed',    potency: 0,   duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
+    { buffName: 'Burn',     potency: 0,   duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
+    { buffName: 'Poison',   potency: 0,   duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
+    { buffName: 'Slowness', potency: 0.2, duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
+    { buffName: 'Weakness', potency: 0.5, duration: 5, condition: 'On hit (passive - 8% chance)', sourceName: 'DARK ELF', sourceType: 'race' as any },
   ],
 }
 

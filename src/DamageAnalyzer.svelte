@@ -309,29 +309,49 @@
   )
  
   $: _dummyDebuffs = (() => {
-    const seen = new Map<string, { color: string; potency: number }>()
+    const variantBase = new Map<string, string>([
+      ['Sticky (Melting Slime)', 'Sticky'],
+    ])
+    const groups = new Map<string, Map<string, number>>()
     for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
       if (b.isSelfDebuff) continue
       const def = BUFF_DEFS[b.buffName]
       if (!def?.isDebuff) continue
-      const existing = seen.get(b.buffName)
-      if (!existing || b.potency > existing.potency) {
-        seen.set(b.buffName, { color: def.color, potency: b.potency })
+      const key = variantBase.get(b.buffName) ?? b.buffName
+      if (!groups.has(key)) groups.set(key, new Map())
+      const inner = groups.get(key)!
+      const existing = inner.get(b.buffName)
+      if (!existing || b.potency > existing) {
+        inner.set(b.buffName, b.potency)
       }
     }
-    return [...seen.entries()].map(([name, { color, potency }]) => {
-      const combatFx = DEBUFF_COMBAT_EFFECTS[name]
-      const effect = potency > 0 ? calcBuffEffect(name, potency) : null
+    const buildVariant = (buffName: string, potency: number) => {
+      const combatFx = DEBUFF_COMBAT_EFFECTS[buffName]
+      const effect = potency > 0 ? calcBuffEffect(buffName, potency) : null
       return {
-        name,
-        abbr: name.slice(0, 4),
-        color,
+        sourceName: buffName,
         potency,
         effectLabel: effect ? `${effect.value}${effect.unit === '%' ? '%' : ''}` : null,
         descLabel: combatFx ? combatFx.descFn(potency, perks) : null,
         damageMult: combatFx?.damageMult ? combatFx.damageMult(potency) : undefined,
         defReduction: combatFx?.defReduction ? combatFx.defReduction(potency) : undefined,
         typeDamageMult: combatFx?.typeDamageMult ? combatFx.typeDamageMult(potency, perks) : undefined,
+      }
+    }
+    return [...groups.entries()].map(([name, inner]) => {
+      const variants = [...inner.entries()].map(([bn, p]) => buildVariant(bn, p))
+      variants.sort((a, b) => {
+        if (a.sourceName === name && b.sourceName !== name) return 1
+        if (a.sourceName !== name && b.sourceName === name) return -1
+        return 0
+      })
+      const def = BUFF_DEFS[name]
+      return {
+        name,
+        abbr: name.slice(0, 4),
+        color: def?.color ?? '#888',
+        ...variants[0],
+        variants,
       }
     })
   })()

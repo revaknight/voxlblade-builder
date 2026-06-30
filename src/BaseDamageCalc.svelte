@@ -36,10 +36,38 @@
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
-  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string; potency?: number; effectLabel?: string | null; descLabel?: string | null; damageMult?: number; defReduction?: Partial<Record<string, number>>; typeDamageMult?: Record<string, number> }> = []
+  export let appliedDebuffs: Array<{
+    name: string; abbr: string; color: string
+    potency?: number; effectLabel?: string | null; descLabel?: string | null
+    damageMult?: number; defReduction?: Partial<Record<string, number>>; typeDamageMult?: Record<string, number>
+    variants?: Array<{
+      sourceName: string; potency: number
+      effectLabel: string | null; descLabel: string | null
+      damageMult?: number; defReduction?: Partial<Record<string, number>>; typeDamageMult?: Record<string, number>
+    }>
+  }> = []
   export let curseRipPerkAmount: number = 0
   export let curseRipActiveDebuffCount: number = 0
   export let curseRipHealMult: number = 1
+
+  let activeVariants = new Map<string, number>()
+
+  $: resolvedDebuffs = appliedDebuffs.map(d => {
+    if (!d.variants?.length) return d
+    const idx = activeVariants.get(d.name) ?? 0
+    const v = d.variants[idx]
+    if (!v) return d
+    return { ...d, ...v, variants: d.variants }
+  })
+
+  function cycleVariant(name: string) {
+    const d = appliedDebuffs.find(d => d.name === name)
+    if (!d?.variants?.length || d.variants.length < 2) return
+    const current = activeVariants.get(name) ?? 0
+    const next = (current + 1) % d.variants.length
+    activeVariants.set(name, next)
+    activeVariants = new Map(activeVariants)
+  }
 
 
   const DMG_TYPES = [
@@ -124,13 +152,13 @@
 
   // ── Active debuff combat effects ───────────────────────────────────────────
   // Product of all active damageMult debuffs (Weakness on enemy doesn't affect damage you deal)
-  $: _activeDebuffDamageMult = appliedDebuffs
+  $: _activeDebuffDamageMult = resolvedDebuffs
     .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
     .reduce((acc, d) => Math.round(acc * (d.damageMult ?? 1) * 10000) / 10000, 1)
 
   $: _activeDebuffTypeDamageMult = (() => {
     const mults: Record<string, number> = {}
-    for (const d of appliedDebuffs) {
+    for (const d of resolvedDebuffs) {
       if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
       for (const [type, mult] of Object.entries(d.typeDamageMult)) {
         mults[type] = Math.round((mults[type] ?? 1) * mult * 10000) / 10000
@@ -141,7 +169,7 @@
 
   $: _debuffTypeLabels = (() => {
     const labels: Record<string, string[]> = {}
-    for (const d of appliedDebuffs) {
+    for (const d of resolvedDebuffs) {
       if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
       for (const type of Object.keys(d.typeDamageMult)) {
         (labels[type] ??= []).push(d.name)
@@ -153,7 +181,7 @@
   // Effective enemy defenses after applying debuff reductions (e.g. Shatter strips armor)
   $: effectiveDefenses = (() => {
     const reductions: Record<string, number> = {}
-    for (const d of appliedDebuffs) {
+    for (const d of resolvedDebuffs) {
       if (disabledDebuffs.has(d.name) || !d.defReduction) continue
       for (const [k, v] of Object.entries(d.defReduction)) {
         // Map defense stat keys to damage type keys
@@ -436,29 +464,40 @@
         {#if armorPen > 0}
           <div class="bdc-pen-badge">🗡 {fmt(armorPen)} Pen</div>
         {/if}
-        {#if appliedDebuffs.length > 0}
+        {#if resolvedDebuffs.length > 0}
           <div class="bdc-debuff-row">
-            {#each appliedDebuffs as d (d.name)}
+            {#each resolvedDebuffs as d (d.name)}
               {@const isOff = disabledDebuffs.has(d.name)}
-              <button
-                class="bdc-debuff-pill"
-                class:bdc-debuff-pill--off={isOff}
-                style="--dc:{d.color}"
-                title="{d.name}{d.effectLabel ? ` · ${d.effectLabel}` : ''} — click to toggle"
-                on:click={() => {
-                  if (disabledDebuffs.has(d.name)) disabledDebuffs.delete(d.name)
-                  else disabledDebuffs.add(d.name)
-                  disabledDebuffs = new Set(disabledDebuffs)
-                }}
-              >
-                <span class="bdc-dp-abbr">{d.abbr}</span>
-                {#if d.effectLabel}
-                  <span class="bdc-dp-val">{isOff ? '—' : d.effectLabel}</span>
+              {@const hasVariants = d.variants && d.variants.length > 1}
+              <div class="bdc-debuff-group">
+                <button
+                  class="bdc-debuff-pill"
+                  class:bdc-debuff-pill--off={isOff}
+                  style="--dc:{d.color}"
+                  title="{(d.variants ?? [])[activeVariants.get(d.name) ?? 0]?.sourceName ?? d.name}{d.effectLabel ? ` · ${d.effectLabel}` : ''} — click to toggle"
+                  on:click={() => {
+                    if (disabledDebuffs.has(d.name)) disabledDebuffs.delete(d.name)
+                    else disabledDebuffs.add(d.name)
+                    disabledDebuffs = new Set(disabledDebuffs)
+                  }}
+                >
+                  <span class="bdc-dp-abbr">{d.abbr}</span>
+                  {#if d.effectLabel}
+                    <span class="bdc-dp-val">{isOff ? '—' : d.effectLabel}</span>
+                  {/if}
+                </button>
+                {#if hasVariants}
+                  <button
+                    class="bdc-variant-btn"
+                    style="--dc:{d.color}"
+                    title="Switch variant (currently: {(d.variants ?? [])[activeVariants.get(d.name) ?? 0]?.sourceName ?? d.name})"
+                    on:click|stopPropagation={() => cycleVariant(d.name)}
+                  >▾</button>
                 {/if}
-              </button>
+              </div>
             {/each}
           </div>
-        {@const activeDescs = appliedDebuffs.filter(d => !disabledDebuffs.has(d.name) && d.descLabel)}
+        {@const activeDescs = resolvedDebuffs.filter(d => !disabledDebuffs.has(d.name) && d.descLabel)}
           {#if activeDescs.length > 0}
             <div class="bdc-debuff-descs">
               {#each activeDescs as d}
@@ -778,12 +817,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 1px;
   font-size: .58rem;
   font-weight: 800;
   letter-spacing: .03em;
   text-transform: uppercase;
   padding: 3px 6px 4px;
+  min-height: 1.7rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dc) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--dc) 45%, transparent);
@@ -817,6 +858,31 @@
   opacity: 0.8;
   line-height: 1;
   letter-spacing: 0;
+}
+.bdc-debuff-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.bdc-variant-btn {
+  display: flex;
+  align-items: center;
+  font-size: .45rem;
+  font-weight: 700;
+  padding: 3px 3px;
+  align-self: stretch;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--dc) 30%, transparent);
+  color: var(--dc);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0.55;
+  transition: opacity .15s;
+}
+.bdc-variant-btn:hover {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--dc) 60%, transparent);
 }
 
 /* Daily presets */
