@@ -3283,7 +3283,7 @@ $: _appWaAvgTotal = (() => {
 
   .right-column {
     flex: 0 0 auto;
-    max-width: 250px;
+    width: 250px;
     display: flex;
     flex-direction: column;
     gap: 12px;

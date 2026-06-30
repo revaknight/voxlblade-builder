@@ -136,4 +136,13 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     hits: 1,
     note: 'Base cooldown on miss is 25 seconds, when successfully landing this rune the base cooldown is instead 5 seconds',
   },
+  {
+    runeName: 'Brainblast Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 10,
+    dmgTypes: { fire: 0.33, earth: 0.33, magic: 0.33 },
+    scalings: { fire: 1.0, earth: 1.0, magic: 1.0 },
+    hits: 2,
+    note: 'Guardbreaks. Applies Sticky (Melting Slime) and Burn for 5s.',
+  },
 ]

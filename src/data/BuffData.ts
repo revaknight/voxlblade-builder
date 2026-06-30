@@ -264,6 +264,18 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isDebuff: true,
   },
+  'Sticky (Melting Slime)': {
+    name: 'Sticky',
+    color: '#ff9349',
+    description: 'Move x% slower and take 20% more magic, fire and earth damage.',
+    dynamicDescription: (_perks, potency) => {
+      const slowPct = Math.round(potency * 10000) / 100
+      return `Move ${slowPct}% slower, deals fire and poise damage and take 20% more magic, fire and earth damage.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isDebuff: true,
+  },
   Shatter: {
     name: 'Shatter',
     color: '#ff8183',
@@ -433,6 +445,22 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     duration: 4,
     condition: 'On Weapon Art hit',
     sourceName: 'Glacial Snapper Mount Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Burn',
+    potency: 0,
+    duration: 5,
+    condition: 'On cast',
+    sourceName: 'Brainblast Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Sticky (Melting Slime)',
+    potency: 0.1,
+    duration: 5,
+    condition: 'On cast',
+    sourceName: 'Brainblast Rune',
     sourceType: 'rune',
   },
 ]
