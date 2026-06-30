@@ -36,7 +36,7 @@
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
-  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string; potency?: number; effectLabel?: string | null; descLabel?: string | null; damageMult?: number; defReduction?: Partial<Record<string, number>> }> = []
+  export let appliedDebuffs: Array<{ name: string; abbr: string; color: string; potency?: number; effectLabel?: string | null; descLabel?: string | null; damageMult?: number; defReduction?: Partial<Record<string, number>>; typeDamageMult?: Record<string, number> }> = []
   export let curseRipPerkAmount: number = 0
   export let curseRipActiveDebuffCount: number = 0
   export let curseRipHealMult: number = 1
@@ -128,6 +128,28 @@
     .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
     .reduce((acc, d) => Math.round(acc * (d.damageMult ?? 1) * 10000) / 10000, 1)
 
+  $: _activeDebuffTypeDamageMult = (() => {
+    const mults: Record<string, number> = {}
+    for (const d of appliedDebuffs) {
+      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
+      for (const [type, mult] of Object.entries(d.typeDamageMult)) {
+        mults[type] = Math.round((mults[type] ?? 1) * mult * 10000) / 10000
+      }
+    }
+    return mults
+  })()
+
+  $: _debuffTypeLabels = (() => {
+    const labels: Record<string, string[]> = {}
+    for (const d of appliedDebuffs) {
+      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
+      for (const type of Object.keys(d.typeDamageMult)) {
+        (labels[type] ??= []).push(d.name)
+      }
+    }
+    return labels
+  })()
+
   // Effective enemy defenses after applying debuff reductions (e.g. Shatter strips armor)
   $: effectiveDefenses = (() => {
     const reductions: Record<string, number> = {}
@@ -172,6 +194,7 @@
     typeBase: number; scalingMult: number; combatMult: number
     applicableBoosts: Array<{ perkName: string; label: string; mult: number }>
     weaponBoostMult: number; weaponBoostLabel?: string
+    typeDebuffMult: number
     defMult: number; enemyDefPct: number
     raw: number; critVal: number
     isHeal: boolean
@@ -239,10 +262,11 @@
       const defMult = isHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
       const typeBase = Math.round(hit.base * mult * 10000) / 10000
 
+      const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
       const raw = Math.round(
         typeBase * hit.scalingMult * typedMultUsed *
         hit.combatMult * weaponBoostMult * defMult *
-        (isHeal ? 1 : _activeDebuffDamageMult) * (isHeal ? 1 : selfDebuffDamageMult) *
+        (isHeal ? 1 : _activeDebuffDamageMult * typeDebuffMult) * (isHeal ? 1 : selfDebuffDamageMult) *
         (isHeal ? antiHealSelfMult : 1) * 10000
       ) / 10000
 
@@ -252,6 +276,7 @@
         key: k, label: info.label, color: info.color,
         typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
         applicableBoosts, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
+        typeDebuffMult,
         defMult, enemyDefPct,
         raw, critVal, isHeal, forceCrit: hit.forceCrit ?? false,
       }
@@ -268,6 +293,7 @@
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
           const applicableBoosts = getApplicableBoosts(k, false)
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+          const lumDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lumDefPct  = defPctForType(k)
           const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
           const lumTypeBase = Math.round(lumAmount * mult * 10000) / 10000
@@ -276,7 +302,7 @@
           types.push({
             key: k, label: info.label, color: info.color,
             typeBase: lumTypeBase, scalingMult: 1, combatMult: 1,
-            applicableBoosts, weaponBoostMult: 1,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lumDebuffMult,
             defMult: lumDefMult, enemyDefPct: lumDefPct,
             raw: lumRaw, critVal: Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isLuminescent: true, forceCrit: false,
@@ -297,6 +323,7 @@
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
           const applicableBoosts = getApplicableBoosts(k, false)
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+          const lcDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lcDefPct  = defPctForType(k)
           const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
           const lcTypeBase = Math.round(cloakTotal * mult * 10000) / 10000
@@ -305,7 +332,7 @@
           types.push({
             key: k, label: info.label, color: info.color,
             typeBase: lcTypeBase, scalingMult: 1, combatMult: 1,
-            applicableBoosts, weaponBoostMult: 1,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lcDebuffMult,
             defMult: lcDefMult, enemyDefPct: lcDefPct,
             raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isChainLightning: true, forceCrit: false,
@@ -326,7 +353,7 @@
           types.push({
             key: 'heal', label: 'Heal', color: '#4ade80',
             typeBase: healAmount, scalingMult: 1, combatMult: 1,
-            applicableBoosts: [], weaponBoostMult: 1,
+            applicableBoosts: [], weaponBoostMult: 1, typeDebuffMult: 1,
             defMult: 1, enemyDefPct: 0,
             raw: healRaw, critVal: healRaw,
             isHeal: true, isCurseRip: true, forceCrit: false,
@@ -569,6 +596,10 @@
                                 <span class="bdc-mini-chip bdc-mini-chip--combat" title="Combat multipliers">{Number(t.combatMult.toFixed(4))}</span>
                               {/if}
 
+                              {#if t.typeDebuffMult !== 1 && !t.isHeal}
+                                <span class="bdc-mini-op">×</span>
+                                <span class="bdc-mini-chip bdc-mini-chip--debuff" title={(_debuffTypeLabels[t.key] ?? ['?']).join(', ')}>{Number(t.typeDebuffMult.toFixed(4))}</span>
+                              {/if}
                               {#if selfDebuffDamageMult !== 1 && !t.isHeal}
                                 <span class="bdc-mini-op">×</span>
                                 <span class="bdc-mini-chip bdc-mini-chip--selfdebuff" title="Self-Debuff multiplier (Weakness)">{Number(selfDebuffDamageMult.toFixed(4))}</span>
@@ -1290,6 +1321,11 @@
   opacity: .75;
   text-align: center;
   letter-spacing: .03em;
+}
+.bdc-mini-chip--debuff {
+  color: #ff9349;
+  border-color: rgba(255, 147, 73, 0.3);
+  background: rgba(255, 147, 73, 0.08);
 }
 .bdc-mini-chip--selfdebuff {
   color: #a855f7;

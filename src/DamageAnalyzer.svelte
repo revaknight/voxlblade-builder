@@ -5,7 +5,7 @@
   import ScalingBreakdownRow from './ScalingBreakdownRow.svelte'
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
-  import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, type WeaponBaseDmg } from './lib/types'
+  import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, SCALING_TO_BOOST, type WeaponBaseDmg } from './lib/types'
   import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect } from './data/BuffData'
   import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
   import { getDraconicHexDebuffs, getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'  
@@ -331,6 +331,7 @@
         descLabel: combatFx ? combatFx.descFn(potency) : null,
         damageMult: combatFx?.damageMult ? combatFx.damageMult(potency) : undefined,
         defReduction: combatFx?.defReduction ? combatFx.defReduction(potency) : undefined,
+        typeDamageMult: combatFx?.typeDamageMult ? combatFx.typeDamageMult(potency) : undefined,
       }
     })
   })()
@@ -619,16 +620,13 @@
     if (!_gunOverlay) return _weaponDmgTypes
     const entries = Object.entries(_weaponDmgTypes)
     if (entries.length === 0) return _weaponDmgTypes
-    const PRIORITY = DMG_TYPE_PRIORITY
-    
+    const priority = DMG_TYPE_PRIORITY
     const [highestKey] = entries.reduce((a, b) => {
       if (b[1] > a[1]) return b
       if (b[1] === a[1]) {
-        const pa = PRIORITY.indexOf(a[0])
-        const pb = PRIORITY.indexOf(b[0])
-        const ia = pa === -1 ? 999 : pa
-        const ib = pb === -1 ? 999 : pb
-        return ib < ia ? b : a
+        const ia = priority.indexOf(a[0])
+        const ib = priority.indexOf(b[0])
+        return (ib === -1 ? 999 : ib) < (ia === -1 ? 999 : ia) ? b : a
       }
       return a
     })
@@ -762,19 +760,6 @@
     }
     return groups
   })()
-
-  const SCALING_TO_BOOST: Record<string, string> = {
-    physical:   'physicalBoost',
-    magic:      'magicBoost',
-    fire:       'fireBoost',
-    water:      'waterBoost',
-    earth:      'earthBoost',
-    air:        'airBoost',
-    hex:        'hexBoost',
-    holy:       'holyBoost',
-    dexterity:  'dexterityBoost',
-    summon:     'summonBoost',
-  }
 
   const SCALING_COLORS: Record<string, string> = {
     physical:  '#fb923c',
@@ -974,18 +959,12 @@
     }
   })()
 
-  const SCALING_TO_BOOST_KEY: Record<string, string> = {
-    physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',
-    water: 'waterBoost', earth: 'earthBoost', air: 'airBoost',
-    hex: 'hexBoost', holy: 'holyBoost', dexterity: 'dexterityBoost', summon: 'summonBoost',
-  }
-
   $: _scalingMult = (() => {
     if (!_weaponResult) return 1
     const scalings = _weaponResult.scalings
     let totalEffectivePct = 0
     for (const [key, scalingVal] of Object.entries(scalings)) {
-      const boostKey = SCALING_TO_BOOST_KEY[key]
+      const boostKey = SCALING_TO_BOOST[key]
       if (!boostKey) continue
       const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
       totalEffectivePct += scalingVal * boostPct
@@ -1032,12 +1011,11 @@
       if (entries.length === 0) {
         return _weaponDmgTypes
       }
-      const PRIORITY = ['hex', 'water', 'air', 'true', 'earth', 'magic', 'fire', 'physical', 'holy']
       const [highestKey] = entries.reduce((a, b) => {
         if (b[1] > a[1]) return b
         if (b[1] === a[1]) {
-          const ia = PRIORITY.indexOf(a[0])
-          const ib = PRIORITY.indexOf(b[0])
+          const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
+          const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
           return (ib === -1 ? 999 : ib) < (ia === -1 ? 999 : ia) ? b : a
         }
         return a

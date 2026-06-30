@@ -11,6 +11,8 @@
   } from './lib/engine'
   import { setEnchantment, setGuild } from './lib/store'
   import type { EnchantSlot, StatMap, StatPrefix, ScalingKey } from './lib/types'
+  import { DMG_TYPE_PRIORITY, SCALING_TO_BOOST } from './lib/types'
+  import { OFFENSIVE_BOOSTS } from './data/statboost'
   import { enchantments, getEnchant as ge, isExclusiveEnchant } from './lib/engine'
   import EnchantSelect from './lib/EnchantSelect.svelte'
   import { getEnchantTooltipText } from './lib/enchantTooltip'
@@ -72,12 +74,6 @@ import Highlight from './Highlight.svelte'
   let weaponStatFilterSortMode:'highest'|'lowest'|'alphabetical'= 'highest'
 
   // ── Armor effective-boost sort helpers ────────────────────────────────────
-  const ARMOR_SCALING_TO_BOOST: Record<string, string> = {
-    physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',
-    water: 'waterBoost', earth: 'earthBoost', air: 'airBoost',
-    hex: 'hexBoost', holy: 'holyBoost', dexterity: 'dexterityBoost', summon: 'summonBoost',
-  }
-
   function computeArmorEffectiveBoost(
     armorStats: Record<string, number>,
     weaponScalings: Record<string, number>,
@@ -85,7 +81,7 @@ import Highlight from './Highlight.svelte'
   ): number {
     let total = 0
     for (const [key, scalingVal] of Object.entries(weaponScalings)) {
-      const boostKey = ARMOR_SCALING_TO_BOOST[key]
+      const boostKey = SCALING_TO_BOOST[key]
       if (!boostKey) continue
       total += scalingVal * (armorStats[boostKey] ?? 0)
     }
@@ -100,9 +96,8 @@ import Highlight from './Highlight.svelte'
   ): number {
     const convRate = Math.min(brawnyAmt, 1.0)
     const s: Record<string, number> = { ...armorStats }
-    const OFFENSIVE = ['physicalBoost','magicBoost','fireBoost','waterBoost','earthBoost','airBoost','hexBoost','holyBoost','dexterityBoost']
     let gained = 0
-    for (const key of OFFENSIVE) {
+    for (const key of OFFENSIVE_BOOSTS) {
       if (key === 'physicalBoost') continue
       const val = s[key] ?? 0
       if (val <= 0) continue
@@ -926,13 +921,11 @@ $: highestDamageType = (() => {
   const entries = Object.entries(weaponDamageTypesWithBonus)
   if (entries.length === 0) return null
   
-  const PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy']
-  
   return entries.reduce((a, b) => {
     if (b[1] > a[1]) return b
     if (b[1] === a[1]) {
-      const ia = PRIORITY.indexOf(a[0])
-      const ib = PRIORITY.indexOf(b[0])
+      const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
+      const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
       const pa = ia === -1 ? 999 : ia
       const pb = ib === -1 ? 999 : ib
       return pb < pa ? b : a

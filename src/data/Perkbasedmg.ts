@@ -323,4 +323,25 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalings: { physical: 1.0, dexterity: 1.0 },
     note: 'Cannot proc other effects. No internal cooldown. Proccing Bleed multiple times in the same hit will proc this perk multiple times.',
   },
+  // ── Honey Arts ────────────────────────────────────────────────────────────
+  {
+    perkName: 'Honey Arts',
+    condition: 'On Weapon Art use',
+    getBaseDamage: ({ perkAmount }) => 0.625 + 0.6725 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { magic: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { magic: 1.0 },
+    isWA: true,
+    secondaryEffects: [
+      {
+        label: 'Sticky',
+        getValue: () => 5,
+        format: v => `${v}s`,
+        condition: 'Applied on hit',
+        tone: 'utility',
+      },
+    ],
+    note: 'Maximum globs depend on WA cooldown. Each glob has small AoE. Cannot proc other effects.',
+  },
 ]

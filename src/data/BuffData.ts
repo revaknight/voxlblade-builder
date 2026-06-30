@@ -251,7 +251,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   Sticky: {
     name: 'Sticky',
     color: '#ff9349',
-    description: 'Enemy is stuck.',
+    description: 'Move x% slower and take 20% more magic damage.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -296,6 +296,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isDebuff: true,
   },
+
   'Minion Absorbed': {
     name: 'Minion Absorbed',
     color: '#ff004b',
@@ -754,6 +755,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceName: 'Roaring Heads',
       sourceType: 'perk',
       isSelfDebuff: true,
+    },
+  ],
+  'Honey Arts': () => [
+    {
+      buffName: 'Sticky',
+      potency: 0.1,
+      duration: 5,
+      condition: 'On Weapon Art hit',
+      sourceName: 'Honey Arts',
+      sourceType: 'perk',
     },
   ],
 }

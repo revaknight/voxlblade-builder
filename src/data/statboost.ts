@@ -3,7 +3,7 @@ import type { StatMap, StatKey } from '../lib/types'
 const WEIGHT_DISTRIBUTION_SPLIT_RATIO = 0.5
 const WEIGHT_DISTRIBUTION_MULTIPLIER = 0.1
 
-const OFFENSIVE_BOOSTS: StatKey[] = [
+export const OFFENSIVE_BOOSTS: StatKey[] = [
   'physicalBoost', 'magicBoost', 'fireBoost', 'waterBoost',
   'earthBoost', 'airBoost', 'hexBoost', 'holyBoost', 'dexterityBoost',
 ]

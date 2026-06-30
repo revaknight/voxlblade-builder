@@ -246,6 +246,12 @@ const ONE_HANDED_TYPES = new Set([
 
 export const DMG_TYPE_PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy'];
 
+export const SCALING_TO_BOOST: Record<string, string> = {
+  physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',
+  water: 'waterBoost', earth: 'earthBoost', air: 'airBoost',
+  hex: 'hexBoost', holy: 'holyBoost', dexterity: 'dexterityBoost', summon: 'summonBoost',
+};
+
 export interface WeaponHitObject {
   n: number;
   count: number;
