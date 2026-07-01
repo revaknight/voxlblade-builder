@@ -562,7 +562,6 @@
     { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
     { perkName: 'Emotional', type: 'fire', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'debuffs' },
-    { perkName: 'Emotional', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'buffs' },
     {
       perkName: 'Draconic Blood',
       getType: ctx => ctx.draconicColor || 'physical',
@@ -590,6 +589,28 @@
       bonus[type] = Math.round(((bonus[type] ?? 0) + amt * amountPerStack) * 10000) / 10000
     }
     return bonus
+  })()
+
+  $: _emotionalHexBonus = (() => {
+    const amt = perks['Emotional'] ?? 0
+    if (amt <= 0) return 0
+    if ($build.emotionalState !== 'buffs') return 0
+    return Math.round(amt * 0.1 * 10000) / 10000
+  })()
+
+  $: _emotionalFireBonus = (() => {
+    const amt = perks['Emotional'] ?? 0
+    if (amt <= 0) return 0
+    if ($build.emotionalState !== 'debuffs') return 0
+    return Math.round(amt * 0.1 * 10000) / 10000
+  })()
+
+  $: _waDmgTypeBonuses = (() => {
+    const bonuses = { ..._perkDmgTypeBonuses }
+    if (_emotionalHexBonus > 0) {
+      bonuses.hex = Math.round(((bonuses.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000
+    }
+    return bonuses
   })()
 
   function _applyDmgBonuses(base: Record<string, number>, bonuses: Record<string, number>): Record<string, number> {
@@ -1022,14 +1043,18 @@
 
   $: _waDmgTypes = (() => {
     const dt = selectedWA.damageType
+    const addHex = (r: Record<string, number>) => _emotionalHexBonus > 0
+      ? { ...r, hex: Math.round(((r.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
+      : r
+    
     if (!dt || dt === 'Same as weapon') {
-      return _weaponDmgTypes
+      return addHex(_weaponDmgTypes)
     }
     
     if (dt.includes('Highest damage type')) {
       const entries = Object.entries(_weaponDmgTypesBase)
       if (entries.length === 0) {
-        return _weaponDmgTypes
+        return addHex(_weaponDmgTypes)
       }
       const [highestKey] = entries.reduce((a, b) => {
         if (b[1] > a[1]) return b
@@ -1040,7 +1065,7 @@
         }
         return a
       })
-      return _applyDmgBonuses({ [highestKey]: 1 }, _perkDmgTypeBonuses)
+      return _applyDmgBonuses({ [highestKey]: 1 }, _waDmgTypeBonuses)
     }
 
     const types: Record<string, number> = {}
@@ -1054,9 +1079,9 @@
     }
 
     if (Object.keys(types).length > 0) {
-      return _applyDmgBonuses(types, _perkDmgTypeBonuses)
+      return _applyDmgBonuses(types, _waDmgTypeBonuses)
     } else {
-      return { ..._weaponDmgTypes }
+      return addHex({ ..._weaponDmgTypes })
     }
   })()
   
@@ -1138,7 +1163,13 @@
 
       const effectiveMult = hitScalingMult * _waCombatMult
 
-      const dtFinal = _resolveHitDmgTypes(dtStr, _weaponDmgTypes, _perkDmgTypeBonuses)
+      const dtFinal = (() => {
+        const base = _resolveHitDmgTypes(dtStr, _weaponDmgTypes, _waDmgTypeBonuses)
+        if (dtStr === 'Same as weapon' && _emotionalHexBonus > 0) {
+          return { ...base, hex: Math.round(((base.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
+        }
+        return base
+      })()
       const types: DamageDisplayType[] = Object.entries(dtFinal).map(([k, mult]) => ({
         label: k.charAt(0).toUpperCase() + k.slice(1),
         rawVal: Math.round(base * 10000) / 10000,
@@ -1308,14 +1339,17 @@
 
       // Apply Draconic Runes + Dragon Infusion bonuses to rune damage
       const resolvedDmgTypes = def.isRune
-        ? applyDraconicBonuses(baseDmgTypes, {
-            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
-            draconicColor: $build.draconicColor || 'physical',
-          }, {
-            isActive: $build.draconicRuneInfusion === 'infusion',
-            buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
-            draconicColor: $build.draconicColor || 'physical',
-          })
+        ? _applyDmgBonuses(
+            applyDraconicBonuses(baseDmgTypes, {
+              draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+              draconicColor: $build.draconicColor || 'physical',
+            }, {
+              isActive: $build.draconicRuneInfusion === 'infusion',
+              buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+              draconicColor: $build.draconicColor || 'physical',
+            }),
+            _perkDmgTypeBonuses
+          )
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
 
       // Store base damage types without Draconic Runes bonus for self damage calculation
@@ -1453,13 +1487,8 @@
     }
     if (_activeMountRuneDef && mountActive) {
         const m1Def = _activeMountRuneDef.m1
-        result.push({
-          group: 'M1', index: 0, count: 1,
-          base: m1Def.getBaseDamage(),
-          scalingMult: _computePerkScalingMult(m1Def.getScalings()),
-          combatMult: _runeCombatMult,
-          isFinisher: false,
-          dmgTypes: applyDraconicBonuses(m1Def.getDmgTypes(), {
+        const _mountM1DmgTypes = _applyDmgBonuses(
+          applyDraconicBonuses(m1Def.getDmgTypes(), {
             draconicRunesStacks: perks['Draconic Runes'] ?? 0,
             draconicColor: $build.draconicColor || 'physical',
           }, {
@@ -1467,6 +1496,15 @@
             buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
             draconicColor: $build.draconicColor || 'physical',
           }),
+          _perkDmgTypeBonuses
+        )
+        result.push({
+          group: 'M1', index: 0, count: 1,
+          base: m1Def.getBaseDamage(),
+          scalingMult: _computePerkScalingMult(m1Def.getScalings()),
+          combatMult: _runeCombatMult,
+          isFinisher: false,
+          dmgTypes: _mountM1DmgTypes,
           label: `${_activeMountRuneDef.mountLabel} (Mounted)`,
         })
         if (m1Def.healFlat) {
@@ -1494,7 +1532,12 @@
           sc = 1 + t / 100
         } else if (hss === 'Same as weapon') sc = _scalingMult
         const hitDt = selectedWA.hitDamageTypes?.length
-         ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)
+         ? (() => {
+             const _hdt = selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)]
+             return _hdt === 'Same as weapon' && _emotionalHexBonus > 0
+               ? { ..._weaponDmgTypes, hex: Math.round(((_weaponDmgTypes.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
+               : _resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses)
+           })()
          : _waDmgTypes
          
         const hitDtBase = selectedWA.hitDamageTypes?.length
@@ -1529,14 +1572,20 @@
     if (_activeMountRuneDef && mountActive) {
       const waDef = _activeMountRuneDef.wa
       const waScalingMult = _computePerkScalingMult(waDef.getScalings())
-      const waDmgTypes = applyDraconicBonuses(waDef.getDmgTypes(), {
-        draconicRunesStacks: perks['Draconic Runes'] ?? 0,
-        draconicColor: $build.draconicColor || 'physical',
-      }, {
-        isActive: $build.draconicRuneInfusion === 'infusion',
-        buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
-        draconicColor: $build.draconicColor || 'physical',
-      })
+      const baseWaDmgTypes = _applyDmgBonuses(
+        applyDraconicBonuses(waDef.getDmgTypes(), {
+          draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+          draconicColor: $build.draconicColor || 'physical',
+        }, {
+          isActive: $build.draconicRuneInfusion === 'infusion',
+          buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+          draconicColor: $build.draconicColor || 'physical',
+        }),
+        _perkDmgTypeBonuses
+      )
+      const waDmgTypes = _emotionalHexBonus > 0
+        ? { ...baseWaDmgTypes, hex: Math.round(((baseWaDmgTypes.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
+        : baseWaDmgTypes
       for (const h of waDef.getHits()) {
         const base = typeof h === 'number' ? h : h.n
         const count = typeof h === 'number' ? 1 : h.count
@@ -1613,14 +1662,17 @@
       const _runeIsHeal = _activeRuneDmgDef.isHealOnly ?? false
       const _runeDmgTypesWithBonus = _runeIsHeal
         ? _activeRuneDmgDef.dmgTypes
-        : applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
-            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
-            draconicColor: $build.draconicColor || 'physical',
-          }, {
-            isActive: $build.draconicRuneInfusion === 'infusion',
-            buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
-            draconicColor: $build.draconicColor || 'physical',
-          })
+        : _applyDmgBonuses(
+            applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
+              draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+              draconicColor: $build.draconicColor || 'physical',
+            }, {
+              isActive: $build.draconicRuneInfusion === 'infusion',
+              buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+              draconicColor: $build.draconicColor || 'physical',
+            }),
+            _perkDmgTypeBonuses
+          )
       result.push({
         group: 'Rune',
         index: result.length,
@@ -2450,14 +2502,18 @@
         })}
         {@const _runeDmgTypesWithBonus = _runeIsHeal
           ? _activeRuneDmgDef.dmgTypes
-          : applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
-              draconicRunesStacks: _draconicRunesStacks,
-              draconicColor: _draconicColor,
-            }, {
-              isActive: _dragonInfusionActive,
-              buffPotency: _dragonInfusionPotency,
-              draconicColor: _draconicColor,
-            })}
+          : (() => {
+              const base = applyDraconicBonuses(_activeRuneDmgDef.dmgTypes, {
+                draconicRunesStacks: _draconicRunesStacks,
+                draconicColor: _draconicColor,
+              }, {
+                isActive: _dragonInfusionActive,
+                buffPotency: _dragonInfusionPotency,
+                draconicColor: _draconicColor,
+              })
+              const bonusEntries = Object.entries(_perkDmgTypeBonuses).filter(([, v]) => v > 0)
+              return bonusEntries.length > 0 ? resolveDamageTypes(base, _perkDmgTypeBonuses) : base
+            })()}
         
         <div class="da-wbd-section">
           {#if _activeRuneDmgDef.slider}
