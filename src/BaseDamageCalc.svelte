@@ -413,6 +413,24 @@
     return Math.round(sum * (includeCount ? hit.count : 1) * 100) / 100
   }
   function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {return Math.round(list.filter(h => !h.isHeal).reduce((s, h) =>s +h.types.filter(t => !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count,0) * 100) / 100}
+
+  import { onMount } from 'svelte'
+  onMount(() => {
+    function onOutside(e: TouchEvent | MouseEvent) {
+      const target = e.target as HTMLElement
+      if (!target.closest('.bdc-hit-type-chunk')) {
+        document.querySelectorAll('.bdc-hit-type-chunk--hovered').forEach(el => {
+          el.classList.remove('bdc-hit-type-chunk--hovered', 'bdc-hit-type-chunk--flip')
+        })
+      }
+    }
+    document.addEventListener('touchstart', onOutside, { passive: true })
+    document.addEventListener('mouseup', onOutside)
+    return () => {
+      document.removeEventListener('touchstart', onOutside)
+      document.removeEventListener('mouseup', onOutside)
+    }
+  })
 </script>
 
 <div class="bdc-root da-section">
@@ -589,7 +607,32 @@
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
                             class:bdc-hit-type-chunk--luminescent={t.isLuminescent || t.isChainLightning}
-                            class:bdc-hit-type-chunk--crit={(showCritValues && !t.isCritExempt) || t.forceCrit}>
+                            class:bdc-hit-type-chunk--crit={(showCritValues && !t.isCritExempt) || t.forceCrit}
+                            role="group"
+                            on:mouseenter={(e) => {
+                              const el = e.currentTarget;
+                              const needFlip = el.getBoundingClientRect().bottom + 250 > window.innerHeight;
+                              if (needFlip) el.classList.add('bdc-hit-type-chunk--flip');
+                              el.classList.add('bdc-hit-type-chunk--hovered');
+                            }}
+                            on:mouseleave={(e) => {
+                              e.currentTarget.classList.remove('bdc-hit-type-chunk--hovered', 'bdc-hit-type-chunk--flip');
+                            }}
+                            on:touchstart={(e) => {
+                              const el = e.currentTarget;
+                              const needFlip = el.getBoundingClientRect().bottom + 250 > window.innerHeight;
+                              if (needFlip) el.classList.add('bdc-hit-type-chunk--flip');
+                              el.classList.add('bdc-hit-type-chunk--hovered');
+                              el.dataset.touchStart = String(Date.now());
+                            }}
+                            on:touchend={(e) => {
+                              const el = e.currentTarget;
+                              const start = el.dataset.touchStart;
+                              delete el.dataset.touchStart;
+                              if (start && Date.now() - +start > 300) {
+                                el.classList.remove('bdc-hit-type-chunk--hovered', 'bdc-hit-type-chunk--flip');
+                              }
+                            }}>
                             <div class="bdc-hit-type-top">
                               <div class="bdc-hit-type-val-row">
                                 {#if (showCritValues && !t.isCritExempt) || t.forceCrit}
@@ -1335,7 +1378,7 @@
   transform: translateY(4px);
   transition: opacity .18s ease, transform .18s ease;
 }
-.bdc-hit-type-chunk:hover .bdc-hit-type-formula {
+:global(.bdc-hit-type-chunk--hovered) .bdc-hit-type-formula {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
@@ -1421,6 +1464,15 @@
 }
 .bdc-hit-type-chunk--weaponboost {
   box-shadow: 0 0 8px color-mix(in srgb, var(--tc) 50%, #fbbf24);
+}
+:global(.bdc-hit-type-chunk--flip) .bdc-hit-type-formula {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+:global(.bdc-hit-type-chunk--flip) .bdc-hit-type-formula::before {
+  top: auto;
+  bottom: -5px;
+  transform: rotate(-135deg);
 }
 .bdc-hit-type-chunk--heal {
   border-color: rgba(74,222,128,.35) !important;
