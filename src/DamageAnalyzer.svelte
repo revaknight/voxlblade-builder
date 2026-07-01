@@ -1027,7 +1027,7 @@
     }
     
     if (dt.includes('Highest damage type')) {
-      const entries = Object.entries(_weaponDmgTypes)
+      const entries = Object.entries(_weaponDmgTypesBase)
       if (entries.length === 0) {
         return _weaponDmgTypes
       }
@@ -1040,10 +1040,7 @@
         }
         return a
       })
-      const total =
-        Math.round(entries.reduce((s, [, v]) => s + v, 0) * 1000) / 1000
-        
-      return { [highestKey]: total }
+      return _applyDmgBonuses({ [highestKey]: 1 }, _perkDmgTypeBonuses)
     }
 
     const types: Record<string, number> = {}
@@ -1070,7 +1067,20 @@
     }
   
     if (dt.includes('Highest damage type')) {
-      return _waDmgTypes
+      const entries = Object.entries(_weaponDmgTypesBase)
+      if (entries.length === 0) {
+        return _weaponDmgTypesBase
+      }
+      const [highestKey] = entries.reduce((a, b) => {
+        if (b[1] > a[1]) return b
+        if (b[1] === a[1]) {
+          const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
+          const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
+          return (ib === -1 ? 999 : ib) < (ia === -1 ? 999 : ia) ? b : a
+        }
+        return a
+      })
+      return { [highestKey]: 1 }
     }
   
     const types: Record<string, number> = {}
