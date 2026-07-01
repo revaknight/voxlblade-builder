@@ -111,6 +111,7 @@ function calcBoosts(
   hpFillPct?:        number,
   inDarkness:        boolean = true,
   summonBoostPct:    number = 0,
+  quickdrawPotency:  number = 0,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -132,7 +133,7 @@ function calcBoosts(
   const ctx: BoostContext = {
     perks, naturalCritChance, jumpBoost, summonCount,
     ragePotency, bouncePotency, inDarkness, emotionalState, level,
-    summonBoostPct,
+    summonBoostPct, quickdrawPotency,
   }
 
   for (const def of BOOST_DEFS) {
@@ -432,6 +433,10 @@ function deriveResults(
   )
 
   const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
+  const emotionalAmt = finalPerks['Emotional'] ?? 0
+  if (emotionalAmt > 0 && state.emotionalState === 'debuffs') {
+    boostedStats.attackSpeed = (boostedStats.attackSpeed ?? 0) + 0.2 * emotionalAmt
+  }
   if ((finalPerks['Gladiatorial Rage'] ?? 0) > 0) {
     const BOOST_KEYS: StatKey[] = ['dexterityBoost','physicalBoost','magicBoost','fireBoost','waterBoost','earthBoost','airBoost','hexBoost','holyBoost']
     let highestBoost = 0
@@ -463,12 +468,15 @@ function deriveResults(
   const _bounceBuffs  = _allBuffs.filter(b => b.buffName === 'Bounce')
   const bouncePotency = _bounceBuffs.length > 0 ? Math.max(..._bounceBuffs.map(b => b.potency)) : 0
 
+  const _quickdrawBuffs = _allBuffs.filter(b => b.buffName === 'Quickdraw')
+  const quickdrawPotency = _quickdrawBuffs.length > 0 ? Math.max(..._quickdrawBuffs.map(b => b.potency)) : 0
+
   const boosts = calcBoosts(
     finalPerks, state.emotionalState, state.level ?? 80,
     crit.naturalCritChance, boostedStats.jumpBoost ?? 0,
     state.summonCount ?? 0, ragePotency, bouncePotency,
     state.race, state.hpFill ?? 100, state.inDarkness ?? true,
-    boostedStats.summonBoost ?? 0,
+    boostedStats.summonBoost ?? 0, quickdrawPotency,
   )
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }

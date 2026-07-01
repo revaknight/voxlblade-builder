@@ -555,12 +555,14 @@
     getType?: (ctx: { draconicColor: string }) => string
     amountPerStack: number
     getAmountPerStack?: (ctx: { draconicColor: string; perkAmount: number; guild: string; draconicRuneInfusion: string; perks: Record<string, number> }) => number
-    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string }) => boolean
+    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string; emotionalState: string }) => boolean
   }
 
   const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
     { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
+    { perkName: 'Emotional', type: 'fire', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'debuffs' },
+    { perkName: 'Emotional', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'buffs' },
     {
       perkName: 'Draconic Blood',
       getType: ctx => ctx.draconicColor || 'physical',
@@ -579,7 +581,7 @@
     for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
       const amt = perks[def.perkName] ?? 0
       if (amt <= 0) continue
-      if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion })) continue
+      if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion, emotionalState: $build.emotionalState })) continue
       const type = def.getType ? def.getType({ draconicColor: $build.draconicColor }) : def.type
       if (!type) continue
       const amountPerStack = def.getAmountPerStack
@@ -733,11 +735,9 @@
   $: activeFinalMultRounded = roundMultiplier(activeFinalMult)
 
   function _categoryMult(type: BoostAttackType): number {
-    return roundMultiplier(
-      activeEntries
-        .filter(e => !(e as any).appliesTo || (e as any).appliesTo.includes(type))
-        .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
-    )
+    return activeEntries
+      .filter(e => !(e as any).appliesTo || (e as any).appliesTo.includes(type))
+      .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
   }
 
   $: _m1CombatMult   = (void activeEntries, _categoryMult('m1'))
@@ -989,7 +989,7 @@
       const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
       totalEffectivePct += scalingVal * boostPct
     }
-    return roundMultiplier(1 + totalEffectivePct / 100)
+    return 1 + totalEffectivePct / 100
   })()
 
   $: selectedWA = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt) ?? WEAPON_ARTS[0]
@@ -1108,7 +1108,7 @@
       const typeName = /dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()
       totalPct += parseFloat(m[1]) * ((stats as Record<string, number>)[typeName + 'Boost'] ?? 0)
     }
-    return roundMultiplier(1 + totalPct / 100)
+    return 1 + totalPct / 100
   })()
 
   $: _waTyped = (() => {
@@ -1263,7 +1263,7 @@
       if (!boostKey) continue
       totalPct += val * ((stats as Record<string, number>)[boostKey] ?? 0)
     }
-    return roundMultiplier(1 + totalPct / 100)
+    return 1 + totalPct / 100
   }
 
   interface PerkDmgComputedEntry {
@@ -1491,7 +1491,7 @@
           let t = 0, m: RegExpExecArray | null
           while ((m = re.exec(hss)) !== null)
             t += parseFloat(m[1]) * ((stats as Record<string,number>)[(/dex/i.test(m[2]) ? 'dexterity' : m[2].toLowerCase()) + 'Boost'] ?? 0)
-          sc = roundMultiplier(1 + t / 100)
+          sc = 1 + t / 100
         } else if (hss === 'Same as weapon') sc = _scalingMult
         const hitDt = selectedWA.hitDamageTypes?.length
          ? _resolveHitDmgTypes(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypes, _perkDmgTypeBonuses)

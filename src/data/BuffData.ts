@@ -360,6 +360,18 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     statKey: 'protection',
     isNeutral: true,
   },
+  'Quickdraw': {
+    name: 'Quickdraw',
+    color: '#daa520',
+    description: 'Deal x% more damage with your weapon arts and runes.',
+    dynamicDescription: (_perks, potency) => {
+      const pct = Math.round(potency * 30000) / 100
+      return `Deal ${pct}% more damage with your weapon arts and runes.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isNeutral: true,
+  },
 }
 
 const ITEM_BUFF_MAP: GrantedBuff[] = [
@@ -808,6 +820,26 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       duration: 5,
       condition: 'On Weapon Art hit',
       sourceName: 'Honey Arts',
+      sourceType: 'perk',
+    },
+  ],
+  'Gorecast': () => [
+    {
+      buffName: 'Bleed',
+      potency: 0,
+      duration: 5,
+      condition: 'On Weapon Art hit (deals Magic or Physical damage)',
+      sourceName: 'Gorecast',
+      sourceType: 'perk',
+    },
+  ],
+  'Quickdraw': (amount) => [
+    {
+      buffName: 'Quickdraw',
+      potency: 0.1 * amount,
+      duration: 5,
+      condition: 'Upon equipping your weapon',
+      sourceName: 'Quickdraw',
       sourceType: 'perk',
     },
   ],

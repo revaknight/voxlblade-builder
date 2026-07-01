@@ -8,6 +8,7 @@ export interface BoostContext {
   summonCount: number
   ragePotency: number
   bouncePotency: number
+  quickdrawPotency: number
   inDarkness: boolean
   emotionalState?: string
   level?: number
@@ -40,9 +41,25 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Royal Parry', multiplierPerPerk: 0.50, type: 'dmg', condition: 'on the hit that activated the Critical Boost status per 1 of this perk.' },
   { sourceName: 'Spell Piercer', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Increase damage dealt by weapon arts and runes on crit by 20% per 1 of this perk' },
   { sourceName: 'Scourge', multiplierPerPerk: 0.2, condition: 'Gain a chance for any hit to count as a Guardbreak', type: 'dmg' },
+  { sourceName: 'Sharpshooter', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting from range (hits with proc coefficient)' },
   { sourceName: 'Valor', multiplierPerPerk: 0.0666, type: 'dmg', condition: 'Damage Boost vs Taunted enemies, per 1 of this perk' },
+  { sourceName: 'Gorecast', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Weapon Art damage vs bleeding opponents', appliesTo: ['wa'] },
   { sourceName: 'Undead Might', multiplierPerPerk: 0.25, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
   { sourceName: 'Rider', multiplierPerPerk: 0.20, type: 'dmg', condition: 'While mounted · +0.1s stun resist/stack' },
+  {
+    sourceName: 'Quickdraw',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      if (ctx.quickdrawPotency > 0) {
+        return {
+          multiplier: roundMultiplier(1 + ctx.quickdrawPotency * 3),
+          condition: `Quickdraw active`,
+        }
+      }
+      return null
+    },
+    appliesTo: ['wa', 'rune'],
+  },
 
 
   // Complex dmg boosts (moved from engine.ts applySpecialBoosts)

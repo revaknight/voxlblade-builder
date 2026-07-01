@@ -154,14 +154,14 @@
   // Product of all active damageMult debuffs (Weakness on enemy doesn't affect damage you deal)
   $: _activeDebuffDamageMult = resolvedDebuffs
     .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
-    .reduce((acc, d) => Math.round(acc * (d.damageMult ?? 1) * 10000) / 10000, 1)
+    .reduce((acc, d) => acc * (d.damageMult ?? 1), 1)
 
   $: _activeDebuffTypeDamageMult = (() => {
     const mults: Record<string, number> = {}
     for (const d of resolvedDebuffs) {
       if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
       for (const [type, mult] of Object.entries(d.typeDamageMult)) {
-        mults[type] = Math.round((mults[type] ?? 1) * mult * 10000) / 10000
+        mults[type] = (mults[type] ?? 1) * mult
       }
     }
     return mults
@@ -288,15 +288,13 @@
 
       const weaponBoostMult = hit.weaponBoostMult ?? 1
       const defMult = isHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
-      const typeBase = Math.round(hit.base * mult * 10000) / 10000
+      const typeBase = hit.base * mult
 
       const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
-      const raw = Math.round(
-        typeBase * hit.scalingMult * typedMultUsed *
+      const raw = typeBase * hit.scalingMult * typedMultUsed *
         hit.combatMult * weaponBoostMult * defMult *
         (isHeal ? 1 : _activeDebuffDamageMult * typeDebuffMult) * (isHeal ? 1 : selfDebuffDamageMult) *
-        (isHeal ? antiHealSelfMult : 1) * 10000
-      ) / 10000
+        (isHeal ? antiHealSelfMult : 1)
 
       const critVal = Math.round(raw * critDmgMult / 100 * 10000) / 10000
       
@@ -311,10 +309,10 @@
     })
     if (!isHeal && luminescentPct > 0) {
       const preMitSum  = computePreMitigationBase(hit)
-      const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
+      const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
       if (preMitBase > 0) {
-        const lumAmount = Math.round(preMitBase * luminescentPct * 10000) / 10000
+        const lumAmount = preMitBase * luminescentPct
         const lumResolvedTypes = resolveDamageTypes({ holy: 1.0 }, perkDmgTypeBonuses)
 
         for (const [k, mult] of Object.entries(lumResolvedTypes)) {
@@ -324,8 +322,8 @@
           const lumDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lumDefPct  = defPctForType(k)
           const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
-          const lumTypeBase = Math.round(lumAmount * mult * 10000) / 10000
-          const lumRaw       = Math.round(lumTypeBase * typedMultUsed * lumDefMult * 10000) / 10000
+          const lumTypeBase = lumAmount * mult
+          const lumRaw       = lumTypeBase * typedMultUsed * lumDefMult
           
           types.push({
             key: k, label: info.label, color: info.color,
@@ -341,10 +339,10 @@
     
     if (!isHeal && lightningCloakPct > 0) {
       const preMitSum  = computePreMitigationBase(hit)
-      const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
+      const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
       if (preMitBase > 0) {
-        const cloakTotal = Math.round(preMitBase * lightningCloakPct * 10000) / 10000
+        const cloakTotal = preMitBase * lightningCloakPct
         const lcResolvedTypes = resolveDamageTypes({ air: 0.5, magic: 0.5 }, perkDmgTypeBonuses)
 
         for (const [k, mult] of Object.entries(lcResolvedTypes)) {
@@ -354,8 +352,8 @@
           const lcDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lcDefPct  = defPctForType(k)
           const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
-          const lcTypeBase = Math.round(cloakTotal * mult * 10000) / 10000
-          const lcRaw       = Math.round(lcTypeBase * typedMultUsed * lcDefMult * 10000) / 10000
+          const lcTypeBase = cloakTotal * mult
+          const lcRaw       = lcTypeBase * typedMultUsed * lcDefMult
           
           types.push({
             key: k, label: info.label, color: info.color,
@@ -371,12 +369,12 @@
 
     if (!isHeal && curseRipPerkAmount > 0 && curseRipActiveDebuffCount > 0) {
       const preMitSum  = computePreMitigationBase(hit)
-      const preMitBase = Math.round(preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult * 10000) / 10000
+      const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
       if (preMitBase > 0) {
-        const healAmount = Math.round(preMitBase / 60 * 10000) / 10000
+        const healAmount = preMitBase / 60
         if (healAmount > 0) {
-          const healRaw = Math.round(healAmount * curseRipHealMult * antiHealSelfMult * 10000) / 10000
+          const healRaw = healAmount * curseRipHealMult * antiHealSelfMult
           
           types.push({
             key: 'heal', label: 'Heal', color: '#4ade80',
