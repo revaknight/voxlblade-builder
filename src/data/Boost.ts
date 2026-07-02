@@ -132,7 +132,7 @@ export const BOOST_DEFS: BoostDef[] = [
     calcFn: (ctx) => {
       const stacks = ctx.perks['Frenzy'] ?? 0
       if (stacks > 0 && ctx.ragePotency > 0) {
-        const frenzyPct = (0.05 + 0.1667 * ctx.ragePotency) * stacks
+        const frenzyPct = (0.05 + (1 / 6) * ctx.ragePotency) * stacks
         return {
           multiplier: roundMultiplier(1 + frenzyPct),
           condition: `Rage active · potency ${Math.round(ctx.ragePotency * 1000) / 1000}`,
