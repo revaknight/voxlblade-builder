@@ -51,4 +51,18 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
     },
     typeDamageMult: () => ({ magic: 1.2, fire: 1.2, earth: 1.2 }),
   },
+  'Sticky (Sickness)': {
+    descFn: (p: number) => {
+      const slowPct = Math.round(p * 10000) / 100
+      return `Move ${slowPct}% slower · +20% Hex & Magic Dmg Taken`
+    },
+    typeDamageMult: () => ({ magic: 1.2, hex: 1.2 }),
+  },
+  'Sticky (Hex Web)': {
+    descFn: (p: number) => {
+      const slowPct = Math.round(p * 10000) / 100
+      return `Move ${slowPct}% slower · +20% Hex & Magic Dmg Taken`
+    },
+    typeDamageMult: () => ({ magic: 1.2, hex: 1.2 }),
+  },
 }

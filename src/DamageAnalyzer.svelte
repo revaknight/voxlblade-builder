@@ -319,6 +319,8 @@
   $: _dummyDebuffs = (() => {
     const variantBase = new Map<string, string>([
       ['Sticky (Melting Slime)', 'Sticky'],
+      ['Sticky (Sickness)', 'Sticky'],
+      ['Sticky (Hex Web)', 'Sticky'],
     ])
     const groups = new Map<string, Map<string, number>>()
     for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
@@ -340,13 +342,14 @@
         inner.set('Burn', 0)
       }
     }
-    // Melting Slime makes all Sticky resolve to base Sticky (unified debuff)
+    // Melting Slime absorbs Brainblast's sticky variant into base Sticky
     if ((perks['Melting Slime'] ?? 0) > 0) {
       for (const inner of groups.values()) {
-        if (inner.has('Sticky') || inner.has('Sticky (Melting Slime)')) {
-          const maxPotency = Math.max(...inner.values())
-          inner.clear()
-          inner.set('Sticky', maxPotency)
+        if (inner.has('Sticky (Melting Slime)')) {
+          const msPotency = inner.get('Sticky (Melting Slime)')!
+          const existing = inner.get('Sticky') ?? 0
+          inner.set('Sticky', Math.max(existing, msPotency))
+          inner.delete('Sticky (Melting Slime)')
         }
       }
     }

@@ -344,6 +344,17 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     ],
     note: 'Maximum globs depend on WA cooldown. Each glob has small AoE. Cannot proc other effects.',
   },
+  // ── Sickness ──────────────────────────────────────────────────────────────
+  {
+    perkName: 'Sickness',
+    condition: 'On sneeze',
+    getBaseDamage: ({ perkAmount }) => 2 + 0.5 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { earth: 0.5, hex: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { earth: 1.0, hex: 1.0 },
+    note: '10% chance to sneeze per second per 1 of this perk. Applies Sticky (Sickness).',
+  },
   // ── Melting Slime ──────────────────────────────────────────────────────────
   {
     perkName: 'Melting Slime',

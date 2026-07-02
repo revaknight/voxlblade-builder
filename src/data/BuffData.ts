@@ -276,6 +276,30 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isDebuff: true,
   },
+  'Sticky (Sickness)': {
+    name: 'Sticky (Sickness)',
+    color: '#4ade80',
+    description: 'Move x% slower and take 20% more hex and magic damage.',
+    dynamicDescription: (_perks, potency) => {
+      const slowPct = Math.round(potency * 10000) / 100
+      return `Move ${slowPct}% slower and take 20% more hex and magic damage.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isDebuff: true,
+  },
+  'Sticky (Hex Web)': {
+    name: 'Sticky (Hex Web)',
+    color: '#a855f7',
+    description: 'Move x% slower and take 20% more hex and magic damage.',
+    dynamicDescription: (_perks, potency) => {
+      const slowPct = Math.round(potency * 10000) / 100
+      return `Move ${slowPct}% slower and take 20% more hex and magic damage.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isDebuff: true,
+  },
   Shatter: {
     name: 'Shatter',
     color: '#ff8183',
@@ -374,7 +398,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   Exhaust: {
     name: 'Exhaust',
-    color: '#ff6347',
+    color: '#fe8284',
     description: 'All hits apply burn.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
@@ -488,6 +512,14 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     duration: 5,
     condition: 'On cast',
     sourceName: 'Brainblast Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Sticky (Hex Web)',
+    potency: 0.1,
+    duration: 5,
+    condition: 'On cast · each hit',
+    sourceName: 'Hex Web Rune',
     sourceType: 'rune',
   },
 ]
@@ -851,6 +883,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     },
   ],
 
+  'Sickness': (amount) => [
+    {
+      buffName: 'Sticky (Sickness)',
+      potency: 0.1,
+      duration: 5,
+      condition: 'On sneeze',
+      sourceName: 'Sickness',
+      sourceType: 'perk',
+    },
+  ],
   'Exhaust': (amount) => [
     {
       buffName: 'Exhaust',

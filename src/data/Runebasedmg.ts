@@ -155,6 +155,15 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     note: 'Damage ticks every ~0.75s over 20.25s. Dodge incoming attacks during casting animation. Every hit applies Bleed for 5s.',
   },
   {
+    runeName: 'Hex Web Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 2,
+    dmgTypes: { hex: 1.0 },
+    scalings: { hex: 1.0 },
+    hits: 10,
+    note: 'Applies Sticky (Hex Web) each hit for 5s. Damage ticks every ~0.5s over 5s. Guardbreaks. Counts as normal Sticky for perk effects.',
+  },
+  {
     runeName: 'Brainblast Rune',
     condition: 'On cast',
     getBaseDamage: () => 10,
