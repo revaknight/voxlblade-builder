@@ -165,24 +165,39 @@
     maxDuration: number
   }
 
-$: groupedBuffs = Object.values(
-  displayBuffs.reduce((acc, buff) => {
+$: groupedBuffs = (() => {
+  const groups = displayBuffs.reduce((acc, buff) => {
     const k = `${buff.buffName}:${String(buff.isSelfDebuff ?? false)}`
     ;(acc[k] ??= []).push(buff)
     return acc
   }, {} as Record<string, GrantedBuff[]>)
-).map(entries => {
-  const sortedEntries = [...entries].sort(
-    (a, b) => (b.potency - a.potency) || (b.duration - a.duration)
-  )
-  return {
-    buffName: sortedEntries[0].buffName,
-    isSelfDebuff: sortedEntries[0].isSelfDebuff ?? false,
-    entries: sortedEntries,
-    strongest: sortedEntries[0],
-    maxDuration: Math.max(...sortedEntries.map(e => e.duration)),
+
+  // Melting Slime merges all Sticky variants into base Sticky
+  if (($result.perks['Melting Slime'] ?? 0) > 0) {
+    for (const [key, entries] of Object.entries(groups)) {
+      const [bn] = key.split(':')
+      if (bn === 'Sticky (Melting Slime)') {
+        const baseKey = `Sticky:false`
+        if (!groups[baseKey]) groups[baseKey] = []
+        groups[baseKey].push(...entries)
+        delete groups[key]
+      }
+    }
   }
-})
+
+  return Object.values(groups).map(entries => {
+    const sortedEntries = [...entries].sort(
+      (a, b) => (b.potency - a.potency) || (b.duration - a.duration)
+    )
+    return {
+      buffName: sortedEntries[0].buffName,
+      isSelfDebuff: sortedEntries[0].isSelfDebuff ?? false,
+      entries: sortedEntries,
+      strongest: sortedEntries[0],
+      maxDuration: Math.max(...sortedEntries.map(e => e.duration)),
+    }
+  })
+})()
 
   $: buffs    = groupedBuffs.filter(g => !BUFF_DEFS[g.buffName]?.isDebuff && !BUFF_DEFS[g.buffName]?.isNeutral)
   $: debuffs  = groupedBuffs.filter(g =>  BUFF_DEFS[g.buffName]?.isDebuff)

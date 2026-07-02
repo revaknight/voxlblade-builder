@@ -317,7 +317,9 @@
   )
  
   $: _dummyDebuffs = (() => {
-    const variantBase = new Map<string, string>([])
+    const variantBase = new Map<string, string>([
+      ['Sticky (Melting Slime)', 'Sticky'],
+    ])
     const groups = new Map<string, Map<string, number>>()
     for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
       if (b.isSelfDebuff) continue
@@ -336,6 +338,16 @@
       const inner = groups.get('Burn')!
       if (!inner.has('Burn') || 0 > (inner.get('Burn') ?? 0)) {
         inner.set('Burn', 0)
+      }
+    }
+    // Melting Slime makes all Sticky resolve to base Sticky (unified debuff)
+    if ((perks['Melting Slime'] ?? 0) > 0) {
+      for (const inner of groups.values()) {
+        if (inner.has('Sticky') || inner.has('Sticky (Melting Slime)')) {
+          const maxPotency = Math.max(...inner.values())
+          inner.clear()
+          inner.set('Sticky', maxPotency)
+        }
       }
     }
     const buildVariant = (buffName: string, potency: number) => {
