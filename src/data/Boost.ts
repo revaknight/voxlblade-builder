@@ -13,6 +13,7 @@ export interface BoostContext {
   emotionalState?: string
   level?: number
   summonBoostPct?: number
+  selectedWeaponArt?: string
 }
 
 export interface BoostDef {
@@ -44,6 +45,7 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Sharpshooter', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting from range (hits with proc coefficient)' },
   { sourceName: 'Valor', multiplierPerPerk: 0.0666, type: 'dmg', condition: 'Damage Boost vs Taunted enemies, per 1 of this perk' },
   { sourceName: 'Gorecast', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Weapon Art damage vs bleeding opponents', appliesTo: ['wa'] },
+  { sourceName: 'Guardian Spin', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Guardian Spin'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Spin') return null; return { multiplier: 1 + 0.15 + 0.1725 * a, condition: 'for Spin weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Undead Might', multiplierPerPerk: 0.25, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
   { sourceName: 'Rider', multiplierPerPerk: 0.20, type: 'dmg', condition: 'While mounted · +0.1s stun resist/stack' },
   {
@@ -134,7 +136,7 @@ export const BOOST_DEFS: BoostDef[] = [
       if (stacks > 0 && ctx.ragePotency > 0) {
         const frenzyPct = (0.05 + (1 / 6) * ctx.ragePotency) * stacks
         return {
-          multiplier: roundMultiplier(1 + frenzyPct),
+          multiplier: 1 + frenzyPct,
           condition: `Rage active · potency ${Math.round(ctx.ragePotency * 1000) / 1000}`,
         }
       }

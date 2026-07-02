@@ -111,7 +111,9 @@
   $: _typedHealBoostEntries = _typedBoostEntries
     .filter(e => e.healMult !== 1)
     .map(e => ({ sourceName: e.perkName, rawMultiplier: e.healMult, condition: e.condition, sourceType: 'perk' as HealSource }))
-  $: _allHealEntries = [..._activeHealEntries, ..._typedHealBoostEntries]
+  $: _activeTypedHealEntries = _typedHealBoostEntries.filter(e => !disabledHealBoosts.has(e.sourceName))
+  $: _allHealEntriesForDisplay = [..._healScalingResult.entries, ..._typedHealBoostEntries]
+  $: _allHealEntries = [..._activeHealEntries, ..._activeTypedHealEntries]
   $: wardingPct = (stats.warding ?? 0) / 100
   $: wardingDebuffMult = Math.max(0, 1 - wardingPct)
   $: _healFinalMultiplier = (() => {
@@ -309,7 +311,7 @@
       !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
     )
     const extinguishAmt = perks['Extinguish'] ?? 0
-    if (extinguishAmt > 0 && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
+    if (extinguishAmt > 0 && !extinguishDisabled && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
       entries.push({
         perkName: 'Extinguish',
         label: 'Extinguish',
@@ -407,6 +409,8 @@
   $: stats = $result.stats
   $: perks = $result.perks
   $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
+  $: _waveRiderAmt = perks['Wave Rider'] ?? 0
+  $: _oceanSongAmt = perks['Ocean Song'] ?? 0
   $: _lightningCloakActive = _allActiveBuffs.some(b => b.buffName === 'Lightning Cloak')
   $: _lightningCloakPct = _lightningCloakActive ? (1 / 3) : 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
@@ -430,6 +434,8 @@
 
   let rageDisabled = false
   let glyphConduitDisabled = false
+  let extinguishDisabled = false
+  let waveRiderDisabled = false
   let environmentTouched = false
   let prevPhotosynthesis = 0
   let prevVampire = 0
@@ -746,7 +752,7 @@
     disabledBoosts = new Set(disabledBoosts)
   }
 
-  let disabledHealBoosts = new Set<string>()
+  let disabledHealBoosts = new Set<string>(['Extinguish'])
   let disableAntiHeal = false
   let disableWeakness = false
   let disableCurseRip = false
@@ -1751,7 +1757,35 @@
         isHeal: true,
       })
     }
-    // NEW
+    if (_waveRiderAmt > 0 && !waveRiderDisabled) {
+      const wrScaling = _computePerkScalingMult({ water: 1.0 })
+      result.push({
+        group: 'Perk', index: result.length, count: 1, base: 40, scalingMult: wrScaling, combatMult: _perkCombatMult,
+        isFinisher: false, dmgTypes: { water: 1.0 },
+        label: 'Wave Rider (M2)',
+      })
+      result.push({
+        group: 'Perk', index: result.length, count: 1, base: 8, scalingMult: wrScaling, combatMult: _healFinalMultiplier,
+        isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Wave Rider (M2 Heal)', isHeal: true,
+      })
+      result.push({
+        group: 'Perk', index: result.length, count: 1, base: 35, scalingMult: wrScaling, combatMult: _perkCombatMult,
+        isFinisher: false, dmgTypes: { water: 1.0 },
+        label: 'Wave Rider (WA)',
+      })
+      result.push({
+        group: 'Perk', index: result.length, count: 1, base: 7, scalingMult: wrScaling, combatMult: _healFinalMultiplier,
+        isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Wave Rider (WA Heal)', isHeal: true,
+      })
+    }
+    if (_oceanSongAmt > 0) {
+      const osScaling = _computePerkScalingMult({ water: 1.0, dexterity: 1.0 })
+      const baseHeal = (1 + 0.1 * _oceanSongAmt) * (1 + selectedWA.cooldown / 30)
+      result.push({
+        group: 'Perk', index: result.length, count: 1, base: baseHeal, scalingMult: osScaling, combatMult: _healFinalMultiplier,
+        isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Ocean Song', isHeal: true,
+      })
+    }
     return result
   })()
 
@@ -1893,7 +1927,7 @@
       <div class="da-section da-section--apen">
         <div class="da-section-title">🛡 Armor Penetration</div>
         <div class="da-apen-inner">
-          <span class="da-apen-val">{(stats as Record<string, number>).armorPenetration}</span>
+          <span class="da-apen-val">{Math.round((stats as Record<string, number>).armorPenetration * 100) / 100}</span>
         </div>
       </div>
     {/if}
@@ -2012,7 +2046,7 @@
           </button>
         </div>
       {/if}
-      {#if _ragePotency > 0 || _glyphConduitEntry || _vampireStacks > 0 || _photosynthesisStacks > 0}
+      {#if _ragePotency > 0 || _glyphConduitEntry || _vampireStacks > 0 || _photosynthesisStacks > 0 || (perks['Extinguish'] ?? 0) > 0}
         <div class="da-buff-list" style="margin-top: 8px;">
           {#if _ragePotency > 0}
             <span class="da-buff">
@@ -2043,6 +2077,36 @@
                 <span class="da-bc-cond">Magic</span>
                 <span class="da-bc-toggle" style={glyphConduitDisabled ? '' : 'background:rgba(23,179,254,.15);color:#17b3fe'}>{glyphConduitDisabled ? 'OFF' : 'ON'}</span>
                 <span class="da-buff-sources">{_activeGlyphConduitBuffs.toSorted((a,b) => b.potency - a.potency).slice(0,1).map(b => `${b.sourceName} (${b.potency})`)}</span>
+              </button>
+            </span>
+          {/if}
+          {#if (perks['Extinguish'] ?? 0) > 0}
+            <span class="da-buff">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={extinguishDisabled}
+                style="background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.2)"
+                on:click={() => extinguishDisabled = !extinguishDisabled}
+              >
+                <span class="da-bc-name">Extinguish</span>
+                <span class="da-bc-val" style="color:#0ea5e9">{extinguishDisabled ? '—' : `×${+(1 + 0.5 * (perks['Extinguish'] ?? 0)).toFixed(4)}`}</span>
+                <span class="da-bc-cond">Water · vs Burning</span>
+                <span class="da-bc-toggle" style={extinguishDisabled ? '' : 'background:rgba(14,165,233,.15);color:#0ea5e9'}>{extinguishDisabled ? 'OFF' : 'ON'}</span>
+              </button>
+            </span>
+          {/if}
+          {#if _waveRiderAmt > 0}
+            <span class="da-buff">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={waveRiderDisabled}
+                style="background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.2)"
+                on:click={() => waveRiderDisabled = !waveRiderDisabled}
+              >
+                <span class="da-bc-name">Wave Rider</span>
+                <span class="da-bc-val" style="color:#0ea5e9">{waveRiderDisabled ? '—' : `×${_waveRiderAmt}`}</span>
+                <span class="da-bc-cond">Water · Empowered</span>
+                <span class="da-bc-toggle" style={waveRiderDisabled ? '' : 'background:rgba(14,165,233,.15);color:#0ea5e9'}>{waveRiderDisabled ? 'OFF' : 'ON'}</span>
               </button>
             </span>
           {/if}
@@ -2080,10 +2144,10 @@
       {/if}
     </div>
   {/if}
-  {#if _allHealEntries.length > 0}
+  {#if _allHealEntriesForDisplay.length > 0}
     <div class="da-boost-row" style="margin-top:8px">
       <span class="da-heal-label">✦ Heal</span>
-      {#each _allHealEntries as entry}
+      {#each _allHealEntriesForDisplay as entry}
         {@const isDisabled = disabledHealBoosts.has(entry.sourceName)}
         <button
           class="da-boost-chip da-boost-chip--heal"

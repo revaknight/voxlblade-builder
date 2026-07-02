@@ -703,7 +703,7 @@
                             </div>
                             <div class="bdc-hit-type-formula">
                               <div class="bdc-fr">
-                                <span class="bdc-fr-label">Base Damage</span>
+                                <span class="bdc-fr-label">{t.isHeal ? 'Base Heal' : 'Base Damage'}</span>
                                 <span class="bdc-fr-val">{fmt(t.typeBase)}</span>
                               </div>
                               {#if t.scalingMult !== 1}
@@ -760,13 +760,13 @@
                               {/if}
                               {#if t.defMult !== 1}
                                 <div class="bdc-fr">
-                                  <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(armorPen)})</span>
+                                  <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(armorPen * 100) / 100)})</span>
                                   <span class="bdc-fr-val bdc-fr-val--def" class:bdc-fr-val--amplify={t.defMult > 1}>× {fmtMult(t.defMult)}</span>
                                 </div>
                               {/if}
                               <div class="bdc-fr-divider"></div>
                               <div class="bdc-fr bdc-fr--result">
-                                <span class="bdc-fr-label">Final Damage</span>
+                                <span class="bdc-fr-label">{t.isHeal ? 'Final Heal' : 'Final Damage'}</span>
                                 <span class="bdc-fr-val bdc-fr-val--result" style="--tc:{t.color}">{fmt(t.raw)}</span>
                               </div>
                               {#if (showCritValues && !t.isCritExempt) || t.forceCrit}

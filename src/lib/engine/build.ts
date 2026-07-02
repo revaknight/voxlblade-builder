@@ -9,7 +9,6 @@ import type { BoostEntry, BoostResult } from '../types'
 import { calcCrit } from '../crit'
 import type { CritResult } from '../crit'
 import { roundMultiplier } from '../utils'
-import { round2 } from './_utils'
 import {
   getRace, getGuild, getGuildRank, getArmorPart, getRing, getRune,
   getBlade, getHandle, getGlove, getEssence, isMonkGuild,
@@ -112,6 +111,7 @@ function calcBoosts(
   inDarkness:        boolean = true,
   summonBoostPct:    number = 0,
   quickdrawPotency:  number = 0,
+  selectedWeaponArt?: string,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -133,7 +133,7 @@ function calcBoosts(
   const ctx: BoostContext = {
     perks, naturalCritChance, jumpBoost, summonCount,
     ragePotency, bouncePotency, inDarkness, emotionalState, level,
-    summonBoostPct, quickdrawPotency,
+    summonBoostPct, quickdrawPotency, selectedWeaponArt,
   }
 
   for (const def of BOOST_DEFS) {
@@ -226,7 +226,7 @@ function accumulateMonkWeapon(
       if (v == null) continue
       if (v <= 0) { gloveStats[k] = v; continue }
       const shrineMult = state.shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
-      gloveStats[k] = round2(v * shrineMult + v * monkPct)
+      gloveStats[k] = v * shrineMult + v * monkPct
     }
     addStats(gloveStats)
     if (glove.perkName) perks[glove.perkName] = (perks[glove.perkName] ?? 0) + (glove.perkAmount ?? 1)
@@ -249,7 +249,7 @@ function accumulateMonkWeapon(
         const v = _baseEss[k]
         if (v == null) continue
         const _sm = state.shrineActive ? (SHRINE_MULTIPLIERS[essence.tier] ?? 1.0) : 1.0
-        _boostedEss[k] = v > 0 ? round2(v * _sm + v * _monkPct) : round2(v * _sm)
+        _boostedEss[k] = v > 0 ? v * _sm + v * _monkPct : v * _sm
       }
       addStats(_boostedEss)
     } else {
@@ -390,8 +390,7 @@ function finalizePerks(rawPerks: Record<string, number>): Record<string, number>
   let finalPerks: Record<string, number> = {}
   for (const k in rawPerks) {
     if (Object.prototype.hasOwnProperty.call(rawPerks, k)) {
-      const rounded = round2(rawPerks[k])
-      if (rounded !== 0) finalPerks[k] = rounded
+      if (rawPerks[k] !== 0) finalPerks[k] = rawPerks[k]
     }
   }
 
@@ -399,9 +398,6 @@ function finalizePerks(rawPerks: Record<string, number>): Record<string, number>
   const perkEffectivenessStacks = finalPerks["Perk Effectiveness"] ?? 0
   if (perkEffectivenessStacks > 0 || cursedStacks > 0) {
     finalPerks = applyPerkEffectiveness(finalPerks, perkEffectivenessStacks, cursedStacks)
-    for (const k in finalPerks) {
-      if (Object.prototype.hasOwnProperty.call(finalPerks, k)) finalPerks[k] = round2(finalPerks[k])
-    }
   }
 
   if (finalPerks["Buckler"] != null) finalPerks["Parry"] = (finalPerks["Parry"] ?? 0) + finalPerks["Buckler"]
@@ -417,9 +413,8 @@ function deriveResults(
   const finalStats: StatMap = {}
   for (let i = 0; i < STAT_KEYS.length; i++) {
     const k = STAT_KEYS[i]
-    if (rawStats[k] != null) {
-      const rounded = round2(rawStats[k] ?? 0)
-      if (rounded !== 0) finalStats[k] = rounded
+    if (rawStats[k] != null && rawStats[k] !== 0) {
+      finalStats[k] = rawStats[k]
     }
   }
 
@@ -444,7 +439,7 @@ function deriveResults(
       const bV = boostedStats[BOOST_KEYS[i]] ?? 0
       if (bV > highestBoost) highestBoost = bV
     }
-    const armorPen = round2(highestBoost / 15)
+    const armorPen = highestBoost / 15
     if (armorPen > 0) boostedStats['armorPenetration'] = (boostedStats['armorPenetration'] ?? 0) + armorPen
   }
 
@@ -477,6 +472,7 @@ function deriveResults(
     state.summonCount ?? 0, ragePotency, bouncePotency,
     state.race, state.hpFill ?? 100, state.inDarkness ?? true,
     boostedStats.summonBoost ?? 0, quickdrawPotency,
+    state.selectedWeaponArt,
   )
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }

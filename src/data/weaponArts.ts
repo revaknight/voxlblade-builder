@@ -62,7 +62,7 @@ export const WEAPON_ARTS: WeaponArt[] = [
     name: "Spin",
     description: "Spin with your weapon to quickly chop up the opponent!",
     cooldown: 10,
-    baseDamage: "3.5 × 5 Hits + 17",
+    baseDamage: "3.5 × 5 Hits + 17.5",
     damageType: "Same as weapon",
     scaling: "Same as weapon",
     requirements: { weaponType: ["Two Handed Sword", "Greatsword", "Unbalanced Sword"] },

@@ -271,7 +271,7 @@ $: gladRageArmorPen = (() => {
   if (($result.perks['Gladiatorial Rage'] ?? 0) <= 0) return 0
   const BOOST_KEYS = ['dexterityBoost','physicalBoost','magicBoost','fireBoost','waterBoost','earthBoost','airBoost','hexBoost','holyBoost']
   const highestBoost = Math.max(0, ...BOOST_KEYS.map(k => ($result.stats as Record<string,number>)[k] ?? 0))
-  return Math.round((highestBoost / 15) * 100) / 100
+  return highestBoost / 15
 })()
 
 $: statRows = Object.entries($result.stats).filter(([k, v]) => {
