@@ -279,10 +279,10 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   'Sticky (Sickness)': {
     name: 'Sticky (Sickness)',
     color: '#4ade80',
-    description: 'Move x% slower and take 20% more hex and magic damage.',
+    description: 'Move x% slower and take 20% more hex, magic and earth damage.',
     dynamicDescription: (_perks, potency) => {
       const slowPct = Math.round(potency * 10000) / 100
-      return `Move ${slowPct}% slower and take 20% more hex and magic damage.`
+      return `Move ${slowPct}% slower and take 20% more hex, magic and earth damage.`
     },
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
