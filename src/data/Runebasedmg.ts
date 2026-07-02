@@ -161,6 +161,6 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     dmgTypes: { fire: 0.33, earth: 0.33, magic: 0.33 },
     scalings: { fire: 1.0, earth: 1.0, magic: 1.0 },
     hits: 2,
-    note: 'Guardbreaks. Applies Sticky (Melting Slime) and Burn for 5s.',
+    note: 'Guardbreaks. Applies Sticky and Burn for 5s.',
   },
 ]

@@ -244,6 +244,14 @@
       $result.perks, $build.rune || undefined
     )
 
+    const _exhaustIdx = baseBuffs.findIndex(b => b.buffName === 'Exhaust')
+    if (_exhaustIdx !== -1) {
+      const wa = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt)
+      if (wa?.cooldown) {
+        baseBuffs[_exhaustIdx] = { ...baseBuffs[_exhaustIdx], duration: wa.cooldown / 2 }
+      }
+    }
+
     const _infActive = $build.draconicRuneInfusion === 'infusion'
     const color = $build.draconicColor
     if (!_infActive || (color !== 'hex' && color !== 'holy')) {
@@ -309,9 +317,7 @@
   )
  
   $: _dummyDebuffs = (() => {
-    const variantBase = new Map<string, string>([
-      ['Sticky (Melting Slime)', 'Sticky'],
-    ])
+    const variantBase = new Map<string, string>([])
     const groups = new Map<string, Map<string, number>>()
     for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
       if (b.isSelfDebuff) continue
@@ -323,6 +329,13 @@
       const existing = inner.get(b.buffName)
       if (!existing || b.potency > existing) {
         inner.set(b.buffName, b.potency)
+      }
+    }
+    if (_allActiveBuffs.some(b => b.buffName === 'Exhaust')) {
+      if (!groups.has('Burn')) groups.set('Burn', new Map())
+      const inner = groups.get('Burn')!
+      if (!inner.has('Burn') || 0 > (inner.get('Burn') ?? 0)) {
+        inner.set('Burn', 0)
       }
     }
     const buildVariant = (buffName: string, potency: number) => {

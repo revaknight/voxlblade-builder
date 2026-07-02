@@ -12,6 +12,7 @@
     type GrantedBuff,
   } from './data/BuffData'
   import { getDraconicInfusionBuff, getDraconicHexDebuffs } from './data/draconicBuffs'
+  import { WEAPON_ARTS } from './data/weaponArts'
 
 
   $: wardingPct = ($result.stats.warding ?? 0) / 100
@@ -29,7 +30,17 @@
     race: $build.race,
   })
 
-  $: perkBuffs = getPerkBuffs($result.perks)
+  $: perkBuffs = (() => {
+    const buffs = getPerkBuffs($result.perks)
+    const idx = buffs.findIndex(b => b.buffName === 'Exhaust')
+    if (idx !== -1) {
+      const wa = WEAPON_ARTS.find(wa => wa.name === $build.selectedWeaponArt)
+      if (wa?.cooldown) {
+        buffs[idx] = { ...buffs[idx], duration: wa.cooldown / 2 }
+      }
+    }
+    return buffs
+  })()
 
   $: weaponArtBuffs = getWeaponArtBuffs($build.selectedWeaponArt)
 
@@ -49,6 +60,19 @@
           modified[i] = { ...modified[i], potency: _minionAbsPotency }
         }
       }
+    }
+
+    const _hasExhaust = modified.some(b => b.buffName === 'Exhaust')
+    const _hasBurn = modified.some(b => b.buffName === 'Burn')
+    if (_hasExhaust && !_hasBurn) {
+      modified.push({
+        buffName: 'Burn',
+        potency: 0,
+        duration: 5,
+        condition: 'On hit during Exhaust',
+        sourceName: 'Exhaust',
+        sourceType: 'perk',
+      })
     }
 
     return modified
