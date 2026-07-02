@@ -546,7 +546,7 @@
                   <button
                     class="bdc-variant-btn"
                     style="--dc:{d.color}"
-                    title="Switch variant (currently: {(d.variants ?? [])[activeVariants.get(d.name) ?? 0]?.sourceName ?? d.name})"
+                    title="{(d.variants ?? [])[activeVariants.get(d.name) ?? 0]?.sourceName ?? d.name}"
                     on:click|stopPropagation={() => cycleVariant(d.name)}
                   >▾</button>
                 {/if}
@@ -1424,6 +1424,7 @@
   border: 1px solid rgba(255,255,255,.1);
   box-shadow: 0 8px 24px rgba(0,0,0,.6);
   min-width: 180px;
+  width: max-content;
 
   position: absolute;
   top: calc(100% + 4px);

@@ -48,13 +48,16 @@ import Highlight from './Highlight.svelte'
 
   
   function toggleCdrPerk(perkName: string) {
-    build.update(s => ({
-      ...s,
-      cdrToggles: {
-        ...s.cdrToggles,
-        [perkName]: s.cdrToggles[perkName] === false ? true : false,
-      },
-    }))
+    build.update(s => {
+      const toggles = s.cdrToggles ?? {}
+      return {
+        ...s,
+        cdrToggles: {
+          ...toggles,
+          [perkName]: toggles[perkName] === false ? true : false,
+        },
+      }
+    })
   }
 
   $: toggleableCdrPerks = Object.keys(CDR_PERK_DATA).filter(name =>
@@ -2835,7 +2838,7 @@ $: _appWaAvgTotal = (() => {
     {#if toggleableCdrPerks.length > 0}
       <div class="cdr-toggle-row">
         {#each toggleableCdrPerks as perkName}
-          {@const isOn = $build.cdrToggles[perkName] !== false}
+          {@const isOn = $build.cdrToggles?.[perkName] !== false}
           <button class="cdr-toggle-chip" class:cdr-toggle-chip--off={!isOn}
             on:click={() => toggleCdrPerk(perkName)}>
             {isOn ? '✓' : '✕'} {perkName}

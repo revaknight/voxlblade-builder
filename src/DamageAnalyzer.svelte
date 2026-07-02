@@ -303,10 +303,24 @@
   $: _glyphConduitEntry = _typedBoostResult.activeEntries.find(e => e.perkName === 'Glyph Conduit')
   $: _glyphConduitMult = _glyphConduitEntry?.dmgMult ?? 1
 
-  $: _typedBoostEntries = _typedBoostResult.activeEntries.filter(e =>
-    !(e.perkName === 'Rage' && rageDisabled) &&
-    !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
-  )
+  $: _typedBoostEntries = (() => {
+    const entries = _typedBoostResult.activeEntries.filter(e =>
+      !(e.perkName === 'Rage' && rageDisabled) &&
+      !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
+    )
+    const extinguishAmt = perks['Extinguish'] ?? 0
+    if (extinguishAmt > 0 && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
+      entries.push({
+        perkName: 'Extinguish',
+        label: 'Extinguish',
+        types: ['water'],
+        dmgMult: 1 + 0.5 * extinguishAmt,
+        healMult: 1 + 0.5 * extinguishAmt,
+        condition: 'vs Burning enemies',
+      })
+    }
+    return entries
+  })()
 
   $: _draconicHexDebuffsForDummy = applyBuffPerkModifiers(
     getDraconicHexDebuffs(
@@ -2012,7 +2026,7 @@
                 <span class="da-bc-val" style="color:#f70201">{rageDisabled ? '—' : `×${+_rageMult.toFixed(4)}`}</span>
                 <span class="da-bc-cond">{[..._rageAffectedTypes].map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' · ')}</span>
                 <span class="da-bc-toggle" style={rageDisabled ? '' : 'background:rgba(247,2,1,.15);color:#f70201'}>{rageDisabled ? 'OFF' : 'ON'}</span>
-                <span class="da-buff-sources">{_activeRageBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
+                <span class="da-buff-sources">{_activeRageBuffs.toSorted((a,b) => b.potency - a.potency).slice(0,1).map(b => `${b.sourceName} (${b.potency})`)}</span>
               </button>
             </span>
           {/if}
@@ -2028,7 +2042,7 @@
                 <span class="da-bc-val" style="color:#17b3fe">{glyphConduitDisabled ? '—' : `×${+_glyphConduitMult.toFixed(4)}`}</span>
                 <span class="da-bc-cond">Magic</span>
                 <span class="da-bc-toggle" style={glyphConduitDisabled ? '' : 'background:rgba(23,179,254,.15);color:#17b3fe'}>{glyphConduitDisabled ? 'OFF' : 'ON'}</span>
-                <span class="da-buff-sources">{_activeGlyphConduitBuffs.map(b => `${b.sourceName} (${b.potency})`).join(', ')}</span>
+                <span class="da-buff-sources">{_activeGlyphConduitBuffs.toSorted((a,b) => b.potency - a.potency).slice(0,1).map(b => `${b.sourceName} (${b.potency})`)}</span>
               </button>
             </span>
           {/if}
