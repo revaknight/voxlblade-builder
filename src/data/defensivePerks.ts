@@ -109,7 +109,7 @@ const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     perkName: 'Carapace',
     drPctPerStack: 15,
     label: 'Carapace',
-    conditionLabel: 'While you have protection',
+    conditionLabel: 'While you have Shield HP',
     dependsOn: ctx => ctx.hasProtection,
     grantsStunImmunity: true,
   },
