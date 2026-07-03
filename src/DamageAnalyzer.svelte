@@ -422,10 +422,14 @@
   $: _wildBoltAmt = perks['Wild Bolt'] ?? 0
   $: _lightningCloakActive = _allActiveBuffs.some(b => b.buffName === 'Lightning Cloak')
   $: _activeLightningCloakBuffs = _allActiveBuffs.filter(b => b.buffName === 'Lightning Cloak')
-  $: _lightningCloakPct = _lightningCloakActive && !disableLightningCloak ? (1 / 3) : 0
   $: _stormRendAmt = perks['Storm Rend'] ?? 0
   let disableStormRend = false
-  $: _stormRendPct = _stormRendAmt > 0 && !disableStormRend ? (2 / 3) : 0
+  $: _stormRendActive = _stormRendAmt > 0 && !disableStormRend
+  $: _lightningCloakPct = (_lightningCloakActive && !disableLightningCloak) || _stormRendActive ? (1 / 3) : 0
+  $: _windWalkerAmt = perks['Wind Walker'] ?? 0
+  $: _hasTailwindOrWhirlwind = _allActiveBuffs.some(b => b.buffName === 'Tailwind' || b.buffName === 'Whirlwind')
+  $: _waArmorPenetration = _windWalkerAmt > 0 && _hasTailwindOrWhirlwind ? 10 * _windWalkerAmt : 0
+  $: _stormRendPct = 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
 
   let disabledDebuffs = new Set<string>()
@@ -680,6 +684,12 @@
     const bonuses = { ..._perkDmgTypeBonuses }
     if (_emotionalHexBonus > 0) {
       bonuses.hex = Math.round(((bonuses.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000
+    }
+    if (_hasTailwindOrWhirlwind) {
+      const wwAmt = perks['Wind Walker'] ?? 0
+      if (wwAmt > 0) {
+        bonuses.air = Math.round(((bonuses.air ?? 0) + wwAmt * 0.15) * 10000) / 10000
+      }
     }
     return bonuses
   })()
@@ -2179,8 +2189,8 @@
                 on:click={() => disableStormRend = !disableStormRend}
               >
                 <span class="da-bc-name">Storm Rend</span>
-                <span class="da-bc-val" style="color:#fff27a">{disableStormRend ? '—' : '2/3'}</span>
-                <span class="da-bc-cond">Air + Magic</span>
+                <span class="da-bc-val" style="color:#fff27a">{disableStormRend ? '—' : '1/3'}</span>
+                <span class="da-bc-cond">Lightning Cloak</span>
                 <span class="da-bc-toggle" style={disableStormRend ? '' : 'background:rgba(255,242,122,.15);color:#fff27a'}>{disableStormRend ? 'OFF' : 'ON'}</span>
                 <span class="da-buff-sources">Perk ({_stormRendAmt})</span>
               </button>
@@ -3477,6 +3487,7 @@
   lightningCloakPct={_lightningCloakPct}
   stormRendPct={_stormRendPct}
   explosiveChargePct={_explosiveChargePct}
+  waArmorPenetration={_waArmorPenetration}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,

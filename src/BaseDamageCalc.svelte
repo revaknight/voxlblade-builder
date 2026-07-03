@@ -17,6 +17,7 @@
   export let lightningCloakPct: number = 0
   export let stormRendPct: number = 0
   export let explosiveChargePct: number = 0
+  export let waArmorPenetration: number = 0
   export let m1Label: string = 'M1'
 
   boosts
@@ -279,20 +280,23 @@
     return baseSum * (hit.scalingMult ?? 1) * (hit.combatMult ?? 1) * (hit.weaponBoostMult ?? 1)
   }
 
-  function getApplicableBoosts(k: string, isHeal: boolean): Array<{ perkName: string; label: string; mult: number }> {
+  function getApplicableBoosts(k: string, isHeal: boolean, group?: string): Array<{ perkName: string; label: string; mult: number }> {
     return typedBoostEntries
       .filter(e => e.types.includes(k) && (isHeal ? e.healMult !== 1 : e.dmgMult !== 1))
+      .filter(e => !e.appliesToGroups || (group && e.appliesToGroups.includes(group)))
       .map(e => ({ perkName: e.perkName, label: e.label, mult: isHeal ? e.healMult : e.dmgMult }))
   }
 
   $: computedHits = typedBoostEntries && weaponHits.map((hit): ComputedHit => {
     const isHeal = hit.isHeal ?? false
+    const basePenDecimal = armorPen / 100
+    const hitPenDecimal = hit.group === 'WA' ? (armorPen + waArmorPenetration) / 100 : basePenDecimal
     const types: ComputedType[] = Object.entries(hit.dmgTypes ?? {}).map(([k, mult]) => {
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
       const typeIsHeal   = hit.dmgTypeIsHeal?.[k] ?? isHeal
       const typeCombat   = hit.dmgTypeCombatMults?.[k] ?? hit.combatMult
       const typeNoCrit   = healCritDmgMult > 0 && typeIsHeal ? false : (hit.dmgTypeIsCritExempt?.[k] ?? typeIsHeal)
-      const applicableBoosts = getApplicableBoosts(k, typeIsHeal)
+      const applicableBoosts = getApplicableBoosts(k, typeIsHeal, hit.group)
       const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
       let enemyDefPct = 0
@@ -306,7 +310,7 @@
       }
 
       const weaponBoostMult = hit.weaponBoostMult ?? 1
-      const defMult = typeIsHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
+      const defMult = typeIsHeal ? 1 : calcArmorMult(enemyDefPct, hitPenDecimal).mult
       const typeBase = hit.base * mult
 
       const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
@@ -341,7 +345,7 @@
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
           const lumDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lumDefPct  = defPctForType(k)
-          const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
+          const lumDefMult = calcArmorMult(lumDefPct, basePenDecimal).mult
           const lumTypeBase = lumAmount * mult
           const lumRaw       = lumTypeBase * typedMultUsed * lumDefMult * lumDebuffMult
           
@@ -371,7 +375,7 @@
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
           const lcDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const lcDefPct  = defPctForType(k)
-          const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
+          const lcDefMult = calcArmorMult(lcDefPct, basePenDecimal).mult
           const lcTypeBase = cloakTotal * mult
           const lcRaw       = lcTypeBase * typedMultUsed * lcDefMult * lcDebuffMult
           
@@ -381,36 +385,6 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lcDebuffMult,
             defMult: lcDefMult, enemyDefPct: lcDefPct,
             raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, isChainLightning: true, forceCrit: false,
-          })
-        }
-      }
-    }
-
-    if (!isHeal && stormRendPct > 0) {
-      const preMitSum  = computePreMitigationBase(hit)
-      const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
-
-      if (preMitBase > 0) {
-        const srTotal = preMitBase * stormRendPct
-        const srResolvedTypes = resolveDamageTypes({ air: 0.5, magic: 0.5 }, perkDmgTypeBonuses)
-
-        for (const [k, mult] of Object.entries(srResolvedTypes)) {
-          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
-          const applicableBoosts = getApplicableBoosts(k, false)
-          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
-          const srDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
-          const srDefPct  = defPctForType(k)
-          const srDefMult = calcArmorMult(srDefPct, penDecimal).mult
-          const srTypeBase = srTotal * mult
-          const srRaw       = srTypeBase * typedMultUsed * srDefMult * srDebuffMult
-
-          types.push({
-            key: k, label: info.label, color: info.color,
-            typeBase: srTypeBase, scalingMult: 1, combatMult: 1,
-            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: srDebuffMult,
-            defMult: srDefMult, enemyDefPct: srDefPct,
-            raw: srRaw, critVal: Math.round(srRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isChainLightning: true, forceCrit: false,
           })
         }
@@ -431,7 +405,7 @@
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
           const ecDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const ecDefPct  = defPctForType(k)
-          const ecDefMult = calcArmorMult(ecDefPct, penDecimal).mult
+          const ecDefMult = calcArmorMult(ecDefPct, basePenDecimal).mult
           const ecTypeBase = explosiveTotal * mult
           const ecRaw       = ecTypeBase * typedMultUsed * ecDefMult * ecDebuffMult
 

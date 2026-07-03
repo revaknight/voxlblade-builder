@@ -3136,7 +3136,7 @@
   },
   {
     "name": "Tailwind",
-    "description": "Using your Weapon Art grants the Buff Tailwind. Additionally, increases the potency of all Tailwind, regardless of source.",
+    "description": "Using your Weapon Art grants the Buff ''Tailwind''. Additionally, increases the potency of all ''Tailwind'', regardless of source.",
     "tags": [
       "Buff",
       "Weapon Art Activated",

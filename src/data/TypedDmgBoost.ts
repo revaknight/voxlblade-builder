@@ -17,6 +17,7 @@ export interface TypedDmgBoostDef {
   getHealMultiplier?: (potencyOrAmount: number) => number
   activeIf?: (ctx: TypedDmgBoostCtx) => boolean
   conditionLabel: string
+  appliesToGroups?: string[]
 }
 
 const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
@@ -71,6 +72,7 @@ export interface TypedDmgBoostEntry {
   dmgMult: number
   healMult: number
   condition: string
+  appliesToGroups?: string[]
 }
 
 export interface TypedDmgBoostResult {
@@ -115,6 +117,7 @@ export function calcTypedDmgBoosts(
       dmgMult,
       healMult: hMult,
       condition: def.conditionLabel,
+      appliesToGroups: def.appliesToGroups,
     })
   }
 

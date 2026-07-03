@@ -921,6 +921,17 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceType: 'perk',
     },
   ],
+
+  'Tailwind': (amount) => [
+    {
+      buffName: 'Tailwind',
+      potency: 0.1,
+      duration: 8,
+      condition: 'On weapon art activation',
+      sourceName: 'Tailwind',
+      sourceType: 'perk',
+    },
+  ],
 }
 
 const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
@@ -1090,6 +1101,8 @@ const BUFF_POTENCY_MODIFIERS: BuffPotencyModifier[] = [
   { buffName: 'Weakness', potencyPerStack: 0.1, label: 'Slayer Rage', runeFilter: 'Weakening Roar Rune' },
   { buffName: 'Rage', potencyPerStack: 0.2, label: 'Iron Slayer Spirit', durationMultiplierPerStack: 2 },
   { buffName: 'Rage', potencyPerStack: 0,   label: 'Fury', durationMultiplierPerStack: 1.5 },
+  { buffName: 'Tailwind', potencyPerStack: 0.1, label: 'Tailwind' },
+  { buffName: 'Tailwind', potencyPerStack: 0, label: 'Wind Walker', durationMultiplierFormula: stacks => 1 + stacks / 8 },
 ]
 
 const MODIFIERS_BY_BUFF = BUFF_POTENCY_MODIFIERS.reduce((acc, mod) => {
