@@ -34,6 +34,9 @@
     weaponBoostLabel?: string
     isHeal?: boolean
     forceCrit?: boolean
+    dmgTypeCombatMults?: Record<string, number>
+    dmgTypeIsHeal?: Record<string, boolean>
+    dmgTypeIsCritExempt?: Record<string, boolean>
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
@@ -283,11 +286,14 @@
     const isHeal = hit.isHeal ?? false
     const types: ComputedType[] = Object.entries(hit.dmgTypes ?? {}).map(([k, mult]) => {
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
-      const applicableBoosts = getApplicableBoosts(k, isHeal)
+      const typeIsHeal   = hit.dmgTypeIsHeal?.[k] ?? isHeal
+      const typeCombat   = hit.dmgTypeCombatMults?.[k] ?? hit.combatMult
+      const typeNoCrit   = hit.dmgTypeIsCritExempt?.[k] ?? typeIsHeal
+      const applicableBoosts = getApplicableBoosts(k, typeIsHeal)
       const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
       let enemyDefPct = 0
-      if (!isHeal && k !== 'true' && k !== 'summon') {
+      if (!typeIsHeal && k !== 'true' && k !== 'summon') {
         enemyDefPct = effectiveDefenses[k] ?? 0
         if (k === 'air' || k === 'earth') {
           enemyDefPct += effectiveDefenses['physical'] ?? 0
@@ -297,24 +303,24 @@
       }
 
       const weaponBoostMult = hit.weaponBoostMult ?? 1
-      const defMult = isHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
+      const defMult = typeIsHeal ? 1 : calcArmorMult(enemyDefPct, penDecimal).mult
       const typeBase = hit.base * mult
 
       const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
       const raw = typeBase * hit.scalingMult * typedMultUsed *
-        hit.combatMult * weaponBoostMult * defMult *
-        (isHeal ? 1 : _activeDebuffDamageMult * typeDebuffMult) * (isHeal ? 1 : selfDebuffDamageMult) *
-        (isHeal ? antiHealSelfMult : 1)
+        typeCombat * weaponBoostMult * defMult *
+        (typeIsHeal ? 1 : _activeDebuffDamageMult * typeDebuffMult) * (typeIsHeal ? 1 : selfDebuffDamageMult) *
+        (typeIsHeal ? antiHealSelfMult : 1)
 
-      const critVal = raw * critDmgMult / 100
+      const critVal = typeNoCrit ? raw : raw * critDmgMult / 100
 
       return {
         key: k, label: info.label, color: info.color,
-        typeBase, scalingMult: hit.scalingMult, combatMult: hit.combatMult,
+        typeBase, scalingMult: hit.scalingMult, combatMult: typeCombat,
         applicableBoosts, weaponBoostMult, weaponBoostLabel: hit.weaponBoostLabel,
         typeDebuffMult,
         defMult, enemyDefPct,
-        raw, critVal, isHeal, forceCrit: hit.forceCrit ?? false,
+        raw, critVal, isHeal: typeIsHeal, isCritExempt: typeNoCrit, forceCrit: hit.forceCrit ?? false,
       }
     })
     if (!isHeal && luminescentPct > 0) {
@@ -439,20 +445,34 @@
   $: runeHits = computedHits.filter(h => h.group === 'Rune')
   $: perkHits = computedHits.filter(h => h.group !== 'M1' && h.group !== 'M2' && h.group !== 'WA' && h.group !== 'Rune')
 
+  $: _groupedPerks = (() => {
+    const map = new Map<string, typeof perkHits>()
+    for (const h of perkHits) {
+      const key = h.label ?? 'Perk'
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(h)
+    }
+    return [...map.entries()].map(([label, list]) => ({ label, list }))
+  })()
   $: hitGroups = [
     { label: m1Label, list: m1Hits },
     { label: 'M2', list: m2Hits },
     { label: 'WA', list: waHits },
     ...(runeHits.length > 0 ? [{ label: 'Rune', list: runeHits }] : []),
-    ...(perkHits.length > 0 ? [{ label: 'Perk', list: perkHits }] : [])
+    ..._groupedPerks,
   ]
 
   // ── Totals ──────────────────────────────────────────────────
   function hitTypeSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
-    const sum = hit.types.filter(t => !t.isCurseRip).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    const sum = hit.types.filter(t => !t.isHeal && !t.isCurseRip).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     return sum * (includeCount ? hit.count : 1)
   }
-  function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.filter(h => !h.isHeal).reduce((s, h) =>s +h.types.filter(t => !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
+  function hitHealSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
+    const sum = hit.types.filter(t => t.isHeal && !t.isCurseRip).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    return sum * (includeCount ? hit.count : 1)
+  }
+  function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.filter(h => !h.isHeal).reduce((s, h) =>s +h.types.filter(t => !t.isHeal && !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
+  function groupHealTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.reduce((s, h) =>s +h.types.filter(t => t.isHeal && !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
 
   import { onMount } from 'svelte'
   onMount(() => {
@@ -619,20 +639,26 @@
           {#each hitGroups as grp}
             {#if grp.list.length > 0}
               {@const gTotal = groupTotalSum(grp.list, showCritValues)}
+              {@const gHealTotal = groupHealTotalSum(grp.list, showCritValues)}
               <div class="bdc-hit-list-grp">
                 <div class="bdc-grp-head">
                   <span class="bdc-hit-grp-label">{grp.label}</span>
-                  {#if grp.label !== 'Perk'}
+                    {#if gTotal > 0}
                     <span class="bdc-grp-total" class:bdc-grp-total--crit={showCritValues}>
                       {#if showCritValues}<CritIcon size={10}/>{/if}
                       {fmt1(gTotal)}
                     </span>
-                  {/if}
+                    {/if}
+                    {#if gHealTotal > 0}
+                      <span class="bdc-grp-heal-total">{fmt1(gHealTotal)} Heal</span>
+                    {/if}
                 </div>
                 <div class="bdc-hit-list-rows">
                   {#each grp.list as hit}
                     {@const hSum = hitTypeSum(hit, showCritValues)}
                     {@const hSumWithCount = hitTypeSum(hit, showCritValues, true)}
+                    {@const hHealSum = hitHealSum(hit, showCritValues)}
+                    {@const hHealSumWithCount = hitHealSum(hit, showCritValues, true)}
                     {@const multiType = hit.types.length > 1}
                     {@const hitForceCrit = hit.types.some(t => t.forceCrit)}  
                     <div class="bdc-hit-row" class:bdc-hit-row--finisher={hit.isFinisher}>
@@ -786,11 +812,17 @@
                       <div class="bdc-hit-row-end">
                         {#if hit.count > 1}<span class="bdc-hit-cnt">×{hit.count}</span>{/if}
                         
+                        {#if hSumWithCount > 0}
                         <span class="bdc-hit-type-sum-sep">=</span>
                           <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues || hitForceCrit}>
                           {#if showCritValues || hitForceCrit}<CritIcon size={11}/>{/if}
                           {fmt4(hSumWithCount)}
                         </span>
+                        {/if}
+                        {#if hHealSumWithCount > 0}
+                          {#if hSumWithCount === 0}<span class="bdc-hit-type-sum-sep">=</span>{/if}
+                          <span class="bdc-hit-type-heal-sum">{fmt4(hHealSumWithCount)}</span>
+                        {/if}
                         
                         {#if hit.isFinisher}<span class="bdc-hit-fin">✦</span>{/if}
                       </div>
@@ -1208,6 +1240,19 @@
   text-shadow: 0 0 10px rgba(226,178,3,.4);
 }
 
+.bdc-grp-heal-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #4ade80;
+  opacity: .8;
+  letter-spacing: -.01em;
+  margin-left: 8px;
+}
+
 /* ── Per-hit type sum (multi-type only) ── */
 .bdc-hit-type-sum-sep {
   font-size: .7rem;
@@ -1224,15 +1269,16 @@
   justify-content: flex-end;
   gap: 4px;
   font-family: 'Courier New', monospace;
-  font-size: 1.18rem;
-  font-weight: 900;
-  color: var(--ink, #e8e4da);
-  padding: 5px 13px;
-  border-radius: 8px;
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.14);
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: #f0ece4;
+  padding: 4px 14px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
   letter-spacing: -.01em;
-  min-width: 64px;
+  min-width: 70px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.3);
 }
 
 .bdc-hit-type-sum--crit {
@@ -1240,6 +1286,23 @@
   background: rgba(226,178,3,.12);
   border-color: rgba(226,178,3,.3);
   text-shadow: 0 0 10px rgba(226,178,3,.35);
+}
+
+.bdc-hit-type-heal-sum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.18rem;
+  font-weight: 900;
+  color: #4ade80;
+  padding: 5px 13px;
+  border-radius: 8px;
+  background: rgba(74,222,128,.1);
+  border: 1px solid rgba(74,222,128,.2);
+  letter-spacing: -.01em;
+  margin-left: 4px;
 }
 
 /* ── Full hit list (no selection needed) ── */

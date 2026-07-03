@@ -435,7 +435,7 @@
   let rageDisabled = false
   let glyphConduitDisabled = false
   let extinguishDisabled = false
-  let waveRiderDisabled = false
+
   let environmentTouched = false
   let prevPhotosynthesis = 0
   let prevVampire = 0
@@ -1496,6 +1496,9 @@
     label?: string
     isHeal?: boolean
     forceCrit?: boolean
+    dmgTypeCombatMults?: Record<string, number>
+    dmgTypeIsHeal?: Record<string, boolean>
+    dmgTypeIsCritExempt?: Record<string, boolean>
   }
 
   $: _bdcWeaponHits = (() => {
@@ -1757,25 +1760,23 @@
         isHeal: true,
       })
     }
-    if (_waveRiderAmt > 0 && !waveRiderDisabled) {
+    if (_waveRiderAmt > 0) {
       const wrScaling = _computePerkScalingMult({ water: 1.0 })
       result.push({
         group: 'Perk', index: result.length, count: 1, base: 40, scalingMult: wrScaling, combatMult: _perkCombatMult,
-        isFinisher: false, dmgTypes: { water: 1.0 },
+        isFinisher: false, dmgTypes: { water: 1.0, heal: 0.2 }, baseDmgTypes: { water: 1.0 },
+        dmgTypeCombatMults: { heal: _healFinalMultiplier },
+        dmgTypeIsHeal: { heal: true },
+        dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (M2)',
       })
       result.push({
-        group: 'Perk', index: result.length, count: 1, base: 8, scalingMult: wrScaling, combatMult: _healFinalMultiplier,
-        isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Wave Rider (M2 Heal)', isHeal: true,
-      })
-      result.push({
         group: 'Perk', index: result.length, count: 1, base: 35, scalingMult: wrScaling, combatMult: _perkCombatMult,
-        isFinisher: false, dmgTypes: { water: 1.0 },
+        isFinisher: false, dmgTypes: { water: 1.0, heal: 0.2 }, baseDmgTypes: { water: 1.0 },
+        dmgTypeCombatMults: { heal: _healFinalMultiplier },
+        dmgTypeIsHeal: { heal: true },
+        dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (WA)',
-      })
-      result.push({
-        group: 'Perk', index: result.length, count: 1, base: 7, scalingMult: wrScaling, combatMult: _healFinalMultiplier,
-        isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Wave Rider (WA Heal)', isHeal: true,
       })
     }
     if (_oceanSongAmt > 0) {
@@ -2092,21 +2093,6 @@
                 <span class="da-bc-val" style="color:#0ea5e9">{extinguishDisabled ? '—' : `×${+(1 + 0.5 * (perks['Extinguish'] ?? 0)).toFixed(4)}`}</span>
                 <span class="da-bc-cond">Water · vs Burning</span>
                 <span class="da-bc-toggle" style={extinguishDisabled ? '' : 'background:rgba(14,165,233,.15);color:#0ea5e9'}>{extinguishDisabled ? 'OFF' : 'ON'}</span>
-              </button>
-            </span>
-          {/if}
-          {#if _waveRiderAmt > 0}
-            <span class="da-buff">
-              <button
-                class="da-boost-chip"
-                class:da-boost-chip--off={waveRiderDisabled}
-                style="background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.2)"
-                on:click={() => waveRiderDisabled = !waveRiderDisabled}
-              >
-                <span class="da-bc-name">Wave Rider</span>
-                <span class="da-bc-val" style="color:#0ea5e9">{waveRiderDisabled ? '—' : `×${_waveRiderAmt}`}</span>
-                <span class="da-bc-cond">Water · Empowered</span>
-                <span class="da-bc-toggle" style={waveRiderDisabled ? '' : 'background:rgba(14,165,233,.15);color:#0ea5e9'}>{waveRiderDisabled ? 'OFF' : 'ON'}</span>
               </button>
             </span>
           {/if}

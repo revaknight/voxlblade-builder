@@ -224,9 +224,9 @@ function accumulateMonkWeapon(
       const k = STAT_KEYS[i]
       const v = baseGloveStats[k]
       if (v == null) continue
-      if (v <= 0) { gloveStats[k] = v; continue }
       const shrineMult = state.shrineActive ? (SHRINE_MULTIPLIERS[glove.tier] ?? 1.0) : 1.0
-      gloveStats[k] = v * shrineMult + v * monkPct
+      const monkPart = v > 0 ? v * monkPct : 0
+      gloveStats[k] = v * shrineMult + monkPart
     }
     addStats(gloveStats)
     if (glove.perkName) perks[glove.perkName] = (perks[glove.perkName] ?? 0) + (glove.perkAmount ?? 1)

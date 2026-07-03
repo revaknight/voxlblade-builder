@@ -27,7 +27,7 @@ export function applyShrineToStats(stats: StatMap | undefined | null, tier: numb
     const k = STAT_KEYS[i]
     const v = stats[k]
     if (v == null) continue
-    result[k] = (mult === 1.0 || v <= 0) ? v : round2(v * mult)
+    result[k] = (mult === 1.0) ? v : round2(v * mult)
   }
   return result
 }
