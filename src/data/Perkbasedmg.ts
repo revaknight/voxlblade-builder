@@ -369,4 +369,17 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     }),
     note: 'Fire/Earth DoT · Multi-hit over duration · Poise Damage',
   },
+  // ── Whirlwind ───────────────────────────────────────────────────────────────
+  {
+    perkName: 'Whirlwind',
+    condition: 'On Weapon Art or Rune use',
+    getBaseDamage: ({ perkAmount }) => 3 + 0.3 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { air: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { air: 1.0 },
+    isWA: true,
+    isRune: true,
+    note: 'AoE wind slash. Applies Bleed for 5s. Can proc other effects.',
+  },
 ]

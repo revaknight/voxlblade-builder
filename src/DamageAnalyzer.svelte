@@ -6,7 +6,7 @@
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, SCALING_TO_BOOST, type WeaponBaseDmg } from './lib/types'
-  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect } from './data/BuffData'
+  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect, convertTailwindToWhirlwind } from './data/BuffData'
   import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
   import { getDraconicHexDebuffs, getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat, calcMaxSummonCount } from './data/SummonData'
@@ -245,10 +245,10 @@
       weaponBlade: $build.weaponBlade, weaponHandle: $build.weaponHandle,
       monkGlove: $build.monkGlove, race: $build.race,
     })    
-    const baseBuffs = applyBuffPerkModifiers(
+    const baseBuffs = convertTailwindToWhirlwind(applyBuffPerkModifiers(
       [...itemBuffs, ...getPerkBuffs($result.perks), ...getWeaponArtBuffs($build.selectedWeaponArt)],
       $result.perks, $build.rune || undefined
-    )
+    ), $result.perks)
 
     const _exhaustIdx = baseBuffs.findIndex(b => b.buffName === 'Exhaust')
     if (_exhaustIdx !== -1) {
@@ -3213,7 +3213,7 @@
                   <span style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
                 </div>
                 <div class="ds-col ds-col--val">
-                  <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal.toFixed(4)}</span>
+                  <span class="ds-num" style="color: {SCALING_COLORS[key] ?? '#e8e4da'}">{scalingVal % 1 === 0 ? scalingVal.toFixed(1) : scalingVal.toFixed(4).replace(/\.?0+$/, '')}</span>
                 </div>
                 <div class="ds-col ds-col--op">×</div>
                 

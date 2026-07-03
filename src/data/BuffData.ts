@@ -87,6 +87,13 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
   },
+  Whirlwind: {
+    name: 'Whirlwind',
+    color: '#a5f3fc',
+    description: 'Move and jump x% faster/higher.',
+    effectPerTenthPotency: 0.0666,
+    effectUnit: 'flat',
+  },
   'Critical Boost': {
     name: 'Critical Boost',
     color: '#ede714',
@@ -1286,6 +1293,23 @@ export function applyBuffPerkModifiers(
   })
 }
 
+export function convertTailwindToWhirlwind(
+  buffs: GrantedBuff[],
+  perks: Record<string, number>
+): GrantedBuff[] {
+  const wwAmt = perks['Whirlwind'] ?? 0
+  if (wwAmt <= 0) return buffs
+  return buffs.map(b => {
+    if (b.buffName !== 'Tailwind') return b
+    return {
+      ...b,
+      buffName: 'Whirlwind',
+      sourceName: 'Whirlwind',
+      duration: Math.round(b.duration * (1.3 + 0.3 * wwAmt)),
+    }
+  })
+}
+
 export function getBuffDescription(
   buffName: string,
   perks: Record<string, number>,
@@ -1312,7 +1336,9 @@ export function getBuffDescription(
     return `Reduce healing by ${(dmgReduction * 100).toFixed(4).replace(/\.?0+$/, '')}%.`
   }
 
-  return desc.replace(/x%/g, `${+(potency * 100).toFixed(4).replace(/\.?0+$/, '')}%`)
+  const effect = calcBuffEffect(buffName, potency)
+  const pct = effect.unit === '%' ? effect.value : effect.value * 100
+  return desc.replace(/x%/g, `${+(pct).toFixed(4).replace(/\.?0+$/, '')}%`)
 }
 
 export function getPerkBuffs(perks: Record<string, number>): GrantedBuff[] {

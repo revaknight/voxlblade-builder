@@ -9,6 +9,7 @@
     getBuffDescription,
     getTrueBalanceBuffs,
     getWeaponArtBuffs,
+    convertTailwindToWhirlwind,
     type GrantedBuff,
   } from './data/BuffData'
   import { getDraconicInfusionBuff, getDraconicHexDebuffs } from './data/draconicBuffs'
@@ -48,11 +49,11 @@
   $: weaponArtBuffs = getWeaponArtBuffs($build.selectedWeaponArt)
 
   $: baseActiveBuffs = (() => {
-    const modified = applyBuffPerkModifiers(
+    const modified = convertTailwindToWhirlwind(applyBuffPerkModifiers(
       [...itemBuffs, ...perkBuffs, ...weaponArtBuffs],
       $result.perks,
       $build.rune || undefined
-    )
+    ), $result.perks)
 
     const _minionAbsAmt = $result.perks['Minion Absorption'] ?? 0
     const _minionAbsSB  = ($result.stats as Record<string, number>).summonBoost ?? 0
@@ -313,7 +314,7 @@ $: groupedBuffs = (() => {
 
                   <div class="bl-value-box">
                     <span class="bl-value" style="color:{def.color}">
-                      {effect.value}{effect.unit === '%' ? '%' : ''}
+                      {topPotency}
                       {def.isDebuff && !group.isSelfDebuff ? ' to enemy' : ''}
                     </span>
                   </div>

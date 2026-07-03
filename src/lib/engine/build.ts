@@ -2,7 +2,7 @@ import type { StatKey, StatMap, ArmorPart, EnchantSlot, BuildState } from '../ty
 import { STAT_KEYS, applyUpgrade } from '../types'
 import { CDR_PERK_DATA } from '../../data/cdr'
 import { applyStatBoostPerks } from '../../data/statboost'
-import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers } from '../../data/BuffData'
+import { getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, convertTailwindToWhirlwind } from '../../data/BuffData'
 import { getActiveRaceEffect } from '../../data/raceEffects'
 import { BOOST_DEFS, type BoostContext } from '../../data/Boost'
 import type { BoostEntry, BoostResult } from '../types'
@@ -451,11 +451,11 @@ function deriveResults(
     weaponBlade: state.weaponBlade, weaponHandle: state.weaponHandle,
     monkGlove: state.monkGlove, race: state.race,
   })
-  const _allBuffs = applyBuffPerkModifiers(
+  const _allBuffs = convertTailwindToWhirlwind(applyBuffPerkModifiers(
     [..._itemBuffs, ...getPerkBuffs(finalPerks), ...getWeaponArtBuffs(state.selectedWeaponArt)],
     finalPerks,
     state.rune || undefined,
-  )
+  ), finalPerks)
 
   const _rageBuffs  = _allBuffs.filter(b => b.buffName === 'Rage')
   const ragePotency = _rageBuffs.length > 0 ? Math.max(..._rageBuffs.map(b => b.potency)) : 0
