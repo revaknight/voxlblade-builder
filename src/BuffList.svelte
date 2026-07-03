@@ -172,14 +172,14 @@ $: groupedBuffs = (() => {
     return acc
   }, {} as Record<string, GrantedBuff[]>)
 
-  // Melting Slime merges all Sticky variants into base Sticky
+  // Melting Slime overrides every sticky into Sticky
   if (($result.perks['Melting Slime'] ?? 0) > 0) {
     for (const [key, entries] of Object.entries(groups)) {
       const [bn] = key.split(':')
-      if (bn === 'Sticky (Melting Slime)') {
+      if (bn.startsWith('Sticky') && bn !== 'Sticky') {
         const baseKey = `Sticky:false`
         if (!groups[baseKey]) groups[baseKey] = []
-        groups[baseKey].push(...entries)
+        groups[baseKey].push(...entries.map(e => ({ ...e, buffName: 'Sticky' })))
         delete groups[key]
       }
     }

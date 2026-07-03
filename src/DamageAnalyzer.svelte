@@ -131,6 +131,10 @@
     .filter(e => e.sourceName !== 'Level Healing')
     .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
 
+  $: _healCritDmgMult = (perks['Critical Healing'] ?? 0) > 0
+    ? 120 + (stats.holyBoost ?? 0) / 5 + 16.5 * (perks['Critical Healing'] ?? 0)
+    : 0
+
   $: _antiHealSelfMult = (() => {
     if (disableAntiHeal) return 1
     if (!_healScalingCtx.activeBuffs) return 1
@@ -358,15 +362,19 @@
         inner.set('Burn', 0)
       }
     }
-    // Melting Slime absorbs Brainblast's sticky variant into base Sticky
+    // Melting Slime overrides every sticky into Melting Slime Sticky
     if ((perks['Melting Slime'] ?? 0) > 0) {
       for (const inner of groups.values()) {
-        if (inner.has('Sticky (Melting Slime)')) {
-          const msPotency = inner.get('Sticky (Melting Slime)')!
-          const existing = inner.get('Sticky') ?? 0
-          inner.set('Sticky', Math.max(existing, msPotency))
-          inner.delete('Sticky (Melting Slime)')
+        let maxPotency = 0
+        let hasSticky = false
+        for (const k of inner.keys()) {
+          if (k.startsWith('Sticky')) {
+            hasSticky = true
+            maxPotency = Math.max(maxPotency, inner.get(k)!)
+            inner.delete(k)
+          }
         }
+        if (hasSticky) inner.set('Sticky (Melting Slime)', maxPotency)
       }
     }
     const buildVariant = (buffName: string, potency: number) => {
@@ -3382,6 +3390,7 @@
   curseRipPerkAmount={_curseRipPerkAmount}
   curseRipActiveDebuffCount={_curseRipActiveDebuffCount}
   curseRipHealMult={_curseRipHealMult}
+  healCritDmgMult={_healCritDmgMult}
   bind:disabledDebuffs
   bind:showCritValues
 />

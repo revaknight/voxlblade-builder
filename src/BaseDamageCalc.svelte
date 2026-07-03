@@ -53,6 +53,7 @@
   export let curseRipPerkAmount: number = 0
   export let curseRipActiveDebuffCount: number = 0
   export let curseRipHealMult: number = 1
+  export let healCritDmgMult: number = 0
 
   let activeVariants = new Map<string, number>()
 
@@ -288,7 +289,7 @@
       const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
       const typeIsHeal   = hit.dmgTypeIsHeal?.[k] ?? isHeal
       const typeCombat   = hit.dmgTypeCombatMults?.[k] ?? hit.combatMult
-      const typeNoCrit   = hit.dmgTypeIsCritExempt?.[k] ?? typeIsHeal
+      const typeNoCrit   = healCritDmgMult > 0 && typeIsHeal ? false : (hit.dmgTypeIsCritExempt?.[k] ?? typeIsHeal)
       const applicableBoosts = getApplicableBoosts(k, typeIsHeal)
       const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
@@ -312,7 +313,8 @@
         (typeIsHeal ? 1 : _activeDebuffDamageMult * typeDebuffMult) * (typeIsHeal ? 1 : selfDebuffDamageMult) *
         (typeIsHeal ? antiHealSelfMult : 1)
 
-      const critVal = typeNoCrit ? raw : raw * critDmgMult / 100
+      const effectiveCrit = healCritDmgMult > 0 && typeIsHeal ? healCritDmgMult : critDmgMult
+      const critVal = typeNoCrit ? raw : raw * effectiveCrit / 100
 
       return {
         key: k, label: info.label, color: info.color,
@@ -339,7 +341,7 @@
           const lumDefPct  = defPctForType(k)
           const lumDefMult = calcArmorMult(lumDefPct, penDecimal).mult
           const lumTypeBase = lumAmount * mult
-          const lumRaw       = lumTypeBase * typedMultUsed * lumDefMult
+          const lumRaw       = lumTypeBase * typedMultUsed * lumDefMult * lumDebuffMult
           
           types.push({
             key: k, label: info.label, color: info.color,
@@ -369,7 +371,7 @@
           const lcDefPct  = defPctForType(k)
           const lcDefMult = calcArmorMult(lcDefPct, penDecimal).mult
           const lcTypeBase = cloakTotal * mult
-          const lcRaw       = lcTypeBase * typedMultUsed * lcDefMult
+          const lcRaw       = lcTypeBase * typedMultUsed * lcDefMult * lcDebuffMult
           
           types.push({
             key: k, label: info.label, color: info.color,
@@ -399,7 +401,7 @@
           const ecDefPct  = defPctForType(k)
           const ecDefMult = calcArmorMult(ecDefPct, penDecimal).mult
           const ecTypeBase = explosiveTotal * mult
-          const ecRaw       = ecTypeBase * typedMultUsed * ecDefMult
+          const ecRaw       = ecTypeBase * typedMultUsed * ecDefMult * ecDebuffMult
 
           types.push({
             key: k, label: info.label, color: info.color,
