@@ -430,7 +430,7 @@
             applicableBoosts: [], weaponBoostMult: 1, typeDebuffMult: 1,
             defMult: 1, enemyDefPct: 0,
             raw: healRaw, critVal: healRaw,
-            isHeal: true, isCurseRip: true, forceCrit: false,
+            isHeal: true, isCurseRip: true, isCritExempt: true, forceCrit: false,
             healBoostMult: curseRipHealMult !== 1 ? curseRipHealMult : undefined,
           })
         }
@@ -470,11 +470,11 @@
     return sum * (includeCount ? hit.count : 1)
   }
   function hitHealSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
-    const sum = hit.types.filter(t => t.isHeal && !t.isCurseRip).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    const sum = hit.types.filter(t => t.isHeal).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     return sum * (includeCount ? hit.count : 1)
   }
   function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.filter(h => !h.isHeal).reduce((s, h) =>s +h.types.filter(t => !t.isHeal && !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
-  function groupHealTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.reduce((s, h) =>s +h.types.filter(t => t.isHeal && !t.isCurseRip).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
+  function groupHealTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.reduce((s, h) =>s +h.types.filter(t => t.isHeal).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
 
   import { onMount } from 'svelte'
   onMount(() => {
