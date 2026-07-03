@@ -65,4 +65,14 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
     },
     typeDamageMult: () => ({ magic: 1.2, hex: 1.2 }),
   },
+  'Electrical Rend': {
+    descFn: (p: number) => `Lose ${(p * 100).toFixed(2)} Armor`,
+    defReduction: (p: number) => {
+      const amt = p * 100
+      return {
+        physicalDefense: amt,
+        magicDefense: amt,
+      }
+    },
+  },
 }

@@ -306,7 +306,7 @@
   }
 </script>
 
-<button class="saves-toggle" on:click={() => open = !open}>
+<div class="saves-wrapper"><button class="saves-toggle" on:click={() => open = !open}>
   <svg class="saves-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
     <rect x="5" y="2" width="6" height="5" rx="1" fill="currentColor" opacity="0.5"/>
@@ -413,6 +413,7 @@
     </div>
   </div>
 {/if}
+</div>
 
 <style>
   /* Class tiện ích ẩn phần tử HTML nhưng vẫn hiển thị với máy đọc A11y */
@@ -431,9 +432,11 @@
   .lbl{letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;}
   .cnt{font-size:.62rem;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.25);border-radius:999px;padding:1px 6px;}
   .arr{font-size:.6rem;opacity:.5;}
+  .saves-wrapper{position:relative;}
   .saves-panel{
+    position:absolute;top:calc(100% + 4px);left:0;z-index:50;
     background:var(--surface);border:1px solid rgba(74,222,128,.18);
-    border-radius:10px;padding:14px;margin-top:8px;
+    border-radius:10px;padding:14px;min-width:340px;
     display:flex;flex-direction:column;gap:10px;animation:spOpen .15s ease;
   }
   @keyframes spOpen{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}

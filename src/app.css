@@ -39,3 +39,50 @@ body { background: #0d0f0e; }
   color: var(--accent3);
   text-shadow: 0 0 10px rgba(167,139,250,.35);
 }
+
+.da-wild-bolt-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.25);
+}
+.da-wb-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.da-wb-header {
+  font-size: .65rem;
+  font-weight: 800;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  flex: 1;
+}
+.da-wb-btn {
+  background: rgba(251,191,36,.15);
+  border: 1px solid rgba(251,191,36,.3);
+  color: #fbbf24;
+  font-size: .7rem;
+  padding: 1px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.6;
+  font-family: inherit;
+}
+.da-wb-btn:hover {
+  background: rgba(251,191,36,.25);
+}
+.da-wb-line {
+  font-size: .6rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+.da-wb-elem {
+  font-weight: 700;
+  font-size: .65rem;
+}

@@ -419,8 +419,13 @@
   $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
+  $: _wildBoltAmt = perks['Wild Bolt'] ?? 0
   $: _lightningCloakActive = _allActiveBuffs.some(b => b.buffName === 'Lightning Cloak')
-  $: _lightningCloakPct = _lightningCloakActive ? (1 / 3) : 0
+  $: _activeLightningCloakBuffs = _allActiveBuffs.filter(b => b.buffName === 'Lightning Cloak')
+  $: _lightningCloakPct = _lightningCloakActive && !disableLightningCloak ? (1 / 3) : 0
+  $: _stormRendAmt = perks['Storm Rend'] ?? 0
+  let disableStormRend = false
+  $: _stormRendPct = _stormRendAmt > 0 && !disableStormRend ? (2 / 3) : 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
 
   let disabledDebuffs = new Set<string>()
@@ -435,6 +440,15 @@
     if (_curseRipPerkAmount <= 0 || _curseRipActiveDebuffCount <= 0) return 1
     const bonusPct = (10 * _curseRipPerkAmount - 10 + 5 * _curseRipActiveDebuffCount) / 100
     return 1 + bonusPct
+  })()
+  $: _reaperPerkAmount = perks['Reaper'] ?? 0
+  $: _reaperActiveDebuffCount = (() => {
+    if (_reaperPerkAmount <= 0) return 0
+    return _dummyDebuffs.filter(d => !disabledDebuffs.has(d.name)).length
+  })()
+  $: _reaperDamageBoost = (() => {
+    if (_reaperPerkAmount <= 0 || _reaperActiveDebuffCount <= 0) return 1
+    return 1 + 0.05 * _reaperActiveDebuffCount * _reaperPerkAmount
   })()
 
   $: _activeReinforcePotency      = _allActiveBuffs.reduce((m, b) => b.buffName === 'Reinforce'       ? Math.max(m, b.potency) : m, 0)
@@ -764,6 +778,8 @@
   let disableAntiHeal = false
   let disableWeakness = false
   let disableCurseRip = false
+  let disableReaper = false
+  let disableLightningCloak = false
 
   function toggleHealBoost(name: string) {
     if (disabledHealBoosts.has(name)) disabledHealBoosts.delete(name)
@@ -778,11 +794,19 @@
       rawMultiplier: _curseRipDamageBoost,
       condition: `${_curseRipActiveDebuffCount} unique debuff${_curseRipActiveDebuffCount > 1 ? 's' : ''} · ${_curseRipPerkAmount} stack`,
       type: 'dmg' as const,
-      appliesTo: ['m1', 'm2', 'wa', 'rune'] as BoostAttackType[],
     }
   })()
-  $: activeEntries = [...boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName)), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : [])]
-  $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName)) || (_curseRipBoostEntry && disableCurseRip)
+  $: _reaperBoostEntry = (() => {
+    if (_reaperPerkAmount <= 0 || _reaperActiveDebuffCount <= 0) return null
+    return {
+      sourceName: 'Reaper',
+      rawMultiplier: _reaperDamageBoost,
+      condition: `${_reaperActiveDebuffCount} unique debuff${_reaperActiveDebuffCount > 1 ? 's' : ''} · ${_reaperPerkAmount} stack`,
+      type: 'dmg' as const,
+    }
+  })()
+  $: activeEntries = [...boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName)), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry && !disableReaper ? [_reaperBoostEntry] : [])]
+  $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName)) || (_curseRipBoostEntry && disableCurseRip) || (_reaperBoostEntry && disableReaper)
 
   $: _levelMult = (() => {
     const levelEntry = boosts.dmgEntries.find(e => e.sourceName === 'Level Damage')
@@ -826,7 +850,7 @@
 
   $: _hasSpecificBoosts = boosts.dmgEntries.some(e => !!(e as any).appliesTo)
 
-  $: _allUniversalChips = _visibleDmgEntries.filter(e => !(e as any).appliesTo)
+  $: _allUniversalChips = [..._visibleDmgEntries.filter(e => !(e as any).appliesTo), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry && !disableReaper ? [_reaperBoostEntry] : [])]
 
   $: _universalActiveMult = Math.round(
     _allUniversalChips
@@ -845,9 +869,11 @@
     type CatGroup = { labels: string[]; allChips: typeof boosts.dmgEntries; totalMult: number }
     const groups: CatGroup[] = []
 
+    const allEntries = boosts.dmgEntries
+
     for (const { key, label } of CAT_DEFS) {
-      const allChips   = boosts.dmgEntries.filter(e => (e as any).appliesTo?.includes(key))
-      const activeChips = allChips.filter(e => !disabledBoosts.has(e.sourceName))
+      const allChips   = allEntries.filter(e => (e as any).appliesTo?.includes(key))
+      const activeChips = allChips.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Curse Rip' && disableCurseRip) && !(e.sourceName === 'Reaper' && disableReaper))
       const specMult   = activeChips.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
       const totalMult  = roundMultiplier(_universalActiveMult * specMult)
       const sigKey     = allChips.map(e => e.sourceName).join('|')
@@ -1095,10 +1121,26 @@
   }
 
   $: _waAllHits = parseWAHitsAll(selectedWA.baseDamage)
-  $: _waHitsSeq = _waAllHits.dmg.length > 0 ? _waAllHits.dmg : null
+  $: _waHitsSeq = _waAllHits.dmg.length > 0 ? _waAllHits.dmg.map(h => 
+    _wildBoltAmt > 0 && selectedWA.name === 'Laser' 
+      ? { ...h, n: parseWAHitsAll(selectedWA.baseDamage).dmg[0]?.n - 0.75 } 
+      : h
+  ) : null
   $: _waHealSeq = _waAllHits.heal.length > 0 ? _waAllHits.heal : null
 
+  const _wildBoltElements = ['fire', 'water', 'holy', 'hex', 'earth', 'air', 'magic']
+  let _wildBoltElemIdx = 0
+  function cycleWildBoltElem() {
+    _wildBoltElemIdx = (_wildBoltElemIdx + 1) % _wildBoltElements.length
+  }
+  function randomWildBoltElem() {
+    _wildBoltElemIdx = Math.floor(Math.random() * _wildBoltElements.length)
+  }
+  $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? _wildBoltElements[_wildBoltElemIdx] : null
   $: _waDmgTypes = (() => {
+    if (_wildBoltElement) {
+      return _applyDmgBonuses({ [_wildBoltElement]: 1 }, _waDmgTypeBonuses)
+    }
     const dt = selectedWA.damageType
     const addHex = (r: Record<string, number>) => _emotionalHexBonus > 0
       ? { ...r, hex: Math.round(((r.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
@@ -1143,6 +1185,9 @@
   })()
   
   $: _waDmgTypesBase = (() => {
+    if (_wildBoltElement) {
+      return { [_wildBoltElement]: 1 }
+    }
     const dt = selectedWA.damageType
     if (!dt || dt === 'Same as weapon') {
       return _weaponDmgTypesBase
@@ -1607,7 +1652,7 @@
         result.push({
           group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
-          baseDmgTypes: hitDtBase,
+          baseDmgTypes: hitDtBase, label: selectedWA.name,
           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
         })
       })
@@ -1948,8 +1993,8 @@
   <div class="da-section-title">⚔ Combat Multipliers</div>
     {#if !_hasSpecificBoosts}
       <div class="da-boost-row">
-        {#each [..._visibleDmgEntries, ...(_curseRipBoostEntry ? [_curseRipBoostEntry] : [])] as entry}
-          {@const disabled = entry.sourceName === 'Curse Rip' ? disableCurseRip : disabledBoosts.has(entry.sourceName)}
+        {#each [..._visibleDmgEntries, ...(_curseRipBoostEntry ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry ? [_reaperBoostEntry] : [])] as entry}
+          {@const disabled = entry.sourceName === 'Curse Rip' ? disableCurseRip : entry.sourceName === 'Reaper' ? disableReaper : disabledBoosts.has(entry.sourceName)}
           {@const effectiveMultiplier = disabled ? 1 : entry.rawMultiplier}
           <button
             class="da-boost-chip"
@@ -1958,6 +2003,7 @@
             title={entry.condition ?? ''}
             on:click={() => {
               if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
+              else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
               else toggleBoost(entry.sourceName)
             }}
           >
@@ -1981,13 +2027,17 @@
       <div class="da-boost-split">
         <div class="da-boost-universal">
           {#each _allUniversalChips as entry}
-            {@const disabled = disabledBoosts.has(entry.sourceName)}
+            {@const disabled = entry.sourceName === 'Curse Rip' ? disableCurseRip : entry.sourceName === 'Reaper' ? disableReaper : disabledBoosts.has(entry.sourceName)}
             <button
               class="da-boost-chip"
               class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
               class:da-boost-chip--off={disabled}
               title={entry.condition ?? ''}
-              on:click={() => toggleBoost(entry.sourceName)}
+              on:click={() => {
+                if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
+                else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
+                else toggleBoost(entry.sourceName)
+              }}
             >
               <span class="da-bc-name">
                 {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
@@ -2055,7 +2105,7 @@
           </button>
         </div>
       {/if}
-      {#if _ragePotency > 0 || _glyphConduitEntry || _vampireStacks > 0 || _photosynthesisStacks > 0 || (perks['Extinguish'] ?? 0) > 0}
+      {#if _ragePotency > 0 || _glyphConduitEntry || _vampireStacks > 0 || _photosynthesisStacks > 0 || (perks['Extinguish'] ?? 0) > 0 || _lightningCloakActive || _stormRendAmt > 0}
         <div class="da-buff-list" style="margin-top: 8px;">
           {#if _ragePotency > 0}
             <span class="da-buff">
@@ -2101,6 +2151,38 @@
                 <span class="da-bc-val" style="color:#0ea5e9">{extinguishDisabled ? '—' : `×${+(1 + 0.5 * (perks['Extinguish'] ?? 0)).toFixed(4)}`}</span>
                 <span class="da-bc-cond">Water · vs Burning</span>
                 <span class="da-bc-toggle" style={extinguishDisabled ? '' : 'background:rgba(14,165,233,.15);color:#0ea5e9'}>{extinguishDisabled ? 'OFF' : 'ON'}</span>
+              </button>
+            </span>
+          {/if}
+          {#if _lightningCloakActive}
+            <span class="da-buff">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={disableLightningCloak}
+                style="background:rgba(170,255,219,.08);border-color:rgba(170,255,219,.2)"
+                on:click={() => disableLightningCloak = !disableLightningCloak}
+              >
+                <span class="da-bc-name">Lightning Cloak</span>
+                <span class="da-bc-val" style="color:#aaffdb">{disableLightningCloak ? '—' : '1/3'}</span>
+                <span class="da-bc-cond">Air + Magic</span>
+                <span class="da-bc-toggle" style={disableLightningCloak ? '' : 'background:rgba(170,255,219,.15);color:#aaffdb'}>{disableLightningCloak ? 'OFF' : 'ON'}</span>
+                <span class="da-buff-sources">{_activeLightningCloakBuffs.toSorted((a,b) => b.potency - a.potency).slice(0,1).map(b => `${b.sourceName} (${b.potency})`)}</span>
+              </button>
+            </span>
+          {/if}
+          {#if _stormRendAmt > 0}
+            <span class="da-buff">
+              <button
+                class="da-boost-chip"
+                class:da-boost-chip--off={disableStormRend}
+                style="background:rgba(255,242,122,.08);border-color:rgba(255,242,122,.2)"
+                on:click={() => disableStormRend = !disableStormRend}
+              >
+                <span class="da-bc-name">Storm Rend</span>
+                <span class="da-bc-val" style="color:#fff27a">{disableStormRend ? '—' : '2/3'}</span>
+                <span class="da-bc-cond">Air + Magic</span>
+                <span class="da-bc-toggle" style={disableStormRend ? '' : 'background:rgba(255,242,122,.15);color:#fff27a'}>{disableStormRend ? 'OFF' : 'ON'}</span>
+                <span class="da-buff-sources">Perk ({_stormRendAmt})</span>
               </button>
             </span>
           {/if}
@@ -2570,6 +2652,24 @@
                 <span class="wa-atb-hint">~{_waAvgTotal.total} stars · {_waAvgTotal.starsPerType}/type</span>
               </div>
               <span class="wa-atb-base">{fmtNum(_waAvgTotal.baseTotal)}</span>
+            </div>
+          {/if}
+          {#if _wildBoltAmt > 0 && selectedWA.name === 'Laser'}
+            <div class="da-wild-bolt-box">
+              <div class="da-wb-row">
+                <span class="da-wb-header">Wild Bolt ×{_wildBoltAmt}</span>
+                <button class="da-wb-btn" on:click={cycleWildBoltElem} title="Cycle element">↻</button>
+                <button class="da-wb-btn" on:click={randomWildBoltElem} title="Randomize">🎲</button>
+              </div>
+              <div class="da-wb-line">Base 19.5 → 18.75 · +{_wildBoltAmt * 25}% Dmg</div>
+              <div class="da-wb-line">
+                Element:
+                <span class="da-wb-elem" style="color:{DMG_TYPE_COLORS[_wildBoltElement]}">
+                  {_wildBoltElement.charAt(0).toUpperCase() + _wildBoltElement.slice(1)}
+                </span>
+                ({_wildBoltElemIdx + 1}/{_wildBoltElements.length})
+              </div>
+              <div class="da-wb-line">Debuff (5s, 1 of 6): Bleed · Burn · Poison · Shatter · Slowness · Weakness</div>
             </div>
           {/if}
           </div>
@@ -3375,6 +3475,7 @@
   selfDebuffDamageMult={_selfDebuffDamageMult}
   antiHealSelfMult={_antiHealSelfMult}
   lightningCloakPct={_lightningCloakPct}
+  stormRendPct={_stormRendPct}
   explosiveChargePct={_explosiveChargePct}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({

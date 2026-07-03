@@ -39,6 +39,9 @@
         buffs[idx] = { ...buffs[idx], duration: wa.cooldown / 2 }
       }
     }
+    if ($build.selectedWeaponArt !== 'Laser') {
+      return buffs.filter(b => b.sourceName !== 'Wild Bolt')
+    }
     return buffs
   })()
 

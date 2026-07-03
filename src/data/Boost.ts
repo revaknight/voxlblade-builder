@@ -46,6 +46,7 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Valor', multiplierPerPerk: 0.0666, type: 'dmg', condition: 'Damage Boost vs Taunted enemies, per 1 of this perk' },
   { sourceName: 'Gorecast', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Weapon Art damage vs bleeding opponents', appliesTo: ['wa'] },
   { sourceName: 'Guardian Spin', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Guardian Spin'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Spin') return null; return { multiplier: 1 + 0.15 + 0.1725 * a, condition: 'for Spin weapon art' } }, appliesTo: ['wa'] },
+  { sourceName: 'Wild Bolt', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Wild Bolt'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Laser') return null; return { multiplier: 1 + 0.25 * a, condition: 'for Laser weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Undead Might', multiplierPerPerk: 0.25, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
   { sourceName: 'Rider', multiplierPerPerk: 0.20, type: 'dmg', condition: 'While mounted · +0.1s stun resist/stack' },
   {

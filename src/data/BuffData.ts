@@ -310,7 +310,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   'Electrical Rend': {
     name: 'Electrical Rend',
-    color: '#fff47a',
+    color: '#fff27a',
     description: 'Rend enemy with electricity.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
@@ -869,6 +869,24 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       duration: 5,
       condition: 'On Weapon Art hit (deals Magic or Physical damage)',
       sourceName: 'Gorecast',
+      sourceType: 'perk',
+    },
+  ],
+  'Wild Bolt': () => [
+    { buffName: 'Bleed', potency: 0, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+    { buffName: 'Burn', potency: 0, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+    { buffName: 'Poison', potency: 0, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+    { buffName: 'Shatter', potency: 0.2, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+    { buffName: 'Slowness', potency: 0.2, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+    { buffName: 'Weakness', potency: 0.5, duration: 5, condition: 'Random (1 of 6) on Laser hit', sourceName: 'Wild Bolt', sourceType: 'perk' },
+  ],
+  'Storm Rend': (amount) => [
+    {
+      buffName: 'Electrical Rend',
+      potency: 0.1 * amount,
+      duration: 10,
+      condition: '≈20% chance on hit',
+      sourceName: 'Storm Rend',
       sourceType: 'perk',
     },
   ],

@@ -15,6 +15,7 @@
   export let selfDebuffDamageMult: number = 1
   export let antiHealSelfMult: number = 1
   export let lightningCloakPct: number = 0
+  export let stormRendPct: number = 0
   export let explosiveChargePct: number = 0
   export let m1Label: string = 'M1'
 
@@ -23,6 +24,7 @@
   activeFinalMult
   selfDebuffDamageMult
   lightningCloakPct
+  stormRendPct
 
   export let weaponHits: Array<{
     group: string; index: number; count: number
@@ -379,6 +381,36 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lcDebuffMult,
             defMult: lcDefMult, enemyDefPct: lcDefPct,
             raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, isChainLightning: true, forceCrit: false,
+          })
+        }
+      }
+    }
+
+    if (!isHeal && stormRendPct > 0) {
+      const preMitSum  = computePreMitigationBase(hit)
+      const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
+
+      if (preMitBase > 0) {
+        const srTotal = preMitBase * stormRendPct
+        const srResolvedTypes = resolveDamageTypes({ air: 0.5, magic: 0.5 }, perkDmgTypeBonuses)
+
+        for (const [k, mult] of Object.entries(srResolvedTypes)) {
+          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+          const applicableBoosts = getApplicableBoosts(k, false)
+          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+          const srDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+          const srDefPct  = defPctForType(k)
+          const srDefMult = calcArmorMult(srDefPct, penDecimal).mult
+          const srTypeBase = srTotal * mult
+          const srRaw       = srTypeBase * typedMultUsed * srDefMult * srDebuffMult
+
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: srTypeBase, scalingMult: 1, combatMult: 1,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: srDebuffMult,
+            defMult: srDefMult, enemyDefPct: srDefPct,
+            raw: srRaw, critVal: Math.round(srRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isChainLightning: true, forceCrit: false,
           })
         }
