@@ -426,8 +426,11 @@
     _hpFillPct,
     _dragonStateAmt
   )
+  $: _dragonStateBaseDmg = _dragonStateAmt > 0 ? (1.5 + 1.5 * _dragonStateAmt) : 0
+  $: _dragonStateScalingMult = _computePerkScalingMult({ magic: 0.75, dexterity: 0.75, holy: 0.75 })
+  $: _dragonStateCombatMult = _perkCombatMult
   $: _dragonStateTotalDmg = _dragonStateAmt > 0 && _dragonStateHpGateActive
-    ? (1.5 + 1.5 * _dragonStateAmt) * _computePerkScalingMult({ magic: 0.75, dexterity: 0.75, holy: 0.75 }) * _perkCombatMult
+    ? _dragonStateBaseDmg * _dragonStateScalingMult * _dragonStateCombatMult
     : 0
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
@@ -1480,6 +1483,7 @@
     hits?: number
     isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isRider?: boolean
     guardbreak?: boolean
+    noProc?: boolean
     note?: string
     typedHits_m2:  Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
     typedHits_m1f: Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
@@ -1593,6 +1597,7 @@
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
         isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
         isWA: def.isWA, isRune: def.isRune, isRider: def.isRider, guardbreak: def.guardbreak,
+        noProc: def.noProc,
         note: def.note,
         typedHits_m2: buildTypedHits(baseDmg_m2),
         typedHits_m1f: buildTypedHits(baseDmg_m1f),
@@ -1622,10 +1627,13 @@
     baseDmgTypes?: Record<string, number>
     label?: string
     isHeal?: boolean
+    isM1?: boolean
+    isM2?: boolean
     forceCrit?: boolean
     dmgTypeCombatMults?: Record<string, number>
     dmgTypeIsHeal?: Record<string, boolean>
     dmgTypeIsCritExempt?: Record<string, boolean>
+    noProc?: boolean
   }
 
   $: _bdcWeaponHits = (() => {
@@ -1834,6 +1842,7 @@
         label: entry.displayName,
         isM1: entry.isM1,
         isM2: entry.isM2,
+        noProc: entry.noProc,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
           weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,
@@ -3641,6 +3650,9 @@
   lightningCloakPct={_lightningCloakPct}
   stormRendPct={_stormRendPct}
   explosiveChargePct={_explosiveChargePct}
+  dragonStateBaseDmg={_dragonStateHpGateActive ? _dragonStateBaseDmg : 0}
+  dragonStateScalingMult={_dragonStateScalingMult}
+  dragonStateCombatMult={_dragonStateCombatMult}
   dragonStateTotalDmg={_dragonStateTotalDmg}
   waArmorPenetration={_waArmorPenetration}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}

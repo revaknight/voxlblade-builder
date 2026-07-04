@@ -1,5 +1,6 @@
 <script lang="ts">
   import CritIcon from './CritIcon.svelte'
+  import DmgTotalTooltip from './DmgTotalTooltip.svelte'
   import { resolveDamageTypes } from './lib/damageTypeResolve'
   import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
 
@@ -17,6 +18,9 @@
   export let lightningCloakPct: number = 0
   export let stormRendPct: number = 0
   export let explosiveChargePct: number = 0
+  export let dragonStateBaseDmg: number = 0
+  export let dragonStateScalingMult: number = 1
+  export let dragonStateCombatMult: number = 1
   export let dragonStateTotalDmg: number = 0
   export let waArmorPenetration: number = 0
   export let m1Label: string = 'M1'
@@ -43,6 +47,7 @@
     dmgTypeCombatMults?: Record<string, number>
     dmgTypeIsHeal?: Record<string, boolean>
     dmgTypeIsCritExempt?: Record<string, boolean>
+    noProc?: boolean
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
@@ -62,6 +67,7 @@
   export let healCritDmgMult: number = 0
 
   let activeVariants = new Map<string, number>()
+  let _ttHit: any = null
 
   $: resolvedDebuffs = appliedDebuffs.map(d => {
     if (!d.variants?.length) return d
@@ -335,7 +341,7 @@
         raw, critVal, isHeal: typeIsHeal, isCritExempt: typeNoCrit, forceCrit: hit.forceCrit ?? false,
       }
     })
-    if (!isHeal && luminescentPct > 0) {
+    if (!isHeal && luminescentPct > 0 && !hit.noProc) {
       const preMitSum  = computePreMitigationBase(hit)
       const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
@@ -365,7 +371,7 @@
       }
     }
     
-    if (!isHeal && lightningCloakPct > 0) {
+    if (!isHeal && lightningCloakPct > 0 && !hit.noProc) {
       const preMitSum  = computePreMitigationBase(hit)
       const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
@@ -395,7 +401,7 @@
       }
     }
 
-    if (!isHeal && explosiveChargePct > 0 && hit.group === 'WA') {
+    if (!isHeal && explosiveChargePct > 0 && hit.group === 'WA' && !hit.noProc) {
       const preMitSum  = computePreMitigationBase(hit)
       const preMitBase = preMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
 
@@ -426,27 +432,53 @@
     }
 
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2)) {
-      const dsAmount = dragonStateTotalDmg * _activeDebuffDamageMult * selfDebuffDamageMult
-      if (dsAmount > 0) {
+      const dsDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
+      if (dsDebuffMult > 0) {
         const dsResolvedTypes = resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses)
         for (const [k, mult] of Object.entries(dsResolvedTypes)) {
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
           const applicableBoosts = getApplicableBoosts(k, false)
           const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
-          const dsDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+          const dsTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
           const dsDefPct  = defPctForType(k)
           const dsDefMult = calcArmorMult(dsDefPct, basePenDecimal).mult
-          const dsTypeBase = dsAmount * mult
-          const dsRaw       = dsTypeBase * typedMultUsed * dsDefMult * dsDebuffMult
+          const dsTypeBase = dragonStateBaseDmg * mult
+          const dsRaw = dsTypeBase * dragonStateScalingMult * dragonStateCombatMult * dsDebuffMult * typedMultUsed * dsDefMult * dsTypeDebuffMult
 
           types.push({
             key: k, label: info.label, color: info.color,
-            typeBase: dsTypeBase, scalingMult: 1, combatMult: 1,
-            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsDebuffMult,
+            typeBase: dsTypeBase, scalingMult: dragonStateScalingMult, combatMult: dragonStateCombatMult,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsTypeDebuffMult,
             defMult: dsDefMult, enemyDefPct: dsDefPct,
             raw: dsRaw, critVal: Math.round(dsRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, isDragonState: true, forceCrit: false,
           })
+          if (lightningCloakPct > 0) {
+            const dsPreMitSum = dragonStateBaseDmg * dragonStateScalingMult * dragonStateCombatMult
+            const dsPreMitBase = dsPreMitSum * _activeDebuffDamageMult * selfDebuffDamageMult
+            if (dsPreMitBase > 0) {
+              const cloakTotal = dsPreMitBase * lightningCloakPct
+              const lcResolvedTypes = resolveDamageTypes({ air: 0.5, magic: 0.5 }, perkDmgTypeBonuses)
+              for (const [lk, lMult] of Object.entries(lcResolvedTypes)) {
+                const lInfo = DMG_TYPE_MAP.get(lk) ?? { label: lk, color: '#e8e4da' }
+                const lBoosts = getApplicableBoosts(lk, false)
+                const lTypedMult = lBoosts.reduce((acc, b) => acc * b.mult, 1)
+                const lDebuffMult = _activeDebuffTypeDamageMult[lk] ?? 1
+                const lDefPct  = defPctForType(lk)
+                const lDefMult = calcArmorMult(lDefPct, basePenDecimal).mult
+                const lTypeBase = cloakTotal * lMult
+                const lRaw = lTypeBase * lTypedMult * lDefMult * lDebuffMult
+                types.push({
+                  key: lk, label: lInfo.label, color: lInfo.color,
+                  typeBase: lTypeBase, scalingMult: 1, combatMult: 1,
+                  applicableBoosts: lBoosts, weaponBoostMult: 1, typeDebuffMult: lDebuffMult,
+                  defMult: lDefMult, enemyDefPct: lDefPct,
+                  raw: lRaw, critVal: Math.round(lRaw * critDmgMult / 100 * 10000) / 10000,
+                  isHeal: false, isChainLightning: true, forceCrit: false,
+                })
+              }
+            }
+          }
         }
       }
     }
@@ -868,9 +900,16 @@
                         
                         {#if hSumWithCount > 0}
                         <span class="bdc-hit-type-sum-sep">=</span>
+                          <!-- svelte-ignore a11y_no_static_element_interactions -->
+                          <span class="bdc-hit-type-sum-holder"
+                            on:mouseenter={() => _ttHit = hit} on:mouseleave={() => _ttHit = null}>
                           <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues || hitForceCrit}>
                           {#if showCritValues || hitForceCrit}<CritIcon size={11}/>{/if}
                           {fmt4(hSumWithCount)}
+                        </span>
+                          {#if _ttHit === hit}
+                            <span class="bdc-tt-outer"><DmgTotalTooltip hit={hit} useCrit={showCritValues}/></span>
+                          {/if}
                         </span>
                         {/if}
                         {#if hHealSumWithCount > 0}
@@ -1687,5 +1726,16 @@
   opacity: .75;
   text-align: center;
   letter-spacing: .03em;
+}
+.bdc-hit-type-sum-holder {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.bdc-tt-outer {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 100;
 }
 </style>

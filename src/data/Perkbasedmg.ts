@@ -79,6 +79,7 @@ export interface PerkDmgDef {
   isRune?: boolean
   isRider?: boolean
   guardbreak?: boolean
+  noProc?: boolean
   note?: string
   hpGate?: HpGate
   secondaryEffects?: SecondaryEffect[]
@@ -356,6 +357,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { physical: 1.0 },
     scalingMode: 'fixed',
     scalings: { physical: 1.0, dexterity: 1.0 },
+    noProc: true,
     note: 'Cannot proc other effects. No internal cooldown. Proccing Bleed multiple times in the same hit will proc this perk multiple times.',
   },
   // ── Honey Arts ────────────────────────────────────────────────────────────
@@ -368,6 +370,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { magic: 1.0 },
     isWA: true,
+    noProc: true,
     secondaryEffects: [
       {
         label: 'Sticky',
