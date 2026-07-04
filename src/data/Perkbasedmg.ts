@@ -77,6 +77,7 @@ export interface PerkDmgDef {
   isFinisher?: boolean
   isWA?: boolean
   isRune?: boolean
+  isRider?: boolean
   guardbreak?: boolean
   note?: string
   hpGate?: HpGate
@@ -425,6 +426,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { magic: 1.0 },
     scalingMode: 'fixed',
     scalings: { magic: 0.75, dexterity: 0.75, holy: 0.75 },
+    isRider: true,
     hpGate: {
       hpThreshold: 80,
       aboveThreshold: true,

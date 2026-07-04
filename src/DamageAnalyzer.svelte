@@ -1478,7 +1478,7 @@
     perkAmount: number
     condition?: string
     hits?: number
-    isM1?: boolean; isM2?: boolean; isFinisher?: boolean; isWA?: boolean; isRune?: boolean
+    isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isRider?: boolean
     guardbreak?: boolean
     note?: string
     typedHits_m2:  Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
@@ -1498,7 +1498,6 @@
     for (const def of PERK_DMG_DEFS) {
       const perkAmount = perks[def.perkName] ?? 0
       if (perkAmount <= 0) continue
-      if (def.perkName === 'Dragon State') continue
       if (def.activeIf && !def.activeIf({ draconicRuneInfusion: $build.draconicRuneInfusion, draconicColor: $build.draconicColor })) continue
 
       const combatMult = def.isWA   ? _waCombatMult
@@ -1593,7 +1592,7 @@
         condition: def.condition,
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
         isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
-        isWA: def.isWA, isRune: def.isRune, guardbreak: def.guardbreak,
+        isWA: def.isWA, isRune: def.isRune, isRider: def.isRider, guardbreak: def.guardbreak,
         note: def.note,
         typedHits_m2: buildTypedHits(baseDmg_m2),
         typedHits_m1f: buildTypedHits(baseDmg_m1f),
@@ -1783,6 +1782,7 @@
 
     for (const entry of _activePerkDmgEntries) {
       if (!entry.isActive) continue 
+      if (entry.isRider) continue 
 
       // Check for heal effects from Draconic Blood abilities
       if (entry.perkName === 'Draconic Blood') {
@@ -1832,6 +1832,8 @@
         dmgTypes: entry.resolvedDmgTypes,
         baseDmgTypes: entry.baseDmgTypes,
         label: entry.displayName,
+        isM1: entry.isM1,
+        isM2: entry.isM2,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
           weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,

@@ -34,6 +34,8 @@
     dmgTypes: Record<string, number>
     baseDmgTypes?: Record<string, number>
     label?: string
+    isM1?: boolean
+    isM2?: boolean
     weaponBoostMult?: number
     weaponBoostLabel?: string
     isHeal?: boolean
@@ -423,7 +425,7 @@
       }
     }
 
-    if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2')) {
+    if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2)) {
       const dsAmount = dragonStateTotalDmg * _activeDebuffDamageMult * selfDebuffDamageMult
       if (dsAmount > 0) {
         const dsResolvedTypes = resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses)
@@ -502,21 +504,23 @@
   function hitTypeSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
     const perHitSum = hit.types.filter(t => !t.isHeal && !t.isCurseRip && !t.isDragonState).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     const onceSum = hit.types.filter(t => t.isDragonState).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
-    return perHitSum * (includeCount ? hit.count : 1) + (includeCount ? onceSum : 0)
+    const dsCount = (hit.group === 'M1' || hit.group === 'M2') ? 1 : hit.count
+    return perHitSum * (includeCount ? hit.count : 1) + (includeCount ? onceSum * dsCount : onceSum)
   }
   function hitHealSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
     const sum = hit.types.filter(t => t.isHeal).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     return sum * (includeCount ? hit.count : 1)
   }
   function groupTotalSum(list: ComputedHit[], useCrit: boolean): number {
-    let total = 0, onceTotal = 0
+    let total = 0
     for (const h of list) {
       if (!h.isHeal) {
         total += h.types.filter(t => !t.isHeal && !t.isCurseRip && !t.isDragonState).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * h.count
-        onceTotal += h.types.filter(t => t.isDragonState).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+        const dsCount = (h.group === 'M1' || h.group === 'M2') ? 1 : h.count
+        total += h.types.filter(t => t.isDragonState).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * dsCount
       }
     }
-    return total + onceTotal
+    return total
   }
   function groupHealTotalSum(list: ComputedHit[], useCrit: boolean): number {return list.reduce((s, h) =>s +h.types.filter(t => t.isHeal).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw),0) * h.count, 0)}
 
@@ -765,7 +769,7 @@
                                 {/if}
                                 {#if t.isDragonState}
                                   <span class="bdc-lum-badge bdc-dragon-badge" title="Dragon State: additional wave of Magic above HP threshold · Once per M1/M2">✦ Dragon</span>
-                                  <span class="bdc-dragon-count">×1</span>
+                                  <span class="bdc-dragon-count">×{hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count}</span>
                                 {/if}
                                 {#if t.isCurseRip}
                                   <span class="bdc-lum-badge bdc-curse-rip-badge" title="Curse Rip: 1/60 of damage dealt as lifesteal (requires debuffed opponent)">✦ Curse Rip</span>
