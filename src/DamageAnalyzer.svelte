@@ -3749,7 +3749,7 @@
 </div>
 {/if}
 
-{#if _healScalingResult.entries.length > 0 || _waHealScalingBreakdown || _perkHealScalingBreakdown}
+{#if _waHealScalingBreakdown || _perkHealScalingBreakdown}
 <div class="da-section da-section--scaling" style="border-color:rgba(74,222,128,.2);background:linear-gradient(160deg,var(--surface,#141715) 60%,rgba(74,222,128,.03) 100%)">
   <div class="da-section-title" style="color:#4ade80">✦ Heal Scaling</div>
 
@@ -3824,6 +3824,9 @@
 </div>
 {/if}
 
+</div><!-- end da-right-col -->
+</div><!-- end da-main-row -->
+
 {#if _activeMountRuneDef}
   <div class="da-section da-section--mount">
     <div class="da-section-title">{_activeMountRuneDef.mountLabel} Mount</div>
@@ -3841,8 +3844,6 @@
     {/if}
   </div>
 {/if}
-</div><!-- end da-right-col -->
-</div><!-- end da-main-row -->
 
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
@@ -4603,7 +4604,7 @@
   min-width: 360px;
   max-height: 60vh;
   overflow-y: auto;
-  background: #141428;
+   background: #18181b;
   border: 1px solid rgba(251,146,60,.25);
   border-radius: 10px;
   padding: 8px;
