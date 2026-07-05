@@ -1,14 +1,25 @@
 <script lang="ts">
+  import { onMount, tick } from 'svelte'
   import { BADGE_CONFIG, type ComputedHit } from './lib/dmgTypes'
-  export let hit: ComputedHit
-  export let useCrit: boolean = false
-  export let groupTotal: number = 0
 
-  $: groups = buildGroups(hit, useCrit)
-  $: hitTotal = groups.reduce((s, g) => s + g.total, 0)
-  $: pieSegments = groups.map(g => ({ color: g.color, pct: g.total / hitTotal }))
+  let { hit, useCrit = false, groupTotal = 0 }: {
+    hit: ComputedHit
+    useCrit?: boolean
+    groupTotal?: number
+  } = $props()
+
+  let groups = $derived(buildGroups(hit, useCrit))
+  let hitTotal = $derived(groups.reduce((s, g) => s + g.total, 0))
+  let pieSegments = $derived(groups.map(g => ({ color: g.color, pct: g.total / hitTotal })))
   const PIE_R = 10
   const PIE_CIRC = 2 * Math.PI * PIE_R
+
+  let animReady = $state(false)
+
+  onMount(async () => {
+    await tick()
+    requestAnimationFrame(() => { animReady = true })
+  })
 
   function buildGroups(h: typeof hit, crit: boolean) {
     const map = new Map<string, { label: string; color: string; total: number; entries: Array<{ label: string; val: number; badge: string }> }>()
@@ -38,8 +49,8 @@
         {@const prev = pieSegments.slice(0, i).reduce((s, x) => s + x.pct, 0)}
         <circle cx="12" cy="12" fill="none" stroke={seg.color} stroke-width="4"
           r={PIE_R}
-          stroke-dasharray={`${seg.pct * PIE_CIRC} ${(1 - seg.pct) * PIE_CIRC}`}
-          stroke-dashoffset={-prev * PIE_CIRC}
+          stroke-dasharray={animReady ? `${seg.pct * PIE_CIRC} ${(1 - seg.pct) * PIE_CIRC}` : `0 ${PIE_CIRC}`}
+          stroke-dashoffset={animReady ? -prev * PIE_CIRC : 0}
           transform="rotate(-90 12 12)"
         />
       {/each}
@@ -76,6 +87,17 @@
     height: 60px;
     align-self: center;
     flex-shrink: 0;
+    animation: pieEnter .6s ease-out;
+    transform-origin: center;
+    transform-box: fill-box;
+    will-change: transform, opacity;
+  }
+  .dtt-pie circle {
+    transition: stroke-dasharray .6s ease-out, stroke-dashoffset .6s ease-out;
+  }
+  @keyframes pieEnter {
+    from { opacity: 0; transform: rotate(-15deg) scale(.96); }
+    to   { opacity: 1; transform: rotate(0deg) scale(1); }
   }
   .dtt-wrap {
     background: #1a1a1e;

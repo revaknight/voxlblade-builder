@@ -2548,6 +2548,7 @@
         {/if}
       </div>
       <div class="da-wbd-card-divider"></div>
+      <div class="da-wbd-sections">
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m1">
@@ -2647,13 +2648,14 @@
           <span class="da-wbd-na">N/A</span>
         </div>
       </div>
-      {/if}
-    </div>
-  {/each}
-</div>
-{/if}
-    </div>
-  </div>
+       {/if}
+     </div>
+     </div>
+   {/each}
+ </div>
+ {/if}
+     </div>
+   </div>
 
   <div class="da-wbd-body">
   {#if !_currentLabel && !showAllWeapons}
@@ -2686,6 +2688,7 @@
         {/if}
       </div>
       <div class="da-wbd-card-divider"></div>
+      <div class="da-wbd-sections">
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m1">
@@ -3073,10 +3076,11 @@
             </div>
           </div>
         </div>
-        {/if}
-    </div>
-  {/each}
-  {#if _draconicBloodEntry}
+         {/if}
+     </div>
+     </div>
+   {/each}
+   {#if _draconicBloodEntry}
     <div class="da-wbd-card da-wbd-card--active da-wbd-card--gun">
       <div class="da-wbd-card-head">
         <span class="da-wbd-dot da-wbd-dot--gun"></span>
@@ -4512,25 +4516,20 @@
 }
 .da-wbd-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 380px));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 8px;
 }
 .da-wbd-cards--dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  width: auto;
-  min-width: 420px;
-  z-index: 40;
-  max-height: 420px;
-  overflow-y: auto;
+  width: 100%;
+  min-width: 0;
+  max-height: none;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0 0;
   scrollbar-width: thin;
   scrollbar-color: rgba(251,146,60,.25) transparent;
-  background: var(--surface, #141715);
-  border: 1px solid rgba(251,146,60,.15);
-  border-radius: 8px;
-  padding: 10px 12px;
-  animation: daFadeIn .12s ease;
 }
 .da-wbd-cards--dropdown::-webkit-scrollbar {
   width: 5px;
@@ -4980,7 +4979,7 @@
 
 /* ── Perk Base Damage section ── */
 .da-section--pbd {
-  flex: 0 0 260px;
+  flex: 0 0 300px;
   min-width: 200px;
   border-color: rgba(167,139,250,.2);
   background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(167,139,250,.04) 100%);
