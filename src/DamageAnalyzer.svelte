@@ -2495,8 +2495,9 @@
   {/if}
 </div>
 
+<div class="da-main-row">
 <!-- ══════════════════ WEAPON BASE DAMAGE + PERK BASE DAMAGE ══════════════════ -->
-<div class="da-wbd-outer">
+<div class="da-wbd-outer" class:da-wbd-outer--expanded={showAllWeapons}>
 
 <!-- Weapon Base Damage -->
 <div class="da-section da-section--wbd da-section--wbd-inner">
@@ -3273,6 +3274,7 @@
 
 </div><!-- end da-wbd-outer -->
 
+<div class="da-right-col" class:da-right-col--collapsed={showAllWeapons}>
 {#if _selfDamageSources.length > 0}
 <div class="da-section da-section--selfdmg">
   <div class="da-section-title">Self Damage</div>
@@ -3808,6 +3810,27 @@
   {/if}
 </div>
 {/if}
+
+{#if _activeMountRuneDef}
+  <div class="da-section da-section--mount">
+    <div class="da-section-title">{_activeMountRuneDef.mountLabel} Mount</div>
+    <div class="ap-toggle-row">
+      <span class="ap-toggle-label">{_activeMountRuneDef.mountLabel}</span>
+      <button class="ap-toggle-btn" class:ap-toggle-btn--on={mountActive}
+        on:click={() => mountActive = !mountActive}>
+        {mountActive ? 'Mounted' : 'On Foot'}
+      </button>
+    </div>
+    {#if mountActive}
+      <p class="da-empty-hint">
+        WA Guardbreaks · applies {_activeMountRuneDef.wa.secondaryEffects?.[0]?.display ?? ''} Shatter · sets WA CD to {_activeMountRuneDef.wa.setCooldown}s (CD override not wired into CDR system yet)
+      </p>
+    {/if}
+  </div>
+{/if}
+</div><!-- end da-right-col -->
+</div><!-- end da-main-row -->
+
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
   perkDmgTypeBonuses={_perkDmgTypeBonuses}
@@ -3846,24 +3869,6 @@
   bind:disabledDebuffs
   bind:showCritValues
 />
-
-{#if _activeMountRuneDef}
-  <div class="da-section da-section--mount">
-    <div class="da-section-title">{_activeMountRuneDef.mountLabel} Mount</div>
-    <div class="ap-toggle-row">
-      <span class="ap-toggle-label">{_activeMountRuneDef.mountLabel}</span>
-      <button class="ap-toggle-btn" class:ap-toggle-btn--on={mountActive}
-        on:click={() => mountActive = !mountActive}>
-        {mountActive ? 'Mounted' : 'On Foot'}
-      </button>
-    </div>
-    {#if mountActive}
-      <p class="da-empty-hint">
-        WA Guardbreaks · applies {_activeMountRuneDef.wa.secondaryEffects?.[0]?.display ?? ''} Shatter · sets WA CD to {_activeMountRuneDef.wa.setCooldown}s (CD override not wired into CDR system yet)
-      </p>
-    {/if}
-  </div>
-{/if}
 </div>
 
 <style>
@@ -3872,6 +3877,38 @@
     flex-direction: column;
     gap: 16px;
     font-family: var(--font-body, 'Trebuchet MS', sans-serif);
+  }
+  .da-main-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .da-wbd-outer--expanded {
+    flex: 1 1 100%;
+  }
+  .da-right-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .da-right-col--collapsed {
+    display: none !important;
+  }
+  @media (max-width: 768px) {
+    .da-main-row {
+      flex-direction: column;
+    }
+    .da-wbd-outer {
+      flex: none !important;
+      width: 100% !important;
+      order: 0 !important;
+    }
+    .da-right-col {
+      flex: none !important;
+      width: 100% !important;
+    }
   }
 
   /* ── Section ── */
@@ -4503,11 +4540,39 @@
   border-radius: 5px;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 480px) {
+  .da-section {
+    padding: 10px 12px;
+  }
   .ds-head,
   .ds-row {
-    grid-template-columns: 100px 60px 16px 75px 16px 80px;
+    grid-template-columns: minmax(65px,1fr) 45px 14px 55px 14px 65px;
+    gap: 3px;
+    padding: 5px 6px;
+    font-size: .62rem;
+  }
+  .ds-col {
+    font-size: .65rem;
+    gap: 4px;
+  }
+  .ds-col--op {
+    font-size: .6rem;
+  }
+  .ds-num, .ds-boost, .ds-contrib {
     font-size: .7rem;
+  }
+  .ds-result-val {
+    font-size: 1rem;
+  }
+  .ds-formula-hint {
+    font-size: .55rem;
+    line-height: 1.35;
+  }
+  .ds-total-pct {
+    font-size: .85rem;
+  }
+  .ds-total-label {
+    font-size: .58rem;
   }
 }
 
@@ -4965,22 +5030,21 @@
   font-size: 0.6rem !important;
 }
 
-/* ── WBD outer flex container ── */
+/* ── WBD outer: fixed 360px right column ── */
 .da-wbd-outer {
+  flex: 0 0 360px;
+  order: 1;
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  align-items: flex-start;
-  width: 100%;
 }
 .da-section--wbd-inner {
-  flex: 1 1 0;
   min-width: 0;
 }
 
 /* ── Perk Base Damage section ── */
 .da-section--pbd {
-  flex: 0 0 300px;
-  min-width: 200px;
+  width: 100%;
   border-color: rgba(167,139,250,.2);
   background: linear-gradient(160deg, var(--surface, #141715) 60%, rgba(167,139,250,.04) 100%);
 }
