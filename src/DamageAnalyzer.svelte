@@ -3884,7 +3884,7 @@
     align-items: flex-start;
   }
   .da-wbd-outer--expanded {
-    flex: 1 1 100%;
+    flex: 0 0 360px;
   }
   .da-right-col {
     flex: 1 1 0;
@@ -3894,7 +3894,7 @@
     gap: 12px;
   }
   .da-right-col--collapsed {
-    display: none !important;
+    display: flex;
   }
   @media (max-width: 768px) {
     .da-main-row {
@@ -4585,16 +4585,22 @@
   gap: 8px;
 }
 .da-wbd-cards--dropdown {
-  width: 100%;
-  min-width: 0;
-  max-height: none;
-  overflow: visible;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 4px 0 0;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  width: auto;
+  min-width: 360px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #141428;
+  border: 1px solid rgba(251,146,60,.25);
+  border-radius: 10px;
+  padding: 8px;
   scrollbar-width: thin;
   scrollbar-color: rgba(251,146,60,.25) transparent;
+  box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.3);
+  animation: daFadeIn .15s ease-out;
 }
 .da-wbd-cards--dropdown::-webkit-scrollbar {
   width: 5px;
