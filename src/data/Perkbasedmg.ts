@@ -126,7 +126,6 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'weapon',
     isM2: true,
     isFinisher: true,
-    guardbreak: true,
     note: 'Each hit counts as individual M1/M2 and procs related effects.',
   },
   // ── Mageling Spirit ────────────────────────────────────────────────────────
@@ -470,5 +469,19 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     isRider: true,
     noProc: true,
     note: 'Base damage unknown (???). Only activates once per finisher. Inflicts Poison on self and enemies.',
+  },
+  // ── Royal Finisher ────────────────────────────────────────────────────
+  {
+    perkName: 'Royal Finisher',
+    condition: 'On Finisher',
+    getBaseDamage: ({ perkAmount }) => 3 + perkAmount * 1,
+    hits: 1,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { magic: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { magic: 1.0 },
+    isRider: true,
+    noProc: true,
+    note: 'Only activates once per finisher.',
   },
 ]

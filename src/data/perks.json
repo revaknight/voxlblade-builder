@@ -3666,5 +3666,15 @@
       "Buff",
       "Armor"
     ]
+  },
+  {
+    "name": "Royal Finisher",
+    "description": "Release a damaging wave of Magic once per Finisher.",
+    "tags": [
+      "Offensive",
+      "Finisher",
+      "Magic",
+      "Weapon"
+    ]
   }
 ]

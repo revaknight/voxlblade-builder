@@ -27,6 +27,10 @@
   export let sporeBurstScalingMult: number = 1
   export let sporeBurstCombatMult: number = 1
   export let sporeBurstTotalDmg: number = 0
+  export let royalFinisherBaseDmg: number = 0
+  export let royalFinisherScalingMult: number = 1
+  export let royalFinisherCombatMult: number = 1
+  export let royalFinisherTotalDmg: number = 0
   export let waArmorPenetration: number = 0
   export let m1Label: string = 'M1'
 
@@ -492,6 +496,32 @@ isHeal: false, tag: 'Chain', forceCrit: false,
             defMult: sbDefMult, enemyDefPct: sbDefPct,
             raw: sbRaw, critVal: Math.round(sbRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, tag: 'Spore Burst', oncePerGroup: true, forceCrit: false,
+          })
+        }
+      }
+    }
+
+    if (!isHeal && royalFinisherTotalDmg > 0 && hit.isFinisher) {
+      const rfDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
+      if (rfDebuffMult > 0) {
+        const rfResolvedTypes = resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses)
+        for (const [k, mult] of Object.entries(rfResolvedTypes)) {
+          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+          const applicableBoosts = getApplicableBoosts(k, false)
+          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+          const rfTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+          const rfDefPct  = defPctForType(k)
+          const rfDefMult = calcArmorMult(rfDefPct, basePenDecimal).mult
+          const rfTypeBase = royalFinisherBaseDmg * mult
+          const rfRaw = rfTypeBase * royalFinisherScalingMult * royalFinisherCombatMult * rfDebuffMult * typedMultUsed * rfDefMult * rfTypeDebuffMult
+
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: rfTypeBase, scalingMult: royalFinisherScalingMult, combatMult: royalFinisherCombatMult,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: rfTypeDebuffMult,
+            defMult: rfDefMult, enemyDefPct: rfDefPct,
+            raw: rfRaw, critVal: Math.round(rfRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, tag: 'Royal Finisher', oncePerGroup: true, forceCrit: false,
           })
         }
       }

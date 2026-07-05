@@ -439,6 +439,11 @@
   $: _sporeBurstScalingMult = _computePerkScalingMult({ dexterity: 1.0, hex: 1.0, earth: 1.0 })
   $: _sporeBurstCombatMult = _perkCombatMult
   $: _sporeBurstTotalDmg = _sporeBurstBaseDmg * _sporeBurstScalingMult * _sporeBurstCombatMult
+  $: _royalFinisherAmt = perks['Royal Finisher'] ?? 0
+  $: _royalFinisherBaseDmg = _royalFinisherAmt > 0 ? (3 + _royalFinisherAmt * 1) : 0
+  $: _royalFinisherScalingMult = _computePerkScalingMult({ magic: 1.0 })
+  $: _royalFinisherCombatMult = _perkCombatMult
+  $: _royalFinisherTotalDmg = _royalFinisherBaseDmg * _royalFinisherScalingMult * _royalFinisherCombatMult
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
   $: _wildBoltAmt = perks['Wild Bolt'] ?? 0
@@ -3849,6 +3854,10 @@
   sporeBurstScalingMult={_sporeBurstScalingMult}
   sporeBurstCombatMult={_sporeBurstCombatMult}
   sporeBurstTotalDmg={_sporeBurstTotalDmg}
+  royalFinisherBaseDmg={_royalFinisherBaseDmg}
+  royalFinisherScalingMult={_royalFinisherScalingMult}
+  royalFinisherCombatMult={_royalFinisherCombatMult}
+  royalFinisherTotalDmg={_royalFinisherTotalDmg}
   waArmorPenetration={_waArmorPenetration}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
