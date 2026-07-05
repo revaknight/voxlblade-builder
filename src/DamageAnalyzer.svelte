@@ -722,6 +722,9 @@
         : def.amountPerStack
       bonus[type] = Math.round(((bonus[type] ?? 0) + amt * amountPerStack) * 10000) / 10000
     }
+    if (_toxinTransferHexBonus > 0) {
+      bonus.hex = Math.round(((bonus.hex ?? 0) + _toxinTransferHexBonus) * 10000) / 10000
+    }
     return bonus
   })()
 
@@ -729,6 +732,14 @@
     const amt = perks['Emotional'] ?? 0
     if (amt <= 0) return 0
     if ($build.emotionalState !== 'buffs') return 0
+    return Math.round(amt * 0.1 * 10000) / 10000
+  })()
+
+  $: _toxinTransferHexBonus = (() => {
+    const amt = perks['Toxin Transfer'] ?? 0
+    if (amt <= 0) return 0
+    const hasSelfPoison = _allActiveBuffs.some(b => b.buffName === 'Poison' && b.isSelfDebuff)
+    if (!hasSelfPoison) return 0
     return Math.round(amt * 0.1 * 10000) / 10000
   })()
 

@@ -47,6 +47,15 @@ const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
     conditionLabel: 'While Rage is active',
   },
   {
+    perkName: 'Toxin Transfer',
+    label: 'Toxin Transfer',
+    potencySource: 'perkAmount',
+    getAffectedTypes: () => ['hex'],
+    getDamageMultiplier: (amt) => 1 + 0.1 * amt,
+    activeIf: (ctx) => !!ctx.activeBuffs?.some(b => b.buffName === 'Poison' && b.isSelfDebuff),
+    conditionLabel: 'While poisoned (self-debuff)',
+  },
+  {
     perkName: 'Photosynthesis',
     label: 'Photosynthesis',
     potencySource: 'perkAmount',

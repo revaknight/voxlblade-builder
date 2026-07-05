@@ -1004,6 +1004,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       isSelfDebuff: true,
     },
   ],
+  'Toxin Transfer': (amount) => [
+    {
+      buffName: 'Poison',
+      potency: 0.1 * amount,
+      duration: 0,
+      condition: 'On hit while poisoned (duration = self poison duration + 5s)',
+      sourceName: 'Toxin Transfer',
+      sourceType: 'perk',
+    },
+  ],
 }
 
 const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
@@ -1315,6 +1325,26 @@ export function applyBuffPerkModifiers(
           ? roundMultiplier(finalPotency - buff.potency)
           : undefined,
     }
+  })
+}
+
+export function applyToxinTransferDuration(
+  buffs: GrantedBuff[],
+  perks: Record<string, number>
+): GrantedBuff[] {
+  const ttAmt = perks['Toxin Transfer'] ?? 0
+  if (ttAmt <= 0) return buffs
+
+  const selfPoisonDuration = Math.max(
+    0,
+    ...buffs
+      .filter(b => b.buffName === 'Poison' && b.isSelfDebuff)
+      .map(b => b.duration)
+  )
+
+  return buffs.map(b => {
+    if (b.sourceName !== 'Toxin Transfer' || b.buffName !== 'Poison') return b
+    return { ...b, duration: selfPoisonDuration + 5 }
   })
 }
 

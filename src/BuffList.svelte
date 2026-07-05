@@ -10,6 +10,7 @@
     getTrueBalanceBuffs,
     getWeaponArtBuffs,
     convertTailwindToWhirlwind,
+    applyToxinTransferDuration,
     type GrantedBuff,
   } from './data/BuffData'
   import { getDraconicInfusionBuff, getDraconicHexDebuffs } from './data/draconicBuffs'
@@ -48,12 +49,12 @@
 
   $: weaponArtBuffs = getWeaponArtBuffs($build.selectedWeaponArt)
 
-  $: baseActiveBuffs = (() => {
-    const modified = convertTailwindToWhirlwind(applyBuffPerkModifiers(
+    $: baseActiveBuffs = (() => {
+    const modified = applyToxinTransferDuration(convertTailwindToWhirlwind(applyBuffPerkModifiers(
       [...itemBuffs, ...perkBuffs, ...weaponArtBuffs],
       $result.perks,
       $build.rune || undefined
-    ), $result.perks)
+    ), $result.perks), $result.perks)
 
     const _minionAbsAmt = $result.perks['Minion Absorption'] ?? 0
     const _minionAbsSB  = ($result.stats as Record<string, number>).summonBoost ?? 0
