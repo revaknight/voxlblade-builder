@@ -411,7 +411,9 @@
     })
   })()
 
-  $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks
+  $: _dummyHasPoisonActive = _dummyDebuffs.some(d => d.name === 'Poison' && !disabledDebuffs.has(d.name))
+  $: _venomEaterCanShow = (perks['Venom Eater'] ?? 0) > 0 && _dummyHasPoisonActive
+  $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks || _venomEaterCanShow
   $: _critMult = crit.critDamageMultiplier / 100  
   let showCritValues = false
 
@@ -432,6 +434,11 @@
   $: _dragonStateTotalDmg = _dragonStateAmt > 0 && _dragonStateHpGateActive
     ? _dragonStateBaseDmg * _dragonStateScalingMult * _dragonStateCombatMult
     : 0
+  $: _sporeBurstAmt = perks['Spore Burst'] ?? 0
+  $: _sporeBurstBaseDmg = _sporeBurstAmt > 0 ? _sporeBurstAmt * 1 : 0
+  $: _sporeBurstScalingMult = _computePerkScalingMult({ dexterity: 1.0, hex: 1.0, earth: 1.0 })
+  $: _sporeBurstCombatMult = _perkCombatMult
+  $: _sporeBurstTotalDmg = _sporeBurstBaseDmg * _sporeBurstScalingMult * _sporeBurstCombatMult
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
   $: _wildBoltAmt = perks['Wild Bolt'] ?? 0
@@ -868,7 +875,7 @@
     }
   })()
   $: _adjustedDmgEntries = boosts.dmgEntries
-  $: activeEntries = [..._adjustedDmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0)), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry && !disableReaper ? [_reaperBoostEntry] : [])]
+  $: activeEntries = [..._adjustedDmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive))), ...(_curseRipBoostEntry && !disableCurseRip ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry && !disableReaper ? [_reaperBoostEntry] : [])]
   $: hasDisabledVisible = _adjustedDmgEntries.some(e => disabledBoosts.has(e.sourceName) || (e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0)) || (_curseRipBoostEntry && disableCurseRip) || (_reaperBoostEntry && disableReaper)
 
   $: _levelMult = (() => {
@@ -2125,7 +2132,8 @@
     {#if !_hasSpecificBoosts}
       <div class="da-boost-row">
         {#each [..._visibleDmgEntries, ...(_curseRipBoostEntry ? [_curseRipBoostEntry] : []), ...(_reaperBoostEntry ? [_reaperBoostEntry] : [])] as entry}
-          {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper)}
+          {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
+          {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled}
           {@const effectiveMultiplier = disabled ? 1 : entry.rawMultiplier}
           <button
             class="da-boost-chip"
@@ -2134,6 +2142,7 @@
             title={entry.condition ?? ''}
             on:click={() => {
               if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return
+              if (_venomEaterDisabled) return
               if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
               else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
               else toggleBoost(entry.sourceName)
@@ -2159,7 +2168,8 @@
       <div class="da-boost-split">
         <div class="da-boost-universal">
           {#each _allUniversalChips as entry}
-            {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper)}
+            {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
+            {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled}
             <button
               class="da-boost-chip"
               class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
@@ -2167,6 +2177,7 @@
               title={entry.condition ?? ''}
               on:click={() => {
                 if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return
+                if (_venomEaterDisabled) return
                 if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
                 else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
                 else toggleBoost(entry.sourceName)
@@ -2194,12 +2205,13 @@
 
               {#if grp.allChips.length > 0}
                 {#each grp.allChips as entry}
-                  {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0)}
+                  {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
+                  {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || _venomEaterDisabled}
                   <button
                     class="da-boost-chip da-boost-chip--sm"
                     class:da-boost-chip--off={disabled}
                     title={entry.condition ?? ''}
-                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; toggleBoost(entry.sourceName) }}
+                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; if (_venomEaterDisabled) return; toggleBoost(entry.sourceName) }}
                   >
                     <span class="da-bc-name">{entry.sourceName}</span>
                     <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
@@ -2555,9 +2567,6 @@
                       <span class="da-hit-num" style="--tc:{t.color}">{fmtNum(t.val)}</span>
                     </div>
                   {/each}
-                </div>
-                <div class="da-hit-card-info">
-                  <span class="da-hit-label">{hit.label}</span>
                 </div>
               </div>
             {/each}
@@ -3809,6 +3818,10 @@
   dragonStateScalingMult={_dragonStateScalingMult}
   dragonStateCombatMult={_dragonStateCombatMult}
   dragonStateTotalDmg={_dragonStateTotalDmg}
+  sporeBurstBaseDmg={_sporeBurstBaseDmg}
+  sporeBurstScalingMult={_sporeBurstScalingMult}
+  sporeBurstCombatMult={_sporeBurstCombatMult}
+  sporeBurstTotalDmg={_sporeBurstTotalDmg}
   waArmorPenetration={_waArmorPenetration}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
@@ -3825,6 +3838,7 @@
   curseRipActiveDebuffCount={_curseRipActiveDebuffCount}
   curseRipHealMult={_curseRipHealMult}
   healCritDmgMult={_healCritDmgMult}
+  venomEaterStacks={perks['Venom Eater'] ?? 0}
   bind:disabledDebuffs
   bind:showCritValues
 />

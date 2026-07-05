@@ -985,6 +985,25 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceType: 'perk',
     },
   ],
+  'Spore Burst': () => [
+    {
+      buffName: 'Poison',
+      potency: 0,
+      duration: 5,
+      condition: 'On Finisher hit',
+      sourceName: 'Spore Burst',
+      sourceType: 'perk',
+    },
+    {
+      buffName: 'Poison',
+      potency: 1,
+      duration: 5,
+      condition: 'On Finisher hit (self)',
+      sourceName: 'Spore Burst',
+      sourceType: 'perk',
+      isSelfDebuff: true,
+    },
+  ],
 }
 
 const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {

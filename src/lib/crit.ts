@@ -125,7 +125,6 @@ const CRIT_DMG_SOURCES: Array<CritSource> = [
       const stacks = perks['Venom Eater'] ?? 0
       return stacks > 0 ? round(-30 + stacks * 10) : 0
     },
-    gatingPerks: ['Venom Eater'],
   },
   {
     label: 'Vital Strikes',

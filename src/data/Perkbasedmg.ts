@@ -457,4 +457,18 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     ],
     note: 'Explosion size scales with perk amount · Protection is not a % like other Stat Boosts, making it 100x more effective in scaling',
   },
+  // ── Spore Burst ─────────────────────────────────────────────────────────
+  {
+    perkName: 'Spore Burst',
+    condition: 'On Finisher',
+    getBaseDamage: ({ perkAmount }) => perkAmount * 1,
+    hits: 1,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { hex: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { dexterity: 1.0, hex: 1.0, earth: 1.0 },
+    isRider: true,
+    noProc: true,
+    note: 'Base damage unknown (???). Only activates once per finisher. Inflicts Poison on self and enemies.',
+  },
 ]

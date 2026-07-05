@@ -3,6 +3,7 @@
   import DmgTotalTooltip from './DmgTotalTooltip.svelte'
   import { resolveDamageTypes } from './lib/damageTypeResolve'
   import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
+  import { BADGE_CONFIG, type ComputedType, type ComputedHit } from './lib/dmgTypes'
 
   export let perkDmgTypeBonuses: Record<string, number> = {}
   export let boosts: any
@@ -22,6 +23,10 @@
   export let dragonStateScalingMult: number = 1
   export let dragonStateCombatMult: number = 1
   export let dragonStateTotalDmg: number = 0
+  export let sporeBurstBaseDmg: number = 0
+  export let sporeBurstScalingMult: number = 1
+  export let sporeBurstCombatMult: number = 1
+  export let sporeBurstTotalDmg: number = 0
   export let waArmorPenetration: number = 0
   export let m1Label: string = 'M1'
 
@@ -65,9 +70,15 @@
   export let curseRipActiveDebuffCount: number = 0
   export let curseRipHealMult: number = 1
   export let healCritDmgMult: number = 0
+  export let venomEaterStacks: number = 0
 
   let activeVariants = new Map<string, number>()
   let _ttHit: any = null
+  let _ttStyleStr: string = ''
+  let _ttFormula: {
+    t: typeof hit.types[0]
+    style: string
+  } | null = null
 
   $: resolvedDebuffs = appliedDebuffs.map(d => {
     if (!d.variants?.length) return d
@@ -242,32 +253,9 @@
     return Number.isInteger(n) ? String(n) : n.toFixed(4).replace(/\.?0+$/, '')
   }
 
-  interface ComputedType {
-    key: string; label: string; color: string
-    typeBase: number; scalingMult: number; combatMult: number
-    applicableBoosts: Array<{ perkName: string; label: string; mult: number }>
-    weaponBoostMult: number; weaponBoostLabel?: string
-    typeDebuffMult: number
-    defMult: number; enemyDefPct: number
-    raw: number; critVal: number
-    isHeal: boolean
-    isLuminescent?: boolean
-    isChainLightning?: boolean
-    isExplosiveCharge?: boolean
-    isDragonState?: boolean
-    isCurseRip?: boolean
-    forceCrit: boolean
-    isCritExempt?: boolean
-    healBoostMult?: number
-  }
-  interface ComputedHit {
-      group: string; index: number; count: number; isFinisher: boolean; label?: string
-      isHeal: boolean
-      types: ComputedType[]
-  }
-
   $: critChance  = crit?.effectiveCritChance ?? 0
   $: critDmgMult = crit?.critDamageMultiplier ?? 100
+  $: _venomEaterActive = venomEaterStacks > 0 && showCritValues && resolvedDebuffs.some(d => d.name === 'Poison')
 
   function defPctForType(k: string): number {
     if (k === 'true' || k === 'summon') return 0
@@ -365,7 +353,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lumDebuffMult,
             defMult: lumDefMult, enemyDefPct: lumDefPct,
             raw: lumRaw, critVal: Math.round(lumRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, isLuminescent: true, forceCrit: false,
+            isHeal: false, tag: 'Luminescent', forceCrit: false,
           })
         }
       }
@@ -395,7 +383,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: lcDebuffMult,
             defMult: lcDefMult, enemyDefPct: lcDefPct,
             raw: lcRaw, critVal: Math.round(lcRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, isChainLightning: true, forceCrit: false,
+            isHeal: false, tag: 'Chain', forceCrit: false,
           })
         }
       }
@@ -425,7 +413,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: ecDebuffMult,
             defMult: ecDefMult, enemyDefPct: ecDefPct,
             raw: ecRaw, critVal: Math.round(ecRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, isExplosiveCharge: true, forceCrit: false,
+            isHeal: false, tag: 'Explosive', forceCrit: false,
           })
         }
       }
@@ -451,7 +439,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsTypeDebuffMult,
             defMult: dsDefMult, enemyDefPct: dsDefPct,
             raw: dsRaw, critVal: Math.round(dsRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, isDragonState: true, forceCrit: false,
+            isHeal: false, tag: 'Dragon', oncePerGroup: true, forceCrit: false,
           })
           if (lightningCloakPct > 0) {
             const dsPreMitSum = dragonStateBaseDmg * dragonStateScalingMult * dragonStateCombatMult
@@ -474,11 +462,37 @@
                   applicableBoosts: lBoosts, weaponBoostMult: 1, typeDebuffMult: lDebuffMult,
                   defMult: lDefMult, enemyDefPct: lDefPct,
                   raw: lRaw, critVal: Math.round(lRaw * critDmgMult / 100 * 10000) / 10000,
-                  isHeal: false, isChainLightning: true, forceCrit: false,
+isHeal: false, tag: 'Chain', forceCrit: false,
                 })
               }
             }
           }
+        }
+      }
+    }
+
+    if (!isHeal && sporeBurstTotalDmg > 0 && hit.isFinisher) {
+      const sbDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
+      if (sbDebuffMult > 0) {
+        const sbResolvedTypes = resolveDamageTypes({ hex: 1.0 }, perkDmgTypeBonuses)
+        for (const [k, mult] of Object.entries(sbResolvedTypes)) {
+          const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+          const applicableBoosts = getApplicableBoosts(k, false)
+          const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+          const sbTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+          const sbDefPct  = defPctForType(k)
+          const sbDefMult = calcArmorMult(sbDefPct, basePenDecimal).mult
+          const sbTypeBase = sporeBurstBaseDmg * mult
+          const sbRaw = sbTypeBase * sporeBurstScalingMult * sporeBurstCombatMult * sbDebuffMult * typedMultUsed * sbDefMult * sbTypeDebuffMult
+
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: sbTypeBase, scalingMult: sporeBurstScalingMult, combatMult: sporeBurstCombatMult,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: sbTypeDebuffMult,
+            defMult: sbDefMult, enemyDefPct: sbDefPct,
+            raw: sbRaw, critVal: Math.round(sbRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, tag: 'Spore Burst', oncePerGroup: true, forceCrit: false,
+          })
         }
       }
     }
@@ -498,13 +512,27 @@
             applicableBoosts: [], weaponBoostMult: 1, typeDebuffMult: 1,
             defMult: 1, enemyDefPct: 0,
             raw: healRaw, critVal: healRaw,
-            isHeal: true, isCurseRip: true, isCritExempt: true, forceCrit: false,
+            isHeal: true, isCurseRip: true, tag: 'Curse Rip', isCritExempt: true, forceCrit: false,
             healBoostMult: curseRipHealMult !== 1 ? curseRipHealMult : undefined,
           })
         }
       }
     }
-    
+
+    if (!isHeal && _venomEaterActive) {
+      const veHeal = 0.1 * venomEaterStacks
+      if (veHeal > 0) {
+        types.push({
+          key: 'heal', label: 'Heal', color: '#4ade80',
+          typeBase: veHeal, scalingMult: 1, combatMult: 1,
+          applicableBoosts: [], weaponBoostMult: 1, typeDebuffMult: 1,
+          defMult: 1, enemyDefPct: 0,
+          raw: veHeal, critVal: veHeal,
+          isHeal: true, isCritExempt: true, forceCrit: false,
+          tag: 'Venom Eater',
+        })
+      }
+    }
 
     return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types }
   })
@@ -534,8 +562,8 @@
 
   // ── Totals ──────────────────────────────────────────────────
   function hitTypeSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
-    const perHitSum = hit.types.filter(t => !t.isHeal && !t.isCurseRip && !t.isDragonState).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
-    const onceSum = hit.types.filter(t => t.isDragonState).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    const perHitSum = hit.types.filter(t => !t.isHeal && !t.isCurseRip && !t.oncePerGroup).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
+    const onceSum = hit.types.filter(t => t.oncePerGroup).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0)
     const dsCount = (hit.group === 'M1' || hit.group === 'M2') ? 1 : hit.count
     return perHitSum * (includeCount ? hit.count : 1) + (includeCount ? onceSum * dsCount : onceSum)
   }
@@ -547,9 +575,9 @@
     let total = 0
     for (const h of list) {
       if (!h.isHeal) {
-        total += h.types.filter(t => !t.isHeal && !t.isCurseRip && !t.isDragonState).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * h.count
+        total += h.types.filter(t => !t.isHeal && !t.isCurseRip && !t.oncePerGroup).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * h.count
         const dsCount = (h.group === 'M1' || h.group === 'M2') ? 1 : h.count
-        total += h.types.filter(t => t.isDragonState).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * dsCount
+        total += h.types.filter(t => t.oncePerGroup).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw), 0) * dsCount
       }
     }
     return total
@@ -754,33 +782,24 @@
                             class:bdc-hit-type-chunk--rage={t.applicableBoosts?.some(b => b.perkName === 'Rage')}
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
-                            class:bdc-hit-type-chunk--luminescent={t.isLuminescent || t.isChainLightning || t.isDragonState}
+                            class:bdc-hit-type-chunk--luminescent={!!t.tag}
                             class:bdc-hit-type-chunk--crit={(showCritValues && !t.isCritExempt) || t.forceCrit}
                             role="group"
                             on:mouseenter={(e) => {
-                              const el = e.currentTarget;
-                              const needFlip = el.getBoundingClientRect().bottom + 250 > window.innerHeight;
-                              if (needFlip) el.classList.add('bdc-hit-type-chunk--flip');
-                              el.classList.add('bdc-hit-type-chunk--hovered');
-                            }}
-                            on:mouseleave={(e) => {
-                              e.currentTarget.classList.remove('bdc-hit-type-chunk--hovered', 'bdc-hit-type-chunk--flip');
-                            }}
-                            on:touchstart={(e) => {
-                              const el = e.currentTarget;
-                              const needFlip = el.getBoundingClientRect().bottom + 250 > window.innerHeight;
-                              if (needFlip) el.classList.add('bdc-hit-type-chunk--flip');
-                              el.classList.add('bdc-hit-type-chunk--hovered');
-                              el.dataset.touchStart = String(Date.now());
-                            }}
-                            on:touchend={(e) => {
-                              const el = e.currentTarget;
-                              const start = el.dataset.touchStart;
-                              delete el.dataset.touchStart;
-                              if (start && Date.now() - +start > 300) {
-                                el.classList.remove('bdc-hit-type-chunk--hovered', 'bdc-hit-type-chunk--flip');
+                              const el = e.currentTarget as HTMLElement
+                              const r = el.getBoundingClientRect()
+                              const spaceBelow = window.innerHeight - r.bottom
+                              const estH = 220
+                              const left = Math.max(8, Math.min(r.left, window.innerWidth - 260))
+                              let style: string
+                              if (spaceBelow > estH) {
+                                style = `left:${left}px;top:${r.bottom + 4}px;`
+                              } else {
+                                style = `left:${left}px;bottom:${window.innerHeight - r.top + 4}px;`
                               }
-                            }}>
+                              _ttFormula = { t, style }
+                            }}
+                            on:mouseleave={() => { _ttFormula = null }}>
                             <div class="bdc-hit-type-top">
                               <div class="bdc-hit-type-val-row">
                                 {#if (showCritValues && !t.isCritExempt) || t.forceCrit}
@@ -790,21 +809,11 @@
                               </div>
                               <div class="bdc-hit-type-label-row">
                                 <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
-                                {#if t.isLuminescent}
-                                  <span class="bdc-lum-badge" title="Luminescent Fervor: 5% × perk amount of this hit's damage">✦ Luminescent</span>
-                                {/if}
-                                {#if t.isChainLightning}
-                                  <span class="bdc-lum-badge bdc-chain-badge" title="Lightning Cloak: 1/3 of hit damage as Air+Magic chain lightning (up to 4 targets)">Chain</span>
-                                {/if}
-                                {#if t.isExplosiveCharge}
-                                  <span class="bdc-lum-badge bdc-explosive-badge" title="Explosive Charge: 100% of WA pre-boost damage as Physical+Fire explosion">✦ Explosive</span>
-                                {/if}
-                                {#if t.isDragonState}
-                                  <span class="bdc-lum-badge bdc-dragon-badge" title="Dragon State: additional wave of Magic above HP threshold · Once per M1/M2">✦ Dragon</span>
-                                  <span class="bdc-dragon-count">×{hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count}</span>
-                                {/if}
-                                {#if t.isCurseRip}
-                                  <span class="bdc-lum-badge bdc-curse-rip-badge" title="Curse Rip: 1/60 of damage dealt as lifesteal (requires debuffed opponent)">✦ Curse Rip</span>
+                                {#if t.tag}
+                                  <span class="bdc-lum-badge" style="color:{BADGE_CONFIG[t.tag].color};background:{BADGE_CONFIG[t.tag].color}22;border:1px solid {BADGE_CONFIG[t.tag].color}44" title={BADGE_CONFIG[t.tag].title}>{BADGE_CONFIG[t.tag].label}</span>
+                                  {#if t.tag === 'Dragon'}
+                                    <span class="bdc-dragon-count">×{hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count}</span>
+                                  {/if}
                                 {/if}
                                 {#if hit.group === 'Rune' && draconicRunesBonus[t.label.toLowerCase()]}
                                   <span class="bdc-dr-badge" title="Draconic Bonus: +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))} {t.label} damage type">
@@ -902,14 +911,22 @@
                         <span class="bdc-hit-type-sum-sep">=</span>
                           <!-- svelte-ignore a11y_no_static_element_interactions -->
                           <span class="bdc-hit-type-sum-holder"
-                            on:mouseenter={() => _ttHit = hit} on:mouseleave={() => _ttHit = null}>
+                            on:mouseenter={e => {
+                              _ttHit = hit
+                              const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                              const spaceBelow = window.innerHeight - r.bottom
+                              const estH = 260
+                              const left = Math.max(8, Math.min(r.left, window.innerWidth - 280))
+                              if (spaceBelow > estH) {
+                                _ttStyleStr = `left:${left}px;top:${r.bottom + 6}px;`
+                              } else {
+                                _ttStyleStr = `left:${left}px;bottom:${window.innerHeight - r.top + 6}px;`
+                              }
+                            }} on:mouseleave={() => { _ttHit = null; _ttStyleStr = ''; }}>
                           <span class="bdc-hit-type-sum" class:bdc-hit-type-sum--crit={showCritValues || hitForceCrit}>
                           {#if showCritValues || hitForceCrit}<CritIcon size={11}/>{/if}
                           {fmt4(hSumWithCount)}
                         </span>
-                          {#if _ttHit === hit}
-                            <span class="bdc-tt-outer"><DmgTotalTooltip hit={hit} useCrit={showCritValues}/></span>
-                          {/if}
                         </span>
                         {/if}
                         {#if hHealSumWithCount > 0}
@@ -930,6 +947,95 @@
     </div>
   </div>
 </div>
+
+{#if _ttHit && _ttStyleStr}
+  <div class="bdc-tt-fixed" style={_ttStyleStr}>
+    <DmgTotalTooltip hit={_ttHit} useCrit={showCritValues}/>
+  </div>
+{/if}
+
+{#if _ttFormula}
+  {@const t = _ttFormula.t}
+  <div class="bdc-tt-formula-fixed" style={_ttFormula.style}>
+    <div class="bdc-fr">
+      <span class="bdc-fr-label">{t.isHeal ? 'Base Heal' : 'Base Damage'}</span>
+      <span class="bdc-fr-val">{fmt(t.typeBase)}</span>
+    </div>
+    {#if t.scalingMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Scaling</span>
+        <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.scalingMult)}</span>
+      </div>
+    {/if}
+    {#if t.applicableBoosts && t.applicableBoosts.length > 0}
+      {#each t.applicableBoosts as boost}
+        <div class="bdc-fr">
+          <span class="bdc-fr-label">{boost.label}</span>
+          <span class="bdc-fr-val" 
+            class:bdc-fr-val--rage={boost.perkName === 'Rage'} 
+            class:bdc-fr-val--glyph={boost.perkName === 'Glyph Conduit'}>× {fmtMult(boost.mult)}</span>
+        </div>
+      {/each}
+    {/if}
+    {#if t.combatMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Combat Multipliers</span>
+        <span class="bdc-fr-val bdc-fr-val--combat">× {fmtMult(t.combatMult)}</span>
+      </div>
+    {/if}
+    {#if t.typeDebuffMult !== 1 && !t.isHeal}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Debuffs ({(_debuffTypeLabels[t.key] ?? ['?']).join(', ')})</span>
+        <span class="bdc-fr-val bdc-fr-val--debuff">× {fmtMult(t.typeDebuffMult)}</span>
+      </div>
+    {/if}
+    {#if selfDebuffDamageMult !== 1 && !t.isHeal}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Self-Debuff (Weakness)</span>
+        <span class="bdc-fr-val bdc-fr-val--selfdebuff">× {fmtMult(selfDebuffDamageMult)}</span>
+      </div>
+    {/if}
+    {#if antiHealSelfMult !== 1 && t.isHeal}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Anti Heal (Self)</span>
+        <span class="bdc-fr-val bdc-fr-val--selfdebuff">× {fmtMult(antiHealSelfMult)}</span>
+      </div>
+    {/if}
+    {#if t.healBoostMult !== undefined}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Heal Boost</span>
+        <span class="bdc-fr-val bdc-fr-val--healboost">× {fmtMult(t.healBoostMult)}</span>
+      </div>
+    {/if}
+    {#if t.weaponBoostMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">{t.weaponBoostLabel ?? 'Weapon Boost'}</span>
+        <span class="bdc-fr-val bdc-fr-val--weaponboost">× {fmtMult(t.weaponBoostMult)}</span>
+      </div>
+    {/if}
+    {#if t.defMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(armorPen * 100) / 100)})</span>
+        <span class="bdc-fr-val bdc-fr-val--def" class:bdc-fr-val--amplify={t.defMult > 1}>× {fmtMult(t.defMult)}</span>
+      </div>
+    {/if}
+    <div class="bdc-fr-divider"></div>
+    <div class="bdc-fr bdc-fr--result">
+      <span class="bdc-fr-label">{t.isHeal ? 'Final Heal' : 'Final Damage'}</span>
+      <span class="bdc-fr-val bdc-fr-val--result" style="--tc:{t.color}">{fmt(t.raw)}</span>
+    </div>
+    {#if (showCritValues && !t.isCritExempt) || t.forceCrit}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">{t.forceCrit ? 'Guaranteed Crit' : 'Crit Multiplier'}</span>
+        <span class="bdc-fr-val bdc-fr-val--crit">× {fmtMult(critDmgMult / 100)}</span>
+      </div>
+      <div class="bdc-fr bdc-fr--result">
+        <span class="bdc-fr-label">Crit Damage</span>
+        <span class="bdc-fr-val bdc-fr-val--result bdc-fr-val--crit" style="--tc:{t.color}">{fmt(t.critVal)}</span>
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <style>
 .bdc-root {
@@ -1380,6 +1486,12 @@
   border-color: rgba(226,178,3,.3);
   text-shadow: 0 0 10px rgba(226,178,3,.35);
 }
+.bdc-hit-type-pct {
+  font-size: .7rem;
+  font-weight: 600;
+  opacity: .55;
+  margin-left: 2px;
+}
 
 .bdc-hit-type-heal-sum {
   display: inline-flex;
@@ -1530,16 +1642,6 @@
   text-transform: uppercase;
   letter-spacing: .05em;
 }
-.bdc-explosive-badge {
-  color: #f97316;
-  background: rgba(249,115,22,.12);
-  border: 1px solid rgba(249,115,22,.3);
-}
-.bdc-dragon-badge {
-  color: #a78bfa;
-  background: rgba(167,139,250,.12);
-  border: 1px solid rgba(167,139,250,.3);
-}
 .bdc-dragon-count {
   font-size: .45rem;
   font-weight: 700;
@@ -1552,30 +1654,6 @@
   color: #c084fc;
   background: rgba(192,132,252,.12);
   border: 1px solid rgba(192,132,252,.3);
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-.bdc-chain-badge {
-  font-size: .45rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #AAFFDB;
-  background: rgba(170,255,219,.12);
-  border: 1px solid rgba(170,255,219,.3);
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-.bdc-curse-rip-badge {
-  font-size: .45rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #e879f9;
-  background: rgba(232,121,249,.12);
-  border: 1px solid rgba(232,121,249,.3);
   padding: 1px 4px;
   border-radius: 3px;
   text-transform: uppercase;
@@ -1732,10 +1810,23 @@
   display: inline-flex;
   align-items: center;
 }
-.bdc-tt-outer {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 6px);
+.bdc-tt-fixed {
+  position: fixed;
   z-index: 100;
 }
+.bdc-tt-formula-fixed {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface, #141715);
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,.6);
+  min-width: 180px;
+  width: max-content;
+}
+
 </style>

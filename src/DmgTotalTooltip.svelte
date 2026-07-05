@@ -1,23 +1,14 @@
 <script lang="ts">
-  export let hit: {
-    group: string; count: number
-    types: Array<{
-      key: string; label: string; color: string
-      raw: number; critVal: number; forceCrit: boolean
-      isHeal?: boolean; isCurseRip?: boolean
-      isDragonState?: boolean; isChainLightning?: boolean
-      isLuminescent?: boolean; isExplosiveCharge?: boolean
-      typeBase: number; scalingMult: number; combatMult: number
-      applicableBoosts: Array<{ perkName: string; label: string; mult: number }>
-      weaponBoostMult: number; weaponBoostLabel?: string
-      typeDebuffMult: number; defMult: number; enemyDefPct: number
-      isCritExempt?: boolean
-      healBoostMult?: number
-    }>
-  }
+  import { BADGE_CONFIG, type ComputedHit } from './lib/dmgTypes'
+  export let hit: ComputedHit
   export let useCrit: boolean = false
+  export let groupTotal: number = 0
 
   $: groups = buildGroups(hit, useCrit)
+  $: hitTotal = groups.reduce((s, g) => s + g.total, 0)
+  $: pieSegments = groups.map(g => ({ color: g.color, pct: g.total / hitTotal }))
+  const PIE_R = 10
+  const PIE_CIRC = 2 * Math.PI * PIE_R
 
   function buildGroups(h: typeof hit, crit: boolean) {
     const map = new Map<string, { label: string; color: string; total: number; entries: Array<{ label: string; val: number; badge: string }> }>()
@@ -25,19 +16,15 @@
     for (const t of h.types) {
       if (t.isHeal || t.isCurseRip) continue
       const val = (crit || t.forceCrit) ? t.critVal : t.raw
-      const dsCount = t.isDragonState && (h.group === 'M1' || h.group === 'M2') ? 1 : count
-      const total = t.isDragonState ? val * dsCount : val * count
+      const dsCount = t.oncePerGroup && (h.group === 'M1' || h.group === 'M2') ? 1 : count
+      const total = t.oncePerGroup ? val * dsCount : val * count
       let g = map.get(t.key)
       if (!g) {
         g = { label: t.label, color: t.color, total: 0, entries: [] }
         map.set(t.key, g)
       }
       g.total += total
-      let badge = ''
-      if (t.isDragonState) badge = 'Dragon'
-      else if (t.isChainLightning) badge = 'Chain'
-      else if (t.isLuminescent) badge = 'Luminescent'
-      else if (t.isExplosiveCharge) badge = 'Explosive'
+      let badge = t.tag ?? ''
       g.entries.push({ label: t.label, val: total, badge })
     }
     return [...map.entries()].map(([key, g]) => ({ key, ...g }))
@@ -45,19 +32,36 @@
 </script>
 
 <div class="dtt-wrap">
+  {#if pieSegments.length > 1}
+    <svg class="dtt-pie" viewBox="0 0 24 24">
+      {#each pieSegments as seg, i}
+        {@const prev = pieSegments.slice(0, i).reduce((s, x) => s + x.pct, 0)}
+        <circle cx="12" cy="12" fill="none" stroke={seg.color} stroke-width="4"
+          r={PIE_R}
+          stroke-dasharray={`${seg.pct * PIE_CIRC} ${(1 - seg.pct) * PIE_CIRC}`}
+          stroke-dashoffset={-prev * PIE_CIRC}
+          transform="rotate(-90 12 12)"
+        />
+      {/each}
+    </svg>
+  {/if}
   {#each groups as g}
     <div class="dtt-group">
       <div class="dtt-group-head">
         <span class="dtt-dot" style="background: {g.color}"></span>
         <span class="dtt-type-label" style="color: {g.color}">{g.label}</span>
         <span class="dtt-type-total">{g.total.toFixed(4)}</span>
+        {#if hitTotal > 0}
+          <span class="dtt-type-pct">{((g.total / hitTotal) * 100).toFixed(2)}%</span>
+        {/if}
       </div>
       <div class="dtt-entries">
         {#each g.entries as e}
           <div class="dtt-entry">
             <span class="dtt-entry-val">{e.val.toFixed(4)}</span>
             {#if e.badge}
-              <span class="dtt-badge" style="background: {g.color}22; color: {g.color}">{e.badge}</span>
+              {@const cfg = BADGE_CONFIG[e.badge]}
+              <span class="dtt-badge" style="background:{cfg.color}22;color:{cfg.color}">{cfg.label}</span>
             {/if}
           </div>
         {/each}
@@ -67,6 +71,12 @@
 </div>
 
 <style>
+  .dtt-pie {
+    width: 60px;
+    height: 60px;
+    align-self: center;
+    flex-shrink: 0;
+  }
   .dtt-wrap {
     background: #1a1a1e;
     border: 1px solid rgba(255,255,255,.08);
@@ -109,6 +119,12 @@
     font-variant-numeric: tabular-nums;
     color: #e8e4da;
   }
+  .dtt-type-pct {
+    font-size: .6rem;
+    opacity: .6;
+    font-variant-numeric: tabular-nums;
+    margin-left: 4px;
+  }
   .dtt-entries {
     display: flex;
     flex-direction: column;
@@ -133,4 +149,5 @@
     font-weight: 600;
     letter-spacing: .02em;
   }
+
 </style>
