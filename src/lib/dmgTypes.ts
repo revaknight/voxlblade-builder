@@ -8,6 +8,7 @@ export const BADGE_CONFIG: Record<string, { color: string; label: string; title:
   'Royal Finisher': { color: '#60a5fa', label: '✦ Royal Finisher', title: 'Royal Finisher: damaging wave of Magic on finisher · Once per finisher' },
   'Curse Rip': { color: '#e879f9', label: '✦ Curse Rip', title: 'Curse Rip: 1/60 of damage dealt as lifesteal (requires debuffed opponent)' },
   'Venom Eater': { color: '#4ade80', label: '✦ Venom Eater', title: 'Venom Eater: heal 0.1 HP per stack on crit vs poisoned target' },
+  'Blub':  { color: '#38bdf8', label: '✦ Blub', title: 'Blub Blub: 15% × perk amount of this hit\'s damage as Water · 2 hits · 50% proc chance' },
 }
 
 export interface ComputedType {
@@ -25,6 +26,7 @@ export interface ComputedType {
   forceCrit: boolean
   isCritExempt?: boolean
   healBoostMult?: number
+  canProc?: boolean
 }
 
 export interface PerkOnHitDmg {
@@ -34,6 +36,7 @@ export interface PerkOnHitDmg {
   combatMult: number
   totalDmg: number
   dmgTypes: Record<string, number>
+  canProc?: boolean
 }
 
 export interface ComputedHit {

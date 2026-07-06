@@ -354,6 +354,7 @@
         dmgMult: 1 + 0.5 * extinguishAmt,
         healMult: 1 + 0.5 * extinguishAmt,
         condition: 'vs Burning enemies',
+        needsProcCoeff: true,
       })
     }
     return entries
@@ -480,9 +481,9 @@
   $: _springblastCombatMult = _perkCombatMult
   $: _springblastTotalDmg = _springblastBaseDmgPerHit * _springblastScalingMult * _springblastCombatMult * springblastFinisherHits
   $: _perkOnHitDamages = [
-    { tag: 'Spore Burst', baseDmg: _sporeBurstBaseDmg, scalingMult: _sporeBurstScalingMult, combatMult: _sporeBurstCombatMult, totalDmg: _sporeBurstTotalDmg, dmgTypes: { hex: 1.0 } as Record<string, number> },
-    { tag: 'Royal Finisher', baseDmg: _royalFinisherBaseDmg, scalingMult: _royalFinisherScalingMult, combatMult: _royalFinisherCombatMult, totalDmg: _royalFinisherTotalDmg, dmgTypes: { magic: 1.0 } as Record<string, number> },
-    { tag: 'Springblast', baseDmg: _springblastBaseDmgPerHit, scalingMult: _springblastScalingMult, combatMult: _springblastCombatMult, totalDmg: _springblastTotalDmg, dmgTypes: { physical: 1.0 } as Record<string, number> },
+    { tag: 'Spore Burst', baseDmg: _sporeBurstBaseDmg, scalingMult: _sporeBurstScalingMult, combatMult: _sporeBurstCombatMult, totalDmg: _sporeBurstTotalDmg, dmgTypes: { hex: 1.0 } as Record<string, number>, canProc: PERK_DMG_DEFS.find(d => d.perkName === 'Spore Burst')?.canProc },
+    { tag: 'Royal Finisher', baseDmg: _royalFinisherBaseDmg, scalingMult: _royalFinisherScalingMult, combatMult: _royalFinisherCombatMult, totalDmg: _royalFinisherTotalDmg, dmgTypes: { magic: 1.0 } as Record<string, number>, canProc: PERK_DMG_DEFS.find(d => d.perkName === 'Royal Finisher')?.canProc },
+    { tag: 'Springblast', baseDmg: _springblastBaseDmgPerHit, scalingMult: _springblastScalingMult, combatMult: _springblastCombatMult, totalDmg: _springblastTotalDmg, dmgTypes: { physical: 1.0 } as Record<string, number>, canProc: PERK_DMG_DEFS.find(d => d.perkName === 'Springblast')?.canProc },
   ]
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
@@ -505,6 +506,7 @@
   $: _waArmorPenetration = (_windWalkerAmt > 0 && _hasTailwindOrWhirlwind ? 10 * _windWalkerAmt : 0) + ($build.race === 'ORK' ? 10 : 0)
   $: _stormRendPct = 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
+  $: _blubBlubAmt = perks['Blub Blub'] ?? 0
 
   // ── Ork race: +0.1 tenacity per active buff (excludes debuffs & self-debuffs) ──
   $: _orkBuffs = _allActiveBuffs.filter(b => {
@@ -971,9 +973,10 @@
   $: activeFinalMult = activeEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
   $: activeFinalMultRounded = roundMultiplier(activeFinalMult)
 
-  function _categoryMult(type: BoostAttackType): number {
+  function _categoryMult(type: BoostAttackType, canProc: boolean = true): number {
     return activeEntries
       .filter(e => !(e as any).appliesTo || (e as any).appliesTo.includes(type))
+      .filter(e => canProc || !(e as any).needsProcCoeff)
       .reduce((acc, e) => acc * e.rawMultiplier, 1.0)
   }
 
@@ -1527,7 +1530,7 @@
     hits?: number
     isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isRider?: boolean
     guardbreak?: boolean
-    noProc?: boolean
+    canProc?: boolean
     note?: string
     typedHits_m2:  Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
     typedHits_m1f: Array<{ rawVal: number; val: number; color: string; label: string; rageApplied?: boolean }>
@@ -1548,11 +1551,12 @@
       if (perkAmount <= 0) continue
       if (def.activeIf && !def.activeIf({ draconicRuneInfusion: $build.draconicRuneInfusion, draconicColor: $build.draconicColor })) continue
 
-      const combatMult = def.isWA   ? _waCombatMult
-                     : def.isRune ? _runeCombatMult
-                     : (def.isM2 || def.isFinisher) ? _m2CombatMult
-                     : def.isM1  ? _m1CombatMult
-                     : _perkCombatMult
+      const hitType: BoostAttackType = def.isWA   ? 'wa'
+                      : def.isRune ? 'rune'
+                      : (def.isM2 || def.isFinisher) ? 'm2'
+                      : def.isM1  ? 'm1'
+                      : 'perk'
+      const combatMult = _categoryMult(hitType, def.canProc !== false)
 
       const baseDmgTypes = def.dmgTypeMode === 'weapon'
         ? _weaponDmgTypes
@@ -1641,7 +1645,7 @@
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
         isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
         isWA: def.isWA, isRune: def.isRune, isRider: def.isRider, guardbreak: def.guardbreak,
-        noProc: def.noProc,
+        canProc: def.canProc,
         note: def.note,
         typedHits_m2: buildTypedHits(baseDmg_m2),
         typedHits_m1f: buildTypedHits(baseDmg_m1f),
@@ -1683,7 +1687,7 @@
     dmgTypeCombatMults?: Record<string, number>
     dmgTypeIsHeal?: Record<string, boolean>
     dmgTypeIsCritExempt?: Record<string, boolean>
-    noProc?: boolean
+    canProc?: boolean
   }
 
   $: _bdcWeaponHits = (() => {
@@ -1892,7 +1896,7 @@
         label: entry.displayName,
         isM1: entry.isM1,
         isM2: entry.isM2,
-        noProc: entry.noProc,
+        canProc: entry.canProc,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
           weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,
@@ -3907,6 +3911,7 @@
   lightningCloakPct={_lightningCloakPct}
   stormRendPct={_stormRendPct}
   explosiveChargePct={_explosiveChargePct}
+  blubBlubAmt={_blubBlubAmt}
   dragonStateBaseDmg={_dragonStateHpGateActive ? _dragonStateBaseDmg : 0}
   dragonStateScalingMult={_dragonStateScalingMult}
   dragonStateCombatMult={_dragonStateCombatMult}

@@ -82,6 +82,7 @@ export interface TypedDmgBoostEntry {
   healMult: number
   condition: string
   appliesToGroups?: string[]
+  needsProcCoeff?: boolean
 }
 
 export interface TypedDmgBoostResult {

@@ -221,6 +221,7 @@ export interface BoostEntry {
   condition?: string
   type: 'dmg' | 'heal'
   appliesTo?: BoostAttackType[]
+  needsProcCoeff?: boolean
 }
 
 export interface BoostResult {

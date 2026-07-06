@@ -79,7 +79,7 @@ export interface PerkDmgDef {
   isRune?: boolean
   isRider?: boolean
   guardbreak?: boolean
-  noProc?: boolean
+  canProc?: boolean
   note?: string
   hpGate?: HpGate
   secondaryEffects?: SecondaryEffect[]
@@ -101,7 +101,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { physical: 1.0 },
     guardbreak: true,
-    noProc: true,
+    canProc: false,
     note: 'Activates on every finisher hit. Reduced chance to proc other effects. Deals high knockback. Half activations with Dual Guns or Storm Caster.',
   },
   // ── Basic Spirit ───────────────────────────────────────────────────────────
@@ -357,7 +357,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { physical: 1.0 },
     scalingMode: 'fixed',
     scalings: { physical: 1.0, dexterity: 1.0 },
-    noProc: true,
+    canProc: false,
     note: 'Cannot proc other effects. No internal cooldown. Proccing Bleed multiple times in the same hit will proc this perk multiple times.',
   },
   // ── Honey Arts ────────────────────────────────────────────────────────────
@@ -370,7 +370,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { magic: 1.0 },
     isWA: true,
-    noProc: true,
+    canProc: false,
     secondaryEffects: [
       {
         label: 'Sticky',
@@ -468,7 +468,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { dexterity: 1.0, hex: 1.0, earth: 1.0 },
     isRider: true,
-    noProc: true,
+    canProc: false,
     note: 'Base damage unknown (???). Only activates once per finisher. Inflicts Poison on self and enemies.',
   },
   // ── Royal Finisher ────────────────────────────────────────────────────
@@ -482,7 +482,6 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { magic: 1.0 },
     isRider: true,
-    noProc: true,
     note: 'Only activates once per finisher.',
   },
 ]

@@ -152,6 +152,7 @@ function calcBoosts(
           condition:     result.condition,
           type:          def.type,
           appliesTo:     def.appliesTo,
+          needsProcCoeff: def.needsProcCoeff,
         }
         if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
         else                      healMap.set(def.sourceName, entry)
@@ -171,6 +172,7 @@ function calcBoosts(
         condition:     def.condition,
         type:          def.type,
         appliesTo:     def.appliesTo,
+        needsProcCoeff: def.needsProcCoeff,
       }
       if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
       else                      healMap.set(def.sourceName, entry)

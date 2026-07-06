@@ -33,19 +33,20 @@ export interface BoostDef {
   
   // For boost that only applies to specific attack types
   appliesTo?: BoostAttackType[]
+  needsProcCoeff?: boolean
 }
 
 export const BOOST_DEFS: BoostDef[] = [
   // Simple dmg boosts
-  {sourceName: 'Blood Thirsty', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed',},
+  {sourceName: 'Blood Thirsty', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting an opponent with your Bleed', needsProcCoeff: true},
   {sourceName:'Perfection',multiplierPerPerk: 0.10, type: 'dmg', condition: 'at max potency',},
   {sourceName:'Stealth',multiplierPerPerk: 0.10, type: 'dmg', condition: "gain a Damage Boost against enemies that aren't targeting you",},
   { sourceName: 'Golden Crits', multiplierPerPerk: 0.50, type: 'dmg', condition: '40% chance on crit' },
   { sourceName: 'Royal Parry', multiplierPerPerk: 0.50, type: 'dmg', condition: 'on the hit that activated the Critical Boost status per 1 of this perk.' },
   { sourceName: 'Spell Piercer', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Increase damage dealt by weapon arts and runes on crit by 20% per 1 of this perk' },
   { sourceName: 'Scourge', multiplierPerPerk: 0.2, condition: 'Gain a chance for any hit to count as a Guardbreak', type: 'dmg' },
-  { sourceName: 'Sharpshooter', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting from range (hits with proc coefficient)' },
-  { sourceName: 'Venom Eater', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Venom Eater'] ?? 0; if (a <= 0) return null; return { multiplier: 1 + 0.10 * a, condition: `+10% dmg/stack on Crit hit vs Poisoned target` } } },
+  { sourceName: 'Sharpshooter', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Hitting from range (hits with proc coefficient)', needsProcCoeff: true },
+  { sourceName: 'Venom Eater', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Venom Eater'] ?? 0; if (a <= 0) return null; return { multiplier: 1 + 0.10 * a, condition: `+10% dmg/stack on Crit hit vs Poisoned target` } }, needsProcCoeff: true },
   { sourceName: 'Ferocity', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Ferocity'] ?? 0; if (a <= 0 || ctx.tenacity <= 0) return null; const pct = ctx.tenacity * 11 * a; return { multiplier: 1 + pct / 100, condition: `${Math.round(ctx.tenacity * 100) / 100} tenacity × ${a} Ferocity = +${pct.toFixed(2)}%` } } },
   { sourceName: 'Spirit Winds', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Spirit Winds'] ?? 0; if (a <= 0 || ctx.tailwindPotency <= 0) return null; const pct = (1/3 * ctx.tailwindPotency + 2/15 * a) * 100; return { multiplier: 1 + pct / 100, condition: `${Math.round(ctx.tailwindPotency * 1000) / 1000} tw potency × ${a} SW = +${pct.toFixed(2)}%` } } },
   { sourceName: 'Valor', multiplierPerPerk: 0.0666, type: 'dmg', condition: 'Damage Boost vs Taunted enemies, per 1 of this perk' },
