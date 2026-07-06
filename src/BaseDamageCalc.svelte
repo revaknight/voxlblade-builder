@@ -37,9 +37,17 @@
   export let dragonStateScalingMult: number = 1
   export let dragonStateCombatMult: number = 1
   export let dragonStateTotalDmg: number = 0
+  export let darkMagicHexBonus: number = 0
   export let perkOnHitDamages: PerkOnHitDmg[] = []
   export let waArmorPenetration: number = 0
   export let m1Label: string = 'M1'
+
+  function withDarkMagicHex(types: Record<string, number>): Record<string, number> {
+    if (darkMagicHexBonus <= 0 || (types.magic ?? 0) <= 0) return types
+    const out = { ...types }
+    out.hex = Math.round(((out.hex ?? 0) + darkMagicHexBonus) * 10000) / 10000
+    return out
+  }
 
   boosts
   disabledBoosts
@@ -285,7 +293,7 @@
     const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string) => {
       const amount = baseAmount * pct
       if (amount <= 0) return
-      const resolvedTypes = resolveDamageTypes(dmgTypes, perkDmgTypeBonuses)
+      const resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonuses))
       for (const [k, mult] of Object.entries(resolvedTypes)) {
         const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
         const applicableBoosts = getApplicableBoosts(k, false, undefined, hit?.canProc)
@@ -387,7 +395,7 @@
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2 || hit.isFinisher)) {
       const dsDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
       if (dsDebuffMult > 0) {
-        const dsResolvedTypes = resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses)
+        const dsResolvedTypes = withDarkMagicHex(resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses))
         for (const [k, mult] of Object.entries(dsResolvedTypes)) {
           const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
           const applicableBoosts = getApplicableBoosts(k, false)
@@ -418,7 +426,7 @@
       if (!isHeal && ph.totalDmg > 0 && hit.isFinisher) {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
-          const resolvedTypes = resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses)
+          const resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
           for (const [k, mult] of Object.entries(resolvedTypes)) {
             const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
             const applicableBoosts = getApplicableBoosts(k, false, undefined, hit.canProc)

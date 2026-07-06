@@ -1728,16 +1728,20 @@
     }
     if (_activeMountRuneDef && mountActive) {
         const m1Def = _activeMountRuneDef.m1
-        const _mountM1DmgTypes = _applyDmgBonuses(
-          applyDraconicBonuses(m1Def.getDmgTypes(), {
-            draconicRunesStacks: perks['Draconic Runes'] ?? 0,
-            draconicColor: $build.draconicColor || 'physical',
-          }, {
-            isActive: $build.draconicRuneInfusion === 'infusion',
-            buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
-            draconicColor: $build.draconicColor || 'physical',
-          }),
-          _perkDmgTypeBonuses
+        const _mountM1DmgTypes = applyAirToMagicConversion(
+          _applyDmgBonuses(
+            applyDraconicBonuses(m1Def.getDmgTypes(), {
+              draconicRunesStacks: perks['Draconic Runes'] ?? 0,
+              draconicColor: $build.draconicColor || 'physical',
+            }, {
+              isActive: $build.draconicRuneInfusion === 'infusion',
+              buffPotency: getEffectiveDraconicInfusionPotency($build.guild, $build.draconicRuneInfusion, $build.draconicColor || 'physical', perks['Draconic Blood'] ?? 0, perks),
+              draconicColor: $build.draconicColor || 'physical',
+            }),
+            _perkDmgTypeBonuses
+          ),
+          _spiritWindsConversionRate,
+          _darkMagicHexBonus
         )
         result.push({
           group: 'M1', index: 0, count: 1,
@@ -1775,9 +1779,9 @@
         const hitDt = selectedWA.hitDamageTypes?.length
          ? (() => {
              const _hdt = selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)]
-              return _hdt === 'Same as weapon'
-                ? _applyDmgBonuses({ ..._weaponDmgTypes }, _waOnlyBonuses)
-                : _resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses)
+             return _hdt === 'Same as weapon'
+               ? _applyDmgBonuses({ ..._convertedWeaponDmgTypes }, _waOnlyBonuses)
+               : applyAirToMagicConversion(_resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses), _spiritWindsConversionRate, _darkMagicHexBonus)
            })()
          : _waDmgTypes
          
@@ -1824,9 +1828,13 @@
         }),
         _perkDmgTypeBonuses
       )
-      const waDmgTypes = _emotionalHexBonus > 0
-        ? { ...baseWaDmgTypes, hex: Math.round(((baseWaDmgTypes.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
-        : baseWaDmgTypes
+      const waDmgTypes = applyAirToMagicConversion(
+        _emotionalHexBonus > 0
+          ? { ...baseWaDmgTypes, hex: Math.round(((baseWaDmgTypes.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
+          : baseWaDmgTypes,
+        _spiritWindsConversionRate,
+        _darkMagicHexBonus
+      )
       for (const h of waDef.getHits()) {
         const base = typeof h === 'number' ? h : h.n
         const count = typeof h === 'number' ? 1 : h.count
@@ -3916,6 +3924,7 @@
   dragonStateScalingMult={_dragonStateScalingMult}
   dragonStateCombatMult={_dragonStateCombatMult}
   dragonStateTotalDmg={_dragonStateTotalDmg}
+  darkMagicHexBonus={_darkMagicHexBonus}
   perkOnHitDamages={_perkOnHitDamages}
   waArmorPenetration={_waArmorPenetration}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
