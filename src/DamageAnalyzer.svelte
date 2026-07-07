@@ -259,7 +259,8 @@
     })    
     const baseBuffs = convertTailwindToWhirlwind(applyBuffPerkModifiers(
       [...itemBuffs, ...getPerkBuffs($result.perks), ...getWeaponArtBuffs($build.selectedWeaponArt)],
-      $result.perks, $build.rune || undefined
+      $result.perks, $build.rune || undefined,
+      wardingDebuffMult
     ), $result.perks)
 
     const _exhaustIdx = baseBuffs.findIndex(b => b.buffName === 'Exhaust')

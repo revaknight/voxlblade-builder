@@ -1303,7 +1303,8 @@ function getGenericDebuffModifiers(
 function getTricksterReflection(
   buff: GrantedBuff,
   def: BuffDefinition | undefined,
-  perks: Record<string, number>
+  perks: Record<string, number>,
+  wardingDebuffMult: number
 ): number {
   const tricksterStacks = perks['Trickster'] ?? 0
   if (tricksterStacks <= 0) return 0
@@ -1315,24 +1316,32 @@ function getTricksterReflection(
   // Only Despair (Grounded Despair) gets Trickster reflection
   if (buff.buffName !== 'Despair') return 0
 
-  // Formula: originalPotency + (perkAmount/10 * (1 + originalPotency))
-  // Returns the bonus added by Trickster reflection
-  return roundMultiplier((tricksterStacks / 10) * (1 + buff.potency))
+  // The reflection bonus must be computed from the Warding-adjusted potency.
+  // Since the UI applies Warding as a post-multiplier, we compute the raw
+  // bonus from the adjusted base and divide by wardingMult so the post-hoc
+  // multiplication produces the correct result.
+  const adjustedBase = buff.potency * wardingDebuffMult
+  const rawBonus = (tricksterStacks / 10) * (1 + adjustedBase)
+  return roundMultiplier(rawBonus / wardingDebuffMult)
 }
 
 export function applyBuffPerkModifiers(
   buffs: GrantedBuff[],
   perks: Record<string, number>,
-  activeRune?: string
+  activeRune?: string,
+  wardingDebuffMult?: number
 ): GrantedBuff[] {
   if (buffs.length === 0) return buffs
 
+  const wMult = wardingDebuffMult ?? 1
+
   return buffs.map(buff => {
     const def = BUFF_DEFS[buff.buffName]
+    const isSelfDebuff = buff.isSelfDebuff || def?.isSelfDebuff
 
     const specific = getSpecificBuffModifiers(buff, def, perks)
     const bastionBonus = getBastionBlessBonus(buff, def, perks)
-    const tricksterBonus = getTricksterReflection(buff, def, perks)
+    const tricksterBonus = getTricksterReflection(buff, def, perks, wMult)
     const generic = getGenericDebuffModifiers(buff, def, perks)
 
     const bonus = specific.bonus + bastionBonus + tricksterBonus
@@ -1348,9 +1357,16 @@ export function applyBuffPerkModifiers(
       return buff
     }
 
+    // Endless Despair flat +0.1 must not be multiplied by Warding.
+    // Since the UI applies Warding as a post-multiplier, we divide
+    // the flat bonus by wardingMult so the UI multiplication cancels out.
+    const effectiveFlatBonus = isSelfDebuff
+      ? generic.flatBonus / wMult
+      : generic.flatBonus
+
     const finalPotency = roundMultiplier(
       (buff.potency + bonus) * generic.potencyMult +
-        generic.flatBonus
+        effectiveFlatBonus
     )
 
     return {

@@ -54,7 +54,8 @@
     const modified = applyToxinTransferDuration(convertTailwindToWhirlwind(applyBuffPerkModifiers(
       [...itemBuffs, ...perkBuffs, ...weaponArtBuffs],
       $result.perks,
-      $build.rune || undefined
+      $build.rune || undefined,
+      wardingDebuffMult
     ), $result.perks), $result.perks)
 
     const _minionAbsAmt = $result.perks['Minion Absorption'] ?? 0
