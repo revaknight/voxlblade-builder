@@ -21,7 +21,7 @@
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
   import { applyDraconicBonuses, getDraconicBonuses } from './data/draconicRunes'
   import { calculateHealBoost, type HealSource } from './data/HealBoost'
-  import { roundMultiplier } from './lib/utils'
+  import { roundMultiplier, calcWardingDebuffMultiplier } from './lib/utils'
   import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage, type SelfDamagePerkDef } from './data/selfDamagePerks'
   import { resolveDamageTypes, applyAirToMagicConversion } from './lib/damageTypeResolve'
   import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
@@ -129,8 +129,7 @@
   })()
   $: _allHealEntriesForDisplay = [..._healScalingResult.entries, ..._typedHealBoostEntries, ...(_tbHealEntry ? [_tbHealEntry] : [])]
   $: _allHealEntries = [..._activeHealEntries, ..._activeTypedHealEntries, ...(_tbHealEntry && !disabledHealBoosts.has('True Balance') ? [_tbHealEntry] : [])]
-  $: wardingPct = (stats.warding ?? 0) / 100
-  $: wardingDebuffMult = Math.max(0, 1 - wardingPct)
+  $: wardingDebuffMult = calcWardingDebuffMultiplier(stats.warding ?? 0)
   $: _healFinalMultiplier = (() => {
     const baseMult = _allHealEntries.reduce((acc, e) => acc * e.rawMultiplier, 1.0)
     return baseMult

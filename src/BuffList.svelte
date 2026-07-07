@@ -1,5 +1,6 @@
 <script lang="ts">
   import { build, result } from './lib/store'
+  import { calcWardingDebuffMultiplier } from './lib/utils'
   import {
     BUFF_DEFS,
     getActiveBuildBuffs,
@@ -18,8 +19,7 @@
   import { UI_COLORS, SOURCE_LABELS } from './lib/uiConstants'
 
 
-  $: wardingPct = ($result.stats.warding ?? 0) / 100
-  $: wardingDebuffMult = Math.max(0, 1 - wardingPct)
+  $: wardingDebuffMult = calcWardingDebuffMultiplier($result.stats.warding ?? 0)
   $: itemBuffs = getActiveBuildBuffs({
     rune: $build.rune,
     ring: $build.ring,

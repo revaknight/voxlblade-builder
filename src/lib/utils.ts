@@ -10,6 +10,14 @@ export function roundMultiplier(multiplier: number): number {
   return Math.round(multiplier * 10000) / 10000
 }
 
+export function calcWardingDebuffMultiplier(warding: number): number {
+  const wardingPct = warding / 100
+  if (warding >= 0) {
+    return roundMultiplier(1 / (1 + wardingPct))
+  }
+  return roundMultiplier(1 - wardingPct)
+}
+
 const htmlEscapeMap: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
