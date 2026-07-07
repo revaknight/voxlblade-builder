@@ -1486,6 +1486,10 @@ $: _appWaAvgTotal = (() => {
           {modalSuggestions}
           modalSelectedTags={selectedTags}
           hideTags={[]}
+          showSortButtons
+          {weaponResult}
+          bind:statFilterSortMode
+          effectiveLabel="boost"
           on:focus={onSearchFocus}
           on:blur={onSearchBlur}
           on:toggle={(e) => toggleTag(e.detail)}
@@ -1532,6 +1536,10 @@ $: _appWaAvgTotal = (() => {
           {modalSuggestions}
           modalSelectedTags={selectedTags}
           hideTags={[]}
+          showSortButtons
+          {weaponResult}
+          bind:statFilterSortMode
+          effectiveLabel="armor boost"
           on:focus={onSearchFocus}
           on:blur={onSearchBlur}
           on:toggle={(e) => toggleTag(e.detail)}
@@ -1577,6 +1585,10 @@ $: _appWaAvgTotal = (() => {
           {showSuggestions}
           {modalSuggestions}
           modalSelectedTags={selectedTags}
+          showSortButtons
+          {weaponResult}
+          bind:statFilterSortMode
+          effectiveLabel="boost"
           on:focus={onSearchFocus}
           on:blur={onSearchBlur}
           on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
