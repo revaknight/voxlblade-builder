@@ -25,7 +25,7 @@ export function getActiveRaceEffect(raceName: string, hpFillPct: number): RaceCo
   return RACE_CONDITIONAL_EFFECTS.find(e => e.raceName === raceName && isHpGateActive(e.hpGate, hpFillPct, 0))
 }
 
-export const ORK_TENACITY_PER_BUFF = 0.1
+const ORK_TENACITY_PER_BUFF = 0.1
 
 export function getOrkTenacityBuffs<T extends { buffName: string; isSelfDebuff?: boolean }>(
   buffs: T[],

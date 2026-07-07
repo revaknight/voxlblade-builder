@@ -13,7 +13,7 @@
   import CritIcon from './CritIcon.svelte'
   import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive, DRAGON_STATE_HP_GATE } from './data/Perkbasedmg'
   import { resolveDefenseSources, calcBaseArmorDefPct, DEF_GROUP, type DefenseSource } from './lib/defense'
-  import { getActiveRaceEffect, getOrkTenacityBuffs, ORK_TENACITY_PER_BUFF } from './data/raceEffects'
+  import { getActiveRaceEffect, getOrkTenacityBuffs, calcOrkTenacityBonus } from './data/raceEffects'
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
@@ -25,6 +25,7 @@
   import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage, type SelfDamagePerkDef } from './data/selfDamagePerks'
   import { resolveDamageTypes, applyAirToMagicConversion } from './lib/damageTypeResolve'
   import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
+  import { resolveStanceOverlay } from './data/stanceOverlays'
 
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
@@ -503,7 +504,7 @@
 
   // ── Ork race: +0.1 tenacity per active buff (excludes debuffs & self-debuffs) ──
   $: _orkBuffs = $build.race === 'ORK' ? getOrkTenacityBuffs(_allActiveBuffs, BUFF_DEFS) : []
-  $: _orkBuffTenacity = ORK_TENACITY_PER_BUFF * _orkBuffs.length
+  $: _orkBuffTenacity = $build.race === 'ORK' ? calcOrkTenacityBonus(_allActiveBuffs, BUFF_DEFS) : 0
   $: _effectiveTenacity = (stats.tenacity ?? 0) + _orkBuffTenacity
 
   let disabledDebuffs = new Set<string>()
@@ -648,12 +649,6 @@
 
   $: _hasLockedAndLoaded = ($result.perks['Locked And Loaded'] ?? 0) > 0
 
-  interface GunOverlay {
-    type: string
-    m2Only: boolean
-    m2NoLock?: boolean
-  }
-
   $: _weaponResult = _isMonk
     ? (($build.monkGlove || $build.monkEssence) ? calcMonkWeapon($build.monkGlove, $build.monkEssence, $build.shrineActive, $build.guildRank) : null)
     : (($build.weaponBlade || $build.weaponHandle) ? calcWeapon($build.weaponBlade, $build.weaponHandle, $build.shrineActive) : null)
@@ -661,29 +656,13 @@
   $: _baseWeaponType = _weaponResult?.finalWeaponType ?? ''
   $: _weaponPerks = _weaponResult?.perks ?? {}
 
-  $: _gunOverlay = ((): GunOverlay | null => {
-    const wt = _baseWeaponType
-    const isFists = wt === 'Fists' || wt === 'Chain Fists'
-
-    if (_blasterCount >= 2) {
-      if (isFists) return { type: 'Rifle', m2Only: false, m2NoLock: true }
-      if (wt) return { type: 'Shotgun', m2Only: true }
-    }
-
-    if (_hasLockedAndLoaded) {
-      if (isFists) return { type: 'Dual Guns', m2Only: false }
-      if (wt) return { type: 'Side Gun', m2Only: true }
-    }
-
-    if ((_weaponPerks['Cosmic Ray'] ?? 0) > 0) {
-      return { type: 'Cosmic Ray', m2Only: true, m2NoLock: true }
-    }
-    if ((_weaponPerks['Mine'] ?? 0) > 0) {
-      return { type: 'Mine', m2Only: true, m2NoLock: true }
-    }
-
-    return null
-  })()
+  $: _gunOverlay = resolveStanceOverlay({
+    isFists: _baseWeaponType === 'Fists' || _baseWeaponType === 'Chain Fists',
+    hasWeaponType: !!_baseWeaponType,
+    blasterCount: _blasterCount,
+    hasLockedAndLoaded: _hasLockedAndLoaded,
+    weaponPerks: _weaponPerks,
+  })
 
   $: _displayRows = (() => {
     type MergedRow = WeaponBaseDmg & { gunLabel?: string; m2Only?: boolean; m2NoLock?: boolean }

@@ -30,7 +30,7 @@ export interface HpGate {
   alwaysActiveAtPerkAmount?: number
 }
 
-function gateThreshold(gate: HpGate | undefined, perkAmount: number): number | undefined {
+export function gateThreshold(gate: HpGate | undefined, perkAmount: number): number | undefined {
   if (!gate) return undefined
   if (gate.alwaysActiveAtPerkAmount != null && perkAmount >= gate.alwaysActiveAtPerkAmount) return undefined
   return gate.getThreshold ? gate.getThreshold(perkAmount) : gate.hpThreshold

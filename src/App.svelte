@@ -25,7 +25,8 @@
     DRAGON_BUBBLE_BASE_DAMAGE, DRAGON_BUBBLE_DAMAGE_PER_STACK,
     DRAGON_BUBBLE_HOLY_HEAL_BASE, DRAGON_BUBBLE_HOLY_HEAL_PER_STACK,
     DRAGON_BUBBLE_WATER_HEAL_BASE, DRAGON_BUBBLE_WATER_HEAL_PER_STACK,
-    DRAGON_STATE_HP_GATE
+    DRAGON_STATE_HP_GATE,
+    gateThreshold
   } from './data/Perkbasedmg'
   import { DRACONIC_COLOR_ATTACK_STATS } from './data/draconicColorEffects'
   import BuildSaves from './BuildSaves.svelte'
@@ -42,7 +43,7 @@ import Highlight from './Highlight.svelte'
   import { checkWA, getUnmetReqs } from './data/Weaponartcheck'
   import { getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'
   import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, convertTailwindToWhirlwind, formatPerkDescription } from './data/BuffData'
-  import { getOrkTenacityBuffs, ORK_TENACITY_PER_BUFF } from './data/raceEffects'
+  import { calcOrkTenacityBonus } from './data/raceEffects'
   import { CDR_PERK_DATA } from './data/cdr'
   import { calcMaxSummonCount } from './data/SummonData'
   import ModalSearchHeader from './ModalSearchHeader.svelte'
@@ -73,7 +74,7 @@ import Highlight from './Highlight.svelte'
   }
 
   $: _dragonStateAmt = $result.perks['Dragon State'] ?? 0
-  $: _dragonStateThreshold = _dragonStateAmt > 0 ? DRAGON_STATE_HP_GATE.getThreshold!(_dragonStateAmt) : undefined
+  $: _dragonStateThreshold = _dragonStateAmt > 0 ? gateThreshold(DRAGON_STATE_HP_GATE, _dragonStateAmt) : undefined
 
   let weaponStatFilter: Map<string, 'include' | 'exclude'> = new Map()
   let weaponStatFilterRef: WeaponStatFilter
@@ -288,7 +289,7 @@ $: _orkTenacityBonus = $build.race === 'ORK' ? (() => {
   })
   const baseBuffs = [...itemBuffs, ...getPerkBuffs($result.perks), ...getWeaponArtBuffs($build.selectedWeaponArt)]
   const processed = convertTailwindToWhirlwind(applyBuffPerkModifiers(baseBuffs, $result.perks, $build.rune || undefined), $result.perks)
-  return ORK_TENACITY_PER_BUFF * getOrkTenacityBuffs(processed, BUFF_DEFS).length
+  return calcOrkTenacityBonus(processed, BUFF_DEFS)
 })() : 0
 $: _effectiveTenacity = ($result.stats.tenacity ?? 0) + _orkTenacityBonus
 
