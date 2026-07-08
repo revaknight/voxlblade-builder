@@ -41,6 +41,7 @@
   export let darkMagicHexBonus: number = 0
   export let perkOnHitDamages: PerkOnHitDmg[] = []
   export let waArmorPenetration: number = 0
+  export let globalArmorPenetration: number = 0
   export let m1Label: string = 'M1'
 
   function withDarkMagicHex(types: Record<string, number>): Record<string, number> {
@@ -309,8 +310,8 @@
  
   $: computedHits = typedBoostEntries && weaponHits.map((hit): ComputedHit => {
     const isHeal = hit.isHeal ?? false
-    const basePenDecimal = armorPen / 100
-    const hitPenDecimal = hit.group === 'WA' ? (armorPen + waArmorPenetration) / 100 : basePenDecimal
+    const basePenDecimal = (armorPen + globalArmorPenetration) / 100
+    const hitPenDecimal = hit.group === 'WA' || hit.group === 'Rune' ? (armorPen + globalArmorPenetration + waArmorPenetration) / 100 : basePenDecimal
 
     const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string) => {
       const amount = baseAmount * pct

@@ -57,6 +57,7 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Wild Bolt', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Wild Bolt'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Laser') return null; return { multiplier: 1 + 0.25 * a, condition: 'for Laser weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Weighty Slam', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Weighty Slam'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Slam') return null; return { multiplier: 1 + 0.20 * a, condition: 'for Slam weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Undead Might', multiplierPerPerk: 0.25, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
+  { sourceName: 'Highlander', multiplierPerPerk: 0.20, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
   {
     sourceName: 'Juggernaut',
     type: 'dmg',

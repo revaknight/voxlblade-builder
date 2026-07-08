@@ -933,6 +933,15 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceType: 'perk',
     },
   ],
+  'Erosion': (amount) => [
+    {
+      buffName: 'Shatter',
+      potency: 0.1 + 0.1 * amount,
+      duration: 5,
+      sourceName: 'Erosion',
+      sourceType: 'perk',
+    },
+  ],
   'Quickdraw': (amount) => [
     {
       buffName: 'Quickdraw',

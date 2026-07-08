@@ -16,6 +16,7 @@
   import { getActiveRaceEffect, getOrkTenacityBuffs, calcOrkTenacityBonus } from './data/raceEffects'
   import { getActiveDefensivePerkSources } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
+  import { getRace } from './lib/engine/data/character'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
   import { MOUNT_RUNE_DEFS } from './data/mountRunes'
   import { getDraconicColorDmgMultiplier } from './data/draconicColorEffects'
@@ -498,7 +499,8 @@
   $: _spiritWindsConversionRate = _spiritWindsAmt > 0 && _hasTailwindOrWhirlwind ? 0.10 * _spiritWindsAmt : 0
   $: _darkMagicAmt = perks['Dark Magic'] ?? 0
   $: _darkMagicHexBonus = _darkMagicAmt > 0 ? 0.2 * _darkMagicAmt : 0
-  $: _waArmorPenetration = (_windWalkerAmt > 0 && _hasTailwindOrWhirlwind ? 10 * _windWalkerAmt : 0) + ($build.race === 'ORK' ? 10 : 0)
+  $: _raceGlobalArmorPen = getRace($build.race)?.globalArmorPenetration ?? 0
+  $: _waArmorPenetration = (_windWalkerAmt > 0 && _hasTailwindOrWhirlwind ? 10 * _windWalkerAmt : 0) + (getRace($build.race)?.waArmorPenetration ?? 0) + (disabledBoosts.has('Highlander') ? 0 : (perks['Highlander'] ?? 0) * 10)
   $: _stormRendPct = _stormRendActive ? (1 / 3) : 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
   $: _blubBlubAmt = perks['Blub Blub'] ?? 0
@@ -2220,11 +2222,11 @@
     </div>
 
     <!-- Armor Pen column -->
-    {#if (stats as Record<string, number>).armorPenetration}
+    {#if ((stats as Record<string, number>).armorPenetration ?? 0) + _raceGlobalArmorPen > 0}
       <div class="da-section da-section--apen">
         <div class="da-section-title">🛡 Armor Penetration</div>
         <div class="da-apen-inner">
-          <span class="da-apen-val">{Math.round((stats as Record<string, number>).armorPenetration * 100) / 100}</span>
+          <span class="da-apen-val">{Math.round((((stats as Record<string, number>).armorPenetration ?? 0) + _raceGlobalArmorPen) * 100) / 100}</span>
         </div>
       </div>
     {/if}
@@ -3956,6 +3958,7 @@
   darkMagicHexBonus={_darkMagicHexBonus}
   perkOnHitDamages={_perkOnHitDamages}
   waArmorPenetration={_waArmorPenetration}
+  globalArmorPenetration={_raceGlobalArmorPen}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,

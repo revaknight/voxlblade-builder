@@ -24,6 +24,8 @@ export interface Race {
   passive: string
   statModifiers?: StatMap
   cooldownModifiers?: Record<string, number>
+  waArmorPenetration?: number
+  globalArmorPenetration?: number
 }
 
 export interface GuildPerk { name: string; amount: number }
