@@ -482,6 +482,7 @@
   $: _waveRiderAmt = perks['Wave Rider'] ?? 0
   $: _oceanSongAmt = perks['Ocean Song'] ?? 0
   $: _wildBoltAmt = perks['Wild Bolt'] ?? 0
+  $: _weightySlamAmt = perks['Weighty Slam'] ?? 0
   $: _lightningCloakActive = _allActiveBuffs.some(b => b.buffName === 'Lightning Cloak')
   $: _activeLightningCloakBuffs = _allActiveBuffs.filter(b => b.buffName === 'Lightning Cloak')
   $: _stormRendAmt = perks['Storm Rend'] ?? 0
@@ -1251,6 +1252,9 @@
     if (_wildBoltElement) {
       return apply(_applyDmgBonuses({ [_wildBoltElement]: 1 }, _waDmgTypeBonuses))
     }
+    if (_weightySlamAmt > 0 && selectedWA.name === 'Slam') {
+      return apply(_applyDmgBonuses({ physical: 1 }, _waDmgTypeBonuses))
+    }
     const dt = selectedWA.damageType
     const addHex = (r: Record<string, number>) => _emotionalHexBonus > 0
       ? { ...r, hex: Math.round(((r.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
@@ -1297,6 +1301,9 @@
   $: _waDmgTypesBase = (() => {
     if (_wildBoltElement) {
       return { [_wildBoltElement]: 1 }
+    }
+    if (_weightySlamAmt > 0 && selectedWA.name === 'Slam') {
+      return { physical: 1 }
     }
     const dt = selectedWA.damageType
     if (!dt || dt === 'Same as weapon') {

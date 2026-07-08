@@ -75,6 +75,7 @@ import Highlight from './Highlight.svelte'
 
   $: _dragonStateAmt = $result.perks['Dragon State'] ?? 0
   $: _dragonStateThreshold = _dragonStateAmt > 0 ? gateThreshold(DRAGON_STATE_HP_GATE, _dragonStateAmt) : undefined
+  $: _weightySlamAmt = $result.perks['Weighty Slam'] ?? 0
 
   let weaponStatFilter: Map<string, 'include' | 'exclude'> = new Map()
   let weaponStatFilterRef: WeaponStatFilter
@@ -2759,12 +2760,19 @@ $: _appWaAvgTotal = (() => {
               {#if selectedWA.damageType}
                 <div class="damage-type-grid">
                   {#if selectedWA.damageType === 'Same as weapon' && weaponResult}
-                    {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
+                    {#if _weightySlamAmt > 0 && selectedWA.name === 'Slam'}
                       <div class="damage-type-pill">
-                        <span class="dt-name">{k.charAt(0).toUpperCase() + k.slice(1)}</span>
-                        <span class="dt-val">{v}x</span>
+                        <span class="dt-name">Physical</span>
+                        <span class="dt-val">1x</span>
                       </div>
-                    {/each}
+                    {:else}
+                      {#each Object.entries(weaponDamageTypesWithBonus) as [k, v]}
+                        <div class="damage-type-pill">
+                          <span class="dt-name">{k.charAt(0).toUpperCase() + k.slice(1)}</span>
+                          <span class="dt-val">{v}x</span>
+                        </div>
+                      {/each}
+                    {/if}
                   {:else if selectedWA.damageType.includes('Highest damage type') && highestDamageType && weaponResult}
                     {@const [hdKey] = highestDamageType}
                     <div style="display:flex;flex-direction:column;gap:3px;">
