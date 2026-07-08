@@ -1,5 +1,5 @@
-export const BADGE_CONFIG: Record<string, { color: string; label: string; title: string }> = {
-  'Dragon':  { color: '#a78bfa', label: '✦ Dragon', title: 'Dragon State: additional wave of Magic above HP threshold · Once per M1/M2' },
+﻿export const BADGE_CONFIG: Record<string, { color: string; label: string; title: string }> = {
+  'Dragon State':  { color: '#a78bfa', label: '✦ Dragon', title: 'Dragon State: additional wave of Magic above HP threshold · Once per M1/M2' },
   'Spore Burst': { color: '#d900ff', label: '✦ Spore Burst', title: 'Spore Burst: burst of poison on finisher · Once per finisher' },
   'Chain':   { color: '#AAFFDB', label: 'Chain', title: 'Lightning Cloak: 1/3 of hit damage as Air+Magic chain lightning (up to 4 targets)' },
   'Luminescent': { color: '#fbbf24', label: '✦ Luminescent', title: 'Luminescent Fervor: 5% × perk amount of this hit\'s damage' },

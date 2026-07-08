@@ -441,7 +441,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsTypeDebuffMult,
             defMult: dsDefMult, enemyDefPct: dsDefPct,
             raw: dsRaw, critVal: Math.round(dsRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, tag: 'Dragon', oncePerGroup: true, forceCrit: false,
+            isHeal: false, tag: 'Dragon State', oncePerGroup: true, forceCrit: false,
           })
           if (lightningCloakPct > 0) {
             if (_dsPreMitBase > 0) addProcEffect(_dsPreMitBase, lightningCloakPct, { air: 0.5, magic: 0.5 }, 'Chain')
@@ -454,7 +454,7 @@
     }
 
     for (const ph of perkOnHitDamages) {
-      if (!isHeal && ph.totalDmg > 0 && hit.isFinisher) {
+      if (!isHeal && ph.totalDmg > 0 && hit.isFinisher && ph.tag !== 'Dragon State') {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
           const resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
@@ -897,9 +897,9 @@
                               </div>
                               <div class="bdc-hit-type-label-row">
                                 <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
-                                {#if t.tag}
+                                {#if t.tag && BADGE_CONFIG[t.tag]}
                                   <span class="bdc-lum-badge" style="color:{BADGE_CONFIG[t.tag].color};background:{BADGE_CONFIG[t.tag].color}22;border:1px solid {BADGE_CONFIG[t.tag].color}44" title={BADGE_CONFIG[t.tag].title}>{BADGE_CONFIG[t.tag].label}</span>
-                                  {#if t.tag === 'Dragon'}
+                                  {#if t.tag === 'Dragon State'}
                                     <span class="bdc-dragon-count">×{hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count}</span>
                                   {/if}
                                   {#if t.tag === 'Blub'}
