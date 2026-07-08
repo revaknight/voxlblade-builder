@@ -11,6 +11,8 @@ export interface BoostContext {
   quickdrawPotency: number
   tailwindPotency: number
   tenacity: number
+  speedBoost: number
+  attackSpeed: number
   inDarkness: boolean
   emotionalState?: string
   level?: number
@@ -55,6 +57,22 @@ export const BOOST_DEFS: BoostDef[] = [
   { sourceName: 'Wild Bolt', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Wild Bolt'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Laser') return null; return { multiplier: 1 + 0.25 * a, condition: 'for Laser weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Weighty Slam', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Weighty Slam'] ?? 0; if (a <= 0 || ctx.selectedWeaponArt !== 'Slam') return null; return { multiplier: 1 + 0.20 * a, condition: 'for Slam weapon art' } }, appliesTo: ['wa'] },
   { sourceName: 'Undead Might', multiplierPerPerk: 0.25, type: 'dmg', condition: 'Weapon Art & Rune Damage Boost', appliesTo: ['wa', 'rune'] },
+  {
+    sourceName: 'Juggernaut',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const amt = ctx.perks['Juggernaut'] ?? 0
+      if (amt <= 0) return null
+      const negSpeed = Math.abs(Math.min(ctx.speedBoost, 0))
+      const negAtkSpd = Math.abs(Math.min(ctx.attackSpeed, 0))
+      if (negSpeed <= 0 && negAtkSpd <= 0) return null
+      const pct = ((negSpeed + negAtkSpd) * amt) / 2
+      return {
+        multiplier: 1 + pct / 100,
+        condition: `-${negSpeed}% spd + -${negAtkSpd}% aspd = +${pct.toFixed(2)}%`,
+      }
+    },
+  },
   { sourceName: 'Rider', type: 'dmg', calcFn: (ctx) => { const a = ctx.perks['Rider'] ?? 0; if (a <= 0 || !ctx.mountActive) return null; return { multiplier: 1 + 0.20 * a, condition: 'While mounted · +0.1s stun resist/stack' } } },
   {
     sourceName: 'Quickdraw',
