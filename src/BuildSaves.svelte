@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import EmotionalTracker from './EmotionalTracker.svelte';
   import { build } from './lib/store'
+  import { addToast } from './lib/stores/toast'
   import type { BuildState } from './lib/types'
   import {
     BUILD_STATE_DEFAULTS as DEFAULTS,
@@ -80,12 +81,16 @@
     slots[i] = { name, timestamp: Date.now(), state: structuredClone($build) }
     slots = [...slots]
     persistSlots(slots)
+    addToast(`Saved to slot ${i + 1}`, 'success')
   }
 
   function loadBuild(i: number) {
     if (confirmLoad === i) {
       const slot = slots[i]
-      if (slot) build.set(structuredClone(slot.state))
+      if (slot) {
+        build.set(structuredClone(slot.state))
+        addToast(`Loaded build from slot ${i + 1}`, 'success')
+      }
       confirmLoad = null
     } else {
       confirmLoad = i
@@ -103,6 +108,7 @@
       slots = [...slots]; 
       persistSlots(slots); 
       confirmDelete = null
+      addToast(`Deleted slot ${i + 1}`, 'info')
     } else {
       confirmDelete = i
       const timer = window.setTimeout(() => { 
@@ -265,19 +271,23 @@
       const state = await decodeState(importCode.trim())
       if (!state.race && !state.helmet && !state.weaponBlade) {
         importError = 'Invalid build data!'
+        addToast('Invalid build data', 'error')
         return
       }
       build.set(state)
       importError = ''
       importSuccess = true
       setTimeout(() => importSuccess = false, 2000)
+      addToast('Build imported', 'success')
     } catch {
       importError = 'Invalid code!'
+      addToast('Invalid import code', 'error')
     }
   }
 
   function copyCode() {
     navigator.clipboard.writeText(shareCode)
+    addToast('Code copied', 'success')
   }
   function focusOnMount(node: HTMLInputElement) {
     requestAnimationFrame(() => {
@@ -389,11 +399,12 @@
         <button class="btn btn-paste" on:click={async () => { try { importCode = await navigator.clipboard.readText() } catch {} }} title="Paste from clipboard">📋 Paste</button>
         <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
       </div>
-      {#if importError}<span class="import-err">{importError}</span>{/if}
-      {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
+  {#if importError}<span class="import-err">{importError}</span>{/if}
+  {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
     </div>
   </div>
 {/if}
+
 </div>
 
 <style>
@@ -501,4 +512,9 @@
     color: var(--accent2); flex-shrink: 0;
   }
   .btn-paste:hover { background: rgba(251,191,36,.18); }
+
+  @media (max-width:640px) {
+    .saves-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; border-radius: 0; min-width: unset; padding: 16px; }
+    .saves-list { max-height: calc(100vh - 200px); overflow-y: auto; }
+  }
 </style>

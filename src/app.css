@@ -1,6 +1,19 @@
+:root {
+  --bg: #0d0f0e; --surface: #141715; --surface2: #1a1d1b; --surface3: #212420;
+  --border: rgba(255,255,255,0.06); --border-strong: rgba(255,255,255,0.1);
+  --ink: #e8e4da; --ink-muted: #8a8d85;
+  --accent: #4ade80; --accent2: #f59e0b; --accent3: #a78bfa;
+  --infusion: #38bdf8; --infusion-border: rgba(56,189,248,0.22);
+  --neg: #f87171;
+  --weapon-blade: #fb923c; --weapon-handle: #34d399; --weapon-combined: #fbbf24;
+  --monk-glove: #e879f9; --monk-essence: #818cf8; --monk-combined: #c084fc;
+  --radius: 14px; --radius-sm: 8px;
+  --font-display: 'Georgia','Times New Roman',serif;
+  --font-body: 'Trebuchet MS','Segoe UI',system-ui,sans-serif;
+}
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { background: #0d0f0e; }
+body { background: var(--bg); }
 
 .wa-avg-total-box {
   display: flex;

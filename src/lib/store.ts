@@ -61,10 +61,14 @@ function loadBuild(): BuildState {
 
 export const build = writable<BuildState>(loadBuild())
 
+let _saveTimer: ReturnType<typeof setTimeout>
 build.subscribe(state => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {  }
+  clearTimeout(_saveTimer)
+  _saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch {  }
+  }, 300)
 })
 
 export const result = derived(build, $b => calcBuild($b))

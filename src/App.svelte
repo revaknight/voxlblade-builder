@@ -29,27 +29,25 @@
     gateThreshold
   } from './data/Perkbasedmg'
   import { DRACONIC_COLOR_ATTACK_STATS } from './data/draconicColorEffects'
-  import BuildSaves from './BuildSaves.svelte'
   import EmotionalTracker from './EmotionalTracker.svelte'
   import LevelBar from './LevelBar.svelte'
   import DamageAnalyzer from './DamageAnalyzer.svelte'
   import TagFilter from './TagFilter.svelte'
   import StatFilter from './StatFilter.svelte'
   import WeaponStatFilter from './WeaponStatFilter.svelte'
-  import WeaponStatsDisplay from './WeaponStatsDisplay.svelte'
   import BuffList from './BuffList.svelte'
-  import DidYouMean from './DidYouMean.svelte'
-import Highlight from './Highlight.svelte'
   import { checkWA, getUnmetReqs } from './data/Weaponartcheck'
   import { getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'
   import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, convertTailwindToWhirlwind, formatPerkDescription } from './data/BuffData'
   import { calcOrkTenacityBonus } from './data/raceEffects'
   import { CDR_PERK_DATA } from './data/cdr'
   import { calcMaxSummonCount } from './data/SummonData'
-  import ModalSearchHeader from './ModalSearchHeader.svelte'
   import CdrStepsCalc from './CdrStepsCalc.svelte'
+  import { RaceModal, GuildModal, AccessorySelectModal, WeaponPartModal } from './lib/modals'
+  import AppHeader from './lib/AppHeader.svelte'
+  import Toast from './lib/Toast.svelte'
+  import { addToast } from './lib/stores/toast'
 
-  
   function toggleCdrPerk(perkName: string) {
     build.update(s => {
       const toggles = s.cdrToggles ?? {}
@@ -135,6 +133,11 @@ function weaponMatchesFilter(item: any): boolean {
 
   let activeAppTab: 'overview' | 'analyze' = 'overview'
 
+  function switchTab(tab: 'overview' | 'analyze') {
+    if (tab === activeAppTab) return
+    activeAppTab = tab
+  }
+
   // ── Undo clear ─────────────────────────────────────────────────────────────
   import type { BuildState } from './lib/types'
   let _previousBuild: BuildState | null = null
@@ -147,6 +150,7 @@ function weaponMatchesFilter(item: any): boolean {
     _undoVisible = true
     if (_undoTimer) clearTimeout(_undoTimer)
     _undoTimer = setTimeout(() => { _undoVisible = false; _previousBuild = null }, 8000)
+    addToast('Build cleared', 'info')
   }
 
   function handleUndo() {
@@ -181,51 +185,8 @@ function weaponMatchesFilter(item: any): boolean {
 
     import { tick, onMount } from 'svelte'
 
-  type AppTab = 'overview' | 'analyze'
-
-
-  let tabOverview: HTMLButtonElement
-  let tabAnalyze: HTMLButtonElement
-  let bubbleEl: HTMLDivElement
-
-  let bubbleX = 0
-  let bubbleW = 0
-
-async function updateBubble(animated = true) {
-    await tick();
-
-    const target = activeAppTab === 'overview' ? tabOverview : tabAnalyze;
-    if (!target) return;
-
-    const parentRect = target.parentElement!.getBoundingClientRect();
-    const rect = target.getBoundingClientRect();
-
-    bubbleX = rect.left - parentRect.left;
-    bubbleW = rect.width;
-
-    if (animated && bubbleEl) {
-      bubbleEl.classList.add('is-moving');
-      // Lắng nghe chính xác thời điểm CSS transition hoàn tất
-      bubbleEl.addEventListener('transitionend', () => {
-        bubbleEl.classList.remove('is-moving');
-      }, { once: true });
-    }
-  }
-
-  async function switchTab(tab: AppTab) {
-    if (tab === activeAppTab) return
-
-    activeAppTab = tab
-    updateBubble(true)
-  }
   let waHydrated = false
   onMount(async () => {
-    updateBubble(false)
-
-    window.addEventListener('resize', () => {
-      updateBubble(false)
-    })
-
     await tick()
     waHydrated = true
   })
@@ -1155,6 +1116,57 @@ $: highestDamageType = (() => {
   function onSearchFocus() { showSuggestions = true }
   function onSearchBlur() { setTimeout(() => { showSuggestions = false }, 150) }
 
+  function modalItems(type: string): any[] {
+    switch (type) {
+      case 'race': return searchedRaces
+      case 'guild': return searchedGuilds
+      case 'blade': return searchedBlades
+      case 'handle': return searchedHandles
+      case 'glove': return searchedGloves
+      case 'essence': return searchedEssences
+      case 'ring': case 'infusion-ring': return searchedRings
+      case 'rune': return searchedRunes
+      default: return searchedArmorsForModal
+    }
+  }
+  function modalTypeOptions(type: string): string[] {
+    switch (type) {
+      case 'blade': return ['Small Blade', 'Medium Blade', 'Heavy Blade', 'Hammer Head']
+      case 'handle': return ['Medium Handle', 'Long Handle', 'Pole']
+      default: return []
+    }
+  }
+  function modalTierVal(type: string): string {
+    switch (type) {
+      case 'blade': return bladeFilterTier
+      case 'handle': return handleFilterTier
+      case 'glove': return gloveFilterTier
+      case 'essence': return essenceFilterTier
+      default: return ''
+    }
+  }
+  function modalTypeVal(type: string): string {
+    switch (type) {
+      case 'blade': return bladeFilterType
+      case 'handle': return handleFilterType
+      default: return ''
+    }
+  }
+  function handleTierChange(val: string) {
+    switch (activeModal) {
+      case 'blade': bladeFilterTier = val; break
+      case 'handle': handleFilterTier = val; break
+      case 'glove': gloveFilterTier = val; break
+      case 'essence': essenceFilterTier = val; break
+    }
+  }
+  function handleTypeChange(val: string) {
+    switch (activeModal) {
+      case 'blade': bladeFilterType = val; break
+      case 'handle': handleFilterType = val; break
+    }
+  }
+
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       if (activeModal) closeModal()
@@ -1272,605 +1284,51 @@ $: _appWaAvgTotal = (() => {
   </div>
 {/if}
 
-<!-- Modal Overlay -->
-{#if activeModal}
-  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-  <div class="modal-overlay" on:click|self={closeModal}>
-    <div class="modal-box" role="dialog" aria-modal="true">
-      <button class="modal-close" on:click={closeModal}>✕</button>
-
-      {#if activeModal === 'race'}
-        <ModalSearchHeader
-          title="Select Race"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          hideTagFilter
-          hideStatFilter
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-        />
-        <div class="modal-list">
-          {#each searchedRaces as r}
-            <button class="modal-item" class:modal-item--active={$build.race === r.name}
-              on:click={() => { build.update(s => ({...s, race: r.name})); closeModal() }}>
-              <span class="modal-item-name"><Highlight text={r.name} query={modalSearch} /></span>
-              <span class="modal-item-desc">{r.passive}</span>
-              {#if r.statModifiers && Object.keys(r.statModifiers).length}
-                <div class="modal-item-stats">
-                  {#each Object.entries(r.statModifiers) as [k,v]}
-                    <span class="modal-stat-pill" class:neg={v < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                  {/each}
-                </div>
-              {/if}
-            </button>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'guild'}
-        <ModalSearchHeader
-          title="Select Guild"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-        />
-        <div class="modal-list">
-          <button class="modal-item" class:modal-item--active={$build.guild === ''}
-            on:click={() => { setGuild('', 1); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedGuilds as g}
-            <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-            <div class="modal-item" class:modal-item--active={$build.guild === g.name}
-              on:click={() => { setGuild(g.name, $build.guild === g.name ? $build.guildRank : 3); closeModal() }}>
-              <span class="modal-item-name"><Highlight text={g.name} query={modalSearch} /></span>
-              <div class="modal-rank-row">
-                {#each g.ranks as rank}
-                  <button class="rank-btn" class:rank-btn--active={$build.guild === g.name && $build.guildRank === rank.rank}
-                    on:click|stopPropagation={() => { setGuild(g.name, rank.rank); closeModal() }}>
-                    Rank {rank.rank}
-                  </button>
-                {/each}
-              </div>
-              {#each [($build.guild === g.name ? g.ranks.find(r => r.rank === $build.guildRank) : g.ranks[0])] as displayRank}
-                {#if displayRank?.stats && Object.keys(displayRank.stats).length}
-                  <div class="modal-item-stats">
-                    {#each Object.entries(displayRank.stats) as [k,v]}
-                      <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                    {/each}
-                  </div>
-                {/if}
-                {#if displayRank?.perks?.length}
-                  <div class="modal-item-stats">
-                    {#each displayRank.perks as p}
-                      <span class="modal-perk-tag"><Highlight text={p.name} query={modalSearch} /> +{p.amount}</span>
-                    {/each}
-                  </div>
-                {/if}
-              {/each}
-            </div>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'armor-helmet' || activeModal === 'armor-chestplate' || activeModal === 'armor-leggings'}
-        {@const slotName = activeModal === 'armor-helmet' ? 'Helmet' : activeModal === 'armor-chestplate' ? 'Chestplate' : 'Leggings'}
-        {@const storeKey = slotName.toLowerCase() as 'helmet'|'chestplate'|'leggings'}
-        <ModalSearchHeader
-          title="Select {slotName}"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          showSortButtons
-          {weaponResult}
-          bind:statFilterSortMode
-          effectiveLabel="boost"
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-        />
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build[storeKey] === ''}
-            on:click={() => { build.update(s => ({...s, [storeKey]: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedArmorsForModal as a}
-            {@const part = getArmorPart(a.name, slotName as any)}
-            {#if part}
-              {@const upgradedStats = applyUpgrade(part.stats as StatMap, UPGRADE_MAX)}
-              {@const _effScore = _armorSortActive ? (statFilterSortMode === 'brawny' ? computeArmorBrawnyEffectiveBoost(upgradedStats, _armorSortScalings, Math.max(1, _brawnyPerkAmt)) : computeArmorEffectiveBoost(upgradedStats, _armorSortScalings)) : null}
-              <button class="modal-item modal-item--sm" class:modal-item--active={$build[storeKey] === a.name}
-                on:click={() => { build.update(s => ({...s, [storeKey]: a.name})); closeModal() }}>
-                <div class="modal-item-head">
-                  <span class="modal-item-name"><Highlight text={a.name} query={modalSearch} /></span>
-                  {#if _effScore !== null}
-                    <span class="armor-eff-score" class:armor-eff-score--brawny={statFilterSortMode === 'brawny'}>{_effScore >= 0 ? '+' : ''}{_effScore}% lv+5</span>
-                  {/if}
-                </div>
-                <span class="modal-item-desc">{part.description}</span>
-                {#if part.perkName}<span class="modal-perk-tag"><Highlight text={part.perkName} query={modalSearch} /> +{part.perkAmount}</span>{/if}
-                <div class="modal-item-stats">
-                  {#each Object.entries(part.stats).filter(([,v]) => v !== 0) as [k,v]}
-                    <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                  {/each}
-                </div>
-              </button>
-            {/if}
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'infusion-helmet' || activeModal === 'infusion-chestplate' || activeModal === 'infusion-leggings'}
-        {@const slotName = activeModal === 'infusion-helmet' ? 'Helmet' : activeModal === 'infusion-chestplate' ? 'Chestplate' : 'Leggings'}
-        {@const infKey = ('infusion' + slotName) as 'infusionHelmet'|'infusionChestplate'|'infusionLeggings'}
-        <ModalSearchHeader
-          title="Select Infusion {slotName}"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          showSortButtons
-          {weaponResult}
-          bind:statFilterSortMode
-          effectiveLabel="armor boost"
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-        />
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build[infKey] === ''}
-            on:click={() => { build.update(s => ({...s, [infKey]: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedArmorsForModal as a}
-            {@const part = getArmorPart(a.name, slotName as any)}
-            {#if part}
-              {@const _effScoreInf = _armorSortActive ? (statFilterSortMode === 'brawny' ? computeArmorBrawnyEffectiveBoost(part.stats as Record<string,number>, _armorSortScalings, Math.max(1, _brawnyPerkAmt), 0.5) : computeArmorEffectiveBoost(part.stats as Record<string,number>, _armorSortScalings, 0.5)) : null}
-              <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build[infKey] === a.name}
-                on:click={() => { build.update(s => ({...s, [infKey]: a.name})); closeModal() }}>
-                <div class="modal-item-head">
-                  <span class="modal-item-name"><Highlight text={a.name} query={modalSearch} /> <span class="inf-label">×0.5</span></span>
-                  {#if _effScoreInf !== null}
-                    <span class="armor-eff-score armor-eff-score--inf" class:armor-eff-score--brawny={statFilterSortMode === 'brawny'}>+{_effScoreInf}% eff</span>
-                  {/if}
-                </div>
-                {#if part.perkName}<span class="modal-perk-tag"><Highlight text={part.perkName} query={modalSearch} /> +{part.perkAmount}</span>{/if}
-                <div class="modal-item-stats">
-                  {#each Object.entries(part.stats).filter(([,v]) => v !== 0) as [k,v]}
-                    <span class="modal-stat-pill modal-stat-pill--inf" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, (v as number) * 0.5)}</span>
-                  {/each}
-                </div>
-              </button>
-            {/if}
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'ring'}
-        <ModalSearchHeader
-          title="Select Ring"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          showSortButtons
-          {weaponResult}
-          bind:statFilterSortMode
-          effectiveLabel="boost"
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-        />
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.ring === ''}
-            on:click={() => { build.update(s => ({...s, ring: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedRings as r}
-            {@const _effScore = _armorSortActive ? (statFilterSortMode === 'brawny' ? computeArmorBrawnyEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings, Math.max(1, _brawnyPerkAmt)) : computeArmorEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings)) : null}
-            <button class="modal-item modal-item--sm" class:modal-item--active={$build.ring === r.name}
-              on:click={() => { build.update(s => ({...s, ring: r.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={r.name} query={modalSearch} /></span>
-                {#if _effScore !== null}
-                  <span class="armor-eff-score" class:armor-eff-score--brawny={statFilterSortMode === 'brawny'}>{_effScore >= 0 ? '+' : ''}{_effScore}%</span>
-                {/if}
-              </div>
-              <span class="modal-item-desc">{r.description}</span>
-              {#if r.perkName}<span class="modal-perk-tag"><Highlight text={r.perkName} query={modalSearch} /> +{r.perkAmount}</span>{/if}
-              <div class="modal-item-stats">
-                {#each Object.entries(r.stats).filter(([,v]) => v !== 0) as [k,v]}
-                  <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                {/each}
-              </div>
-            </button>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'infusion-ring'}
-        <ModalSearchHeader
-          title="Select Infusion Ring"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          showSortButtons
-          {weaponResult}
-          bind:statFilterSortMode
-          effectiveLabel="armor boost"
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-        />
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build.infusionRing === ''}
-            on:click={() => { build.update(s => ({...s, infusionRing: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedRings as r}
-            {@const _effScoreInf = _armorSortActive ? (statFilterSortMode === 'brawny' ? computeArmorBrawnyEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings, Math.max(1, _brawnyPerkAmt), 0.5) : computeArmorEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings, 0.5)) : null}
-            <button class="modal-item modal-item--sm modal-item--inf" class:modal-item--active={$build.infusionRing === r.name}
-              on:click={() => { build.update(s => ({...s, infusionRing: r.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={r.name} query={modalSearch} /> <span class="inf-label">×0.5</span></span>
-                {#if _effScoreInf !== null}
-                  <span class="armor-eff-score armor-eff-score--inf" class:armor-eff-score--brawny={statFilterSortMode === 'brawny'}>+{_effScoreInf}% eff</span>
-                {/if}
-              </div>
-              {#if r.perkName}<span class="modal-perk-tag"><Highlight text={r.perkName} query={modalSearch} /> +{r.perkAmount}</span>{/if}
-              <div class="modal-item-stats">
-                {#each Object.entries(r.stats).filter(([,v]) => v !== 0) as [k,v]}
-                  <span class="modal-stat-pill modal-stat-pill--inf" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, (v as number) * 0.5)}</span>
-                {/each}
-              </div>
-            </button>
-          {/each}
-          <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  searchQuery={modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
-        </div>
-
-      {:else if activeModal === 'rune'}
-        <ModalSearchHeader
-          title="Select Rune"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          showSortButtons
-          {weaponResult}
-          bind:statFilterSortMode
-          effectiveLabel="boost"
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:change={onStatFilterChange}
-        />
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.rune === ''}
-            on:click={() => { build.update(s => ({...s, rune: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedRunes as r}
-            {@const _effScore = _armorSortActive ? (statFilterSortMode === 'brawny' ? computeArmorBrawnyEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings, Math.max(1, _brawnyPerkAmt)) : computeArmorEffectiveBoost(r.stats as Record<string,number>, _armorSortScalings)) : null}
-            <button class="modal-item modal-item--sm" class:modal-item--active={$build.rune === r.name}
-              on:click={() => { build.update(s => ({...s, rune: r.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={r.name} query={modalSearch} /></span>
-                {#if _effScore !== null}
-                  <span class="armor-eff-score" class:armor-eff-score--brawny={statFilterSortMode === 'brawny'}>{_effScore >= 0 ? '+' : ''}{_effScore}%</span>
-                {/if}
-              </div>
-              <span class="modal-item-desc">{r.description}</span>
-              <span class="modal-cd-badge">CD: {r.cooldown}s</span>
-              {#if r.perkName}<span class="modal-perk-tag"><Highlight text={r.perkName} query={modalSearch} /> +{r.perkAmount ?? 1}</span>{/if}
-              <div class="modal-item-stats">
-                {#each Object.entries(r.stats).filter(([,v]) => v !== 0) as [k,v]}
-                  <span class="modal-stat-pill" class:neg={(v as number) < 0}>{formatLabel(k)}: {formatStat(k, v as number)}</span>
-                {/each}
-              </div>
-            </button>
-          {/each}
-          <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  searchQuery={modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
-        </div>
-
-      {:else if activeModal === 'blade'}
-        <ModalSearchHeader
-          title="Select Blade"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          useWeaponStatFilter={true}
-          weaponStatFilter={weaponStatFilter}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
-        />
-        <div class="modal-filters">
-          <select bind:value={bladeFilterTier} class="modal-filter-sel">
-            <option value="">All Tiers</option>
-            {#each [1,2,3,4,5] as t}<option value={String(t)}>Tier {t}</option>{/each}
-          </select>
-          <select bind:value={bladeFilterType} class="modal-filter-sel">
-            <option value="">All Types</option>
-            {#each ['Small Blade','Medium Blade','Heavy Blade','Hammer Head'] as t}<option value={t}>{t}</option>{/each}
-          </select>
-        </div>
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.weaponBlade === ''}
-            on:click={() => { build.update(s => ({...s, weaponBlade: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedBlades as b}
-            {@const bAny = b as any}
-            <button class="modal-item modal-item--sm modal-item--blade" class:modal-item--active={$build.weaponBlade === b.name}
-              on:click={() => { build.update(s => ({...s, weaponBlade: b.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={b.name} query={modalSearch} /></span>
-                <span class="modal-tier-badge">T{b.tier}</span>
-                <span class="modal-type-badge modal-type-badge--blade">{b.bladeType}</span>
-                {#if b.attackSpeed != null}<span class="modal-cd-badge">{b.attackSpeed}x spd</span>{/if}
-              </div>
-              <WeaponStatsDisplay stats={b.stats ?? {}} />
-              {#if bAny.perks?.length}
-                {#each bAny.perks as p}<span class="modal-perk-tag"><Highlight text={p.name} query={modalSearch} /> +{p.amount}</span>{/each}
-              {/if}
-            </button>
-          {/each}
-          <DidYouMean
-  {noExactResults}
-  {didYouMean}
-  searchQuery={modalSearch}
-  on:select={(e) => { modalSearch = e.detail }}
-/>
-        </div>
-
-      {:else if activeModal === 'handle'}
-        <ModalSearchHeader
-          title="Select Handle"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          useWeaponStatFilter={true}
-          weaponStatFilter={weaponStatFilter}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
-        />
-        <div class="modal-filters">
-          <select bind:value={handleFilterTier} class="modal-filter-sel">
-            <option value="">All Tiers</option>
-            {#each [1,2,3,4,5] as t}<option value={String(t)}>Tier {t}</option>{/each}
-          </select>
-          <select bind:value={handleFilterType} class="modal-filter-sel">
-            <option value="">All Types</option>
-            {#each ['Medium Handle','Long Handle','Pole'] as t}<option value={t}>{t}</option>{/each}
-          </select>
-        </div>
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.weaponHandle === ''}
-            on:click={() => { build.update(s => ({...s, weaponHandle: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedHandles as h}
-            {@const hAny = h as any}
-            <button class="modal-item modal-item--sm modal-item--handle" class:modal-item--active={$build.weaponHandle === h.name}
-              on:click={() => { build.update(s => ({...s, weaponHandle: h.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={h.name} query={modalSearch} /></span>
-                <span class="modal-tier-badge modal-tier-badge--handle">T{h.tier}</span>
-                <span class="modal-type-badge modal-type-badge--handle">{h.handleType}</span>
-                {#if h.attackSpeed != null}<span class="modal-cd-badge">{h.attackSpeed}x spd</span>{/if}
-              </div>
-              <WeaponStatsDisplay stats={h.stats ?? {}} />
-              {#if hAny.perks?.length}
-                {#each hAny.perks as p}<span class="modal-perk-tag"><Highlight text={p.name} query={modalSearch} /> +{p.amount}</span>{/each}
-              {/if}
-            </button>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'glove'}
-        <ModalSearchHeader
-          title="Select Glove"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          useWeaponStatFilter={true}
-          weaponStatFilter={weaponStatFilter}
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
-        />
-        <div class="modal-filters">
-          <select bind:value={gloveFilterTier} class="modal-filter-sel">
-            <option value="">All Tiers</option>
-            {#each [1,2,3,4,5] as t}<option value={String(t)}>Tier {t}</option>{/each}
-          </select>
-        </div>
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.monkGlove === ''}
-            on:click={() => { build.update(s => ({...s, monkGlove: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedGloves as g}
-            {@const gAny = g as any}
-            <button class="modal-item modal-item--sm modal-item--glove" class:modal-item--active={$build.monkGlove === g.name}
-              on:click={() => { build.update(s => ({...s, monkGlove: g.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={g.name} query={modalSearch} /></span>
-                <span class="modal-tier-badge modal-tier-badge--glove">T{g.tier}</span>
-                {#if g.attackSpeed != null}<span class="modal-cd-badge">{g.attackSpeed}x spd</span>{/if}
-              </div>
-              <WeaponStatsDisplay stats={g.stats ?? {}} />
-              {#if (g as any).perks?.length}
-                {#each (g as any).perks as p}<span class="modal-perk-tag"><Highlight text={p.name} query={modalSearch} /> +{p.amount}</span>{/each}
-              {/if}
-            </button>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-
-      {:else if activeModal === 'essence'}
-        <ModalSearchHeader
-          title="Select Essence"
-          bind:modalSearch
-          {showSuggestions}
-          {modalSuggestions}
-          modalSelectedTags={selectedTags}
-          hideTags={[]}
-          on:focus={onSearchFocus}
-          on:blur={onSearchBlur}
-          useWeaponStatFilter={true}
-          weaponStatFilter={weaponStatFilter}
-          on:toggle={(e) => toggleTag(e.detail)}
-          on:clear={clearTags}
-          on:select={(e) => applySuggestion(e.detail.label, e.detail.type)}
-          on:weaponStatFilterChange={e => weaponStatFilter = e.detail}
-        />
-        <div class="modal-filters">
-          <select bind:value={essenceFilterTier} class="modal-filter-sel">
-            <option value="">All Tiers</option>
-            {#each [1,2,3,4,5] as t}<option value={String(t)}>Tier {t}</option>{/each}
-          </select>
-        </div>
-        <div class="modal-list modal-list--compact">
-          <button class="modal-item modal-item--sm" class:modal-item--active={$build.monkEssence === ''}
-            on:click={() => { build.update(s => ({...s, monkEssence: ''})); closeModal() }}>
-            <span class="modal-item-name">— None —</span>
-          </button>
-          {#each searchedEssences as e}
-            {@const eAny = e as any}
-            <button class="modal-item modal-item--sm modal-item--essence" class:modal-item--active={$build.monkEssence === e.name}
-              on:click={() => { build.update(s => ({...s, monkEssence: e.name})); closeModal() }}>
-              <div class="modal-item-head">
-                <span class="modal-item-name"><Highlight text={e.name} query={modalSearch} /></span>
-                <span class="modal-tier-badge modal-tier-badge--essence">T{e.tier}</span>
-                {#if e.attackSpeed != null}<span class="modal-cd-badge">{e.attackSpeed}x spd</span>{/if}
-              </div>
-              <WeaponStatsDisplay stats={e.stats ?? {}} />
-              {#if (e as any).perks?.length}
-                {#each (e as any).perks as p}<span class="modal-perk-tag"><Highlight text={p.name} query={modalSearch} /> +{p.amount}</span>{/each}
-              {/if}
-            </button>
-          {/each}
-          <DidYouMean
-            {noExactResults}
-            {didYouMean}
-            searchQuery={modalSearch}
-            on:select={(e) => { modalSearch = e.detail }}
-          />
-        </div>
-      {/if}
-
-    </div>
-  </div>
+<!-- Modals -->
+{#if activeModal === 'race'}
+  <RaceModal close={closeModal} bind:modalSearch
+    {showSuggestions} {modalSuggestions} {noExactResults} {didYouMean}
+    onFocus={onSearchFocus} onBlur={onSearchBlur}
+    onSelect={(e) => applySuggestion(e.detail.label, e.detail.type)} />
+{:else if activeModal === 'guild'}
+  <GuildModal close={closeModal} bind:modalSearch
+    {showSuggestions} {modalSuggestions} {noExactResults} {didYouMean}
+    onFocus={onSearchFocus} onBlur={onSearchBlur}
+    onSelect={(e) => applySuggestion(e.detail.label, e.detail.type)}
+    {selectedTags} {toggleTag} {clearTags} onChange={onStatFilterChange} />
+{:else if activeModal === 'blade' || activeModal === 'handle' || activeModal === 'glove' || activeModal === 'essence'}
+  <WeaponPartModal close={closeModal} bind:modalSearch
+    {showSuggestions} {modalSuggestions} {noExactResults} {didYouMean}
+    onFocus={onSearchFocus} onBlur={onSearchBlur}
+    onSelect={(e) => applySuggestion(e.detail.label, e.detail.type)}
+    {selectedTags} {toggleTag} {clearTags}
+    modalType={activeModal}
+    searchedItems={modalItems(activeModal)}
+    {weaponStatFilter}
+    onWeaponStatFilterChange={e => weaponStatFilter = e.detail}
+    tierFilterOptions={[1,2,3,4,5]}
+    typeFilterOptions={modalTypeOptions(activeModal)}
+    tierFilterValue={modalTierVal(activeModal)}
+    typeFilterValue={modalTypeVal(activeModal)}
+    onTierFilterChange={handleTierChange}
+    onTypeFilterChange={handleTypeChange} />
+{:else if activeModal}
+  <AccessorySelectModal close={closeModal} bind:modalSearch
+    {showSuggestions} {modalSuggestions} {noExactResults} {didYouMean}
+    onFocus={onSearchFocus} onBlur={onSearchBlur}
+    onSelect={(e) => applySuggestion(e.detail.label, e.detail.type)}
+    {selectedTags} {toggleTag} {clearTags} onChange={onStatFilterChange}
+    modalType={activeModal}
+    searchedItems={modalItems(activeModal)}
+    showSortButtons={activeModal !== 'ring' && activeModal !== 'infusion-ring'}
+    hideTags={activeModal === 'ring' || activeModal === 'infusion-ring' ? [] : undefined} />
 {/if}
 
 
 
 <!-- ═══════════════════════════════ MAIN APP ═══════════════════════════════ -->
 <div class="app">
-  <header>
-  <h1>Voxl<span class="accent">Builder</span></h1>
-  <div class="header-right">
-    <span class="header-hint">Click any cell to edit · Click ✦ to enchant</span>
-  </div>
-</header>
-
-  <BuildSaves />  
-
-  <div class="app-tabs">
-
-<div bind:this={bubbleEl} class="tab-bubble" class:tab-bubble--analyze={activeAppTab === 'analyze'} style="transform: translateX({bubbleX}px); width: {bubbleW}px;"></div>
-    <button bind:this={tabOverview} class="app-tab" class:app-tab--active={activeAppTab === 'overview'} on:click={() => switchTab('overview')}>Overview</button>
-    <button bind:this={tabAnalyze} class="app-tab app-tab--analyze" class:app-tab--active={activeAppTab === 'analyze'} on:click={() => switchTab('analyze')}>Analyze</button>
-  </div>
+  <AppHeader bind:activeAppTab on:switchTab={e => switchTab(e.detail)} />
   {#if activeAppTab === 'overview'}
     <div class="workspace">
 
@@ -3122,116 +2580,18 @@ $: _appWaAvgTotal = (() => {
       </div>
     {/if}
 
+  <Toast />
 </div> <style>
-  :root {
-    --bg: #0d0f0e; --surface: #141715; --surface2: #1a1d1b; --surface3: #212420;
-    --border: rgba(255,255,255,0.06); --border-strong: rgba(255,255,255,0.1);
-    --ink: #e8e4da; --ink-muted: #8a8d85;
-    --accent: #4ade80; --accent2: #f59e0b; --accent3: #a78bfa;
-    --infusion: #38bdf8; --infusion-border: rgba(56,189,248,0.22);
-    --neg: #f87171;
-    --weapon-blade: #fb923c; --weapon-handle: #34d399; --weapon-combined: #fbbf24;
-    --monk-glove: #e879f9; --monk-essence: #818cf8; --monk-combined: #c084fc;
-    --radius: 14px; --radius-sm: 8px;
-    --font-display: 'Georgia','Times New Roman',serif;
-    --font-body: 'Trebuchet MS','Segoe UI',system-ui,sans-serif;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :global(body) { background: var(--bg); color: var(--ink); font-family: var(--font-body); min-height: 100vh; }
 
   .app { max-width: 1400px; margin: 0 auto; padding: 24px clamp(10px,3vw,32px) 60px; }
 
-  header {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 24px 32px; border-radius: 20px;
-    background: linear-gradient(135deg,#161a16 0%,#1c201c 100%);
-    border: 1px solid var(--border-strong); margin-bottom: 16px; position: relative; overflow: hidden;
-  }
-  header::before {
-    content:""; position:absolute; inset:0;
-    background: radial-gradient(ellipse at 90% 0%,rgba(74,222,128,.07) 0%,transparent 50%),
-                radial-gradient(ellipse at 10% 100%,rgba(245,158,11,.05) 0%,transparent 40%);
-    pointer-events:none;
-  }
-  h1 { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,3rem); font-weight:400; letter-spacing:-.02em; }
-  .accent { color:var(--accent); }
-  .header-hint { font-size:.72rem; color:var(--ink-muted); letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+
 
   .workspace { display:flex; flex-direction:column; gap:14px; }
   .analyze-hp-bar { display:flex; padding:0 4px 8px 4px; }
 
-  /* ── MODAL ── */
-  .modal-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:1000;
-    display:flex; align-items:center; justify-content:center;
-    padding:16px; backdrop-filter:blur(4px);
-    animation: fadeIn .15s ease;
-  }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal-box {
-    background:var(--surface); border:1px solid var(--border-strong);
-    border-radius:var(--radius); padding:24px; width:min(680px,100%);
-    overflow-y:auto; position:relative;
-    animation: slideUp .18s ease;  max-height: 90vh;
-    overflow-y: auto;
-    scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent;
-  }
-  @keyframes slideUp { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .modal-box::-webkit-scrollbar { width:5px; }
-  .modal-box::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:3px; }
-  .modal-close {
-    position:absolute; top:14px; right:14px;
-    background:var(--surface3); border:1px solid var(--border); border-radius:6px;
-    color:var(--ink-muted); font-size:.8rem; width:28px; height:28px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    transition:background .15s,color .15s;
-  }
-  .modal-close:hover { background:rgba(248,113,113,.15); color:var(--neg); }
-  .modal-filters { display:flex; gap:8px; margin-bottom:12px; }
-  .modal-filter-sel {
-    flex:1; appearance:none; background:var(--surface2); border:1px solid var(--border-strong);
-    border-radius:var(--radius-sm); color:var(--ink); font-family:var(--font-body);
-    font-size:.8rem; padding:7px 26px 7px 10px; cursor:pointer;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234ade80' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 8px center;
-  }
-  .modal-list { display:flex; flex-direction:column; gap:6px; max-height:500px; overflow-y:auto; padding-right:4px; scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent; }
-  .modal-list::-webkit-scrollbar { width:4px; }
-  .modal-list::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
-  .modal-list--compact { gap:5px; }
-  .modal-item {
-    width:100%; text-align:left; background:var(--surface2);
-    border:1px solid var(--border); border-radius:var(--radius-sm);
-    color:var(--ink); font-family:var(--font-body); padding:12px 14px;
-    cursor:pointer; display:flex; flex-direction:column; gap:4px;
-    transition:background .12s,border-color .12s;
-  }
-  .modal-item:hover { background:var(--surface3); border-color:var(--border-strong); }
-  .modal-item--active { border-color:var(--accent); background:rgba(74,222,128,.07); }
-  .modal-item--sm { padding:9px 12px; }
-  .modal-item--inf { border-color:var(--infusion-border); }
-  .modal-item--blade.modal-item--active { border-color:var(--weapon-blade); background:rgba(251,146,60,.08); }
-  .modal-item--handle.modal-item--active { border-color:var(--weapon-handle); background:rgba(52,211,153,.08); }
-  .modal-item--glove.modal-item--active { border-color:var(--monk-glove); background:rgba(232,121,249,.08); }
-  .modal-item-head { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
-  .modal-item-name { font-size:.88rem; font-weight:600; color:var(--ink); }
-  .modal-item-desc { font-size:.76rem; color:var(--ink-muted); line-height:1.4; }
-  .modal-item-stats { display:flex; flex-wrap:wrap; gap:4px; margin-top:2px; }
-  .modal-stat-pill { font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.2); color:var(--accent); }
-  .modal-stat-pill.neg { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.2); color:var(--neg); }
-  .modal-stat-pill--inf { background:rgba(56,189,248,.1); border-color:rgba(56,189,248,.2); color:var(--infusion); }
-  .modal-perk-tag { font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.22); color:var(--accent2); width:fit-content; }
-  .modal-cd-badge { font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.22); color:var(--weapon-handle); width:fit-content; }
-  .modal-tier-badge { font-size:.62rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.25); color:var(--weapon-blade); }
-  .modal-tier-badge--handle { background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.25); color:var(--weapon-handle); }
-  .modal-tier-badge--glove { background:rgba(232,121,249,.12); border-color:rgba(232,121,249,.25); color:var(--monk-glove); }
-  .modal-type-badge { font-size:.62rem; padding:2px 6px; border-radius:4px; background:var(--surface3); color:var(--ink-muted); border:1px solid var(--border); }
-  .modal-type-badge--blade { color:var(--weapon-blade); }
-  .modal-type-badge--handle { color:var(--weapon-handle); }
-  .modal-rank-row { display:flex; gap:6px; margin-top:4px; }
-  .rank-btn { padding:4px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface3); color:var(--ink-muted); font-size:.75rem; font-weight:600; cursor:pointer; transition:all .12s; }
-  .rank-btn:hover { border-color:rgba(74,222,128,.35); color:var(--accent); }
-  .rank-btn--active { border-color:var(--accent); background:rgba(74,222,128,.12); color:var(--accent); }
   .corruption-widget {
     margin-top: 6px;
     padding: 10px 12px;
@@ -3277,7 +2637,8 @@ $: _appWaAvgTotal = (() => {
    .corruption-effect-chip--dmg { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.28); color: var(--neg); }
    .ce-label { opacity: .7; text-transform: uppercase; letter-spacing: .06em; font-size: .58rem; }
    .ce-val { font-family: 'Courier New', monospace; font-weight: 800; }
-  .inf-label { font-size:.6rem; color:var(--infusion); font-weight:600; opacity:.7; }
+
+
 
   /* ── Tooltip ── */
   :global(.enchant-tooltip) {
@@ -3726,7 +3087,6 @@ $: _appWaAvgTotal = (() => {
     .iep-slot { min-width:unset; }
   }
   @media (max-width:640px) {
-    header { flex-direction:column; align-items:flex-start; gap:4px; }
     .weapon-result-layout { grid-template-columns:1fr; }
     .weapon-combine { flex-direction:row; padding-top:0; }
     .weapon-combine-line { width:40px; height:1px; min-height:unset; }
@@ -4274,120 +3634,7 @@ $: _appWaAvgTotal = (() => {
   border-color: rgba(74,222,128,.55);
 }
 
-.app-tabs {
-  position: relative;
-  display: flex;
 
-  padding: 4px;
-
-  border-radius: 12px;
-
-  background: var(--surface);
-
-  border: 1px solid var(--border);
-
-  width: fit-content;
-
-  overflow: hidden;
-}
-.tab-bubble {
-  position: absolute;
-
-  top: 4px;
-  bottom: 4px;
-  left: 0;
-
-  border-radius: 8px;
-
-  z-index: 0;
-
-  pointer-events: none;
-
-  border: 1px solid rgba(74,222,128,0.28);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(74,222,128,0.16),
-      rgba(74,222,128,0.08)
-    );
-
-  box-shadow:
-    0 0 14px rgba(74,222,128,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.05);
-
-  transition:
-    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-}
-.tab-bubble--analyze {
-  border-color: rgba(226,178,3,0.32);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(226,178,3,0.16),
-      rgba(226,178,3,0.08)
-    );
-
-  box-shadow:
-    0 0 14px rgba(226,178,3,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.05);
-}
-
-@keyframes bubbleSquish {
-  0% {
-    scale: 1 1;
-  }
-
-  50% {
-    scale: 0.82 1.08;
-  }
-
-  100% {
-    scale: 1 1;
-  }
-}
-.app-tab {
-  position: relative;
-  z-index: 1;
-
-  border: none;
-  background: transparent;
-
-  padding: 8px 20px;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  color: var(--ink-muted);
-
-  font-size: .78rem;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-
-  transition:
-    color .18s ease,
-    transform .18s ease;
-}
-
-.app-tab:hover {
-  color: var(--ink);
-  transform: translateY(-1px);
-}
-
-.app-tab--active {
-  color: var(--accent);
-}
-
-.app-tab--analyze.app-tab--active {
-  color: #e2b203;
-}
 .heal-val{
   color:#7CFF8D;
   font-weight:700;
@@ -4407,24 +3654,7 @@ $: _appWaAvgTotal = (() => {
   overflow-wrap:anywhere;
   line-height:1.15;
 }
-.armor-eff-score {
-  font-size: .65rem;
-  font-weight: 800;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: rgba(167,139,250,.12);
-  border: 1px solid rgba(167,139,250,.28);
-  color: var(--accent3);
-  margin-left: auto;
-  font-family: 'Courier New', monospace;
-  flex-shrink: 0;
-}
-.armor-eff-score--brawny {
-  background: rgba(251,146,60,.12);
-  border-color: rgba(251,146,60,.28);
-  color: var(--weapon-blade);
-}
-.armor-eff-score--inf { opacity: .85; }
+
 .clear-all-btn {
   padding: 4px 12px;
   border-radius: 6px;
@@ -4452,5 +3682,23 @@ $: _appWaAvgTotal = (() => {
 }
 .cdr-toggle-chip--off {
   border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.08); color:var(--neg); opacity:.7;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .app { padding: 12px 10px 40px; }
+  .sg-cell { padding: 8px 10px; min-height: 70px; }
+  .sg-clear, .sg-ench-btn { width: 26px; height: 26px; }
+  .summary-title-row { flex-direction: column; gap: 8px; }
+  :global(.enchant-tooltip) { max-width: 200px; font-size: .72rem; }
+}
+@media (max-width: 480px) {
+  .app { padding: 8px 6px 32px; }
+  .panel { padding: 12px; }
+  .sg-cell { min-height: 60px; padding: 6px 8px; }
+  .sg-value { font-size: .76rem; }
+  .sg-label { font-size: .52rem; }
+  .summary-grid-wrap { margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; overflow-x: auto; }
+  .summary-grid { min-width: 500px; }
 }
 </style>
