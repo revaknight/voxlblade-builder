@@ -49,6 +49,12 @@ export const DRAGON_STATE_HP_GATE: HpGate = {
   getThreshold: (perkAmount) => 85 - 5 * perkAmount,
 }
 
+export const BELLOWING_EMBER_HP_GATE: HpGate = {
+  hpThreshold: 40,
+  aboveThreshold: false,
+  getThreshold: (perkAmount) => 40 + 5 * (perkAmount - 1),
+}
+
 export interface SecondaryEffect {
   label: string
   getValue: (ctx: PerkDmgCtx) => number

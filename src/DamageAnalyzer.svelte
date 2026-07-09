@@ -850,6 +850,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
     return { ...(_weaponResult?.damageTypes ?? {}) }
   })()
   $: _convertedWeaponDmgTypes = applyAirToMagicConversion(_weaponDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus)
+  $: _hasFireDmg = Object.entries(_weaponDmgTypes).some(([dt, mult]) => dt === 'fire' && mult > 0)
 
   $: _gunDmgTypes = (() => {
     if (!_gunOverlay) return _weaponDmgTypes
@@ -934,7 +935,12 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 
     return entries
   })()
-  $: _adjustedDmgEntries = boosts.dmgEntries
+  $: _adjustedDmgEntries = boosts.dmgEntries.map(e => {
+    if (e.sourceName === 'Bellowing Ember' && _hasFireDmg) {
+      return { ...e, rawMultiplier: 1.23 }
+    }
+    return e
+  })
   $: activeEntries = [..._adjustedDmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Frenzy'), ..._syntheticDmgBoostEntries.filter(e => {
     if (e.sourceName === 'Curse Rip' && disableCurseRip) return false
     if (e.sourceName === 'Reaper' && disableReaper) return false
@@ -2051,6 +2057,8 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
         isFinisher: false, dmgTypes: { heal: 1.0 }, label: 'Ocean Song', isHeal: true,
       })
     }
+
+
     return result
   })()
 
@@ -2270,7 +2278,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
             <span class="da-bc-name">
               {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
             </span>
-            <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
+            <span class="da-bc-val">{disabled ? '—' : entry.sourceName === 'Bellowing Ember' && _hasFireDmg ? '×1.23' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
             {#if entry.condition}<span class="da-bc-cond">{entry.condition}</span>{/if}
             <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
           </button>
@@ -2307,7 +2315,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
               <span class="da-bc-name">
                 {entry.sourceName === 'Level Damage' ? `LV${$build.level ?? 80}` : entry.sourceName}
               </span>
-              <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
+              <span class="da-bc-val">{disabled ? '—' : entry.sourceName === 'Bellowing Ember' && _hasFireDmg ? '×1.23' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
               {#if entry.condition}<span class="da-bc-cond">{entry.condition}</span>{/if}
               <span class="da-bc-toggle">{disabled ? 'OFF' : 'ON'}</span>
             </button>

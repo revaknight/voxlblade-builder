@@ -54,5 +54,21 @@ export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
     }
   }
 
+  const bellowingAmt = perks['Bellowing Ember'] ?? 0
+  if (bellowingAmt > 0) {
+    const actualHpPct = calcActualHpFillPct(hpFill, level, protection)
+    const threshold = 40 + 5 * (bellowingAmt - 1)
+    if (actualHpPct <= threshold && !existingBuffNames.includes('Burn')) {
+      debuffs.push({
+        buffName: 'Burn',
+        potency: 0,
+        duration: 5,
+        condition: `35% chance per hit · only while HP ≤ ${threshold}%`,
+        sourceName: 'Bellowing Ember',
+        sourceType: 'perk',
+      })
+    }
+  }
+
   return debuffs
 }

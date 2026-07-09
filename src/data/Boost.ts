@@ -273,6 +273,21 @@ export const BOOST_DEFS: BoostDef[] = [
   },
 
   {
+    sourceName: 'Bellowing Ember',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const amount = ctx.perks['Bellowing Ember'] ?? 0
+      if (amount <= 0) return null
+      const hpFill = ctx.hpFillPct ?? 100
+      const threshold = 40 + 5 * (amount - 1)
+      if (hpFill > threshold) return null
+      return {
+        multiplier: 1.10,
+        condition: `HP ≤${threshold}% · +10% dmg boost · +23% dmg boost if attack contains Fire Type`,
+      }
+    },
+  },
+  {
     sourceName: 'Penance',
     type: 'dmg',
     calcFn: (ctx) => {
