@@ -89,7 +89,7 @@ export interface PerkDmgDef {
   isFinisher?: boolean
   isWA?: boolean
   isRune?: boolean
-  isRider?: boolean
+  isProcHit?: boolean
   guardbreak?: boolean
   canProc?: boolean
   note?: string
@@ -440,9 +440,8 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { magic: 1.0 },
     scalingMode: 'fixed',
     scalings: { magic: 0.75, dexterity: 0.75, holy: 0.75 },
-    isRider: true,
+    isProcHit: true,
     hpGate: DRAGON_STATE_HP_GATE,
-    note: 'Can only activate once per M1/M2. Can proc other effects.',
   },
   // ── Volatile Shell ──────────────────────────────────────────────────────────
   {
@@ -474,7 +473,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { hex: 1.0 },
     scalingMode: 'fixed',
     scalings: { dexterity: 1.0, hex: 1.0, earth: 1.0 },
-    isRider: true,
+    isProcHit: true,
     canProc: false,
     note: 'Base damage unknown (???). Only activates once per finisher. Inflicts Poison on self and enemies.',
   },
@@ -488,7 +487,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { magic: 1.0 },
     scalingMode: 'fixed',
     scalings: { magic: 1.0 },
-    isRider: true,
+    isProcHit: true,
     note: 'Only activates once per finisher.',
   },
   // ── Grounded Despair ─────────────────────────────────────────────────
@@ -500,6 +499,17 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     dmgTypes: { physical: 0.5, hex: 0.5 },
     scalingMode: 'fixed',
     scalings: { physical: 1.0, magic: 1.0 },
-    canProc: true,
+  },
+  // ── Echo Incineration ─────────────────────────────────────────────
+  {
+    perkName: 'Echo Incineration',
+    condition: 'On hit · (10 + 2.5 × perkAmount)% chance',
+    getBaseDamage: ({ perkAmount }) => 7 + 1.25 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { fire: 0.5, air: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { fire: 1.0, air: 1.0 },
+    guardbreak: true,
+    canProc: false,
   },
 ]

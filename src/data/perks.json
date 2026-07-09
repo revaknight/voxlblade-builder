@@ -1654,6 +1654,19 @@
     ]
   },
   {
+    "name": "Echo Incineration",
+    "description": "Half of your Fire Damage is converted into Air Damage and vice versa. Additionally, you have a chance to release a fiery tornado on hit that deals Fire and Air Damage whilst inflicting Burn. Grants Burn potency.",
+    "tags": [
+      "Offensive",
+      "Debuff",
+      "RNG",
+      "Burn Potency",
+      "Ring",
+      "Weapon",
+      "Armor"
+    ]
+  },
+  {
     "name": "Immovable",
     "description": "Reduce received Knockback and increase Physical Defense scaling off of your Tenacity.",
     "tags": [

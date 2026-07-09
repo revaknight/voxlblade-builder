@@ -514,6 +514,11 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
   $: _stormRendPct = _stormRendActive ? (1 / 3) : 0
   $: _explosiveChargePct = (perks['Explosive Charge'] ?? 0) > 0 ? 1.0 : 0
   $: _blubBlubAmt = perks['Blub Blub'] ?? 0
+  $: _crushingPressureAmt = perks['Crushing Pressure'] ?? 0
+  $: _echoIncinerationAmt = perks['Echo Incineration'] ?? 0
+  $: _echoIncinerationBaseDmg = _echoIncinerationAmt > 0 ? 7 + 1.25 * _echoIncinerationAmt : 0
+  $: _echoIncinerationScalings = PERK_DMG_DEFS.find(d => d.perkName === 'Echo Incineration')?.scalings ?? {}
+  $: _echoIncinerationScalingMult = _echoIncinerationAmt > 0 ? _computePerkScalingMult(_echoIncinerationScalings) : 1
 
   // ── Ork race: +0.1 tenacity per active buff (excludes debuffs & self-debuffs) ──
   $: _orkBuffs = $build.race === 'ORK' ? getOrkTenacityBuffs(_allActiveBuffs, BUFF_DEFS) : []
@@ -849,7 +854,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
   $: _weaponDmgTypesBase = (() => {
     return { ...(_weaponResult?.damageTypes ?? {}) }
   })()
-  $: _convertedWeaponDmgTypes = applyAirToMagicConversion(_weaponDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus)
+  $: _convertedWeaponDmgTypes = applyAirToMagicConversion(_weaponDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
   $: _hasFireDmg = Object.entries(_weaponDmgTypes).some(([dt, mult]) => dt === 'fire' && mult > 0)
 
   $: _gunDmgTypes = (() => {
@@ -1265,7 +1270,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
   $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? _wildBoltElements[_wildBoltElemIdx] : null
   $: _waDmgTypes = (() => {
     const apply = (types: Record<string, number>) =>
-      applyAirToMagicConversion(types, _spiritWindsConversionRate, _darkMagicHexBonus)
+      applyAirToMagicConversion(types, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
 
     if (_wildBoltElement) {
       return apply(_applyDmgBonuses({ [_wildBoltElement]: 1 }, _waDmgTypeBonuses))
@@ -1405,7 +1410,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
         let result = dtStr === 'Same as weapon' && _emotionalHexBonus > 0
           ? { ...base, hex: Math.round(((base.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
           : base
-        result = applyAirToMagicConversion(result, _spiritWindsConversionRate, _darkMagicHexBonus)
+        result = applyAirToMagicConversion(result, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
         return result
       })()
       const types: DamageDisplayType[] = Object.entries(dtFinal).map(([k, mult]) => ({
@@ -1550,7 +1555,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
     perkAmount: number
     condition?: string
     hits?: number
-    isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isRider?: boolean
+    isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isProcHit?: boolean
     guardbreak?: boolean
     canProc?: boolean
     note?: string
@@ -1605,7 +1610,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
             _perkDmgTypeBonuses
           )
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
-      const resolvedDmgTypes = applyAirToMagicConversion(baseResolvedDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus)
+      const resolvedDmgTypes = applyAirToMagicConversion(baseResolvedDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
 
       // Store base damage types without Draconic Runes bonus for self damage calculation
       const baseDmgTypesForSelfDmg = def.isRune ? baseDmgTypes : baseResolvedDmgTypes
@@ -1680,7 +1685,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
         condition: def.condition,
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
         isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
-        isWA: def.isWA, isRune: def.isRune, isRider: def.isRider, guardbreak: def.guardbreak,
+        isWA: def.isWA, isRune: def.isRune, isProcHit: def.isProcHit, guardbreak: def.guardbreak,
         canProc: def.canProc,
         note: def.note,
         typedHits_m2: buildTypedHits(isSpringblast ? baseDmg : baseDmg_m2),
@@ -1707,12 +1712,12 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
   $: _perkOnHitDamages = (() => {
     const out: Array<{
       tag: string; baseDmg: number; scalingMult: number; combatMult: number; totalDmg: number
-      dmgTypes: Record<string, number>; canProc?: boolean
+      dmgTypes: Record<string, number>; canProc?: boolean; isProcHit?: boolean
       rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean
     }> = []
     for (const e of _activePerkDmgEntries) {
       if (!e.isActive) continue
-      if (!e.isRider && e.perkName !== 'Springblast') continue
+      if (!e.isProcHit && e.perkName !== 'Springblast') continue
       out.push({
         tag: e.displayName,
         baseDmg: e.baseDmg,
@@ -1721,6 +1726,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
         totalDmg: e.totalDmg,
         dmgTypes: e.resolvedDmgTypes,
         canProc: e.canProc,
+        isProcHit: e.isProcHit,
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
@@ -1806,7 +1812,8 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
             _perkDmgTypeBonuses
           ),
           _spiritWindsConversionRate,
-          _darkMagicHexBonus
+          _darkMagicHexBonus,
+          _echoIncinerationAmt
         )
         result.push({
           group: 'M1', index: 0, count: 1,
@@ -1846,7 +1853,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
              const _hdt = selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)]
              return _hdt === 'Same as weapon'
                ? _applyDmgBonuses({ ..._convertedWeaponDmgTypes }, _waOnlyBonuses)
-               : applyAirToMagicConversion(_resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses), _spiritWindsConversionRate, _darkMagicHexBonus)
+               : applyAirToMagicConversion(_resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses), _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
            })()
          : _waDmgTypes
          
@@ -1898,7 +1905,8 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
           ? { ...baseWaDmgTypes, hex: Math.round(((baseWaDmgTypes.hex ?? 0) + _emotionalHexBonus) * 10000) / 10000 }
           : baseWaDmgTypes,
         _spiritWindsConversionRate,
-        _darkMagicHexBonus
+        _darkMagicHexBonus,
+        _echoIncinerationAmt
       )
       for (const h of waDef.getHits()) {
         const base = typeof h === 'number' ? h : h.n
@@ -1917,7 +1925,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 
     for (const entry of _activePerkDmgEntries) {
       if (!entry.isActive) continue 
-      if (entry.isRider) continue 
+      if (entry.isProcHit) continue 
 
       // Check for heal effects from Draconic Blood abilities
       if (entry.perkName === 'Draconic Blood') {
@@ -1994,7 +2002,8 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
               _perkDmgTypeBonuses
             ),
             _spiritWindsConversionRate,
-            _darkMagicHexBonus
+            _darkMagicHexBonus,
+            _echoIncinerationAmt
           )
       result.push({
         group: 'Rune',
@@ -3182,7 +3191,7 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
               })
               const bonusEntries = Object.entries(_perkDmgTypeBonuses).filter(([, v]) => v > 0)
               const resolved = bonusEntries.length > 0 ? resolveDamageTypes(base, _perkDmgTypeBonuses) : base
-              return applyAirToMagicConversion(resolved, _spiritWindsConversionRate, _darkMagicHexBonus)
+              return applyAirToMagicConversion(resolved, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
             })()}
         
         <div class="da-wbd-section">
@@ -3977,6 +3986,9 @@ import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
   perkOnHitDamages={_perkOnHitDamages}
   waArmorPenetration={_waArmorPenetration}
   globalArmorPenetration={_raceGlobalArmorPen}
+  crushingPressureAmt={_crushingPressureAmt}
+  echoIncinerationBaseDmg={_echoIncinerationBaseDmg}
+  echoIncinerationScalingMult={_echoIncinerationScalingMult}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,

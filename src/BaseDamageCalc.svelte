@@ -4,6 +4,7 @@
   import { resolveDamageTypes } from './lib/damageTypeResolve'
   import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
   import { BADGE_CONFIG, type ComputedType, type ComputedHit, type PerkOnHitDmg } from './lib/dmgTypes'
+  import { SCALING_TO_BOOST, PERCENT_STATS } from './lib/types'
   import {
     DMG_TYPE_META,
     DEF_TRACKED_TYPES,
@@ -42,6 +43,9 @@
   export let perkOnHitDamages: PerkOnHitDmg[] = []
   export let waArmorPenetration: number = 0
   export let globalArmorPenetration: number = 0
+  export let crushingPressureAmt: number = 0
+  export let echoIncinerationBaseDmg: number = 0
+  export let echoIncinerationScalingMult: number = 1
   export let m1Label: string = 'M1'
 
   function withDarkMagicHex(types: Record<string, number>): Record<string, number> {
@@ -300,8 +304,14 @@
     if (k === 'true' || k === 'summon') return 0
     let pct = effectiveDefenses[k] ?? 0
     const parentKey = DEF_INHERITANCE[k]
-    if (parentKey) pct += effectiveDefenses[parentKey] ?? 0
+    if (parentKey) pct += defPctForType(parentKey)
     return pct
+  }
+
+  function crushingPenForType(dmgType: string): number {
+    if (crushingPressureAmt <= 0) return 0
+    const defPct = defPctForType(dmgType)
+    return crushingPressureAmt * 10 + (defPct > 0 ? crushingPressureAmt * defPct * 0.15 : 0)
   }
 
   function computePreMitigationBase(hit: {
@@ -336,7 +346,7 @@
     const basePenDecimal = (armorPen + globalArmorPenetration) / 100
     const hitPenDecimal = hit.group === 'WA' || hit.group === 'Rune' ? (armorPen + globalArmorPenetration + waArmorPenetration) / 100 : basePenDecimal
 
-    const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string) => {
+    const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string, scalingMult = 1, combatMult = 1) => {
       const amount = baseAmount * pct
       if (amount <= 0) return
       const resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonuses))
@@ -345,13 +355,14 @@
         const applicableBoosts = getApplicableBoosts(k, false, undefined, hit?.canProc)
         const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
         const debuffMult = _activeDebuffTypeDamageMult[k] ?? 1
-        const defPct  = defPctForType(k)
-        const defMult = calcArmorMult(defPct, basePenDecimal).mult
+        const defPct   = defPctForType(k)
+        const crushPen = crushingPenForType(k)
+        const defMult  = calcArmorMult(defPct, basePenDecimal + crushPen / 100).mult
         const typeBase = amount * mult
-        const raw = typeBase * typedMultUsed * defMult * debuffMult
+        const raw = typeBase * scalingMult * typedMultUsed * combatMult * defMult * debuffMult
         types.push({
           key: k, label: info.label, color: info.color,
-          typeBase, scalingMult: 1, combatMult: 1,
+          typeBase, scalingMult, combatMult,
           applicableBoosts, weaponBoostMult: 1, typeDebuffMult: debuffMult,
           defMult, enemyDefPct: defPct,
           raw, critVal: Math.round(raw * critDmgMult / 100 * 10000) / 10000,
@@ -373,9 +384,10 @@
       const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
       const enemyDefPct = typeIsHeal ? 0 : defPctForType(k)
+      const crushPen = typeIsHeal ? 0 : crushingPenForType(k)
 
       const weaponBoostMult = hit.weaponBoostMult ?? 1
-      const defMult = typeIsHeal ? 1 : calcArmorMult(enemyDefPct, hitPenDecimal).mult
+      const defMult = typeIsHeal ? 1 : calcArmorMult(enemyDefPct, hitPenDecimal + crushPen / 100).mult
       const typeBase = hit.base * mult
 
       const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
@@ -422,7 +434,8 @@
         const blubResolvedTypes = resolveDamageTypes({ water: 1.0 }, perkDmgTypeBonuses)
 
         for (const [k, mult] of Object.entries(blubResolvedTypes)) {
-          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: blubDebuffMult, defPct: blubDefPct, defMult: blubDefMult } = resolveTypeInfo(k, basePenDecimal)
+          const blubCrushPen = crushingPenForType(k)
+          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: blubDebuffMult, defPct: blubDefPct, defMult: blubDefMult } = resolveTypeInfo(k, basePenDecimal + blubCrushPen / 100)
           const blubTypeBase = blubPerHit * mult
           const blubRawPerHit = blubTypeBase * typedMultUsed * (hit.combatMult ?? 1) * blubDefMult * blubDebuffMult * 2
           
@@ -438,6 +451,10 @@
       }
     }
 
+    if (!isHeal && echoIncinerationBaseDmg > 0 && hit.canProc !== false) {
+      addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, hit.combatMult)
+    }
+
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2 || hit.isFinisher)) {
       const dsDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
       // Cache Dragon State pre-mit base for proc effects below
@@ -445,7 +462,8 @@
       if (dsDebuffMult > 0) {
         const dsResolvedTypes = withDarkMagicHex(resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses))
         for (const [k, mult] of Object.entries(dsResolvedTypes)) {
-          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: dsTypeDebuffMult, defPct: dsDefPct, defMult: dsDefMult } = resolveTypeInfo(k, basePenDecimal)
+          const dsCrushPen = crushingPenForType(k)
+          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: dsTypeDebuffMult, defPct: dsDefPct, defMult: dsDefMult } = resolveTypeInfo(k, basePenDecimal + dsCrushPen / 100)
           const dsTypeBase = dragonStateBaseDmg * mult
           const dsRaw = dsTypeBase * dragonStateScalingMult * dragonStateCombatMult * dsDebuffMult * typedMultUsed * dsDefMult * dsTypeDebuffMult
 
@@ -455,7 +473,7 @@
             applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsTypeDebuffMult,
             defMult: dsDefMult, enemyDefPct: dsDefPct,
             raw: dsRaw, critVal: Math.round(dsRaw * critDmgMult / 100 * 10000) / 10000,
-            isHeal: false, tag: 'Dragon State', oncePerGroup: true, forceCrit: false,
+            isHeal: false, tag: 'Dragon State', forceCrit: false,
           })
           if (lightningCloakPct > 0) {
             if (_dsPreMitBase > 0) addProcEffect(_dsPreMitBase, lightningCloakPct, { air: 0.5, magic: 0.5 }, 'Chain')
@@ -468,7 +486,7 @@
     }
 
     for (const ph of perkOnHitDamages) {
-      if (!isHeal && ph.totalDmg > 0 && hit.isFinisher && ph.tag !== 'Dragon State') {
+      if (!isHeal && ph.totalDmg > 0 && (hit.isFinisher || ph.isProcHit) && ph.tag !== 'Dragon State') {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
           const resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
@@ -478,7 +496,8 @@
             const typedMultUsed = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
             const typeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
             const defPct  = defPctForType(k)
-            const defMult = calcArmorMult(defPct, basePenDecimal).mult
+            const crushPen = crushingPenForType(k)
+            const defMult = calcArmorMult(defPct, basePenDecimal + crushPen / 100).mult
             let baseForType: number
             if (ph.rawFinisherNumerator != null) {
               const fh = hit.count
@@ -512,7 +531,8 @@
               const blubPerHit = blubPreMitBase * 0.15 * blubBlubAmt
               const blubResolvedTypes = resolveDamageTypes({ water: 1.0 }, perkDmgTypeBonuses)
               for (const [k, mult] of Object.entries(blubResolvedTypes)) {
-                const { info, applicableBoosts, typedMultUsed, typeDebuffMult: blubDebuffMult, defPct: blubDefPct, defMult: blubDefMult } = resolveTypeInfo(k, basePenDecimal)
+          const blubCrushPen = crushingPenForType(k)
+          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: blubDebuffMult, defPct: blubDefPct, defMult: blubDefMult } = resolveTypeInfo(k, basePenDecimal + blubCrushPen / 100)
                 const blubTypeBase = blubPerHit * mult
                 const blubRaw = blubTypeBase * typedMultUsed * blubDefMult * blubDebuffMult * 2
                 types.push({
@@ -983,8 +1003,9 @@
                                 </div>
                               {/if}
                               {#if t.defMult !== 1}
+                                {@const totalPen = armorPen + globalArmorPenetration + crushingPenForType(t.key)}
                                 <div class="bdc-fr">
-                                  <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(armorPen * 100) / 100)})</span>
+                                  <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(totalPen * 100) / 100)})</span>
                                   <span class="bdc-fr-val bdc-fr-val--def" class:bdc-fr-val--amplify={t.defMult > 1}>× {fmtMult(t.defMult)}</span>
                                 </div>
                               {/if}
@@ -1123,8 +1144,9 @@
       </div>
     {/if}
     {#if t.defMult !== 1}
+      {@const totalPen = armorPen + globalArmorPenetration + crushingPenForType(t.key)}
       <div class="bdc-fr">
-        <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(armorPen * 100) / 100)})</span>
+        <span class="bdc-fr-label">Defense ({fmt(t.enemyDefPct)}% / Pen {fmt(Math.round(totalPen * 100) / 100)})</span>
         <span class="bdc-fr-val bdc-fr-val--def" class:bdc-fr-val--amplify={t.defMult > 1}>× {fmtMult(t.defMult)}</span>
       </div>
     {/if}

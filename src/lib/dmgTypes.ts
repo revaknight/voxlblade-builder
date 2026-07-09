@@ -10,6 +10,7 @@
   'Venom Eater': { color: '#4ade80', label: '✦ Venom Eater', title: 'Venom Eater: heal 0.1 HP per stack on crit vs poisoned target' },
   'Blub':  { color: '#38bdf8', label: '✦ Blub', title: 'Blub Blub: 15% × perk amount of this hit\'s damage as Water · 2 hits · 50% proc chance' },
   'Blood Thirsty': { color: '#ef4444', label: '✦ Blood Thirsty', title: 'Blood Thirsty: heal 0.3 HP per stack on hit vs Bleeding target' },
+  'Echo Incineration': { color: '#f97316', label: '✦ Echo', title: 'Echo Incineration: (10+2.5×perkAmount)% for Fire+Air on hit' },
 }
 
 export interface ComputedType {
@@ -40,6 +41,7 @@ export interface PerkOnHitDmg {
   totalDmg: number
   dmgTypes: Record<string, number>
   canProc?: boolean
+  isProcHit?: boolean
   rawFinisherNumerator?: number
   halfActivations?: boolean
   oncePerFinisher?: boolean
