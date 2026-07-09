@@ -358,6 +358,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { hex: 1.0 },
     condition: 'Every 10th self-inflicted debuff · 1s CD between roars',
+    procCoefficient: { type: 'noProc' },
     note: 'Stuns on roar',
   },
   // ── Barbed Flurry ───────────────────────────────────────────────────────────
