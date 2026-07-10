@@ -175,7 +175,17 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
       if (buff.isSelfDebuff) return buff
       const potPerk = $result.perks[`${buff.buffName} Potency`] ?? 0
       if (potPerk <= 0) return buff
-      return { ...buff, potency: roundMultiplier(potPerk * 0.1) }
+      const basePot = roundMultiplier(potPerk * 0.1)
+      const edAmt = $result.perks['Endless Despair'] ?? 0
+      const potency = edAmt > 0
+        ? roundMultiplier(basePot * (1 + 0.35 * edAmt) + 0.1)
+        : basePot
+      return {
+        ...buff,
+        basePotency: basePot,
+        bonusPotency: potency !== basePot ? roundMultiplier(potency - basePot) : undefined,
+        potency,
+      }
     })
   })()
 

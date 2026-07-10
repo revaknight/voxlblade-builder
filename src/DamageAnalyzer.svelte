@@ -376,7 +376,7 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
     const entries = _typedBoostResult.activeEntries.filter(e =>
       !(e.perkName === 'Rage' && rageDisabled) &&
       !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled) &&
-      !(e.perkName === 'Hex Shield' && disabledBoosts.has('Converted Energy'))
+      e.perkName !== 'Hex Shield'
     )
     const extinguishAmt = perks['Extinguish'] ?? 0
     if (extinguishAmt > 0 && !extinguishDisabled && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
