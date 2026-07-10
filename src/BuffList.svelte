@@ -332,7 +332,7 @@ $: groupedBuffs = (() => {
 
                   <div class="bl-value-box">
                     <span class="bl-value" style="color:{def.color}">
-                      {effectivePotency}
+                      {+effectivePotency.toFixed(6)}
                       {def.isDebuff && !group.isSelfDebuff ? ' to enemy' : ''}
                     </span>
                   </div>
