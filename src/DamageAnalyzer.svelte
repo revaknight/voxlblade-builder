@@ -543,28 +543,23 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
       }
     })
     if ((perks['Caustic Slow'] ?? 0) > 0) {
+      const csAmt = perks['Caustic Slow'] ?? 0
       const poisonPot = perks['Poison Potency'] ?? 0
       const gamePot = toGamePotency(poisonPot)
-      const edAmt = perks['Endless Despair'] ?? 0
-      const inflictionPot = edAmt > 0 ? gamePot * (1 + 0.35 * edAmt) + 0.1 : gamePot
-      const level = __daBuildVal.level ?? 80
-      const levelMult = 1 + level / 80
-      const base = getDotBase(inflictionPot)
-      const mult = getDotPotencyMult(gamePot)
-      const tick = base * mult
-      const slowAmp = _slowDuration > 0 ? 1 + _slowDuration * 0.1 : 1
-      const tickDamage = tick * slowAmp
+      const potencyMult = getDotPotencyMult(gamePot)
+      const csBase = (1.5 + (csAmt * 5)) * (1 + (_slowPotency / 2))
+      const tickDamage = csBase * potencyMult
       const csRows = buildScalingRows(DOT_SCALINGS['Caustic Slow'])
       const csTotalPct = Math.round(csRows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
       ticks.push({
         type: 'Caustic Slow',
         tickDamage,
         dotPotency: poisonPot,
-        inflictionPotency: inflictionPot,
+        inflictionPotency: 0,
         debuffName: 'Slowness',
         slowDuration: _slowDuration,
-        dotBase: base, potencyMult: mult * slowAmp,
-        levelMult: 1, baseTick: tick,
+        dotBase: csBase, potencyMult: potencyMult,
+        levelMult: 1, baseTick: csBase,
         scalingMult: dotScalingMult('Caustic Slow'), combatMult: _dotCombatMult,
         scalingRows: csRows, totalEffectivePct: csTotalPct,
       })

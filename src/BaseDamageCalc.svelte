@@ -283,53 +283,59 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
   // ── Active debuff combat effects ───────────────────────────────────────────
   // Product of all active damageMult debuffs (Weakness on enemy doesn't affect damage you deal)
-  $: _activeDebuffDamageMult = resolvedDebuffs
-    .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
-    .reduce((acc, d) => acc * (d.damageMult ?? 1), 1)
+  function calcActiveDebuffDamageMult(resolved: Array<any>, disabled: Set<string>): number {
+    return resolved
+      .filter(d => !disabled.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
+      .reduce((acc, d) => acc * (d.damageMult ?? 1), 1)
+  }
+  $: _activeDebuffDamageMult = calcActiveDebuffDamageMult(resolvedDebuffs, disabledDebuffs)
 
-  $: _activeDebuffTypeDamageMult = (() => {
+  function calcDebuffTypeDamageMult(resolved: Array<any>, disabled: Set<string>): Record<string, number> {
     const mults: Record<string, number> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
-      for (const [type, mult] of Object.entries(d.typeDamageMult)) {
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.typeDamageMult) continue
+      for (const [type, mult] of Object.entries(d.typeDamageMult as Record<string, number>)) {
         mults[type] = (mults[type] ?? 1) * mult
       }
     }
     return mults
-  })()
+  }
+  $: _activeDebuffTypeDamageMult = calcDebuffTypeDamageMult(resolvedDebuffs, disabledDebuffs)
 
-  $: _debuffTypeLabels = (() => {
+  function calcDebuffTypeLabels(resolved: Array<any>, disabled: Set<string>): Record<string, string[]> {
     const labels: Record<string, string[]> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.typeDamageMult) continue
       for (const type of Object.keys(d.typeDamageMult)) {
         (labels[type] ??= []).push(d.name)
       }
     }
     return labels
-  })()
+  }
+  $: _debuffTypeLabels = calcDebuffTypeLabels(resolvedDebuffs, disabledDebuffs)
 
   // Effective enemy defenses after applying debuff reductions (e.g. Shatter strips armor)
-  $: effectiveDefenses = (() => {
+  function calcEffectiveDefenses(resolved: Array<any>, disabled: Set<string>, defs: Record<string, number>): Record<string, number> {
     const reductions: Record<string, number> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.defReduction) continue
-      for (const [k, v] of Object.entries(d.defReduction)) {
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.defReduction) continue
+      for (const [k, v] of Object.entries(d.defReduction as Record<string, number>)) {
         // Map defense stat keys to damage type keys
         const typeKey = k.replace('Defense', '')
-        reductions[typeKey] = (reductions[typeKey] ?? 0) + (v ?? 0)
+        reductions[typeKey] = (reductions[typeKey] ?? 0) + v
       }
     }
-    if (Object.keys(reductions).length === 0) return { ...defenses }
-    const out = { ...defenses }
+    if (Object.keys(reductions).length === 0) return { ...defs }
+    const out = { ...defs }
     for (const [k, v] of Object.entries(reductions)) {
       out[k] = (out[k] ?? 0) - v
     }
     return out
-  })()
+  }
+  $: effectiveDefenses = calcEffectiveDefenses(resolvedDebuffs, disabledDebuffs, defenses)
 
   function calcArmorMult(defPct: number, pen: number): { mult: number; branch: 'low'|'high' } {
-    if (defPct <= 0 && pen <= 0) return { mult: 1, branch: 'low' }
+    if (defPct === 0 && pen <= 0) return { mult: 1, branch: 'low' }
     const def = defPct / 100
     if (def <= pen + ARMOR_PEN_BRANCH_THRESHOLD) {
       const am = def - pen
@@ -1338,7 +1344,11 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   {@const _hasSelfDebuff = selfDebuffDamageMult !== 1}
   <div class="bdc-tt-formula-fixed" style={_dotTooltip.style}>
       <div class="bdc-fr">
-        <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
+        {#if _dotTooltip.type === 'Caustic Slow'}
+          <span class="bdc-fr-label">Caustic Base <span class="bdc-tt-muted">((1.5 + perk×5) × (1 + slowPot/2))</span></span>
+        {:else}
+          <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
+        {/if}
         <span class="bdc-fr-val">{fmt(_dotTooltip.dotBase)}</span>
       </div>
       {#if _dotTooltip.potencyMult !== 1}
