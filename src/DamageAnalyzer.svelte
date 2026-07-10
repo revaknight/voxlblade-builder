@@ -30,6 +30,7 @@ import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
+import { WILD_BOLT_ELEMENTS } from './lib/constants'
 
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
@@ -587,7 +588,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: boosts = $result.boosts
   $: stats = $result.stats
   $: perks = $result.perks
-  $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
+  $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 && _allActiveBuffs.some(b => b.buffName === 'Luminescent') ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
   $: _dragonStateAmt = perks['Dragon State'] ?? 0
   $: _dragonStateHpGateActive = _dragonStateAmt > 0 && isHpGateActive(
     DRAGON_STATE_HP_GATE,
@@ -835,11 +836,12 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     getType?: (ctx: { draconicColor: string }) => string
     amountPerStack: number
     getAmountPerStack?: (ctx: { draconicColor: string; perkAmount: number; guild: string; draconicRuneInfusion: string; perks: Record<string, number> }) => number
-    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string; emotionalState: string }) => boolean
+    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string; emotionalState: string; rageDisabled: boolean }) => boolean
+    appliesWithoutProc?: boolean
   }
 
   const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
-    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
+    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => !ctx.rageDisabled && ctx.ragePotency > 0 },
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
     { perkName: 'Emotional', type: 'fire', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'debuffs' },
     {
@@ -852,28 +854,47 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         return effective / ctx.perkAmount
       },
       condition: ctx => ctx.draconicRuneInfusion === 'infusion',
+      appliesWithoutProc: false,
     },
   ]
 
-  $: _perkDmgTypeBonuses = (() => {
+  function buildDmgTypeBonuses(includeNoProcExempt: boolean, ctx: {
+    perks: Record<string, number>; ragePotency: number; draconicRuneInfusion: string;
+    emotionalState: string; draconicColor: string; guild: string;
+    draconicInfusionDisabled: boolean; toxinTransferHexBonus: number; rageDisabled: boolean;
+  }): Record<string, number> {
     const bonus: Record<string, number> = {}
     for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
-      const amt = perks[def.perkName] ?? 0
+      if (!includeNoProcExempt && def.appliesWithoutProc === false) continue
+      const amt = ctx.perks[def.perkName] ?? 0
       if (amt <= 0) continue
-      if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion, emotionalState: $build.emotionalState })) continue
-      if (def.perkName === 'Draconic Blood' && draconicInfusionDisabled) continue
-      const type = def.getType ? def.getType({ draconicColor: $build.draconicColor }) : def.type
+      if (def.condition && !def.condition({ ragePotency: ctx.ragePotency, draconicRuneInfusion: ctx.draconicRuneInfusion, emotionalState: ctx.emotionalState, rageDisabled: ctx.rageDisabled })) continue
+      if (def.perkName === 'Draconic Blood' && ctx.draconicInfusionDisabled) continue
+      const type = def.getType ? def.getType({ draconicColor: ctx.draconicColor }) : def.type
       if (!type) continue
       const amountPerStack = def.getAmountPerStack
-        ? def.getAmountPerStack({ draconicColor: $build.draconicColor, perkAmount: amt, guild: $build.guild, draconicRuneInfusion: $build.draconicRuneInfusion, perks })
+        ? def.getAmountPerStack({ draconicColor: ctx.draconicColor, perkAmount: amt, guild: ctx.guild, draconicRuneInfusion: ctx.draconicRuneInfusion, perks: ctx.perks })
         : def.amountPerStack
       bonus[type] = Math.round(((bonus[type] ?? 0) + amt * amountPerStack) * 10000) / 10000
     }
-    if (_toxinTransferHexBonus > 0) {
-      bonus.hex = Math.round(((bonus.hex ?? 0) + _toxinTransferHexBonus) * 10000) / 10000
+    if (ctx.toxinTransferHexBonus > 0) {
+      bonus.hex = Math.round(((bonus.hex ?? 0) + ctx.toxinTransferHexBonus) * 10000) / 10000
     }
     return bonus
-  })()
+  }
+
+  $: _perkDmgTypeBonuses = buildDmgTypeBonuses(true, {
+    perks, ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion,
+    emotionalState: $build.emotionalState, draconicColor: $build.draconicColor,
+    guild: $build.guild, draconicInfusionDisabled, toxinTransferHexBonus: _toxinTransferHexBonus,
+    rageDisabled,
+  })
+  $: _perkDmgTypeBonusesNoProc = buildDmgTypeBonuses(false, {
+    perks, ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion,
+    emotionalState: $build.emotionalState, draconicColor: $build.draconicColor,
+    guild: $build.guild, draconicInfusionDisabled, toxinTransferHexBonus: _toxinTransferHexBonus,
+    rageDisabled,
+  })
 
   $: _emotionalHexBonus = (() => {
     const amt = perks['Emotional'] ?? 0
@@ -1389,15 +1410,14 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   ) : null
   $: _waHealSeq = _waAllHits.heal.length > 0 ? _waAllHits.heal : null
 
-  const _wildBoltElements = ['fire', 'water', 'holy', 'hex', 'earth', 'air', 'magic']
   let _wildBoltElemIdx = 0
   function cycleWildBoltElem() {
-    _wildBoltElemIdx = (_wildBoltElemIdx + 1) % _wildBoltElements.length
+    _wildBoltElemIdx = (_wildBoltElemIdx + 1) % WILD_BOLT_ELEMENTS.length
   }
   function randomWildBoltElem() {
-    _wildBoltElemIdx = Math.floor(Math.random() * _wildBoltElements.length)
+    _wildBoltElemIdx = Math.floor(Math.random() * WILD_BOLT_ELEMENTS.length)
   }
-  $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? _wildBoltElements[_wildBoltElemIdx] : null
+  $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? WILD_BOLT_ELEMENTS[_wildBoltElemIdx] : null
   $: _waDmgTypes = (() => {
     const apply = (types: Record<string, number>) =>
       applyAirToMagicConversion(types, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
@@ -2223,7 +2243,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         result.push({
           group: 'Perk', index: result.length, count: 10, base: fpPerTick,
           scalingMult: 1, combatMult: _perkCombatMult,
-          isFinisher: false, dmgTypes: { hex: 1.0 },
+          isFinisher: false, dmgTypes: _applyDmgBonuses({ hex: 1.0 }, _perkDmgTypeBonusesNoProc),
           label: 'Fungal Prototype (' + label + ' →)',
           procCoefficient: { type: 'noProc' },
         })
@@ -3365,7 +3385,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
                 <span class="da-wb-elem" style="color:{DMG_TYPE_COLORS[_wildBoltElement!]}">
                   {_wildBoltElement!.charAt(0).toUpperCase() + _wildBoltElement!.slice(1)}
                 </span>
-                ({_wildBoltElemIdx + 1}/{_wildBoltElements.length})
+                ({_wildBoltElemIdx + 1}/{WILD_BOLT_ELEMENTS.length})
               </div>
               <div class="da-wb-line">Debuff (5s, 1 of 6): Bleed · Burn · Poison · Shatter · Slowness · Weakness</div>
             </div>
@@ -4251,6 +4271,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
   perkDmgTypeBonuses={_perkDmgTypeBonuses}
+  perkDmgTypeBonusesNoProc={_perkDmgTypeBonusesNoProc}
   typedBoostEntries={_typedBoostEntries}
   luminescentPct={_luminescentPct}
   selfDebuffDamageMult={_selfDebuffDamageMult}

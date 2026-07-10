@@ -22,6 +22,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   } from './lib/constants'
 
   export let perkDmgTypeBonuses: Record<string, number> = {}
+  export let perkDmgTypeBonusesNoProc: Record<string, number> = {}
   export let boosts: any
   export let crit: any
   export let stats: any
@@ -367,6 +368,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     const combatMult = d.combatMult
     const preMitBase = d.tickDamage * scalingMult * combatMult
 
+    const resolvedTypes = resolveDamageTypes({ [dmgType]: 1.0 }, perkDmgTypeBonusesNoProc)
+
     const applicableBoosts = getApplicableBoosts(dmgType, false, undefined, { type: 'noProc' as const })
     const typedMult = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
@@ -378,7 +381,24 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     const typeDebuffMult = _activeDebuffTypeDamageMult[dmgType] ?? 1
     const debuffMult = _activeDebuffDamageMult
 
-    const finalDmg = preMitBase * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
+    const primaryMult = resolvedTypes[dmgType] ?? 1
+    const finalDmgPrimary = preMitBase * primaryMult * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
+
+    const bonusTypes = Object.entries(resolvedTypes)
+      .filter(([k]) => k !== dmgType)
+      .map(([k, mult]) => {
+        const bApplicable = getApplicableBoosts(k, false, undefined, { type: 'noProc' as const })
+        const bTypedMult = bApplicable.reduce((acc, b) => acc * b.mult, 1)
+        const bDefPct = defPctForType(k)
+        const bCrushPen = crushingPenForType(k)
+        const { mult: bDefMult } = calcArmorMult(bDefPct, (totalPen + bCrushPen) / 100)
+        const bTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+        const raw = preMitBase * mult * bTypedMult * bDefMult * bTypeDebuffMult * debuffMult * selfDebuffDamageMult
+        const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+        return { key: k, label: info.label, color: info.color, raw }
+      })
+
+    const finalDmg = finalDmgPrimary + bonusTypes.reduce((s, b) => s + b.raw, 0)
 
     const trueDmg = d.meltingShredFactor != null
       ? preMitBase * d.meltingShredFactor
@@ -388,7 +408,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
       ? 0.01 * preMitBase * lifeDrinkerAmt + 0.1
       : 0
 
-    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, trueDmg, lifeDrinkerHeal }
+    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, lifeDrinkerHeal }
   })
 
   function defPctForType(k: string): number {
@@ -1226,7 +1246,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                       on:mouseleave={() => { _dotTooltip = null }}>
                       <div class="bdc-hit-type-top">
                         <div class="bdc-hit-type-val-row">
-                          <span class="bdc-hit-type-val">{fmt(dot.finalDmg ?? dot.tickDamage)}</span>
+                          <span class="bdc-hit-type-val">{fmt(dot.finalDmgPrimary ?? dot.finalDmg ?? dot.tickDamage)}</span>
                         </div>
                         <div class="bdc-hit-type-label-row">
                           <span class="bdc-hit-type-label">{dot.type}</span>
@@ -1239,6 +1259,19 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                         {/if}
                       </div>
                     </div>
+                    {#each dot.bonusTypes ?? [] as bt}
+                      <span class="bdc-hit-plus">+</span>
+                      <div class="bdc-hit-type-chunk" style="--tc:{bt.color}">
+                        <div class="bdc-hit-type-top">
+                          <div class="bdc-hit-type-val-row">
+                            <span class="bdc-hit-type-val">{fmt(bt.raw)}</span>
+                          </div>
+                          <div class="bdc-hit-type-label-row">
+                            <span class="bdc-hit-type-label">{bt.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                    {/each}
                     {#if dot.trueDmg}
                       <span class="bdc-hit-plus">+</span>
                       <!-- svelte-ignore a11y_no_static_element_interactions -->
