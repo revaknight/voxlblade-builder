@@ -955,15 +955,7 @@ $: highestDamageType = (() => {
 
   function buildSlotCard(title: string, label: string, description: string, baseStats: StatMap, basePerks: Record<string, number>, enchSlot: EnchantSlot, extras?: string[], upgradeLevel: number = 0): DetailCard {
     const enchNames = $build.enchantments[enchSlot]
-    let upgradedStats = { ...baseStats }
-    if (upgradeLevel > 0) {
-      const preUpgradeArmorPen = upgradedStats.armorPenetration
-      upgradedStats = applyUpgrade(upgradedStats, upgradeLevel)
-      if (upgradedStats.armorPenetration !== preUpgradeArmorPen) {
-        upgradedStats.armorPenetration = preUpgradeArmorPen
-      }
-    }
-    const slotResult = applyEnchantmentsToSlot(upgradedStats, basePerks, enchNames)
+    const slotResult = applyEnchantmentsToSlot(baseStats, basePerks, enchNames, upgradeLevel)
     const filteredStats: Record<string, number> = {}
     for (const [k, v] of Object.entries(slotResult.stats)) {
       const rounded = Math.round((v + Number.EPSILON) * 100) / 100
@@ -1016,7 +1008,6 @@ $: highestDamageType = (() => {
       const ip = infName ? getArmorPart(infName, partType as any) : null
       if (part || ip) {
         const bp: Record<string, number> = part?.perkName ? { [part.perkName]: 1 } : {}
-        const upgradedStats = part ? applyUpgrade(part.stats as StatMap, upgradeLevel) : {}
         const main = part ? buildSlotCard(partType, buildEnchantLabel(armorName, enchSlot), part.description, part.stats as StatMap, bp, enchSlot, undefined, upgradeLevel) : null
         let infusion: DetailCard | null = null
         if (ip) {
@@ -1031,7 +1022,6 @@ $: highestDamageType = (() => {
       const ir = $build.infusionRing ? getRing($build.infusionRing) : null
       if (ring || ir) {
         const bp: Record<string, number> = ring?.perkName ? { [ring.perkName]: ring.perkAmount ?? 1 } : {}
-        const upgradedRingStats = applyUpgrade(ring.stats, $build.upgradeRing ?? 0)
         const main = ring ? buildSlotCard('Ring', buildEnchantLabel(ring.name, 'ring'), ring.description, ring.stats, bp, 'ring', undefined, $build.upgradeRing ?? 0) : null
         let infusion: DetailCard | null = null
         if (ir) {

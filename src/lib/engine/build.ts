@@ -303,18 +303,11 @@ function processEnchantedSlot(
   if (!itemName) return
   const item = getItem(itemName)
   if (!item) return
-  let baseStats = { ...item.stats }
-  if (upgrade > 0) {
-    const preUpgradeArmorPen = baseStats.armorPenetration
-    baseStats = applyUpgrade(baseStats, upgrade)
-    if (baseStats.armorPenetration !== preUpgradeArmorPen) {
-      baseStats.armorPenetration = preUpgradeArmorPen
-    }
-  }
   let slotResult = applyEnchantmentsToSlot(
-    baseStats,
+    item.stats,
     item.perkName ? { [item.perkName]: item.perkAmount ?? 1 } : {},
     enchants,
+    upgrade,
   )
   addStats(slotResult.stats)
   addPerkMap(slotResult.perks)
@@ -365,19 +358,12 @@ function accumulateEquipment(state: BuildState): { stats: StatMap; perks: Record
     if (!armorName) continue
     const part = getArmorPart(armorName, partType)
     if (!part) continue
-    let baseStats = { ...(part.stats as StatMap) }
     const upgrade = state[upgradeKey] ?? 0
-    if (upgrade > 0) {
-      const preUpgradeArmorPen = baseStats.armorPenetration
-      baseStats = applyUpgrade(baseStats, upgrade)
-      if (baseStats.armorPenetration !== preUpgradeArmorPen) {
-        baseStats.armorPenetration = preUpgradeArmorPen
-      }
-    }
     let slotResult = applyEnchantmentsToSlot(
-      baseStats,
+      part.stats as StatMap,
       part.perkName ? { [part.perkName]: 1 } : {},
       state.enchantments[enchSlot],
+      upgrade,
     )
     addStats(slotResult.stats)
     addPerkMap(slotResult.perks)

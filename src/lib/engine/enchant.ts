@@ -30,11 +30,12 @@ function applyModsWhere(
   baseStats: StatMap,
   mult:      Partial<Record<StatKey, number>>,
   add:       Partial<Record<StatKey, number>>,
-  predicate: (baseValue: number, key: StatKey) => boolean,
+  predicate: (currentValue: number, key: StatKey) => boolean,
 ): void {
   for (let j = 0; j < STAT_KEYS.length; j++) {
     const key = STAT_KEYS[j]
-    if (predicate(baseStats[key] ?? 0, key)) applyModsToKey(key, mods, mult, add)
+    const currentVal = (baseStats[key] ?? 0) * (mult[key] ?? 1) + (add[key] ?? 0)
+    if (predicate(currentVal, key)) applyModsToKey(key, mods, mult, add)
   }
 }
 
@@ -55,10 +56,13 @@ export function applyEnchantmentsToSlot(
   baseStats:    StatMap,
   basePerks:    Record<string, number>,
   enchantNames: string[],
+  upgradeLevel: number = 0,
 ): { stats: StatMap; perks: Record<string, number> } {
   const ordered = [...enchantNames].reverse()
-  const mult: Partial<Record<StatKey, number>> = {}
-  const add:  Partial<Record<StatKey, number>> = {}
+
+  // Phase 1: STAT_SELECTORS (Restored, Flawless) transform base stats
+  const baseMult: Partial<Record<StatKey, number>> = {}
+  const add: Partial<Record<StatKey, number>> = {}
   const perks = { ...basePerks }
 
   for (let i = 0; i < ordered.length; i++) {
@@ -67,10 +71,48 @@ export function applyEnchantmentsToSlot(
     const e = getEnchant(name)
     if (!e) continue
     const es = e.stats
+    if (!es) continue
 
     for (const { key, pred } of STAT_SELECTORS) {
       if (!es[key]) continue
-      applyModsWhere(normalizeModifiers(es[key] as StatModifier | StatModifier[]), baseStats, mult, add, pred)
+      applyModsWhere(normalizeModifiers(es[key] as StatModifier | StatModifier[]), baseStats, baseMult, add, pred)
+    }
+  }
+
+  // Compute modified base (base stats after selector transformations)
+  let currentStats: StatMap = {}
+  for (let j = 0; j < STAT_KEYS.length; j++) {
+    const key    = STAT_KEYS[j]
+    const result = (baseStats[key] ?? 0) * (baseMult[key] ?? 1)
+    if (result !== 0) currentStats[key] = result
+  }
+
+  // Apply upgrade to modified base (keep armorPen unaffected)
+  if (upgradeLevel > 0) {
+    const preUpgradeArmorPen = currentStats.armorPenetration
+    currentStats = applyUpgrade(currentStats, upgradeLevel)
+    if (currentStats.armorPenetration !== preUpgradeArmorPen) {
+      currentStats.armorPenetration = preUpgradeArmorPen
+    }
+  }
+
+  // Phase 2: Direct stat modifiers (Quenched +5, Strengthened 1.2x+10, etc.)
+  const bonusMult: Partial<Record<StatKey, number>> = {}
+  const bonusAdd:  Partial<Record<StatKey, number>> = {}
+
+  for (let i = 0; i < ordered.length; i++) {
+    const name = ordered[i]
+    if (!name) continue
+    const e = getEnchant(name)
+    if (!e) continue
+    const es = e.stats
+    if (!es) continue
+
+    for (let j = 0; j < STAT_KEYS.length; j++) {
+      const key      = STAT_KEYS[j]
+      const modifier = es[key]
+      if (!modifier) continue
+      applyModsToKey(key, normalizeModifiers(modifier as StatModifier | StatModifier[]), bonusMult, bonusAdd)
     }
 
     if (es.perks) {
@@ -83,13 +125,6 @@ export function applyEnchantmentsToSlot(
       }
     }
 
-    for (let j = 0; j < STAT_KEYS.length; j++) {
-      const key      = STAT_KEYS[j]
-      const modifier = es[key]
-      if (!modifier) continue
-      applyModsToKey(key, normalizeModifiers(modifier as StatModifier | StatModifier[]), mult, add)
-    }
-
     if (e.effects) {
       for (let j = 0; j < e.effects.length; j++) {
         const eff = e.effects[j]
@@ -98,10 +133,12 @@ export function applyEnchantmentsToSlot(
     }
   }
 
+  // Apply bonus onto upgraded base
   const stats: StatMap = {}
   for (let j = 0; j < STAT_KEYS.length; j++) {
     const key    = STAT_KEYS[j]
-    const result = (baseStats[key] ?? 0) * (mult[key] ?? 1) + (add[key] ?? 0)
+    const base   = currentStats[key] ?? 0
+    const result = base * (bonusMult[key] ?? 1) + (bonusAdd[key] ?? 0)
     if (result !== 0) stats[key] = result
   }
 
