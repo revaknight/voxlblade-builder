@@ -28,7 +28,7 @@
 import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
-import { calcDotTick, calcCausticSlow, toGamePotency, DOT_TYPE_LIST } from './data/DoTDamage'
+import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
 
 
@@ -38,23 +38,29 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
   const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
   
-  $: _activeDefensivePerkSources = (() => {
-    const _hasProtection = ($result.stats.protection ?? 0) > 0
-    const _debuffCount = _dummyDebuffs.filter(d => !disabledDebuffs.has(d.name)).length
+  $: _activeDefensivePerkSources = computeActiveDefensivePerkSources(
+    __daResultVal, __daBuildVal, perks, _hpFillPct, _adaptivePlateTriggered, _effectiveInDarkness, _ragePotency, mountActive, _dummyDebuffs, disabledDebuffs,
+  )
+  function computeActiveDefensivePerkSources(
+    resultVal: typeof __daResultVal, buildVal: typeof __daBuildVal,
+    perka: Record<string,number>, hpFillPct: number, adaptivePlateTriggered: boolean, effectiveInDarkness: boolean, ragePotency: number, mountActive: boolean, dummyDebuffs: any[], disabledDebuffs: Set<string>,
+  ) {
+    const _hasProtection = (resultVal.stats.protection ?? 0) > 0
+    const _debuffCount = dummyDebuffs.filter((d: any) => !disabledDebuffs.has(d.name)).length
     const baseSources = getActiveDefensivePerkSources(
-      perks, _hpFillPct, _adaptivePlateTriggered, _effectiveInDarkness, _ragePotency > 0, mountActive, _hasProtection, _debuffCount
+      perka, hpFillPct, adaptivePlateTriggered, effectiveInDarkness, ragePotency > 0, mountActive, _hasProtection, _debuffCount
     )
     let potMult = 1
     
-    const bastionStacks = perks['Bastion Bless'] ?? 0
+    const bastionStacks = perka['Bastion Bless'] ?? 0
     if (bastionStacks > 0) {
       potMult += 0.1 * bastionStacks
     }
     
-    const _infActive = $build.draconicRuneInfusion === 'infusion'
-    const color = $build.draconicColor
+    const _infActive = buildVal.draconicRuneInfusion === 'infusion'
+    const color = buildVal.draconicColor
     if (_infActive && color === 'holy') {
-      const _infPerkAmt = perks['Draconic Blood'] ?? 0
+      const _infPerkAmt = perka['Draconic Blood'] ?? 0
       potMult *= 1 + _infPerkAmt * 0.05
     }
     
@@ -67,7 +73,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         defPct: Math.round(s.defPct * potMult * 1000) / 1000
       }
     })
-  })()
+  }
   $: _photosynthesisStacks = perks['Photosynthesis'] ?? 0
   $: _vampireStacks = perks['Vampire'] ?? 0
   $: {
@@ -387,6 +393,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     $build.rune || undefined
   )
  
+  $: __daBuildVal = $build
+  $: __daResultVal = $result
   $: _dummyDebuffs = (() => {
     const variantBase = new Map<string, string>([
       ['Sticky (Melting Slime)', 'Sticky'],
@@ -410,9 +418,9 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       existingBuffNames: [...groups.keys()],
       playerBuffNames: _allActiveBuffs.map(b => b.buffName),
       perks,
-      hpFill: $build.hpFill ?? 100,
-      level: $build.level ?? 80,
-      protection: $result.stats.protection ?? 0,
+      hpFill: __daBuildVal.hpFill ?? 100,
+      level: __daBuildVal.level ?? 80,
+      protection: __daResultVal.stats.protection ?? 0,
       selectedWAProcCoefficient: WA_PROC_COEFFS[selectedWA.name] ?? DEFAULT_PROC_COEFF,
     })
     for (const d of autoDebuffs) {
@@ -451,7 +459,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         typeDamageMult: combatFx?.typeDamageMult ? combatFx.typeDamageMult(potency, perks) : undefined,
       }
     }
-    return [...groups.entries()].map(([name, inner]) => {
+    const result = [...groups.entries()].map(([name, inner]) => {
       const variants = [...inner.entries()].map(([bn, p]) => buildVariant(bn, p))
       variants.sort((a, b) => {
         if (a.sourceName === name && b.sourceName !== name) return 1
@@ -467,6 +475,24 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         variants,
       }
     })
+    // For DoT debuffs (Bleed/Burn/Poison), use player's {type} Potency perk value
+    for (const debuff of result) {
+      if (['Bleed', 'Burn', 'Poison'].includes(debuff.name)) {
+        const potPerk = perks[`${debuff.name} Potency`] ?? 0
+        if (potPerk > 0) {
+          const gamePot = roundMultiplier(potPerk * 0.1)
+          const effect = calcBuffEffect(debuff.name, gamePot)
+          debuff.potency = gamePot
+          debuff.effectLabel = effect ? `${effect.value}${effect.unit === '%' ? '%' : ''}` : null
+          debuff.variants = debuff.variants.map(v => ({
+            ...v,
+            potency: gamePot,
+            effectLabel: debuff.effectLabel,
+          }))
+        }
+      }
+    }
+    return result
   })()
 
   $: _dummyHasPoisonActive = _dummyDebuffs.some(d => d.name === 'Poison' && !disabledDebuffs.has(d.name))
@@ -478,26 +504,61 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       .filter(b => b.buffName === 'Slowness' && !b.isSelfDebuff)
       .map(b => b.duration ?? 0),
   )
+  function dotScalingMult(type: string): number {
+    const scalings = DOT_SCALINGS[type] ?? {}
+    let totalPct = 0
+    for (const [key, val] of Object.entries(scalings)) {
+      const boostKey = SCALING_TO_BOOST[key]
+      if (!boostKey) continue
+      const boostPct = (stats as Record<string, number>)[boostKey] ?? 0
+      totalPct += val * boostPct
+    }
+    return 1 + totalPct / 100
+  }
+
   $: _dotTicks = (() => {
     const ticks: Array<{
       type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
       debuffName?: string; slowDuration?: number; baseTick?: number
+      dotBase: number; potencyMult: number
+      scalingMult: number; combatMult: number
     }> = DOT_TYPE_LIST.map(type => {
       const dotPot = perks[`${type} Potency`] ?? 0
       const gamePot = toGamePotency(dotPot)
-      return { type, tickDamage: calcDotTick(gamePot, gamePot), dotPotency: gamePot, inflictionPotency: gamePot }
+      const base = getDotBase(gamePot)
+      const mult = getDotPotencyMult(gamePot)
+      const tick = Math.round(base * mult * 1000) / 1000
+      const rows = buildScalingRows(DOT_SCALINGS[type])
+      const totalPct = Math.round(rows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
+      return {
+        type, tickDamage: tick, dotPotency: dotPot, inflictionPotency: gamePot,
+        dotBase: base, potencyMult: mult,
+        baseTick: tick,
+        scalingMult: dotScalingMult(type), combatMult: _dotCombatMult,
+        scalingRows: rows, totalEffectivePct: totalPct,
+      }
     })
     if ((perks['Caustic Slow'] ?? 0) > 0) {
       const poisonPot = perks['Poison Potency'] ?? 0
-      const { baseTick, tickDamage, slowMult } = calcCausticSlow(poisonPot, _slowDuration)
+      const gamePot = toGamePotency(poisonPot)
+      const base = getDotBase(gamePot)
+      const mult = getDotPotencyMult(gamePot)
+      const tick = Math.round(base * mult * 1000) / 1000
+      const slowAmp = _slowDuration > 0 ? 1 + _slowDuration * 0.1 : 1
+      const tickDamage = Math.round(tick * slowAmp * 1000) / 1000
+      const csRows = buildScalingRows(DOT_SCALINGS['Caustic Slow'])
+      const csTotalPct = Math.round(csRows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
       ticks.push({
         type: 'Caustic Slow',
         tickDamage,
-        dotPotency: toGamePotency(poisonPot),
-        inflictionPotency: toGamePotency(poisonPot),
+        dotPotency: poisonPot,
+        inflictionPotency: gamePot,
         debuffName: 'Slowness',
         slowDuration: _slowDuration,
-        baseTick,
+        dotBase: base, potencyMult: mult * slowAmp,
+        baseTick: tick,
+        scalingMult: dotScalingMult('Caustic Slow'), combatMult: _dotCombatMult,
+        scalingRows: csRows, totalEffectivePct: csTotalPct,
       })
     }
     return ticks
@@ -1052,6 +1113,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: _waCombatMult   = (void activeEntries, _categoryMult('wa'))
   $: _runeCombatMult = (void activeEntries, _categoryMult('rune'))
   $: _perkCombatMult = (void activeEntries, _categoryMult('perk'))
+  $: _dotCombatMult = (void activeEntries, _categoryMult('perk', false))
 
   $: _hasSpecificBoosts = boosts.dmgEntries.some(e => !!(e as any).appliesTo)
 
@@ -1106,6 +1168,12 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     dexterity: '#ffe373',
     summon:    '#c084fc',
     protection: 'rgb(68, 226, 43)',
+  }
+  const DOT_COLORS: Record<string, string> = {
+    Bleed: '#ff0004',
+    Burn: '#fd5d00',
+    Poison: '#d900ff',
+    'Caustic Slow': '#a855f7',
   }
 
   function buildScalingRows(scalings: Record<string, number>): ScalingRow[] {
@@ -3810,6 +3878,74 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         {/if}
       {/each}
     </div>
+  </div>
+{/if}
+
+{#if _dotTicks.length > 0}
+  <div class="da-section da-section--scaling">
+    <div class="da-section-title">📐 DoT Damage Scaling</div>
+    <div class="ds-formula-hint">Effective Boost = Σ (Scaling × Boost%) → adds to base as ×(1 + Effective%)</div>
+    {#each _dotTicks as dt, i}
+      {@const _dc = DOT_COLORS[dt.type] ?? '#e8e4da'}
+      {#if i > 0}<div class="da-perk-scaling-divider"></div>{/if}
+      <div class="ds-table ds-table--perk" style="margin-top:6px;">
+        <div class="ds-head">
+          <div class="ds-col ds-col--type" style="flex:1.2;">
+            <span class="ds-dot" style="background:{_dc}"></span>
+            <span style="color:{_dc}">{dt.type}</span>
+          </div>
+          <div class="ds-col ds-col--val" style="flex:1;">Scaling</div>
+          <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+          <div class="ds-col ds-col--boost" style="flex:1.2;">Your Boost</div>
+          <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+          <div class="ds-col ds-col--contrib" style="flex:1;">Contribution</div>
+        </div>
+        {#each dt.scalingRows as row}
+          <div class="ds-row">
+            <div class="ds-col ds-col--type" style="flex:1.2;">
+              <span class="ds-dot" style="background:{row.color}"></span>
+              <span style="color:{row.color}">{row.key}</span>
+            </div>
+            <div class="ds-col ds-col--val" style="flex:1;">
+              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
+            </div>
+            <div class="ds-col ds-col--op" style="flex:0.3;">×</div>
+            <div class="ds-col ds-col--boost" style="flex:1.2;">
+              {#if row.boostPct !== 0}
+                <span class="ds-boost" class:ds-boost--zero={row.boostPct === 0}>
+                  {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}%
+                </span>
+              {:else}
+                <span class="ds-boost ds-boost--zero">+0%</span>
+              {/if}
+            </div>
+            <div class="ds-col ds-col--op" style="flex:0.3;">=</div>
+            <div class="ds-col ds-col--contrib" style="flex:1;">
+              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0} style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+                {row.contribution > 0 ? '+' : ''}{row.contribution}%
+              </span>
+            </div>
+          </div>
+        {/each}
+        <div class="ds-row ds-row--total">
+          <div class="ds-col ds-col--type ds-total-label">Total Effective Boost</div>
+          <div class="ds-col ds-col--val"></div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost"></div>
+          <div class="ds-col ds-col--op">=</div>
+          <div class="ds-col ds-col--contrib">
+            <span class="ds-total-pct">+{dt.totalEffectivePct}%</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-result-row ds-result-row--perk" style="background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.15);">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+          <span class="ds-result-label" style="color:#fb923c;">{dt.type} Scaling Multiplier</span>
+        </div>
+        <span class="ds-result-eq">1 + {dt.totalEffectivePct}% =</span>
+        <span class="ds-result-val">×{+dt.scalingMult.toFixed(4)}</span>
+      </div>
+    {/each}
   </div>
 {/if}
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { build, result } from './lib/store'
-  import { calcWardingDebuffMultiplier } from './lib/utils'
+  import { calcWardingDebuffMultiplier, roundMultiplier } from './lib/utils'
   import {
     BUFF_DEFS,
     getActiveBuildBuffs,
@@ -168,6 +168,17 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
     })
   })()
 
+  $: _dotDebuffs = (() => {
+    const dotNames = ['Bleed', 'Burn', 'Poison']
+    return displayBuffs.map(buff => {
+      if (!dotNames.includes(buff.buffName)) return buff
+      if (buff.isSelfDebuff) return buff
+      const potPerk = $result.perks[`${buff.buffName} Potency`] ?? 0
+      if (potPerk <= 0) return buff
+      return { ...buff, potency: roundMultiplier(potPerk * 0.1) }
+    })
+  })()
+
   type GroupedBuff = {
     buffName: string
     isSelfDebuff: boolean
@@ -177,7 +188,7 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
   }
 
 $: groupedBuffs = (() => {
-  const groups = displayBuffs.reduce((acc, buff) => {
+  const groups = _dotDebuffs.reduce((acc, buff) => {
     const k = `${buff.buffName}:${String(buff.isSelfDebuff ?? false)}`
     ;(acc[k] ??= []).push(buff)
     return acc

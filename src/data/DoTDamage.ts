@@ -12,12 +12,37 @@ export interface DotTickResult {
   baseTick?: number
 }
 
+/** Stat scalings per DoT type. Same format as weapon scalings. */
+export const DOT_SCALINGS: Record<string, Record<string, number>> = {
+  Bleed: { dexterity: 1.0, physical: 1.0 },
+  Burn: { fire: 1.5 },
+  Poison: { hex: 1.0, earth: 1.0 },
+  'Caustic Slow': { hex: 1.0, earth: 1.0 },
+}
+
 /** Maps each DoT type to the damage type used for defense mitigation. */
 export const DOT_DMG_TYPE_MAP: Record<string, string> = {
   Bleed: 'physical',
   Burn: 'fire',
   Poison: 'hex',
   'Caustic Slow': 'true',
+}
+
+/**
+ * Returns the flat base damage before potency multiplier.
+ * Formula: 1.75 × (1 + inflictionPotency / 1.1)
+ */
+export function getDotBase(inflictionPotency: number): number {
+  return 1.75 * (1 + inflictionPotency / 1.1)
+}
+
+/**
+ * Returns the potency multiplier.
+ * Formula: (1 + dotPotency)^(1 + min(1, dotPotency))
+ * Cap: exponent = 2 when dotPotency >= 1.0 (perkAmount >= 10).
+ */
+export function getDotPotencyMult(dotPotency: number): number {
+  return Math.pow(1 + dotPotency, 1 + Math.min(1, dotPotency))
 }
 
 /**
@@ -30,11 +55,8 @@ export function calcDotTick(
   dotPotency: number,
   inflictionPotency: number,
 ): number {
-  const baseDmg = 1.75 * (1 + inflictionPotency / 1.1)
-  const mult = Math.pow(
-    1 + dotPotency,
-    1 + Math.min(1, dotPotency),
-  )
+  const baseDmg = getDotBase(inflictionPotency)
+  const mult = getDotPotencyMult(dotPotency)
   return Math.round(baseDmg * mult * 1000) / 1000
 }
 

@@ -125,6 +125,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   export let dotTicks: Array<{
     type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
     debuffName?: string; slowDuration?: number; baseTick?: number
+    dotBase: number; potencyMult: number
+    scalingMult: number; combatMult: number
   }> = []
 
   let activeVariants = new Map<string, number>()
@@ -142,10 +144,19 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     style: string
     slowDuration?: number
     baseTick?: number
+    dotBase: number
+    potencyMult: number
     dmgType?: string
-    defPct?: number
-    defMult?: number
-    finalDmg?: number
+    scalingMult: number
+    combatMult: number
+    preMitBase: number
+    applicableBoosts: Array<{ perkName: string; label: string; mult: number }>
+    typedMult: number
+    defPct: number
+    defMult: number
+    typeDebuffMult: number
+    debuffMult: number
+    finalDmg: number
   } | null = null
 
   $: resolvedDebuffs = appliedDebuffs.map(d => {
@@ -304,6 +315,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   })()
 
   function calcArmorMult(defPct: number, pen: number): { mult: number; branch: 'low'|'high' } {
+    if (defPct <= 0) return { mult: 1, branch: 'low' }
     const def = defPct / 100
     if (def <= pen + ARMOR_PEN_BRANCH_THRESHOLD) {
       const am = def - pen
@@ -334,15 +346,28 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
   $: _activeDotTicks = dotTicks.filter(d => {
     const debuffToCheck = d.debuffName ?? d.type
-    const isOnDummy = resolvedDebuffs.some(r => r.name === debuffToCheck && !disabledDebuffs.has(r.name))
+    const isOnDummy = resolvedDebuffs.some(r => r.name === debuffToCheck)
     return isOnDummy && d.tickDamage > 0
   }).map(d => {
-    const dmgType = DOT_DMG_TYPE_MAP[d.type] ?? 'true'
+    const dmgType = DOT_DMG_TYPE_MAP[d.type] ?? 'hex'
+    const scalingMult = d.scalingMult
+    const combatMult = d.combatMult
+    const preMitBase = d.tickDamage * scalingMult * combatMult
+
+    const applicableBoosts = getApplicableBoosts(dmgType, false, undefined, { type: 'noProc' as const })
+    const typedMult = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
+
     const defPct = defPctForType(dmgType)
     const totalPen = armorPen + globalArmorPenetration
-    const { mult: defMult } = calcArmorMult(defPct, totalPen / 100)
-    const finalDmg = Math.round(d.tickDamage * defMult * 1000) / 1000
-    return { ...d, dmgType, defPct, defMult, finalDmg }
+    const crushPen = crushingPenForType(dmgType)
+    const { mult: defMult } = calcArmorMult(defPct, (totalPen + crushPen) / 100)
+
+    const typeDebuffMult = _activeDebuffTypeDamageMult[dmgType] ?? 1
+    const debuffMult = _activeDebuffDamageMult
+
+    const finalDmg = Math.round(preMitBase * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult * 1000) / 1000
+
+    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg }
   })
 
   function defPctForType(k: string): number {
@@ -1157,9 +1182,18 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                           inflictionPotency: dot.inflictionPotency ?? 0,
                           slowDuration: dot.slowDuration,
                           baseTick: dot.baseTick,
+                          dotBase: dot.dotBase,
+                          potencyMult: dot.potencyMult,
                           dmgType: dot.dmgType,
+                          scalingMult: dot.scalingMult,
+                          combatMult: dot.combatMult,
+                          preMitBase: dot.preMitBase,
+                          applicableBoosts: dot.applicableBoosts ?? [],
+                          typedMult: dot.typedMult,
                           defPct: dot.defPct,
                           defMult: dot.defMult,
+                          typeDebuffMult: dot.typeDebuffMult,
+                          debuffMult: dot.debuffMult,
                           finalDmg: dot.finalDmg,
                           style: spaceBelow > 180
                             ? `left:${left}px;top:${r.bottom + 4}px;`
@@ -1206,37 +1240,69 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
 {#if _dotTooltip}
   {@const _dtc = DOT_COLORS[_dotTooltip.type] ?? '#e8e4da'}
+  {@const _hasBoosts = _dotTooltip.applicableBoosts.length > 0 && _dotTooltip.typedMult !== 1}
+  {@const _hasTypeDebuff = _dotTooltip.typeDebuffMult !== 1}
+  {@const _hasDebuffMult = _dotTooltip.debuffMult !== 1}
+  {@const _hasSelfDebuff = selfDebuffDamageMult !== 1}
   <div class="bdc-tt-formula-fixed" style={_dotTooltip.style}>
     <div class="bdc-fr">
-      <span class="bdc-fr-label">DoT Base</span>
-      <span class="bdc-fr-val">{fmt(1.75 * (1 + _dotTooltip.inflictionPotency / 1.1))}</span>
+      <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
+      <span class="bdc-fr-val">{fmt(_dotTooltip.dotBase)}</span>
     </div>
-    <div class="bdc-fr">
-      <span class="bdc-fr-label">Potency Mult</span>
-      <span class="bdc-fr-val"><span class="bdc-tt-paren">(1 + {fmt(_dotTooltip.dotPotency)})</span><sup>{fmt(1 + Math.min(1, _dotTooltip.dotPotency))}</sup> = {fmt(Math.pow(1 + _dotTooltip.dotPotency, 1 + Math.min(1, _dotTooltip.dotPotency)))}</span>
-    </div>
-    {#if _dotTooltip.slowDuration && _dotTooltip.slowDuration > 0 && _dotTooltip.baseTick != null}
+    {#if _dotTooltip.potencyMult !== 1}
       <div class="bdc-fr">
-        <span class="bdc-fr-label">Slow Boost <span class="bdc-tt-hint">(rem. {_dotTooltip.slowDuration}s)</span></span>
-        <span class="bdc-fr-val">× {fmt(1 + _dotTooltip.slowDuration * 0.1)}</span>
+        <span class="bdc-fr-label">Potency Mult</span>
+        <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(_dotTooltip.potencyMult)}</span>
       </div>
     {/if}
-    {#if _dotTooltip.baseTick != null}
+    {#if _dotTooltip.scalingMult !== 1}
       <div class="bdc-fr">
-        <span class="bdc-fr-label">Base Tick</span>
-        <span class="bdc-fr-val">{fmt(_dotTooltip.baseTick)}</span>
+        <span class="bdc-fr-label">Scaling</span>
+        <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(_dotTooltip.scalingMult)}</span>
       </div>
     {/if}
-    {#if _dotTooltip.defPct != null && _dotTooltip.defMult != null}
+    {#if _dotTooltip.combatMult !== 1}
       <div class="bdc-fr">
-        <span class="bdc-fr-label">{_dotTooltip.dmgType ?? '?'} Defense</span>
-        <span class="bdc-fr-val"><span class="bdc-tt-muted">{fmt(_dotTooltip.defPct)}%</span> → × {fmt(_dotTooltip.defMult)}</span>
+        <span class="bdc-fr-label">Combat Multipliers</span>
+        <span class="bdc-fr-val bdc-fr-val--combat">× {fmtMult(_dotTooltip.combatMult)}</span>
+      </div>
+    {/if}
+    {#if _hasBoosts}
+      {#each _dotTooltip.applicableBoosts as boost}
+        <div class="bdc-fr">
+          <span class="bdc-fr-label">{boost.label}</span>
+          <span class="bdc-fr-val bdc-fr-val--typedboost">× {fmtMult(boost.mult)}</span>
+        </div>
+      {/each}
+    {/if}
+    {#if _dotTooltip.defMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">{_dotTooltip.dmgType} Defense <span class="bdc-tt-muted">({fmt(_dotTooltip.defPct)}% / Pen {fmt(armorPen + globalArmorPenetration)})</span></span>
+        <span class="bdc-fr-val bdc-fr-val--def" class:bdc-fr-val--amplify={_dotTooltip.defMult > 1}>× {fmtMult(_dotTooltip.defMult)}</span>
+      </div>
+    {/if}
+    {#if _hasTypeDebuff}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Type Debuff Mult</span>
+        <span class="bdc-fr-val bdc-fr-val--debuff">× {fmtMult(_dotTooltip.typeDebuffMult)}</span>
+      </div>
+    {/if}
+    {#if _hasDebuffMult}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Debuff Damage Mult</span>
+        <span class="bdc-fr-val bdc-fr-val--debuff">× {fmtMult(_dotTooltip.debuffMult)}</span>
+      </div>
+    {/if}
+    {#if _hasSelfDebuff}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Self Debuff Mult</span>
+        <span class="bdc-fr-val bdc-fr-val--debuff">× {fmtMult(selfDebuffDamageMult)}</span>
       </div>
     {/if}
     <div class="bdc-fr-divider"></div>
     <div class="bdc-fr bdc-fr--result">
-      <span class="bdc-fr-label">After Defense</span>
-      <span class="bdc-fr-val bdc-fr-val--result" style="--tc:{_dtc}">{fmt(_dotTooltip.finalDmg ?? _dotTooltip.tickDamage)}</span>
+      <span class="bdc-fr-label">Final DoT Tick</span>
+      <span class="bdc-fr-val bdc-fr-val--result" style="--tc:{_dtc}">{fmt(_dotTooltip.finalDmg)}</span>
     </div>
   </div>
 {/if}
@@ -2115,20 +2181,6 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   box-shadow: 0 8px 24px rgba(0,0,0,.6);
   min-width: 200px;
   width: max-content;
-}
-.bdc-tt-formula-fixed sup {
-  font-size: .55rem;
-  vertical-align: super;
-  line-height: 1;
-  color: var(--ink-muted, #8a8d85);
-}
-.bdc-tt-paren {
-  color: var(--ink-muted, #8a8d85);
-}
-.bdc-tt-hint {
-  font-weight: 400;
-  opacity: .6;
-  font-size: .65rem;
 }
 .bdc-tt-muted {
   color: var(--ink-muted, #8a8d85);
