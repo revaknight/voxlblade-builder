@@ -302,12 +302,14 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
     const _infActive = $build.draconicRuneInfusion === 'infusion'
     const color = $build.draconicColor
     if (!_infActive || draconicInfusionDisabled || (color !== 'hex' && color !== 'holy')) {
+      const hasSelfDebuff = baseBuffs.some(b => b.isSelfDebuff && BUFF_DEFS[b.buffName]?.isDebuff)
+      if (!hasSelfDebuff) return baseBuffs.filter(b => b.buffName !== 'Converted Energy')
       return baseBuffs
     }
     const _infPerkAmt = $result.perks['Draconic Blood'] ?? 0
     const potMult = 1 + _infPerkAmt * 0.05
 
-    return baseBuffs.map(buff => {
+    const infusedBuffs = baseBuffs.map(buff => {
       const def = BUFF_DEFS[buff.buffName]
       if (!def) return buff
       const isSelfDebuff = buff.isSelfDebuff || def.isSelfDebuff
@@ -325,6 +327,10 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
       
       return buff
     })
+
+    const hasSelfDebuff = infusedBuffs.some(b => b.isSelfDebuff && BUFF_DEFS[b.buffName]?.isDebuff)
+    if (!hasSelfDebuff) return infusedBuffs.filter(b => b.buffName !== 'Converted Energy')
+    return infusedBuffs
   })()
   $: _allActiveBuffs = (_disabledKeysArr.length, _allActiveBuffsRaw.filter(b => !_isBuffDisabled(b)))
   $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
@@ -369,7 +375,8 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
   $: _typedBoostEntries = (() => {
     const entries = _typedBoostResult.activeEntries.filter(e =>
       !(e.perkName === 'Rage' && rageDisabled) &&
-      !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
+      !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled) &&
+      !(e.perkName === 'Hex Shield' && disabledBoosts.has('Converted Energy'))
     )
     const extinguishAmt = perks['Extinguish'] ?? 0
     if (extinguishAmt > 0 && !extinguishDisabled && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
@@ -1072,6 +1079,16 @@ import { WILD_BOLT_ELEMENTS } from './lib/constants'
     if (frenzyStacks > 0 && _ragePotency > 0) {
       const pct = (0.05 + (1 / 6) * _ragePotency) * frenzyStacks
       entries.push({ sourceName: 'Frenzy', rawMultiplier: roundMultiplier(1 + pct), condition: `Rage active · potency ${Math.round(_ragePotency * 1000) / 1000}`, type: 'dmg' })
+    }
+
+    const convertedEnergyEntry = _typedBoostResult.activeEntries.find(e => e.perkName === 'Hex Shield')
+    if (convertedEnergyEntry && convertedEnergyEntry.dmgMult !== 1) {
+      entries.push({
+        sourceName: convertedEnergyEntry.label,
+        rawMultiplier: convertedEnergyEntry.dmgMult,
+        condition: convertedEnergyEntry.condition,
+        type: 'dmg',
+      })
     }
 
     return entries

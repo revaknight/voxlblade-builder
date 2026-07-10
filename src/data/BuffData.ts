@@ -347,6 +347,19 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isDebuff: true,
   },
+  Wound: {
+    name: 'Wound',
+    color: '#911213',
+    description: 'Grant bleed x seconds of stun and adds x% true damage to bleed.',
+    dynamicDescription: (_perks, potency) => {
+      const trueDmgPct = Math.round(potency * 10000) / 100
+      const stunSec = Math.round(potency * 50) / 100
+      return `Bleed deals ${trueDmgPct}% additional true damage and stuns for ${stunSec}s.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isDebuff: true,
+  },
 
   'Minion Absorbed': {
     name: 'Minion Absorbed',
@@ -409,6 +422,25 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     description: 'All hits apply burn.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
+  },
+  'Converted Energy': {
+    name: 'Converted Energy',
+    color: '#01fb67',
+    description: 'Deal x% more damage.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+  },
+  'Hex Shield': {
+    name: 'Hex Shield',
+    color: '#00fd66',
+    description: 'Block the next debuff you receive and heal.',
+    dynamicDescription: (_perks, potency) => {
+      const heal = potency * 3
+      return `Blocks ${potency} debuff(s). Heals ${heal} HP on block.`
+    },
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isNeutral: true,
   },
 }
 
@@ -895,6 +927,24 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       isSelfDebuff: true,
     },
   ],
+  'Hex Shield': (amount) => [
+    {
+      buffName: 'Hex Shield',
+      potency: 1 * amount,
+      duration: 0,
+      condition: `Max stacks · +1 every 10s`,
+      sourceName: 'Hex Shield',
+      sourceType: 'perk',
+    },
+    {
+      buffName: 'Converted Energy',
+      potency: 0.1 * amount,
+      duration: 10,
+      condition: 'On debuff block',
+      sourceName: 'Hex Shield',
+      sourceType: 'perk',
+    },
+  ],
   'Honey Arts': () => [
     {
       buffName: 'Sticky',
@@ -912,6 +962,24 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       duration: 5,
       condition: 'On Weapon Art hit (deals Magic or Physical damage)',
       sourceName: 'Gorecast',
+      sourceType: 'perk',
+    },
+  ],
+  'Sharp Claws': (amount) => [
+    {
+      buffName: 'Bleed',
+      potency: 0,
+      duration: 5,
+      condition: 'On guardbreak',
+      sourceName: 'Sharp Claws',
+      sourceType: 'perk',
+    },
+    {
+      buffName: 'Wound',
+      potency: 0.1 * amount,
+      duration: 6,
+      condition: 'On guardbreak',
+      sourceName: 'Sharp Claws',
       sourceType: 'perk',
     },
   ],
@@ -1171,6 +1239,7 @@ const BUFF_POTENCY_MODIFIERS: BuffPotencyModifier[] = [
   { buffName: 'Rage', potencyPerStack: 0,   label: 'Fury', durationMultiplierPerStack: 1.5 },
   { buffName: 'Tailwind', potencyPerStack: 0.1, label: 'Tailwind' },
   { buffName: 'Tailwind', potencyPerStack: 0, label: 'Wind Walker', durationMultiplierFormula: stacks => 1 + stacks / 8 },
+  { buffName: 'Bleed', potencyPerStack: 0, label: 'Slow Leak', durationMultiplierPerStack: 1.5 },
 ]
 
 const MODIFIERS_BY_BUFF = BUFF_POTENCY_MODIFIERS.reduce((acc, mod) => {

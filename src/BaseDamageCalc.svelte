@@ -173,6 +173,13 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     trueDmg: number
   } | null = null
 
+  let _woundTooltip: {
+    style: string
+    finalDmgPrimary: number
+    woundPotency: number
+    trueDmg: number
+  } | null = null
+
   $: resolvedDebuffs = appliedDebuffs.map(d => {
     if (!d.variants?.length) return d
     const idx = activeVariants.get(d.name) ?? 0
@@ -410,11 +417,17 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
       ? preMitBase * d.meltingShredFactor
       : 0
 
+    const woundPotency = d.type === 'Bleed'
+      ? (resolvedDebuffs.find(r => r.name === 'Wound' && !disabledDebuffs.has(r.name))?.potency ?? 0)
+      : 0
+    const woundTrueDmg = woundPotency > 0 ? finalDmgPrimary * woundPotency : 0
+    const woundAmt = woundPotency > 0 ? Math.round(woundPotency * 10) : 0
+
     const lifeDrinkerHeal = lifeDrinkerAmt > 0
-      ? 0.01 * preMitBase * lifeDrinkerAmt + 0.1
+      ? 0.01 * preMitBase  * lifeDrinkerAmt + 0.1
       : 0
 
-    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, lifeDrinkerHeal }
+    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, woundTrueDmg, woundPotency, woundAmt, lifeDrinkerHeal }
   })
 
   function defPctForType(k: string): number {
@@ -1091,8 +1104,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                                   <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.scalingMult)}</span>
                                 </div>
                               {/if}
-                              {#if t.applicableBoosts && t.applicableBoosts.length > 0}
-                                {#each t.applicableBoosts as boost}
+                              {#if t.applicableBoosts && t.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0}
+                                {#each t.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
                                   <div class="bdc-fr">
                                     <span class="bdc-fr-label">{boost.label}</span>
                                     <span class="bdc-fr-val" 
@@ -1311,10 +1324,39 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                         </div>
                       </div>
                     {/if}
+                    {#if dot.woundTrueDmg}
+                      <span class="bdc-hit-plus">+</span>
+                      <!-- svelte-ignore a11y_no_static_element_interactions -->
+                      <div class="bdc-hit-type-chunk" style="--tc:{BADGE_COLORS['true'] ?? '#52525b'}"
+                        on:mouseenter={(e) => {
+                          const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                          const spaceBelow = window.innerHeight - r.bottom
+                          const left = Math.max(8, Math.min(r.left, window.innerWidth - 260))
+                          _woundTooltip = {
+                            finalDmgPrimary: dot.finalDmgPrimary,
+                            woundPotency: dot.woundPotency ?? 0,
+                            trueDmg: dot.woundTrueDmg!,
+                            style: spaceBelow > 180
+                              ? `left:${left}px;top:${r.bottom + 4}px;`
+                              : `left:${left}px;bottom:${window.innerHeight - r.top + 4}px;`,
+                          }
+                        }}
+                        on:mouseleave={() => { _woundTooltip = null }}>
+                        <div class="bdc-hit-type-top">
+                          <div class="bdc-hit-type-val-row">
+                            <span class="bdc-hit-type-val">{fmt(dot.woundTrueDmg)}</span>
+                          </div>
+                          <div class="bdc-hit-type-label-row">
+                            <span class="bdc-hit-type-label">Wound</span>
+                            <span class="bdc-dot-dmg-badge" style="background:{BADGE_COLORS['true'] ?? '#52525b'}">true</span>
+                          </div>
+                        </div>
+                      </div>
+                    {/if}
                   </div>
                   <div class="bdc-hit-row-end">
                     <span class="bdc-hit-type-sum-sep">=</span>
-                    <span class="bdc-hit-type-sum">{fmt((dot.finalDmg ?? dot.tickDamage) + (dot.trueDmg ?? 0))}</span>
+                    <span class="bdc-hit-type-sum">{fmt((dot.finalDmg ?? dot.tickDamage) + (dot.trueDmg ?? 0) + (dot.woundTrueDmg ?? 0))}</span>
                     {#if dot.lifeDrinkerHeal}
                       <span class="bdc-hit-type-heal-sum">{fmt(dot.lifeDrinkerHeal)}</span>
                     {/if}
@@ -1338,7 +1380,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
 {#if _dotTooltip}
   {@const _dtc = DOT_COLORS[_dotTooltip.type] ?? '#e8e4da'}
-  {@const _hasBoosts = _dotTooltip.applicableBoosts.length > 0 && _dotTooltip.typedMult !== 1}
+  {@const _hasBoosts = _dotTooltip.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0 && _dotTooltip.typedMult !== 1}
   {@const _hasTypeDebuff = _dotTooltip.typeDebuffMult !== 1}
   {@const _hasDebuffMult = _dotTooltip.debuffMult !== 1}
   {@const _hasSelfDebuff = selfDebuffDamageMult !== 1}
@@ -1370,7 +1412,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
       </div>
     {/if}
     {#if _hasBoosts}
-      {#each _dotTooltip.applicableBoosts as boost}
+      {#each _dotTooltip.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
         <div class="bdc-fr">
           <span class="bdc-fr-label">{boost.label}</span>
           <span class="bdc-fr-val bdc-fr-val--typedboost">× {fmtMult(boost.mult)}</span>
@@ -1432,6 +1474,25 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   </div>
 {/if}
 
+{#if _woundTooltip}
+  {@const wt = _woundTooltip}
+  <div class="bdc-tt-formula-fixed" style={wt.style}>
+    <div class="bdc-fr">
+      <span class="bdc-fr-label">Final Bleed Dmg <span class="bdc-tt-muted">(after all mults)</span></span>
+      <span class="bdc-fr-val">{fmt(wt.finalDmgPrimary)}</span>
+    </div>
+    <div class="bdc-fr">
+      <span class="bdc-fr-label">Wound Potency <span class="bdc-tt-muted">(10% per stack)</span></span>
+      <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(wt.woundPotency)}</span>
+    </div>
+    <div class="bdc-fr-divider"></div>
+    <div class="bdc-fr bdc-fr--result">
+      <span class="bdc-fr-label">Wound True Damage</span>
+      <span class="bdc-fr-val bdc-fr-val--result" style="--tc:#f87171">+ {fmt(wt.trueDmg)}</span>
+    </div>
+  </div>
+{/if}
+
 {#if _ttFormula}
   {@const t = _ttFormula.t}
   <div class="bdc-tt-formula-fixed" style={_ttFormula.style}>
@@ -1445,8 +1506,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
         <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.scalingMult)}</span>
       </div>
     {/if}
-    {#if t.applicableBoosts && t.applicableBoosts.length > 0}
-      {#each t.applicableBoosts as boost}
+    {#if t.applicableBoosts && t.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0}
+      {#each t.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
         <div class="bdc-fr">
           <span class="bdc-fr-label">{boost.label}</span>
           <span class="bdc-fr-val" 
