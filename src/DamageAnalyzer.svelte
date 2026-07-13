@@ -8,13 +8,13 @@
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, SCALING_TO_BOOST, PERCENT_STATS, canProc, type WeaponBaseDmg, type ProcCoefficient } from './lib/types'
   import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect, getBuffDescription, convertTailwindToWhirlwind, getTrueBalanceBuffs } from './data/BuffData'
   import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
-  import { getDraconicInfusionBuff, getDraconicHexDebuffs, getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'  
+  import { getDraconicInfusionBuff, getDraconicAbilityDebuffs, getEffectiveDraconicInfusionPotency } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat, calcMaxSummonCount } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
   import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive, DRAGON_STATE_HP_GATE } from './data/Perkbasedmg'
   import { resolveDefenseSources, calcBaseArmorDefPct, DEF_GROUP, type DefenseSource } from './lib/defense'
   import { getActiveRaceEffect, getOrkTenacityBuffs, calcOrkTenacityBonus } from './data/raceEffects'
-  import { getActiveDefensivePerkSources } from './data/defensivePerks'
+  import { getActiveDefensivePerkSources, calcDefensivePotencyMult } from './data/defensivePerks'
   import { getWeaponConditionalBoost } from './data/weaponConditionalBoosts'
   import { getRace } from './lib/engine/data/character'
   import { RUNE_DMG_DEFS } from './data/Runebasedmg'
@@ -30,6 +30,8 @@ import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
+import { BOOST_DEF_MAP } from './data/Boost'
+import { WILD_BOLT_ELEMENTS } from './lib/constants'
 
 
   $: _m1FinisherWeaponBoost = getWeaponConditionalBoost(perks, _baseWeaponType, 'm1Finisher')
@@ -50,20 +52,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     const baseSources = getActiveDefensivePerkSources(
       perka, hpFillPct, adaptivePlateTriggered, effectiveInDarkness, ragePotency > 0, mountActive, _hasProtection, _debuffCount
     )
-    let potMult = 1
-    
-    const bastionStacks = perka['Bastion Bless'] ?? 0
-    if (bastionStacks > 0) {
-      potMult += 0.1 * bastionStacks
-    }
-    
-    const _infActive = buildVal.draconicRuneInfusion === 'infusion'
-    const color = buildVal.draconicColor
-    if (_infActive && color === 'holy') {
-      const _infPerkAmt = perka['Draconic Blood'] ?? 0
-      potMult *= 1 + _infPerkAmt * 0.05
-    }
-    
+    const potMult = calcDefensivePotencyMult(perka, buildVal.draconicRuneInfusion, buildVal.draconicColor)
+
     if (potMult === 1) return baseSources
     
     return baseSources.map(s => {
@@ -301,12 +291,14 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     const _infActive = $build.draconicRuneInfusion === 'infusion'
     const color = $build.draconicColor
     if (!_infActive || draconicInfusionDisabled || (color !== 'hex' && color !== 'holy')) {
+      const hasSelfDebuff = baseBuffs.some(b => b.isSelfDebuff && BUFF_DEFS[b.buffName]?.isDebuff)
+      if (!hasSelfDebuff) return baseBuffs.filter(b => b.buffName !== 'Converted Energy')
       return baseBuffs
     }
     const _infPerkAmt = $result.perks['Draconic Blood'] ?? 0
     const potMult = 1 + _infPerkAmt * 0.05
 
-    return baseBuffs.map(buff => {
+    const infusedBuffs = baseBuffs.map(buff => {
       const def = BUFF_DEFS[buff.buffName]
       if (!def) return buff
       const isSelfDebuff = buff.isSelfDebuff || def.isSelfDebuff
@@ -324,6 +316,10 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       
       return buff
     })
+
+    const hasSelfDebuff = infusedBuffs.some(b => b.isSelfDebuff && BUFF_DEFS[b.buffName]?.isDebuff)
+    if (!hasSelfDebuff) return infusedBuffs.filter(b => b.buffName !== 'Converted Energy')
+    return infusedBuffs
   })()
   $: _allActiveBuffs = (_disabledKeysArr.length, _allActiveBuffsRaw.filter(b => !_isBuffDisabled(b)))
   $: _hasCritBoostBuff = _allActiveBuffs.some(b => b.buffName === 'Critical Boost')
@@ -368,7 +364,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: _typedBoostEntries = (() => {
     const entries = _typedBoostResult.activeEntries.filter(e =>
       !(e.perkName === 'Rage' && rageDisabled) &&
-      !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled)
+      !(e.perkName === 'Glyph Conduit' && glyphConduitDisabled) &&
+      e.perkName !== 'Hex Shield'
     )
     const extinguishAmt = perks['Extinguish'] ?? 0
     if (extinguishAmt > 0 && !extinguishDisabled && _dummyDebuffs.some(d => d.name === 'Burn' && !disabledDebuffs.has(d.name))) {
@@ -385,10 +382,15 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     return entries
   })()
 
-  $: _draconicHexDebuffsForDummy = applyBuffPerkModifiers(
-    getDraconicHexDebuffs(
-      $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
-    ),
+  $: _draconicAbilityDebuffsForDummy = applyBuffPerkModifiers(
+    [
+      ...getDraconicAbilityDebuffs(
+        $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+      ),
+      ...getDraconicInfusionBuff(
+        $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+      ).filter(b => b.buffName !== 'Draconic Infusion'),
+    ],
     $result.perks,
     $build.rune || undefined
   )
@@ -402,7 +404,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       ['Sticky (Hex Web)', 'Sticky'],
     ])
     const groups = new Map<string, Map<string, number>>()
-    for (const b of [..._allActiveBuffs, ..._draconicHexDebuffsForDummy]) {
+    for (const b of [..._allActiveBuffs, ..._draconicAbilityDebuffsForDummy]) {
       if (b.isSelfDebuff) continue
       const def = BUFF_DEFS[b.buffName]
       if (!def?.isDebuff) continue
@@ -478,7 +480,16 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     // For DoT debuffs (Bleed/Burn/Poison), use player's {type} Potency perk value
     for (const debuff of result) {
       if (['Bleed', 'Burn', 'Poison'].includes(debuff.name)) {
-        const potPerk = perks[`${debuff.name} Potency`] ?? 0
+        let potPerk = perks[`${debuff.name} Potency`] ?? 0
+        if (__daBuildVal.draconicRuneInfusion === 'infusion') {
+          const dbAmt = perks['Draconic Blood'] ?? 0
+          if (__daBuildVal.draconicColor === 'fire' && debuff.name === 'Burn') {
+            potPerk = roundMultiplier(potPerk * (1 + dbAmt * 0.15))
+          }
+          if (__daBuildVal.draconicColor === 'hex') {
+            potPerk = roundMultiplier(potPerk * (1 + dbAmt * 0.05))
+          }
+        }
         if (potPerk > 0) {
           const gamePot = roundMultiplier(potPerk * 0.1)
           const effect = calcBuffEffect(debuff.name, gamePot)
@@ -498,12 +509,9 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: _dummyHasPoisonActive = _dummyDebuffs.some(d => d.name === 'Poison' && !disabledDebuffs.has(d.name))
   $: _dummyHasBleedActive = _dummyDebuffs.some(d => d.name === 'Bleed' && !disabledDebuffs.has(d.name))
   $: _venomEaterCanShow = (perks['Venom Eater'] ?? 0) > 0 && _dummyHasPoisonActive
-  $: _slowDuration = Math.max(
-    0,
-    ..._allActiveBuffsRaw
-      .filter(b => b.buffName === 'Slowness' && !b.isSelfDebuff)
-      .map(b => b.duration ?? 0),
-  )
+  $: _slowActive = _allActiveBuffsRaw.filter(b => b.buffName === 'Slowness' && !b.isSelfDebuff)
+  $: _slowPotency = Math.max(0, ..._slowActive.map(b => b.potency ?? 0))
+  $: _slowDuration = Math.max(0, ..._slowActive.map(b => b.duration ?? 0))
   function dotScalingMult(type: string): number {
     const scalings = DOT_SCALINGS[type] ?? {}
     let totalPct = 0
@@ -516,6 +524,9 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     return 1 + totalPct / 100
   }
 
+  let _dotCollapsed = true
+  $: _topDotTick = _dotTicks.length > 0 ? _dotTicks.reduce((best, dt) => dt.totalEffectivePct > best.totalEffectivePct ? dt : best) : null
+
   $: _dotTicks = (() => {
     const ticks: Array<{
       type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
@@ -525,7 +536,16 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       meltingShredFactor?: number
       scalingRows: ScalingRow[]; totalEffectivePct: number
     }> = DOT_TYPE_LIST.map(type => {
-      const dotPot = perks[`${type} Potency`] ?? 0
+      let dotPot = perks[`${type} Potency`] ?? 0
+      if (__daBuildVal.draconicRuneInfusion === 'infusion') {
+        const draconicBloodAmt = perks['Draconic Blood'] ?? 0
+        if (__daBuildVal.draconicColor === 'fire' && type === 'Burn') {
+          dotPot *= 1 + draconicBloodAmt * 0.15
+        }
+        if (__daBuildVal.draconicColor === 'hex') {
+          dotPot *= 1 + draconicBloodAmt * 0.05
+        }
+      }
       const gamePot = toGamePotency(dotPot)
       const edAmt = perks['Endless Despair'] ?? 0
       const inflictionPot = edAmt > 0 ? gamePot * (1 + 0.35 * edAmt) + 0.1 : gamePot
@@ -545,28 +565,23 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       }
     })
     if ((perks['Caustic Slow'] ?? 0) > 0) {
+      const csAmt = perks['Caustic Slow'] ?? 0
       const poisonPot = perks['Poison Potency'] ?? 0
       const gamePot = toGamePotency(poisonPot)
-      const edAmt = perks['Endless Despair'] ?? 0
-      const inflictionPot = edAmt > 0 ? gamePot * (1 + 0.35 * edAmt) + 0.1 : gamePot
-      const level = __daBuildVal.level ?? 80
-      const levelMult = 1 + level / 80
-      const base = getDotBase(inflictionPot)
-      const mult = getDotPotencyMult(gamePot)
-      const tick = base * mult
-      const slowAmp = _slowDuration > 0 ? 1 + _slowDuration * 0.1 : 1
-      const tickDamage = tick * slowAmp
+      const potencyMult = getDotPotencyMult(gamePot)
+      const csBase = (1.5 + (csAmt * 5)) * (1 + (_slowPotency / 2))
+      const tickDamage = csBase * potencyMult
       const csRows = buildScalingRows(DOT_SCALINGS['Caustic Slow'])
       const csTotalPct = Math.round(csRows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
       ticks.push({
         type: 'Caustic Slow',
         tickDamage,
         dotPotency: poisonPot,
-        inflictionPotency: inflictionPot,
+        inflictionPotency: 0,
         debuffName: 'Slowness',
         slowDuration: _slowDuration,
-        dotBase: base, potencyMult: mult * slowAmp,
-        levelMult: 1, baseTick: tick,
+        dotBase: csBase, potencyMult: potencyMult,
+        levelMult: 1, baseTick: csBase,
         scalingMult: dotScalingMult('Caustic Slow'), combatMult: _dotCombatMult,
         scalingRows: csRows, totalEffectivePct: csTotalPct,
       })
@@ -587,7 +602,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   $: boosts = $result.boosts
   $: stats = $result.stats
   $: perks = $result.perks
-  $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
+  $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 && _allActiveBuffs.some(b => b.buffName === 'Luminescent') ? 0.05 * (perks['Luminescent Fervor'] ?? 0) : 0
   $: _dragonStateAmt = perks['Dragon State'] ?? 0
   $: _dragonStateHpGateActive = _dragonStateAmt > 0 && isHpGateActive(
     DRAGON_STATE_HP_GATE,
@@ -835,11 +850,12 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     getType?: (ctx: { draconicColor: string }) => string
     amountPerStack: number
     getAmountPerStack?: (ctx: { draconicColor: string; perkAmount: number; guild: string; draconicRuneInfusion: string; perks: Record<string, number> }) => number
-    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string; emotionalState: string }) => boolean
+    condition?: (ctx: { ragePotency: number; draconicRuneInfusion: string; emotionalState: string; rageDisabled: boolean }) => boolean
+    appliesWithoutProc?: boolean
   }
 
   const PERK_DMG_TYPE_BONUS_DEFS: PerkDmgTypeBonusDef[] = [
-    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => ctx.ragePotency > 0 },
+    { perkName: 'Void Rage', type: 'hex', amountPerStack: 0.1, condition: ctx => !ctx.rageDisabled && ctx.ragePotency > 0 },
     { perkName: 'Channeled Weapon', type: 'magic', amountPerStack: 0.05 },
     { perkName: 'Emotional', type: 'fire', amountPerStack: 0.1, condition: ctx => ctx.emotionalState === 'debuffs' },
     {
@@ -852,28 +868,54 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         return effective / ctx.perkAmount
       },
       condition: ctx => ctx.draconicRuneInfusion === 'infusion',
+      appliesWithoutProc: false,
     },
   ]
 
-  $: _perkDmgTypeBonuses = (() => {
+  function buildDmgTypeBonuses(includeNoProcExempt: boolean, ctx: {
+    perks: Record<string, number>; ragePotency: number; draconicRuneInfusion: string;
+    emotionalState: string; draconicColor: string; guild: string;
+    draconicInfusionDisabled: boolean; toxinTransferHexBonus: number; rageDisabled: boolean;
+  }, excludePerks?: Set<string>): Record<string, number> {
     const bonus: Record<string, number> = {}
     for (const def of PERK_DMG_TYPE_BONUS_DEFS) {
-      const amt = perks[def.perkName] ?? 0
+      if (excludePerks?.has(def.perkName)) continue
+      if (!includeNoProcExempt && def.appliesWithoutProc === false) continue
+      const amt = ctx.perks[def.perkName] ?? 0
       if (amt <= 0) continue
-      if (def.condition && !def.condition({ ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion, emotionalState: $build.emotionalState })) continue
-      if (def.perkName === 'Draconic Blood' && draconicInfusionDisabled) continue
-      const type = def.getType ? def.getType({ draconicColor: $build.draconicColor }) : def.type
+      if (def.condition && !def.condition({ ragePotency: ctx.ragePotency, draconicRuneInfusion: ctx.draconicRuneInfusion, emotionalState: ctx.emotionalState, rageDisabled: ctx.rageDisabled })) continue
+      if (def.perkName === 'Draconic Blood' && ctx.draconicInfusionDisabled) continue
+      const type = def.getType ? def.getType({ draconicColor: ctx.draconicColor }) : def.type
       if (!type) continue
       const amountPerStack = def.getAmountPerStack
-        ? def.getAmountPerStack({ draconicColor: $build.draconicColor, perkAmount: amt, guild: $build.guild, draconicRuneInfusion: $build.draconicRuneInfusion, perks })
+        ? def.getAmountPerStack({ draconicColor: ctx.draconicColor, perkAmount: amt, guild: ctx.guild, draconicRuneInfusion: ctx.draconicRuneInfusion, perks: ctx.perks })
         : def.amountPerStack
       bonus[type] = Math.round(((bonus[type] ?? 0) + amt * amountPerStack) * 10000) / 10000
     }
-    if (_toxinTransferHexBonus > 0) {
-      bonus.hex = Math.round(((bonus.hex ?? 0) + _toxinTransferHexBonus) * 10000) / 10000
+    if (ctx.toxinTransferHexBonus > 0) {
+      bonus.hex = Math.round(((bonus.hex ?? 0) + ctx.toxinTransferHexBonus) * 10000) / 10000
     }
     return bonus
-  })()
+  }
+
+  $: _perkDmgTypeBonuses = buildDmgTypeBonuses(true, {
+    perks, ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion,
+    emotionalState: $build.emotionalState, draconicColor: $build.draconicColor,
+    guild: $build.guild, draconicInfusionDisabled, toxinTransferHexBonus: _toxinTransferHexBonus,
+    rageDisabled,
+  })
+  $: _perkDmgTypeBonusesNoProc = buildDmgTypeBonuses(false, {
+    perks, ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion,
+    emotionalState: $build.emotionalState, draconicColor: $build.draconicColor,
+    guild: $build.guild, draconicInfusionDisabled, toxinTransferHexBonus: _toxinTransferHexBonus,
+    rageDisabled,
+  })
+  $: _perkDmgTypeBonusesDoT = buildDmgTypeBonuses(false, {
+    perks, ragePotency: _ragePotency, draconicRuneInfusion: $build.draconicRuneInfusion,
+    emotionalState: $build.emotionalState, draconicColor: $build.draconicColor,
+    guild: $build.guild, draconicInfusionDisabled, toxinTransferHexBonus: _toxinTransferHexBonus,
+    rageDisabled,
+  }, new Set(['Channeled Weapon']))
 
   $: _emotionalHexBonus = (() => {
     const amt = perks['Emotional'] ?? 0
@@ -1061,6 +1103,16 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
       entries.push({ sourceName: 'Frenzy', rawMultiplier: roundMultiplier(1 + pct), condition: `Rage active · potency ${Math.round(_ragePotency * 1000) / 1000}`, type: 'dmg' })
     }
 
+    const convertedEnergyEntry = _typedBoostResult.activeEntries.find(e => e.perkName === 'Hex Shield')
+    if (convertedEnergyEntry && convertedEnergyEntry.dmgMult !== 1) {
+      entries.push({
+        sourceName: convertedEnergyEntry.label,
+        rawMultiplier: convertedEnergyEntry.dmgMult,
+        condition: convertedEnergyEntry.condition,
+        type: 'dmg',
+      })
+    }
+
     return entries
   })()
   $: _adjustedDmgEntries = boosts.dmgEntries.map(e => {
@@ -1069,7 +1121,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     }
     return e
   })
-  $: activeEntries = [..._adjustedDmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive) && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Frenzy'), ..._syntheticDmgBoostEntries.filter(e => {
+  $: activeEntries = [..._adjustedDmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Golden Crits' && !showCritValues) && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive) && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Frenzy'), ..._syntheticDmgBoostEntries.filter(e => {
     if (e.sourceName === 'Curse Rip' && disableCurseRip) return false
     if (e.sourceName === 'Reaper' && disableReaper) return false
     if (disabledBoosts.has(e.sourceName)) return false
@@ -1389,15 +1441,14 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   ) : null
   $: _waHealSeq = _waAllHits.heal.length > 0 ? _waAllHits.heal : null
 
-  const _wildBoltElements = ['fire', 'water', 'holy', 'hex', 'earth', 'air', 'magic']
   let _wildBoltElemIdx = 0
   function cycleWildBoltElem() {
-    _wildBoltElemIdx = (_wildBoltElemIdx + 1) % _wildBoltElements.length
+    _wildBoltElemIdx = (_wildBoltElemIdx + 1) % WILD_BOLT_ELEMENTS.length
   }
   function randomWildBoltElem() {
-    _wildBoltElemIdx = Math.floor(Math.random() * _wildBoltElements.length)
+    _wildBoltElemIdx = Math.floor(Math.random() * WILD_BOLT_ELEMENTS.length)
   }
-  $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? _wildBoltElements[_wildBoltElemIdx] : null
+  $: _wildBoltElement = _wildBoltAmt > 0 && selectedWA.name === 'Laser' ? WILD_BOLT_ELEMENTS[_wildBoltElemIdx] : null
   $: _waDmgTypes = (() => {
     const apply = (types: Record<string, number>) =>
       applyAirToMagicConversion(types, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
@@ -1645,7 +1696,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance'
   )
 
-  $: _goldenCritsBaseChance = 0.40
+  $: _goldenCritsBaseChance = BOOST_DEF_MAP.get('Golden Crits')?.baseProcChance ?? 0.40
   $: _goldenCritsEffectiveChance = (() => {
     const coeff = WEAPON_PROC_COEFFS[_baseWeaponType]?.m2 ?? DEFAULT_PROC_COEFF
     return calcProcChance(_goldenCritsBaseChance, coeff, 'positiveOnly')
@@ -1800,17 +1851,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         let raw = Math.round(se.getValue({ perkAmount, draconicColor: $build.draconicColor }) * 1000) / 1000
         
         if (se.tone === 'defense') {
-          let potMult = 1
-          const bastionStacks = perks['Bastion Bless'] ?? 0
-          if (bastionStacks > 0) {
-            potMult += 0.1 * bastionStacks
-          }
-          const _infActive = $build.draconicRuneInfusion === 'infusion'
-          const color = $build.draconicColor
-          if (_infActive && color === 'holy') {
-            const _infPerkAmt = perks['Draconic Blood'] ?? 0
-            potMult *= 1 + _infPerkAmt * 0.05
-          }
+          const potMult = calcDefensivePotencyMult(perks, $build.draconicRuneInfusion, $build.draconicColor)
           raw = Math.round(raw * potMult * 1000) / 1000
         }
         
@@ -2223,7 +2264,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
         result.push({
           group: 'Perk', index: result.length, count: 10, base: fpPerTick,
           scalingMult: 1, combatMult: _perkCombatMult,
-          isFinisher: false, dmgTypes: { hex: 1.0 },
+          isFinisher: false, dmgTypes: _applyDmgBonuses({ hex: 1.0 }, _perkDmgTypeBonusesNoProc),
           label: 'Fungal Prototype (' + label + ' →)',
           procCoefficient: { type: 'noProc' },
         })
@@ -2447,7 +2488,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
           {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
           {@const _bloodThirstyDisabled = entry.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive}
           {@const _venomSpitterDisabled = entry.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive}
-          {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled}
+          {@const _goldenCritsDisabled = entry.sourceName === 'Golden Crits' && !showCritValues}
+          {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled || _goldenCritsDisabled}
           {@const effectiveMultiplier = disabled ? 1 : entry.rawMultiplier}
           <button
             class="da-boost-chip"
@@ -2459,6 +2501,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
               if (_venomEaterDisabled) return
               if (_bloodThirstyDisabled) return
               if (_venomSpitterDisabled) return
+              if (_goldenCritsDisabled) return
               if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
               else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
               else toggleBoost(entry.sourceName)
@@ -2487,7 +2530,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
             {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
             {@const _bloodThirstyDisabled = entry.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive}
             {@const _venomSpitterDisabled = entry.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive}
-            {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled}
+            {@const _goldenCritsDisabled = entry.sourceName === 'Golden Crits' && !showCritValues}
+            {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (entry.sourceName === 'Curse Rip' && disableCurseRip) || (entry.sourceName === 'Reaper' && disableReaper) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled || _goldenCritsDisabled}
             <button
               class="da-boost-chip"
               class:da-boost-chip--lvl={entry.sourceName === 'Level Damage'}
@@ -2498,6 +2542,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
                 if (_venomEaterDisabled) return
                 if (_bloodThirstyDisabled) return
                 if (_venomSpitterDisabled) return
+                if (_goldenCritsDisabled) return
                 if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
                 else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
                 else toggleBoost(entry.sourceName)
@@ -2528,12 +2573,13 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
                   {@const _venomEaterDisabled = entry.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)}
                   {@const _bloodThirstyDisabled = entry.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive}
                   {@const _venomSpitterDisabled = entry.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive}
-                  {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled}
+                  {@const _goldenCritsDisabled = entry.sourceName === 'Golden Crits' && !showCritValues}
+                  {@const disabled = disabledBoosts.has(entry.sourceName) || (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || _venomEaterDisabled || _bloodThirstyDisabled || _venomSpitterDisabled || _goldenCritsDisabled}
                   <button
                     class="da-boost-chip da-boost-chip--sm"
                     class:da-boost-chip--off={disabled}
                     title={entry.condition ?? ''}
-                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; if (_venomEaterDisabled) return; if (_bloodThirstyDisabled) return; if (_venomSpitterDisabled) return; toggleBoost(entry.sourceName) }}
+                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; if (_venomEaterDisabled) return; if (_bloodThirstyDisabled) return; if (_venomSpitterDisabled) return; if (_goldenCritsDisabled) return; toggleBoost(entry.sourceName) }}
                   >
                     <span class="da-bc-name">{entry.sourceName}</span>
                     <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>
@@ -3365,7 +3411,7 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
                 <span class="da-wb-elem" style="color:{DMG_TYPE_COLORS[_wildBoltElement!]}">
                   {_wildBoltElement!.charAt(0).toUpperCase() + _wildBoltElement!.slice(1)}
                 </span>
-                ({_wildBoltElemIdx + 1}/{_wildBoltElements.length})
+                ({_wildBoltElemIdx + 1}/{WILD_BOLT_ELEMENTS.length})
               </div>
               <div class="da-wb-line">Debuff (5s, 1 of 6): Bleed · Burn · Poison · Shatter · Slowness · Weakness</div>
             </div>
@@ -3936,71 +3982,141 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
   </div>
 {/if}
 
-{#if _dotTicks.length > 0}
+{#if _dotTicks.some(dt => dt.totalEffectivePct !== 0)}
   <div class="da-section da-section--scaling">
-    <div class="da-section-title">📐 DoT Damage Scaling</div>
+    <div class="da-section-title">
+      📐 DoT Damage Scaling
+      <button class="da-collapse-btn" on:click={() => _dotCollapsed = !_dotCollapsed}>{_dotCollapsed ? '▲' : '▼'}</button>
+    </div>
     <div class="ds-formula-hint">Effective Boost = Σ (Scaling × Boost%) → adds to base as ×(1 + Effective%)</div>
-    {#each _dotTicks as dt, i}
-      {@const _dc = DOT_COLORS[dt.type] ?? '#e8e4da'}
-      {#if i > 0}<div class="da-perk-scaling-divider"></div>{/if}
-      <div class="ds-table ds-table--perk" style="margin-top:6px;">
-        <div class="ds-head">
-          <div class="ds-col ds-col--type" style="flex:1.2;">
-            <span class="ds-dot" style="background:{_dc}"></span>
-            <span style="color:{_dc}">{dt.type}</span>
-          </div>
-          <div class="ds-col ds-col--val" style="flex:1;">Scaling</div>
-          <div class="ds-col ds-col--op" style="flex:0.3;"></div>
-          <div class="ds-col ds-col--boost" style="flex:1.2;">Your Boost</div>
-          <div class="ds-col ds-col--op" style="flex:0.3;"></div>
-          <div class="ds-col ds-col--contrib" style="flex:1;">Contribution</div>
-        </div>
-        {#each dt.scalingRows as row}
-          <div class="ds-row">
+    {#if _dotCollapsed}
+      {#if _topDotTick && _topDotTick.totalEffectivePct !== 0}
+        {#each [_topDotTick] as dt}
+        {@const _dc = DOT_COLORS[dt.type] ?? '#e8e4da'}
+        <div class="ds-table ds-table--perk" style="margin-top:6px;">
+          <div class="ds-head">
             <div class="ds-col ds-col--type" style="flex:1.2;">
-              <span class="ds-dot" style="background:{row.color}"></span>
-              <span style="color:{row.color}">{row.key}</span>
+              <span class="ds-dot" style="background:{_dc}"></span>
+              <span style="color:{_dc}">{dt.type}</span>
             </div>
-            <div class="ds-col ds-col--val" style="flex:1;">
-              <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
-            </div>
-            <div class="ds-col ds-col--op" style="flex:0.3;">×</div>
-            <div class="ds-col ds-col--boost" style="flex:1.2;">
-              {#if row.boostPct !== 0}
-                <span class="ds-boost" class:ds-boost--zero={row.boostPct === 0}>
-                  {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}%
+            <div class="ds-col ds-col--val" style="flex:1;">Scaling</div>
+            <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+            <div class="ds-col ds-col--boost" style="flex:1.2;">Your Boost</div>
+            <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+            <div class="ds-col ds-col--contrib" style="flex:1;">Contribution</div>
+          </div>
+          {#each dt.scalingRows as row}
+            <div class="ds-row">
+              <div class="ds-col ds-col--type" style="flex:1.2;">
+                <span class="ds-dot" style="background:{row.color}"></span>
+                <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+              </div>
+              <div class="ds-col ds-col--val" style="flex:1;">
+                <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
+              </div>
+              <div class="ds-col ds-col--op" style="flex:0.3;">×</div>
+              <div class="ds-col ds-col--boost" style="flex:1.2;">
+                {#if row.boostPct !== 0}
+                  <span class="ds-boost" class:ds-boost--zero={row.boostPct === 0}>
+                    {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}%
+                  </span>
+                {:else}
+                  <span class="ds-boost ds-boost--zero">+0%</span>
+                {/if}
+              </div>
+              <div class="ds-col ds-col--op" style="flex:0.3;">=</div>
+              <div class="ds-col ds-col--contrib" style="flex:1;">
+                <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0} style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+                  {row.contribution > 0 ? '+' : ''}{row.contribution}%
                 </span>
-              {:else}
-                <span class="ds-boost ds-boost--zero">+0%</span>
-              {/if}
+              </div>
             </div>
-            <div class="ds-col ds-col--op" style="flex:0.3;">=</div>
-            <div class="ds-col ds-col--contrib" style="flex:1;">
-              <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0} style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
-                {row.contribution > 0 ? '+' : ''}{row.contribution}%
-              </span>
+          {/each}
+          <div class="ds-row ds-row--total">
+            <div class="ds-col ds-col--type ds-total-label">Total Effective Boost</div>
+            <div class="ds-col ds-col--val"></div>
+            <div class="ds-col ds-col--op"></div>
+            <div class="ds-col ds-col--boost"></div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-total-pct">+{dt.totalEffectivePct}%</span>
             </div>
           </div>
+        </div>
+        <div class="ds-result-row ds-result-row--perk" style="background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.15);">
+          <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+            <span class="ds-result-label" style="color:#fb923c;">{dt.type} Scaling Multiplier</span>
+          </div>
+          <span class="ds-result-eq">1 + {dt.totalEffectivePct}% =</span>
+          <span class="ds-result-val">×{+dt.scalingMult.toFixed(4)}</span>
+        </div>
         {/each}
-        <div class="ds-row ds-row--total">
-          <div class="ds-col ds-col--type ds-total-label">Total Effective Boost</div>
-          <div class="ds-col ds-col--val"></div>
-          <div class="ds-col ds-col--op"></div>
-          <div class="ds-col ds-col--boost"></div>
-          <div class="ds-col ds-col--op">=</div>
-          <div class="ds-col ds-col--contrib">
-            <span class="ds-total-pct">+{dt.totalEffectivePct}%</span>
+      {/if}
+    {:else}
+      {#each _dotTicks as dt, i}
+        {#if dt.totalEffectivePct !== 0}
+        {@const _dc = DOT_COLORS[dt.type] ?? '#e8e4da'}
+        {#if i > 0}<div class="da-perk-scaling-divider"></div>{/if}
+        <div class="ds-table ds-table--perk" style="margin-top:6px;">
+          <div class="ds-head">
+            <div class="ds-col ds-col--type" style="flex:1.2;">
+              <span class="ds-dot" style="background:{_dc}"></span>
+              <span style="color:{_dc}">{dt.type}</span>
+            </div>
+            <div class="ds-col ds-col--val" style="flex:1;">Scaling</div>
+            <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+            <div class="ds-col ds-col--boost" style="flex:1.2;">Your Boost</div>
+            <div class="ds-col ds-col--op" style="flex:0.3;"></div>
+            <div class="ds-col ds-col--contrib" style="flex:1;">Contribution</div>
+          </div>
+          {#each dt.scalingRows as row}
+            <div class="ds-row">
+              <div class="ds-col ds-col--type" style="flex:1.2;">
+                <span class="ds-dot" style="background:{row.color}"></span>
+                <span style="color:{row.color}">{row.key.charAt(0).toUpperCase() + row.key.slice(1)}</span>
+              </div>
+              <div class="ds-col ds-col--val" style="flex:1;">
+                <span class="ds-num" style="color:{row.color}">{roundMultiplier(row.scalingVal)}</span>
+              </div>
+              <div class="ds-col ds-col--op" style="flex:0.3;">×</div>
+              <div class="ds-col ds-col--boost" style="flex:1.2;">
+                {#if row.boostPct !== 0}
+                  <span class="ds-boost" class:ds-boost--zero={row.boostPct === 0}>
+                    {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}%
+                  </span>
+                {:else}
+                  <span class="ds-boost ds-boost--zero">+0%</span>
+                {/if}
+              </div>
+              <div class="ds-col ds-col--op" style="flex:0.3;">=</div>
+              <div class="ds-col ds-col--contrib" style="flex:1;">
+                <span class="ds-contrib" class:ds-contrib--zero={row.contribution === 0} style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+                  {row.contribution > 0 ? '+' : ''}{row.contribution}%
+                </span>
+              </div>
+            </div>
+          {/each}
+          <div class="ds-row ds-row--total">
+            <div class="ds-col ds-col--type ds-total-label">Total Effective Boost</div>
+            <div class="ds-col ds-col--val"></div>
+            <div class="ds-col ds-col--op"></div>
+            <div class="ds-col ds-col--boost"></div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-total-pct">+{dt.totalEffectivePct}%</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="ds-result-row ds-result-row--perk" style="background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.15);">
-        <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
-          <span class="ds-result-label" style="color:#fb923c;">{dt.type} Scaling Multiplier</span>
+        <div class="ds-result-row ds-result-row--perk" style="background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.15);">
+          <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
+            <span class="ds-result-label" style="color:#fb923c;">{dt.type} Scaling Multiplier</span>
+          </div>
+          <span class="ds-result-eq">1 + {dt.totalEffectivePct}% =</span>
+          <span class="ds-result-val">×{+dt.scalingMult.toFixed(4)}</span>
         </div>
-        <span class="ds-result-eq">1 + {dt.totalEffectivePct}% =</span>
-        <span class="ds-result-val">×{+dt.scalingMult.toFixed(4)}</span>
-      </div>
-    {/each}
+      {/if}
+      {/each}
+    {/if}
   </div>
 {/if}
 
@@ -4251,6 +4367,8 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
 <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
   weaponHits={_bdcWeaponHits}
   perkDmgTypeBonuses={_perkDmgTypeBonuses}
+  perkDmgTypeBonusesNoProc={_perkDmgTypeBonusesNoProc}
+  perkDmgTypeBonusesDoT={_perkDmgTypeBonusesDoT}
   typedBoostEntries={_typedBoostEntries}
   luminescentPct={_luminescentPct}
   selfDebuffDamageMult={_selfDebuffDamageMult}
@@ -4354,7 +4472,24 @@ import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/p
     color: var(--ink-muted, #8a8d85);
     border-bottom: 1px solid var(--border, rgba(255,255,255,.06));
     padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  .da-collapse-btn {
+    background: none;
+    border: 1px solid var(--border, rgba(255,255,255,.1));
+    border-radius: 4px;
+    color: var(--ink-muted, #8a8d85);
+    cursor: pointer;
+    font-size: .6rem;
+    padding: 2px 6px;
+    line-height: 1.4;
+    opacity: .7;
+    transition: opacity .15s, border-color .15s;
+    margin-left: auto;
+  }
+  .da-collapse-btn:hover { opacity: 1; border-color: var(--ink-muted, #8a8d85); }
 
   /* ── Crit grid ── */
   .da-crit-grid {

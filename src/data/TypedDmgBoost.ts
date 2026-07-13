@@ -20,6 +20,8 @@ interface TypedDmgBoostDef {
   appliesToGroups?: string[]
 }
 
+const ALL_DMG_TYPES = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'hex', 'holy', 'true']
+
 const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
   {
     perkName: 'Glyph Conduit',
@@ -47,15 +49,6 @@ const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
     conditionLabel: 'While Rage is active',
   },
   {
-    perkName: 'Toxin Transfer',
-    label: 'Toxin Transfer',
-    potencySource: 'perkAmount',
-    getAffectedTypes: () => ['hex'],
-    getDamageMultiplier: (amt) => 1 + 0.1 * amt,
-    activeIf: (ctx) => !!ctx.activeBuffs?.some(b => b.buffName === 'Poison' && b.isSelfDebuff),
-    conditionLabel: 'While poisoned (self-debuff)',
-  },
-  {
     perkName: 'Photosynthesis',
     label: 'Photosynthesis',
     potencySource: 'perkAmount',
@@ -64,6 +57,15 @@ const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
     getHealMultiplier: (amt) => 1 + 0.15 * amt,
     activeIf: (ctx) => !!ctx.inSunlight,
     conditionLabel: 'While standing in Sunlight',
+  },
+  {
+    perkName: 'Hex Shield',
+    label: 'Converted Energy',
+    potencySource: 'buff',
+    buffName: 'Converted Energy',
+    getAffectedTypes: () => ALL_DMG_TYPES,
+    getDamageMultiplier: (potency) => 1 + potency,
+    conditionLabel: 'When Hex Shield blocks a debuff',
   },
 ]
 

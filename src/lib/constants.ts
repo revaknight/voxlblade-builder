@@ -201,7 +201,7 @@ const WIND_WALKER_AIR_PCT_PER_STACK = 0.15
 // ──────────────────────────────────────────────
 // Wild Bolt elements
 // ──────────────────────────────────────────────
-const WILD_BOLT_ELEMENTS = ['fire', 'water', 'holy', 'hex', 'earth', 'air', 'magic'] as const
+export const WILD_BOLT_ELEMENTS = ['fire', 'water', 'holy', 'hex', 'earth', 'air', 'magic'] as const
 
 // (PERK_DMG_TYPE_BONUS_DEFS remains in DamageAnalyzer.svelte where
 //  it already lives, because Draconic Blood getAmountPerStack needs

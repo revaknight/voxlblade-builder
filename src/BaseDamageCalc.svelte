@@ -22,6 +22,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   } from './lib/constants'
 
   export let perkDmgTypeBonuses: Record<string, number> = {}
+  export let perkDmgTypeBonusesNoProc: Record<string, number> = {}
+  export let perkDmgTypeBonusesDoT: Record<string, number> = {}
   export let boosts: any
   export let crit: any
   export let stats: any
@@ -172,6 +174,13 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     trueDmg: number
   } | null = null
 
+  let _woundTooltip: {
+    style: string
+    preMitBase: number
+    woundPotency: number
+    trueDmg: number
+  } | null = null
+
   $: resolvedDebuffs = appliedDebuffs.map(d => {
     if (!d.variants?.length) return d
     const idx = activeVariants.get(d.name) ?? 0
@@ -282,53 +291,59 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
   // ── Active debuff combat effects ───────────────────────────────────────────
   // Product of all active damageMult debuffs (Weakness on enemy doesn't affect damage you deal)
-  $: _activeDebuffDamageMult = resolvedDebuffs
-    .filter(d => !disabledDebuffs.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
-    .reduce((acc, d) => acc * (d.damageMult ?? 1), 1)
+  function calcActiveDebuffDamageMult(resolved: Array<any>, disabled: Set<string>): number {
+    return resolved
+      .filter(d => !disabled.has(d.name) && (d.damageMult ?? 1) !== 1 && d.name !== 'Weakness')
+      .reduce((acc, d) => acc * (d.damageMult ?? 1), 1)
+  }
+  $: _activeDebuffDamageMult = calcActiveDebuffDamageMult(resolvedDebuffs, disabledDebuffs)
 
-  $: _activeDebuffTypeDamageMult = (() => {
+  function calcDebuffTypeDamageMult(resolved: Array<any>, disabled: Set<string>): Record<string, number> {
     const mults: Record<string, number> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
-      for (const [type, mult] of Object.entries(d.typeDamageMult)) {
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.typeDamageMult) continue
+      for (const [type, mult] of Object.entries(d.typeDamageMult as Record<string, number>)) {
         mults[type] = (mults[type] ?? 1) * mult
       }
     }
     return mults
-  })()
+  }
+  $: _activeDebuffTypeDamageMult = calcDebuffTypeDamageMult(resolvedDebuffs, disabledDebuffs)
 
-  $: _debuffTypeLabels = (() => {
+  function calcDebuffTypeLabels(resolved: Array<any>, disabled: Set<string>): Record<string, string[]> {
     const labels: Record<string, string[]> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.typeDamageMult) continue
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.typeDamageMult) continue
       for (const type of Object.keys(d.typeDamageMult)) {
         (labels[type] ??= []).push(d.name)
       }
     }
     return labels
-  })()
+  }
+  $: _debuffTypeLabels = calcDebuffTypeLabels(resolvedDebuffs, disabledDebuffs)
 
   // Effective enemy defenses after applying debuff reductions (e.g. Shatter strips armor)
-  $: effectiveDefenses = (() => {
+  function calcEffectiveDefenses(resolved: Array<any>, disabled: Set<string>, defs: Record<string, number>): Record<string, number> {
     const reductions: Record<string, number> = {}
-    for (const d of resolvedDebuffs) {
-      if (disabledDebuffs.has(d.name) || !d.defReduction) continue
-      for (const [k, v] of Object.entries(d.defReduction)) {
+    for (const d of resolved) {
+      if (disabled.has(d.name) || !d.defReduction) continue
+      for (const [k, v] of Object.entries(d.defReduction as Record<string, number>)) {
         // Map defense stat keys to damage type keys
         const typeKey = k.replace('Defense', '')
-        reductions[typeKey] = (reductions[typeKey] ?? 0) + (v ?? 0)
+        reductions[typeKey] = (reductions[typeKey] ?? 0) + v
       }
     }
-    if (Object.keys(reductions).length === 0) return { ...defenses }
-    const out = { ...defenses }
+    if (Object.keys(reductions).length === 0) return { ...defs }
+    const out = { ...defs }
     for (const [k, v] of Object.entries(reductions)) {
       out[k] = (out[k] ?? 0) - v
     }
     return out
-  })()
+  }
+  $: effectiveDefenses = calcEffectiveDefenses(resolvedDebuffs, disabledDebuffs, defenses)
 
   function calcArmorMult(defPct: number, pen: number): { mult: number; branch: 'low'|'high' } {
-    if (defPct <= 0 && pen <= 0) return { mult: 1, branch: 'low' }
+    if (defPct === 0 && pen <= 0) return { mult: 1, branch: 'low' }
     const def = defPct / 100
     if (def <= pen + ARMOR_PEN_BRANCH_THRESHOLD) {
       const am = def - pen
@@ -367,6 +382,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     const combatMult = d.combatMult
     const preMitBase = d.tickDamage * scalingMult * combatMult
 
+    const resolvedTypes = resolveDamageTypes({ [dmgType]: 1.0 }, perkDmgTypeBonusesDoT)
+
     const applicableBoosts = getApplicableBoosts(dmgType, false, undefined, { type: 'noProc' as const })
     const typedMult = applicableBoosts.reduce((acc, b) => acc * b.mult, 1)
 
@@ -378,17 +395,40 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     const typeDebuffMult = _activeDebuffTypeDamageMult[dmgType] ?? 1
     const debuffMult = _activeDebuffDamageMult
 
-    const finalDmg = preMitBase * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
+    const primaryMult = resolvedTypes[dmgType] ?? 1
+    const finalDmgPrimary = preMitBase * primaryMult * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
+
+    const bonusTypes = Object.entries(resolvedTypes)
+      .filter(([k]) => k !== dmgType)
+      .map(([k, mult]) => {
+        const bApplicable = getApplicableBoosts(k, false, undefined, { type: 'noProc' as const })
+        const bTypedMult = bApplicable.reduce((acc, b) => acc * b.mult, 1)
+        const bDefPct = defPctForType(k)
+        const bCrushPen = crushingPenForType(k)
+        const { mult: bDefMult } = calcArmorMult(bDefPct, (totalPen + bCrushPen) / 100)
+        const bTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
+        const raw = preMitBase * mult * bTypedMult * bDefMult * bTypeDebuffMult * debuffMult * selfDebuffDamageMult
+        const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
+        return { key: k, label: info.label, color: info.color, raw }
+      })
+
+    const finalDmg = finalDmgPrimary + bonusTypes.reduce((s, b) => s + b.raw, 0)
 
     const trueDmg = d.meltingShredFactor != null
       ? preMitBase * d.meltingShredFactor
       : 0
 
+    const woundPotency = d.type === 'Bleed'
+      ? (resolvedDebuffs.find(r => r.name === 'Wound' && !disabledDebuffs.has(r.name))?.potency ?? 0)
+      : 0
+    const woundTrueDmg = woundPotency > 0 ? preMitBase * woundPotency : 0
+    const woundAmt = woundPotency > 0 ? Math.round(woundPotency * 10) : 0
+
     const lifeDrinkerHeal = lifeDrinkerAmt > 0
-      ? 0.01 * preMitBase * lifeDrinkerAmt + 0.1
+      ? 0.01 * preMitBase  * lifeDrinkerAmt + 0.1
       : 0
 
-    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, trueDmg, lifeDrinkerHeal }
+    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, woundTrueDmg, woundPotency, woundAmt, lifeDrinkerHeal }
   })
 
   function defPctForType(k: string): number {
@@ -1065,8 +1105,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                                   <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.scalingMult)}</span>
                                 </div>
                               {/if}
-                              {#if t.applicableBoosts && t.applicableBoosts.length > 0}
-                                {#each t.applicableBoosts as boost}
+                              {#if t.applicableBoosts && t.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0}
+                                {#each t.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
                                   <div class="bdc-fr">
                                     <span class="bdc-fr-label">{boost.label}</span>
                                     <span class="bdc-fr-val" 
@@ -1226,7 +1266,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                       on:mouseleave={() => { _dotTooltip = null }}>
                       <div class="bdc-hit-type-top">
                         <div class="bdc-hit-type-val-row">
-                          <span class="bdc-hit-type-val">{fmt(dot.finalDmg ?? dot.tickDamage)}</span>
+                          <span class="bdc-hit-type-val">{fmt(dot.finalDmgPrimary ?? dot.finalDmg ?? dot.tickDamage)}</span>
                         </div>
                         <div class="bdc-hit-type-label-row">
                           <span class="bdc-hit-type-label">{dot.type}</span>
@@ -1239,6 +1279,19 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                         {/if}
                       </div>
                     </div>
+                    {#each dot.bonusTypes ?? [] as bt}
+                      <span class="bdc-hit-plus">+</span>
+                      <div class="bdc-hit-type-chunk" style="--tc:{bt.color}">
+                        <div class="bdc-hit-type-top">
+                          <div class="bdc-hit-type-val-row">
+                            <span class="bdc-hit-type-val">{fmt(bt.raw)}</span>
+                          </div>
+                          <div class="bdc-hit-type-label-row">
+                            <span class="bdc-hit-type-label">{bt.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                    {/each}
                     {#if dot.trueDmg}
                       <span class="bdc-hit-plus">+</span>
                       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -1272,10 +1325,39 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                         </div>
                       </div>
                     {/if}
+                    {#if dot.woundTrueDmg}
+                      <span class="bdc-hit-plus">+</span>
+                      <!-- svelte-ignore a11y_no_static_element_interactions -->
+                      <div class="bdc-hit-type-chunk" style="--tc:{BADGE_COLORS['true'] ?? '#52525b'}"
+                        on:mouseenter={(e) => {
+                          const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                          const spaceBelow = window.innerHeight - r.bottom
+                          const left = Math.max(8, Math.min(r.left, window.innerWidth - 260))
+                          _woundTooltip = {
+                            preMitBase: dot.preMitBase,
+                            woundPotency: dot.woundPotency ?? 0,
+                            trueDmg: dot.woundTrueDmg!,
+                            style: spaceBelow > 180
+                              ? `left:${left}px;top:${r.bottom + 4}px;`
+                              : `left:${left}px;bottom:${window.innerHeight - r.top + 4}px;`,
+                          }
+                        }}
+                        on:mouseleave={() => { _woundTooltip = null }}>
+                        <div class="bdc-hit-type-top">
+                          <div class="bdc-hit-type-val-row">
+                            <span class="bdc-hit-type-val">{fmt(dot.woundTrueDmg)}</span>
+                          </div>
+                          <div class="bdc-hit-type-label-row">
+                            <span class="bdc-hit-type-label">Wound</span>
+                            <span class="bdc-dot-dmg-badge" style="background:{BADGE_COLORS['true'] ?? '#52525b'}">true</span>
+                          </div>
+                        </div>
+                      </div>
+                    {/if}
                   </div>
                   <div class="bdc-hit-row-end">
                     <span class="bdc-hit-type-sum-sep">=</span>
-                    <span class="bdc-hit-type-sum">{fmt((dot.finalDmg ?? dot.tickDamage) + (dot.trueDmg ?? 0))}</span>
+                    <span class="bdc-hit-type-sum">{fmt((dot.finalDmg ?? dot.tickDamage) + (dot.trueDmg ?? 0) + (dot.woundTrueDmg ?? 0))}</span>
                     {#if dot.lifeDrinkerHeal}
                       <span class="bdc-hit-type-heal-sum">{fmt(dot.lifeDrinkerHeal)}</span>
                     {/if}
@@ -1299,13 +1381,17 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
 {#if _dotTooltip}
   {@const _dtc = DOT_COLORS[_dotTooltip.type] ?? '#e8e4da'}
-  {@const _hasBoosts = _dotTooltip.applicableBoosts.length > 0 && _dotTooltip.typedMult !== 1}
+  {@const _hasBoosts = _dotTooltip.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0 && _dotTooltip.typedMult !== 1}
   {@const _hasTypeDebuff = _dotTooltip.typeDebuffMult !== 1}
   {@const _hasDebuffMult = _dotTooltip.debuffMult !== 1}
   {@const _hasSelfDebuff = selfDebuffDamageMult !== 1}
   <div class="bdc-tt-formula-fixed" style={_dotTooltip.style}>
       <div class="bdc-fr">
-        <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
+        {#if _dotTooltip.type === 'Caustic Slow'}
+          <span class="bdc-fr-label">Caustic Base <span class="bdc-tt-muted">((1.5 + perk×5) × (1 + slowPot/2))</span></span>
+        {:else}
+          <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
+        {/if}
         <span class="bdc-fr-val">{fmt(_dotTooltip.dotBase)}</span>
       </div>
       {#if _dotTooltip.potencyMult !== 1}
@@ -1327,7 +1413,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
       </div>
     {/if}
     {#if _hasBoosts}
-      {#each _dotTooltip.applicableBoosts as boost}
+      {#each _dotTooltip.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
         <div class="bdc-fr">
           <span class="bdc-fr-label">{boost.label}</span>
           <span class="bdc-fr-val bdc-fr-val--typedboost">× {fmtMult(boost.mult)}</span>
@@ -1389,6 +1475,25 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   </div>
 {/if}
 
+{#if _woundTooltip}
+  {@const wt = _woundTooltip}
+  <div class="bdc-tt-formula-fixed" style={wt.style}>
+    <div class="bdc-fr">
+      <span class="bdc-fr-label">Pre-Mitigation Bleed Dmg</span>
+      <span class="bdc-fr-val">{fmt(wt.preMitBase)}</span>
+    </div>
+    <div class="bdc-fr">
+      <span class="bdc-fr-label">Wound Potency <span class="bdc-tt-muted">(10% per stack)</span></span>
+      <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(wt.woundPotency)}</span>
+    </div>
+    <div class="bdc-fr-divider"></div>
+    <div class="bdc-fr bdc-fr--result">
+      <span class="bdc-fr-label">Wound True Damage</span>
+      <span class="bdc-fr-val bdc-fr-val--result" style="--tc:#f87171">+ {fmt(wt.trueDmg)}</span>
+    </div>
+  </div>
+{/if}
+
 {#if _ttFormula}
   {@const t = _ttFormula.t}
   <div class="bdc-tt-formula-fixed" style={_ttFormula.style}>
@@ -1402,8 +1507,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
         <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.scalingMult)}</span>
       </div>
     {/if}
-    {#if t.applicableBoosts && t.applicableBoosts.length > 0}
-      {#each t.applicableBoosts as boost}
+    {#if t.applicableBoosts && t.applicableBoosts.filter(b => b.label !== 'Converted Energy').length > 0}
+      {#each t.applicableBoosts.filter(b => b.label !== 'Converted Energy') as boost}
         <div class="bdc-fr">
           <span class="bdc-fr-label">{boost.label}</span>
           <span class="bdc-fr-val" 
