@@ -29,7 +29,6 @@ import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
-import { resolveBurnCapability } from './data/burnApplicationSources'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
 import { BOOST_DEF_MAP, calcFrenzyPct } from './data/Boost'
 import {
@@ -409,7 +408,9 @@ import {
     $result.perks,
     $build.rune || undefined
   )
- 
+  
+  $: _cauterizedAbilityDebuffs = applyCauterizeConversion(_draconicAbilityDebuffsForDummy, $result.perks)
+
   $: __daBuildVal = $build
   $: __daResultVal = $result
   $: _dummyDebuffs = (() => {
@@ -419,7 +420,7 @@ import {
       ['Sticky (Hex Web)', 'Sticky'],
     ])
     const groups = new Map<string, Map<string, number>>()
-    for (const b of [..._allActiveBuffs, ..._draconicAbilityDebuffsForDummy]) {
+    for (const b of [..._allActiveBuffs, ..._cauterizedAbilityDebuffs]) {
       if (b.isSelfDebuff) continue
       const def = BUFF_DEFS[b.buffName]
       if (!def?.isDebuff) continue
@@ -542,7 +543,7 @@ import {
   let _dotCollapsed = true
   $: _topDotTick = _dotTicks.length > 0 ? _dotTicks.reduce((best, dt) => dt.totalEffectivePct > best.totalEffectivePct ? dt : best) : null
 
-  $: _hasSingedBurn = _allActiveBuffs.some(b => b.burnMode === 'singed')
+  $: _hasSingedBurn = _allActiveBuffs.some(b => b.burnMode === 'singed') || _cauterizedAbilityDebuffs.some(b => b.burnMode === 'singed')
 
   $: _dotTicks = (() => {
     const ticks: Array<{
@@ -670,21 +671,12 @@ import {
 
   $: _cauterizeAmt = (perks['Cauterize'] ?? 0)
   $: _cauterizeDef = PERK_DMG_DEFS.find(d => d.perkName === 'Cauterize')
+  $: _burnApplicationCount = getBurnApplicationCount([..._allActiveBuffs, ..._cauterizedAbilityDebuffs]) + (_hasSingedBurn && _echoIncinerationAmt > 0 ? 1 : 0)
   $: _cauterizeBaseDmg = (_cauterizeAmt > 0 && !disabledEffects.has('cauterize') && _cauterizeDef && (perks['Cursed Flames'] ?? 0) <= 0)
     ? _cauterizeDef.getBaseDamage({ perkAmount: _cauterizeAmt, statuses: { burnPotency: perks['Burn Potency'] ?? 0 } })
     : 0
   $: _cauterizeScalings = _cauterizeDef?.scalings ?? {}
   $: _cauterizeScalingMult = _cauterizeAmt > 0 ? _computePerkScalingMult(_cauterizeScalings) : 1
-
-  $: _burnCapability = resolveBurnCapability(
-    perks,
-    selectedWA?.name ?? '',
-    $build.rune,
-    $build.race,
-    $build.guild === 'Draconic',
-    $build.draconicRuneInfusion === 'infusion',
-    $build.draconicColor || 'physical',
-  )
 
   $: _procChips = (() => {
     const chips: Array<{
@@ -1976,13 +1968,14 @@ import {
   $: _perkOnHitDamages = (() => {
     const out: Array<{
       tag: string; baseDmg: number; scalingMult: number; combatMult: number; totalDmg: number
-      dmgTypes: Record<string, number>; procCoefficient?: ProcCoefficient; isProcHit?: boolean
+      dmgTypes: Record<string, number>; procCoefficient?: ProcCoefficient; isProcHit?: boolean; canApplyBurn?: boolean
       rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean
       getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
     }> = []
     for (const e of _activePerkDmgEntries) {
       if (!e.isActive) continue
       if (!e.isProcHit && e.perkName !== 'Springblast') continue
+      if (e.perkName === 'Echo Incineration') continue
       const perkDef = PERK_DMG_DEFS.find(d => d.perkName === e.perkName)
       out.push({
         tag: e.displayName,
@@ -1993,7 +1986,7 @@ import {
         dmgTypes: e.resolvedDmgTypes,
         procCoefficient: e.procCoefficient,
         isProcHit: e.isProcHit,
-        canApplyBurn: _burnCapability.global || _burnCapability.perkTags.has(e.displayName),
+        canApplyBurn: _hasSingedBurn,
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
@@ -2049,7 +2042,7 @@ import {
             isFinisher: finisherHit, dmgTypes: m1Types,
             baseDmgTypes: _weaponDmgTypesBase,
             ...(wb && wb.mult !== 1 ? { weaponBoostMult: wb.mult, weaponBoostLabel: wb.labels.join(', ') } : {}),
-            canApplyBurn: _burnCapability.global,
+            canApplyBurn: _hasSingedBurn,
           })
         })
       }
@@ -2063,7 +2056,7 @@ import {
             isFinisher: true, dmgTypes: m2Types,
             baseDmgTypes: _weaponDmgTypesBase,
             ...(_m2WeaponBoost.mult !== 1 ? { weaponBoostMult: _m2WeaponBoost.mult, weaponBoostLabel: _m2WeaponBoost.labels.join(', ') } : {}),
-            canApplyBurn: _burnCapability.global,
+            canApplyBurn: _hasSingedBurn,
           })
         })
       }
@@ -2094,7 +2087,7 @@ import {
           isFinisher: false,
           dmgTypes: _mountM1DmgTypes,
           label: `${_activeMountRuneDef.mountLabel} (Mounted)`,
-          canApplyBurn: _burnCapability.global,
+          canApplyBurn: _hasSingedBurn,
         })
         if (m1Def.healFlat) {
           result.push({
@@ -2138,7 +2131,7 @@ import {
           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
           baseDmgTypes: hitDtBase, label: selectedWA.name,
           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
-          canApplyBurn: _burnCapability.global || _burnCapability.wa,
+          canApplyBurn: _hasSingedBurn,
         })
       })
     }
@@ -2192,7 +2185,7 @@ import {
           isFinisher: false,
           dmgTypes: waDmgTypes,
           label: `${_activeMountRuneDef.mountLabel} WA (Mounted)`,
-          canApplyBurn: _burnCapability.global || _burnCapability.wa,
+          canApplyBurn: _hasSingedBurn,
         })
       }
     }
@@ -2253,7 +2246,7 @@ import {
         isM1: entry.isM1,
         isM2: entry.isM2,
         procCoefficient: entry.procCoefficient,
-        canApplyBurn: _burnCapability.global,
+        canApplyBurn: _hasSingedBurn,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
           weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,
@@ -2294,7 +2287,7 @@ import {
         isFinisher: false,
         label: _activeRuneDmgDef.runeName,
         isHeal: _runeIsHeal,
-        canApplyBurn: _burnCapability.global || _burnCapability.rune,
+        canApplyBurn: _hasSingedBurn,
       })
     }
 
@@ -2325,7 +2318,7 @@ import {
         dmgTypeIsHeal: { heal: true },
         dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (M2)',
-        canApplyBurn: _burnCapability.global,
+        canApplyBurn: _hasSingedBurn,
       })
       result.push({
         group: 'Perk', index: result.length, count: 1, base: 35, scalingMult: wrScaling, combatMult: _perkCombatMult,
@@ -2334,7 +2327,7 @@ import {
         dmgTypeIsHeal: { heal: true },
         dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (WA)',
-        canApplyBurn: _burnCapability.global,
+        canApplyBurn: _hasSingedBurn,
       })
     }
     if (_oceanSongAmt > 0) {
@@ -2357,7 +2350,7 @@ import {
           isFinisher: false, dmgTypes: _applyDmgBonuses({ hex: 1.0 }, _perkDmgTypeBonusesNoProc),
           label: 'Fungal Prototype (' + label + ' →)',
           procCoefficient: { type: 'noProc' },
-          canApplyBurn: _burnCapability.global,
+          canApplyBurn: _hasSingedBurn,
         })
       }
       if (_activeMountRuneDef && mountActive) {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import CritIcon from './CritIcon.svelte'
   import DmgTotalTooltip from './DmgTotalTooltip.svelte'
-  import { resolveDamageTypes } from './lib/damageTypeResolve'
+  import { resolveDamageTypes, applyFireAirConversion } from './lib/damageTypeResolve'
   import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
   import { BADGE_CONFIG, type ComputedType, type ComputedHit, type PerkOnHitDmg } from './lib/dmgTypes'
   import type { ProcCoefficient } from './lib/types'
@@ -51,8 +51,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   export let crushingPressureAmt: number = 0
   export let echoIncinerationBaseDmg: number = 0
   export let echoIncinerationScalingMult: number = 1
-  export let cauterizeBaseDmg: number = 0
-  export let cauterizeScalingMult: number = 1
+export let cauterizeBaseDmg: number = 0
+export let cauterizeScalingMult: number = 1
   export let m1Label: string = 'M1'
 
   const DOT_COLORS: Record<string, string> = {
@@ -483,7 +483,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string, scalingMult = 1, combatMult = 1) => {
       const amount = baseAmount * pct
       if (amount <= 0) return
-      const resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonuses))
+      let resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonuses))
+      if (echoIncinerationBaseDmg > 0) resolvedTypes = applyFireAirConversion(resolvedTypes)
       for (const [k, mult] of Object.entries(resolvedTypes)) {
         const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
         const applicableBoosts = getApplicableBoosts(k, false, undefined, hit?.procCoefficient)
@@ -587,8 +588,11 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
 
     if (!isHeal && echoIncinerationBaseDmg > 0 && canProc(hit.procCoefficient)) {
       addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, hit.combatMult)
+      if (cauterizeBaseDmg > 0 && hit.canApplyBurn) {
+        addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
+      }
     }
-    if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn) {
+    if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
       addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
     }
 
@@ -619,8 +623,15 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
             if (_dsPreMitBase > 0) addProcEffect(_dsPreMitBase, stormRendPct, { air: 0.5, magic: 0.5 }, 'Chain')
           }
         }
-        if (echoIncinerationBaseDmg > 0) addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, dragonStateCombatMult)
-        if (cauterizeBaseDmg > 0 && hit.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
+        if (echoIncinerationBaseDmg > 0) {
+          addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, dragonStateCombatMult)
+          if (cauterizeBaseDmg > 0 && hit.canApplyBurn) {
+            addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
+          }
+        }
+        if (cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
+          addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
+        }
         if (_bloodThirstyActive) {
           const btHeal = 0.3 * bloodThirstyStacks
           if (btHeal > 0) {
@@ -642,7 +653,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
       if (!isHeal && ph.totalDmg > 0 && hit.isFinisher && ph.tag !== 'Dragon State') {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
-          const resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
+          let resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
+          if (echoIncinerationBaseDmg > 0) resolvedTypes = applyFireAirConversion(resolvedTypes)
           for (const [k, mult] of Object.entries(resolvedTypes)) {
             const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
             const applicableBoosts = getApplicableBoosts(k, false, undefined, hit.procCoefficient)
@@ -674,10 +686,12 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
             })
           }
 
-          if (cauterizeBaseDmg > 0 && ph.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
           if (canProc(ph.procCoefficient)) {
             const preMitBase = ph.totalDmg * debuffMult
-            if (echoIncinerationBaseDmg > 0) addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, ph.combatMult)
+            if (echoIncinerationBaseDmg > 0) {
+              addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, ph.combatMult)
+              if (cauterizeBaseDmg > 0 && ph.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
+            }
             if (luminescentPct > 0) addProcEffect(preMitBase, luminescentPct, { holy: 1.0 }, 'Luminescent')
             if (lightningCloakPct > 0) addProcEffect(preMitBase, lightningCloakPct, { air: 0.5, magic: 0.5 }, 'Chain')
             if (stormRendPct > 0) addProcEffect(preMitBase, stormRendPct, { air: 0.5, magic: 0.5 }, 'Chain')
@@ -747,6 +761,9 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                 })
               }
             }
+          }
+          if (cauterizeBaseDmg > 0 && ph.canApplyBurn && canProc(ph.procCoefficient)) {
+            addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
           }
         }
       }
@@ -1095,7 +1112,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
                                     <span class="bdc-dragon-count">×{t.activationDivisor ? Math.round(hit.count / t.activationDivisor) : hit.count}</span>
                                   {/if}
                                 {/if}
-                                {#if hit.group === 'Rune' && draconicRunesBonus[t.label.toLowerCase()]}
+                                {#if hit.group === 'Rune' && !t.procCoefficient && draconicRunesBonus[t.label.toLowerCase()]}
                                   <span class="bdc-dr-badge" title="Draconic Bonus: +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))} {t.label} damage type">
                                     ✦ +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))}
                                   </span>

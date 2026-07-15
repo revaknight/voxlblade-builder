@@ -530,6 +530,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { fire: 1.0, air: 1.0 },
     guardbreak: true,
+    isProcHit: true,
     procCoefficient: { type: 'noProc' },
   },
   // ── Venom Spitter ────────────────────────────────────────────────
