@@ -1,5 +1,29 @@
+<<<<<<< Updated upstream
 import { BASTION_BLESS_MULT } from '../lib/constants'
 import { getDraconicInfusionPotMult } from './draconicBuffs'
+=======
+import {
+  BASTION_BLESS_MULT,
+  BARBSKIN_DR_PER_STACK,
+  STONESKIN_DR_PER_STACK,
+  STONESKIN_MAX_DR,
+  ADAPTIVE_PLATE_BASE_DR,
+  ADAPTIVE_PLATE_TRIGGERED_DR,
+  PROTECTOR_SPIRIT_DR_PER_STACK,
+  PROTECTOR_SPIRIT_HP_THRESHOLD,
+  PROTECTOR_SPIRIT_ALWAYS_ON_AT,
+  AIR_PRESSURE_MAX_DR_PER_STACK,
+  VALOR_SHIELD_DR_PER_STACK,
+  VALOR_MAX_DR,
+  VAMPIRE_DR_PER_STACK,
+  FRENZY_DR_PER_STACK,
+  FRENZY_FIXED_DR,
+  STORED_CORRUPTION_DR_PER_STACK,
+  MOUNTED_DEFENSE_DR_PER_STACK,
+  CARAPACE_DR_PER_STACK,
+  CURSED_BARK_DR_PER_DEBUFF,
+} from '../lib/constants'
+>>>>>>> Stashed changes
 
 interface DefensivePerkSourceContext {
   hpFillPct: number
@@ -31,65 +55,65 @@ interface DefensivePerkSource {
 const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
   {
     perkName: 'Barbskin',
-    drPctPerStack: 20,
+    drPctPerStack: BARBSKIN_DR_PER_STACK,
     label: 'Barbskin',
     conditionLabel: 'Grants damage reduction while bleeding per 1 of this perk',
   },
   {
     perkName: 'Stoneskin',
-    drPctPerStack: 30,
-    maxDrPct: 80,
+    drPctPerStack: STONESKIN_DR_PER_STACK,
+    maxDrPct: STONESKIN_MAX_DR,
     isFlat: true,
     label: 'Stoneskin',
     conditionLabel: 'Stoneskin lasts for the entirety of the Weapon Art animation and 50% of its cooldown after cooldown reduction effects',
   },
   {
     perkName: 'Adaptive Plate',
-    drPctPerStack: 10,
+    drPctPerStack: ADAPTIVE_PLATE_BASE_DR,
     label: 'Adaptive Plate',
     conditionLabel: 'While bubble is active (vs all damage)',
   },
   {
     perkName: 'Adaptive Plate',
-    drPctPerStack: 50,
+    drPctPerStack: ADAPTIVE_PLATE_TRIGGERED_DR,
     label: 'Adaptive Plate (Triggered types)',
     conditionLabel: 'Against the type(s) that triggered it — 10% all + 40% matched, additive',
     matchedOnly: true,
   },
   {
     perkName: 'Protector Spirit',
-    drPctPerStack: 20,
+    drPctPerStack: PROTECTOR_SPIRIT_DR_PER_STACK,
     isFlat: true,
     label: 'Protector Spirit',
     conditionLabel: 'Below 50% HP (or always at 2+ perk) · 3s cooldown between activations',
-    hpBelowThreshold: 50,
-    minPerkForAlways: 2,
+    hpBelowThreshold: PROTECTOR_SPIRIT_HP_THRESHOLD,
+    minPerkForAlways: PROTECTOR_SPIRIT_ALWAYS_ON_AT,
   },
   {
     perkName: 'Air Pressure',
-    drPctPerStack: 10,
+    drPctPerStack: AIR_PRESSURE_MAX_DR_PER_STACK,
     label: 'Air Pressure (Max Potency)',
     conditionLabel: 'Air Pressure (Max Potency)',
-    potencyCapped: true, // <-- Đánh dấu Air Pressure không nhận hệ số buff hiệu lực (potMult)
+    potencyCapped: true,
   },
   {
     perkName: 'Valor',
-    drPctPerStack: 50,
-    maxDrPct: 50,
+    drPctPerStack: VALOR_SHIELD_DR_PER_STACK,
+    maxDrPct: VALOR_MAX_DR,
     label: 'Valor (Shield Block)',
     conditionLabel: 'While blocking with one-handed weapon or spear',
   },
   {
     perkName: 'Vampire',
-    drPctPerStack: 10 / 3,
+    drPctPerStack: VAMPIRE_DR_PER_STACK,
     label: 'Vampire',
     conditionLabel: 'In darkness · removed in sunlight',
     dependsOn: ctx => ctx.inDarkness,
   },
   {
     perkName: 'Frenzy',
-    drPctPerStack: 0,
-    fixedDefPct: -30,
+    drPctPerStack: FRENZY_DR_PER_STACK,
+    fixedDefPct: FRENZY_FIXED_DR,
     label: 'Frenzy (Self)',
     conditionLabel: 'While Rage is active · flat, regardless of perk amount',
     dependsOn: ctx => ctx.rageActive,
@@ -97,20 +121,20 @@ const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
   },
   {
     perkName: 'Stored Corruption',
-    drPctPerStack: -5,
+    drPctPerStack: STORED_CORRUPTION_DR_PER_STACK,
     label: 'Stored Corruption',
     conditionLabel: 'Increases damage taken by 5% per 1 of this perk',
   },
   {
     perkName: 'Mounted Defense',
-    drPctPerStack: 30,
+    drPctPerStack: MOUNTED_DEFENSE_DR_PER_STACK,
     label: 'Mounted Defense',
     conditionLabel: 'While mounted on Glacial Snapper',
     dependsOn: ctx => ctx.isMounted,
   },
   {
     perkName: 'Carapace',
-    drPctPerStack: 15,
+    drPctPerStack: CARAPACE_DR_PER_STACK,
     label: 'Carapace',
     conditionLabel: 'While you have Shield HP',
     dependsOn: ctx => ctx.hasProtection,
@@ -120,7 +144,7 @@ const DEFENSIVE_PERK_SOURCES: DefensivePerkSource[] = [
     perkName: 'Cursed Bark',
     label: 'Cursed Bark',
     conditionLabel: 'Per unique debuff on target',
-    drPctFn: (amt, ctx) => 5 * ctx.uniqueDebuffCount * amt,
+    drPctFn: (amt, ctx) => CURSED_BARK_DR_PER_DEBUFF * ctx.uniqueDebuffCount * amt,
   },
 ]
 

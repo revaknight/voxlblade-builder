@@ -1,3 +1,19 @@
+import {
+  CDR_CASTER_RUNE_PCT,
+  CDR_CASTER_WA_PCT,
+  CDR_CHANNELED_WEAPON_BASE,
+  CDR_CHANNELED_WEAPON_PER_STACK,
+  CDR_MAGE_RAGE_RUNE_PCT,
+  CDR_POISON_ACCEL_RUNE_PCT,
+  CDR_POISON_ACCEL_WA_PCT,
+  CDR_RUNIC_WINDS_RUNE_PCT,
+  CDR_WAVE_RIDER_WA_PCT,
+  CDR_WHIRLWIND_WA_PCT,
+  CDR_WHIRLWIND_RUNE_PCT,
+  CDR_GLADIATORIAL_SET_CD,
+  CDR_VOLTAIC_BODY_MULT,
+} from '../lib/constants'
+
 export interface PerkCDREntry {
   runePct?: number
   waPct?: number
@@ -14,35 +30,35 @@ export interface PerkCDREntry {
 
 export const CDR_PERK_DATA: Record<string, PerkCDREntry> = {
   "Caster": {
-    runePct: 0.2,
-    waPct: 0.1,
+    runePct: CDR_CASTER_RUNE_PCT,
+    waPct: CDR_CASTER_WA_PCT,
   },
   "Channeled Weapon": {
-    waMultiplier: (perkAmount) => 0.8 - 0.05 * perkAmount,
+    waMultiplier: (perkAmount) => CDR_CHANNELED_WEAPON_BASE - CDR_CHANNELED_WEAPON_PER_STACK * perkAmount,
   },
   "Mage Rage": {
-    runePct: 0.1,
+    runePct: CDR_MAGE_RAGE_RUNE_PCT,
   },
   "Poison Acceleration": {
-    runePct: 0.2,
-    waPct: 0.2,
+    runePct: CDR_POISON_ACCEL_RUNE_PCT,
+    waPct: CDR_POISON_ACCEL_WA_PCT,
   },
   "Runic Winds": {
-    runePct: 0.1,
+    runePct: CDR_RUNIC_WINDS_RUNE_PCT,
   },
   "Wave Rider": {
-    waPct: 0.5,
+    waPct: CDR_WAVE_RIDER_WA_PCT,
     toggleable: true,
   },
   "Whirlwind": {
-    waPct: 0.3,
-    runePct: 0.3,
+    waPct: CDR_WHIRLWIND_WA_PCT,
+    runePct: CDR_WHIRLWIND_RUNE_PCT,
   },
   "Gladiatorial Rage": {
-    runeSetCD: 30,
+    runeSetCD: CDR_GLADIATORIAL_SET_CD,
     runeFilter: ['Rage Rune'],
   },
   "Voltaic Body": {
-    runeMultiplier: (_perkAmount) => 1.2,
+    runeMultiplier: (_perkAmount) => CDR_VOLTAIC_BODY_MULT,
   },
 }
