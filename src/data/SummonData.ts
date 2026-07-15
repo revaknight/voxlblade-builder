@@ -57,7 +57,6 @@ export const WA_SUMMON_MAP: Record<string, string> = {
   "Skeletal Woof Summon":  "Skeletal Woof",
 }
 
-// ── 3. Perks ảnh hưởng summon ────────────────────────────────────────────────
 type SummonPerkMode =
   | 'spawn_only'
   | 'adaptive'

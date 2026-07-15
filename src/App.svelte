@@ -452,7 +452,6 @@ function applyEnchantToAll(slot: EnchantSlot) {
   $: iepExcl = iepSlot ? exclMap[iepSlot] : false
   $: iepHasEnchants = !!(iepS0 || iepS1 || iepS2)
   $: iepCat = iepSlot ? enchantCats[iepSlot] : 'unAscended'
-  // enchantCats được đọc trực tiếp ở đây để Svelte track dependency
   $: iepOpts0 = iepSlot ? enchantments.filter(e => e.category === enchantCats[iepSlot] && e.name !== iepS1 && e.name !== iepS2) : []
   $: iepOpts1 = iepSlot ? enchantments.filter(e => e.category === enchantCats[iepSlot] && e.name !== iepS0 && e.name !== iepS2) : []
   $: iepOpts2 = iepSlot ? enchantments.filter(e => e.category === enchantCats[iepSlot] && e.name !== iepS0 && e.name !== iepS1) : []
@@ -464,22 +463,18 @@ function applyEnchantToAll(slot: EnchantSlot) {
   let noExactResults = false
   let didYouMean: Array<{label: string; type: 'name' | 'perk'; score?: number}> = []
 
-  // Thuật toán Substring Levenshtein: Tìm kiếm khoảng cách lỗi trên phân đoạn chuỗi
-  // Giúp gõ "drgon" vẫn bắt được "Dragon Blade" (chỉ tính sai lệch 1 ký tự của từ "Dragon")
   function substringLevenshtein(query: string, candidate: string): number {
     const q = query.toLowerCase().trim();
     const c = candidate.toLowerCase().trim();
     
     if (!q) return 0;
-    if (c.includes(q)) return 0; // Khớp hoàn toàn cụm từ thì không tính lỗi
+    if (c.includes(q)) return 0;
 
     const m = q.length;
     const n = c.length;
     
-    // Khởi tạo ma trận DP cho Substring Match
     const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
     
-    // Hàng đầu tiên bằng 0 vì vị trí bắt đầu trong candidate có thể là bất kỳ đâu
     for (let i = 0; i <= m; i++) dp[i][0] = i;
 
     for (let i = 1; i <= m; i++) {
@@ -488,18 +483,16 @@ function applyEnchantToAll(slot: EnchantSlot) {
           dp[i][j] = dp[i - 1][j - 1];
         } else {
           dp[i][j] = 1 + Math.min(
-            dp[i - 1][j],    // Xóa
-            dp[i][j - 1],    // Thêm
-            dp[i - 1][j - 1] // Sửa
+            dp[i - 1][j],
+            dp[i][j - 1],
+            dp[i - 1][j - 1]
           );
         }
       }
     }
-    // Kết quả là điểm lỗi nhỏ nhất tìm thấy ở bất kỳ phân đoạn nào trong chuỗi ứng viên
     return Math.min(...dp[m]);
   }
 
-  // Khối 1: Gom ứng viên (Bao gồm cả Tên Vật phẩm và Tên Perk)
   $: {
     if (!activeModal) {
       modalCandidates = [];
@@ -552,7 +545,6 @@ function applyEnchantToAll(slot: EnchantSlot) {
     }
   }
 
-  // Khối 2: Lọc gợi ý chính xác khi gõ (Tìm cả tên món đồ lẫn tên Perk của món đó)
   $: {
     if (!modalSearch.trim() || !showSuggestions) {
       modalSuggestions = [];
@@ -899,7 +891,6 @@ $: highestDamageType = (() => {
     ? weaponResult.finalWeaponType : 'None'
   $: summaryWeaponSub = weaponResult ? [weaponResult.part1Name, weaponResult.part2Name].filter(Boolean).join(' + ') : ''
 
-  // ── Damage types per part (từ raw data, không phải weaponResult) ───────────
   function getDamageTypes(data: any): Record<string, number> {
     const dtKeys = ['true','physical','magic','fire','water','earth','air','hex','holy','summon']
     const result: Record<string, number> = {}
@@ -2931,7 +2922,6 @@ $: _appWaAvgTotal = (() => {
 .perks-panel > div:not(.perks-tabs-header) { padding: 14px 18px; }
 
 
-/* boosts layout (giữ nguyên các class cũ) */
 .boosts-layout { display: flex; flex-direction: column; gap: 14px; }
 
   .perk-count-badge { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.25); color:var(--accent2); font-size:.6rem; font-weight:800; margin-left:6px; vertical-align:middle; }

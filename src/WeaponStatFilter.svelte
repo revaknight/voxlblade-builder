@@ -61,7 +61,6 @@
 
   const GROUPS = [DMG_TYPE_GROUP, SCALING_GROUP, BOOST_GROUP]
 
-  // TỐI ƯU HÓA: Bản đồ tra cứu nhanh để tránh lặp lồng nhau O(N^2) trong HTML UI
   const { labelMap: STAT_LABEL_MAP, colorMap: STAT_COLOR_MAP } = buildStatMaps([DMG_TYPE_GROUP, SCALING_GROUP, BOOST_GROUP])
   const STAT_TAG_MAP = new Map<string, string>()
   for (const s of DMG_TYPE_GROUP.stats) STAT_TAG_MAP.set(s.key, 'DMG')

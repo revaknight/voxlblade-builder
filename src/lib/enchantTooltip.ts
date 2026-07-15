@@ -7,7 +7,6 @@ export function getEnchantTooltipText(name: string, includeDescription = true): 
   
   const lines: string[] = []
   
-  // Sử dụng biến flag để kiểm tra xem có thêm description không
   if (includeDescription && e.description) {
     lines.push(e.description)
   }

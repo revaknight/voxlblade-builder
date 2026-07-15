@@ -4343,7 +4343,6 @@ import {
 <div class="da-section da-section--scaling" style="border-color:rgba(74,222,128,.2);background:linear-gradient(160deg,var(--surface,#141715) 60%,rgba(74,222,128,.03) 100%)">
   <div class="da-section-title" style="color:#4ade80">✦ Heal Scaling</div>
 
-  <!-- WA heal scaling subsection (khi WA là heal-only) -->
   {#if _waHealScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:12px">
       <div class="ds-wa-header">

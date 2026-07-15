@@ -13,7 +13,6 @@
   const STORAGE_KEY = 'voxlbuilder_level'
   const HP_FILL_KEY = 'voxlbuilder_hpfill'
 
-  // ── Single Source of Truth (Reactive States trực tiếp từ Store) ───────────
   $: level = $build.level ?? 80
   $: fillPct = $build.hpFill ?? 100
 
@@ -46,7 +45,6 @@
     if (e.key === 'ArrowDown') inputVal = String(Math.max(0,   (parseInt(inputVal) || level) - 1))
   }
 
-  // ── HP Derived (Tính toán tự động dựa trên phản ứng) ─────────────────────
   $: baseMaxHP = Math.round(BASE_HP * (1 + level * HP_PER_LEVEL))
   $: protRounded = Math.round(protection * 100) / 100
   $: HP_FLOOR = Math.round(baseMaxHP * 0.1)
@@ -97,7 +95,6 @@
   $: thumbPos  = fillFrac * 100
   $: thresholdFrac = hpThreshold != null ? (effectiveMaxHP / baseMaxHP) * (hpThreshold / 100) : 0
 
-  // Đưa logic màu sắc/glow thành biến đơn giản để gán vào CSS Variable
   $: barColor = fillPct > 50 ? '#4ade80' : fillPct > 25 ? '#facc15' : '#f87171'
   $: barGlow  = fillPct > 50 ? 'rgba(74,222,128,0.5)' : fillPct > 25 ? 'rgba(250,204,21,0.5)' : 'rgba(248,113,113,0.5)'
 </script>
@@ -332,7 +329,6 @@
     overflow: hidden;
   }
 
-  /* ② HP fill — Tối ưu hóa render màu qua biến CSS */
   .lb-bar-fill {
     position: absolute;
     left: 0; top: 0; bottom: 0;

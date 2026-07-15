@@ -1,7 +1,3 @@
-<<<<<<< Updated upstream
-import { BASTION_BLESS_MULT } from '../lib/constants'
-import { getDraconicInfusionPotMult } from './draconicBuffs'
-=======
 import {
   BASTION_BLESS_MULT,
   BARBSKIN_DR_PER_STACK,
@@ -23,7 +19,7 @@ import {
   CARAPACE_DR_PER_STACK,
   CURSED_BARK_DR_PER_DEBUFF,
 } from '../lib/constants'
->>>>>>> Stashed changes
+import { getDraconicInfusionPotMult } from './draconicBuffs'
 
 interface DefensivePerkSourceContext {
   hpFillPct: number

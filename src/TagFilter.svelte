@@ -184,7 +184,6 @@
     overflow: hidden;
   }
 
-  /* Wrapper chứa icon chevron và title */
   .tf-toggle-info {
     display: flex;
     align-items: center;

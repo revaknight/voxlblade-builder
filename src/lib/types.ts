@@ -69,12 +69,9 @@ export interface Perk { name: string; description: string; tags: string[] }
 
 export type EnchantSlot = "helmet" | "chestplate" | "leggings" | "ring" | "rune"
 
-// ── Helpers Tối ưu cho Browser ───────────────────────────────────────────────────
-
 export const UPGRADE_MAX = 5
 const UPGRADE_MULTIPLIER = 1.1
 
-/** Áp dụng cấp độ nâng cấp: tối ưu vòng lặp tĩnh tránh sinh rác bộ nhớ */
 export function applyUpgrade(stats: StatMap, level: number): StatMap {
   if (level <= 0) return { ...stats }
   const mult = 1 + level * (UPGRADE_MULTIPLIER - 1)

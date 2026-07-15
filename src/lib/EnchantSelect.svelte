@@ -273,7 +273,6 @@
 </div>
 
 <style>
-  /* [Giữ nguyên CSS cũ của bạn, thay thế selector .ecs-option div bằng .ecs-option button] */
   .ecs-wrap {
     position: relative;
     flex: 1;
