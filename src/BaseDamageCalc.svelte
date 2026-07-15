@@ -543,6 +543,18 @@ export let cauterizeScalingMult: number = 1
         raw, critVal, isHeal: typeIsHeal, isCritExempt: typeNoCrit, forceCrit: hit.forceCrit ?? false,
       }
     })
+
+    if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
+      addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
+    }
+
+    if (!isHeal && echoIncinerationBaseDmg > 0 && canProc(hit.procCoefficient)) {
+      addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, hit.combatMult)
+      if (cauterizeBaseDmg > 0 && hit.canApplyBurn) {
+        addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
+      }
+    }
+
     if (!isHeal && luminescentPct > 0 && canProc(hit.procCoefficient)) {
       if (_hitDebuffedPreMitBase > 0) addProcEffect(_hitDebuffedPreMitBase, luminescentPct, { holy: 1.0 }, 'Luminescent')
     }
@@ -584,16 +596,6 @@ export let cauterizeScalingMult: number = 1
           })
         }
       }
-    }
-
-    if (!isHeal && echoIncinerationBaseDmg > 0 && canProc(hit.procCoefficient)) {
-      addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, hit.combatMult)
-      if (cauterizeBaseDmg > 0 && hit.canApplyBurn) {
-        addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
-      }
-    }
-    if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
-      addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
     }
 
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2 || hit.isFinisher)) {
