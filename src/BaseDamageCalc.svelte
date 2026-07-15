@@ -51,6 +51,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   export let crushingPressureAmt: number = 0
   export let echoIncinerationBaseDmg: number = 0
   export let echoIncinerationScalingMult: number = 1
+  export let cauterizeBaseDmg: number = 0
+  export let cauterizeScalingMult: number = 1
   export let m1Label: string = 'M1'
 
   const DOT_COLORS: Record<string, string> = {
@@ -105,6 +107,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     dmgTypeIsHeal?: Record<string, boolean>
     dmgTypeIsCritExempt?: Record<string, boolean>
     procCoefficient?: ProcCoefficient
+    canApplyBurn?: boolean
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
@@ -585,6 +588,9 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
     if (!isHeal && echoIncinerationBaseDmg > 0 && canProc(hit.procCoefficient)) {
       addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, hit.combatMult)
     }
+    if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn) {
+      addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
+    }
 
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2 || hit.isFinisher)) {
       const dsDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
@@ -614,6 +620,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
           }
         }
         if (echoIncinerationBaseDmg > 0) addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, dragonStateCombatMult)
+        if (cauterizeBaseDmg > 0 && hit.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
         if (_bloodThirstyActive) {
           const btHeal = 0.3 * bloodThirstyStacks
           if (btHeal > 0) {
@@ -667,6 +674,7 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
             })
           }
 
+          if (cauterizeBaseDmg > 0 && ph.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
           if (canProc(ph.procCoefficient)) {
             const preMitBase = ph.totalDmg * debuffMult
             if (echoIncinerationBaseDmg > 0) addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, ph.combatMult)

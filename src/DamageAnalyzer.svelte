@@ -29,6 +29,7 @@ import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
+import { resolveBurnCapability } from './data/burnApplicationSources'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
 import { BOOST_DEF_MAP, calcFrenzyPct } from './data/Boost'
 import {
@@ -666,6 +667,58 @@ import {
     : 0
   $: _echoIncinerationScalings = _echoIncinerationDef?.scalings ?? {}
   $: _echoIncinerationScalingMult = _echoIncinerationAmt > 0 ? _computePerkScalingMult(_echoIncinerationScalings) : 1
+
+  $: _cauterizeAmt = (perks['Cauterize'] ?? 0)
+  $: _cauterizeDef = PERK_DMG_DEFS.find(d => d.perkName === 'Cauterize')
+  $: _cauterizeBaseDmg = (_cauterizeAmt > 0 && !disabledEffects.has('cauterize') && _cauterizeDef && (perks['Cursed Flames'] ?? 0) <= 0)
+    ? _cauterizeDef.getBaseDamage({ perkAmount: _cauterizeAmt, statuses: { burnPotency: perks['Burn Potency'] ?? 0 } })
+    : 0
+  $: _cauterizeScalings = _cauterizeDef?.scalings ?? {}
+  $: _cauterizeScalingMult = _cauterizeAmt > 0 ? _computePerkScalingMult(_cauterizeScalings) : 1
+
+  $: _burnCapability = resolveBurnCapability(
+    perks,
+    selectedWA?.name ?? '',
+    $build.rune,
+    $build.race,
+    $build.guild === 'Draconic',
+    $build.draconicRuneInfusion === 'infusion',
+    $build.draconicColor || 'physical',
+  )
+
+  $: _procChips = (() => {
+    const chips: Array<{
+      key: string; name: string; title: string
+      val: string; cond: string
+    }> = []
+    if (_echoIncinerationAmt > 0) {
+      chips.push({
+        key: 'echoIncineration', name: 'Echo Incineration',
+        title: 'Echo Incineration: (10+2.5×perkAmount)% chance · normal scaling',
+        val: disabledEffects.has('echoIncineration') ? '—'
+          : `+${(_echoIncinerationDef?.getBaseDamage({ perkAmount: _echoIncinerationAmt }) ?? 0).toFixed(2)}`,
+        cond: `${(10 + 2.5 * _echoIncinerationAmt)}% chance`,
+      })
+    }
+    if ((perks['Blub Blub'] ?? 0) > 0) {
+      chips.push({
+        key: 'blubBlub', name: 'Blub Blub',
+        title: 'Blub Blub: 50% proc chance · normal scaling',
+        val: disabledEffects.has('blubBlub') ? '—' : `${(perks['Blub Blub'] ?? 0)}×`,
+        cond: '50% chance',
+      })
+    }
+    if (_cauterizeAmt > 0) {
+      chips.push({
+        key: 'cauterize', name: 'Cauterize',
+        title: 'Cauterize: applies Singed burst on any hit that can proc Burn',
+        val: disabledEffects.has('cauterize') ? '—'
+          : `+${(_cauterizeDef?.getBaseDamage({ perkAmount: _cauterizeAmt, statuses: { burnPotency: perks['Burn Potency'] ?? 0 } }) ?? 0).toFixed(2)}`,
+        cond: 'On any hit that can proc',
+      })
+    }
+    return chips
+  })()
 
   // ── Ork race: +0.1 tenacity per active buff (excludes debuffs & self-debuffs) ──
   $: _orkBuffs = $build.race === 'ORK' ? getOrkTenacityBuffs(_allActiveBuffs, BUFF_DEFS) : []
@@ -1940,6 +1993,7 @@ import {
         dmgTypes: e.resolvedDmgTypes,
         procCoefficient: e.procCoefficient,
         isProcHit: e.isProcHit,
+        canApplyBurn: _burnCapability.global || _burnCapability.perkTags.has(e.displayName),
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
@@ -1973,6 +2027,7 @@ import {
     dmgTypeIsHeal?: Record<string, boolean>
     dmgTypeIsCritExempt?: Record<string, boolean>
     procCoefficient?: ProcCoefficient
+    canApplyBurn?: boolean
   }
 
   $: _bdcWeaponHits = (() => {
@@ -1994,6 +2049,7 @@ import {
             isFinisher: finisherHit, dmgTypes: m1Types,
             baseDmgTypes: _weaponDmgTypesBase,
             ...(wb && wb.mult !== 1 ? { weaponBoostMult: wb.mult, weaponBoostLabel: wb.labels.join(', ') } : {}),
+            canApplyBurn: _burnCapability.global,
           })
         })
       }
@@ -2007,6 +2063,7 @@ import {
             isFinisher: true, dmgTypes: m2Types,
             baseDmgTypes: _weaponDmgTypesBase,
             ...(_m2WeaponBoost.mult !== 1 ? { weaponBoostMult: _m2WeaponBoost.mult, weaponBoostLabel: _m2WeaponBoost.labels.join(', ') } : {}),
+            canApplyBurn: _burnCapability.global,
           })
         })
       }
@@ -2037,6 +2094,7 @@ import {
           isFinisher: false,
           dmgTypes: _mountM1DmgTypes,
           label: `${_activeMountRuneDef.mountLabel} (Mounted)`,
+          canApplyBurn: _burnCapability.global,
         })
         if (m1Def.healFlat) {
           result.push({
@@ -2080,6 +2138,7 @@ import {
           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
           baseDmgTypes: hitDtBase, label: selectedWA.name,
           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
+          canApplyBurn: _burnCapability.global || _burnCapability.wa,
         })
       })
     }
@@ -2133,6 +2192,7 @@ import {
           isFinisher: false,
           dmgTypes: waDmgTypes,
           label: `${_activeMountRuneDef.mountLabel} WA (Mounted)`,
+          canApplyBurn: _burnCapability.global || _burnCapability.wa,
         })
       }
     }
@@ -2140,6 +2200,7 @@ import {
     for (const entry of _activePerkDmgEntries) {
       if (!entry.isActive) continue 
       if (entry.isProcHit) continue 
+      if (entry.perkName === 'Cauterize') continue 
 
       // Check for heal effects from Draconic Blood abilities
       if (entry.perkName === 'Draconic Blood') {
@@ -2192,6 +2253,7 @@ import {
         isM1: entry.isM1,
         isM2: entry.isM2,
         procCoefficient: entry.procCoefficient,
+        canApplyBurn: _burnCapability.global,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,
           weaponBoostLabel: `${$build.draconicColor.charAt(0).toUpperCase()}${$build.draconicColor.slice(1)} Color Bonus`,
@@ -2232,6 +2294,7 @@ import {
         isFinisher: false,
         label: _activeRuneDmgDef.runeName,
         isHeal: _runeIsHeal,
+        canApplyBurn: _burnCapability.global || _burnCapability.rune,
       })
     }
 
@@ -2262,6 +2325,7 @@ import {
         dmgTypeIsHeal: { heal: true },
         dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (M2)',
+        canApplyBurn: _burnCapability.global,
       })
       result.push({
         group: 'Perk', index: result.length, count: 1, base: 35, scalingMult: wrScaling, combatMult: _perkCombatMult,
@@ -2270,6 +2334,7 @@ import {
         dmgTypeIsHeal: { heal: true },
         dmgTypeIsCritExempt: { heal: true },
         label: 'Wave Rider (WA)',
+        canApplyBurn: _burnCapability.global,
       })
     }
     if (_oceanSongAmt > 0) {
@@ -2292,6 +2357,7 @@ import {
           isFinisher: false, dmgTypes: _applyDmgBonuses({ hex: 1.0 }, _perkDmgTypeBonusesNoProc),
           label: 'Fungal Prototype (' + label + ' →)',
           procCoefficient: { type: 'noProc' },
+          canApplyBurn: _burnCapability.global,
         })
       }
       if (_activeMountRuneDef && mountActive) {
@@ -2624,34 +2690,21 @@ import {
       </div>
     {/if}
 
-      {#if _echoIncinerationAmt > 0 || (perks['Blub Blub'] ?? 0) > 0}
+      {#if _procChips.length > 0}
         <div class="da-boost-row" style="margin-top: 6px;">
-          {#if _echoIncinerationAmt > 0}
+          {#each _procChips as chip}
             <button
               class="da-boost-chip"
-              class:da-boost-chip--off={disabledEffects.has('echoIncineration')}
-              title="Echo Incineration: (10+2.5×perkAmount)% chance · normal scaling"
-              on:click={() => toggleEffect('echoIncineration')}
+              class:da-boost-chip--off={disabledEffects.has(chip.key)}
+              title={chip.title}
+              on:click={() => toggleEffect(chip.key)}
             >
-              <span class="da-bc-name">Echo Incineration</span>
-              <span class="da-bc-val">{disabledEffects.has('echoIncineration') ? '—' : `+${(_echoIncinerationDef?.getBaseDamage({ perkAmount: _echoIncinerationAmt }) ?? 0).toFixed(2)}`}</span>
-              <span class="da-bc-cond">{(10 + 2.5 * _echoIncinerationAmt)}% chance</span>
-              <span class="da-bc-toggle">{disabledEffects.has('echoIncineration') ? 'OFF' : 'ON'}</span>
+              <span class="da-bc-name">{chip.name}</span>
+              <span class="da-bc-val">{chip.val}</span>
+              <span class="da-bc-cond">{chip.cond}</span>
+              <span class="da-bc-toggle">{disabledEffects.has(chip.key) ? 'OFF' : 'ON'}</span>
             </button>
-          {/if}
-          {#if (perks['Blub Blub'] ?? 0) > 0}
-            <button
-              class="da-boost-chip"
-              class:da-boost-chip--off={disabledEffects.has('blubBlub')}
-              title="Blub Blub: 50% proc chance · normal scaling"
-              on:click={() => toggleEffect('blubBlub')}
-            >
-              <span class="da-bc-name">Blub Blub</span>
-              <span class="da-bc-val">{disabledEffects.has('blubBlub') ? '—' : `${(perks['Blub Blub'] ?? 0)}×`}</span>
-              <span class="da-bc-cond">50% chance</span>
-              <span class="da-bc-toggle">{disabledEffects.has('blubBlub') ? 'OFF' : 'ON'}</span>
-            </button>
-          {/if}
+          {/each}
         </div>
       {/if}
 
@@ -4414,6 +4467,8 @@ import {
   crushingPressureAmt={_crushingPressureAmt}
   echoIncinerationBaseDmg={_echoIncinerationBaseDmg}
   echoIncinerationScalingMult={_echoIncinerationScalingMult}
+  cauterizeBaseDmg={_cauterizeBaseDmg}
+  cauterizeScalingMult={_cauterizeScalingMult}
   m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
   draconicRunesBonus={getDraconicBonuses({
     draconicRunesStacks: perks['Draconic Runes'] ?? 0,
