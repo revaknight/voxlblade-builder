@@ -452,6 +452,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isNeutral: true,
   },
+  'Steam Buildup': {
+    name: 'Steam Buildup',
+    color: '#94a3b8',
+    description: 'Gain stacks upon applying burn. At max stacks, RMB is replaced with a Steam Blast.',
+    effectPerTenthPotency: 0,
+    effectUnit: 'flat',
+    isNeutral: true,
+  },
 }
 
 const ITEM_BUFF_MAP: GrantedBuff[] = [
@@ -1118,6 +1126,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceName: 'Grounded Despair',
       sourceType: 'perk',
       isSelfDebuff: true,
+    },
+  ],
+  'Steam Charge': (amount) => [
+    {
+      buffName: 'Steam Buildup',
+      potency: Math.round(8 / amount),
+      duration: 0,
+      condition: `Gain 1 stack per Burn application. Max ${Math.round(8 / amount)} stacks. Rounds to nearest whole number.`,
+      sourceName: 'Steam Charge',
+      sourceType: 'perk',
     },
   ],
 }

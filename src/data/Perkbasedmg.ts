@@ -575,4 +575,20 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     procCoefficient: { type: 'noProc' },
     note: 'Singed counts as Burn for other perks but deals no DoT damage — only this initial burst. Not a separate debuff. Incompatible with Cursed Flames. Cannot proc other effects. Proccing Burn multiple times in one hit procs this multiple times.',
   },
+  // ── Steam Charge ─────────────────────────────────────────────────────────
+  {
+    perkName: 'Steam Charge',
+    condition: 'On RMB (replaced by Steam Blast at max Steam Buildup)',
+    getBaseDamage: () => 6,
+    hits: 10,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { fire: 0.5, air: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { fire: 1.0, air: 1.0 },
+    isM2: true,
+    isFinisher: true,
+    guardbreak: true,
+    procCoefficient: { type: 'hasCoeff', value: 0.5 },
+    note: 'Replaces RMB with a 10-hit Steam Blast at max Steam Buildup. Guardsbreak. Reduced chance to proc other effects.',
+  },
 ]
