@@ -625,12 +625,6 @@ export let cauterizeScalingMult: number = 1
         }
         if (echoIncinerationBaseDmg > 0) {
           addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, dragonStateCombatMult)
-          if (cauterizeBaseDmg > 0 && hit.canApplyBurn) {
-            addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
-          }
-        }
-        if (cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
-          addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, dragonStateCombatMult)
         }
         if (_bloodThirstyActive) {
           const btHeal = 0.3 * bloodThirstyStacks
