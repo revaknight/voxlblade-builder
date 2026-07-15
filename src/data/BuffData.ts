@@ -31,6 +31,7 @@ export interface GrantedBuff {
   sourceName: string
   sourceType: 'perk' | 'weaponArt'| 'rune'| 'cantrip'
   isSelfDebuff?: boolean
+  burnMode?: 'dot' | 'singed'
 }
 
 
@@ -236,6 +237,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Burn',
     color: '#fd5d00',
     description: 'burns over time.',
+    effectPerTenthPotency: 0.1,
+    effectUnit: 'flat',
+    isDebuff: true,
+  },
+  Singed: {
+    name: 'Singed',
+    color: '#fd5d00',
+    description: 'Counts as Burn for all related effects. Bursts Fire damage on application instead of over time.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,
@@ -560,6 +569,14 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     duration: 5,
     condition: 'On cast · each hit',
     sourceName: 'Hex Web Rune',
+    sourceType: 'rune',
+  },
+  {
+    buffName: 'Burn',
+    potency: 0,
+    duration: 5,
+    condition: 'On cast',
+    sourceName: 'Fireball Rune',
     sourceType: 'rune',
   },
 ]
@@ -1625,6 +1642,36 @@ export interface ActiveBuffsBuildInput {
 }
 
 /**
+ * When Cauterize is active (and Cursed Flames is not), marks all enemy-applied
+ * Burn entries with `burnMode: 'singed'` to signal that they burst on application
+ * instead of ticking as DoT. Non-self-debuff Burn entries are converted.
+ */
+export function applyCauterizeConversion(
+  buffs: GrantedBuff[],
+  perks: Record<string, number>,
+): GrantedBuff[] {
+  const cauterize = perks['Cauterize'] ?? 0
+  if (cauterize <= 0) return buffs
+  if ((perks['Cursed Flames'] ?? 0) > 0) return buffs
+  return buffs.map(b => {
+    if (b.buffName === 'Burn' && !b.isSelfDebuff) {
+      return { ...b, burnMode: 'singed' }
+    }
+    return b
+  })
+}
+
+/**
+ * Returns the number of enemy Burn application entries in the buff list.
+ * Used to multiply the Cauterize/Singed single-burst damage.
+ * Extracted as a helper so the counting strategy can evolve independently
+ * of the damage formula.
+ */
+export function getBurnApplicationCount(buffs: GrantedBuff[]): number {
+  return buffs.filter(b => b.buffName === 'Burn').length
+}
+
+/**
  * Shared assembly pipeline: item buffs + raw perk buffs + weapon art buffs,
  * merged through convertTailwindToWhirlwind(applyBuffPerkModifiers(...)).
  * Only use this where perk buffs are NOT pre-modified/filtered before assembly
@@ -1642,12 +1689,13 @@ export function assembleActiveBuffs(
     weaponBlade: build.weaponBlade, weaponHandle: build.weaponHandle,
     monkGlove: build.monkGlove, race: build.race,
   })
-  return convertTailwindToWhirlwind(applyBuffPerkModifiers(
+  const buffs = convertTailwindToWhirlwind(applyBuffPerkModifiers(
     [...itemBuffs, ...getPerkBuffs(perks), ...getWeaponArtBuffs(build.selectedWeaponArt)],
     perks,
     build.rune || undefined,
     wardingDebuffMult,
   ), perks)
+  return applyCauterizeConversion(buffs, perks)
 }
 
 export function calcBuffEffect(

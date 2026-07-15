@@ -87,8 +87,8 @@ function calcCDR(
   for (let i = 0; i < waSteps.length; i++) wCDR *= waSteps[i].multiplier
 
   return {
-    runeCDR:       roundMultiplier(rCDR),
-    waCDR:         roundMultiplier(wCDR),
+    runeCDR:       rCDR,
+    waCDR:         wCDR,
     runeSetCD,
     runeBreakdown: runeSteps,
     waBreakdown:   waSteps,

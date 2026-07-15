@@ -176,6 +176,14 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     note: 'Guardbreaks. Applies Sticky (Melting Slime) and Burn for 5s.',
   },
   {
+    runeName: 'Fireball Rune',
+    condition: 'On cast',
+    getBaseDamage: () => 15,
+    dmgTypes: { fire: 1.0 },
+    scalings: { fire: 0.7, magic: 0.3 },
+    note: 'Base Poise Damage 20. Applies Burn for 5s.',
+  },
+  {
     runeName: 'Rocky Tail Rune',
     condition: 'On cast / hold for tail slap combo',
     getBaseDamage: () => 8,

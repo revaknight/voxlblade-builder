@@ -1,3 +1,4 @@
+import { getDotPotencyMult } from './DoTDamage'
 import { getDraconicColorDmgMultiplier } from '../data/draconicColorEffects'
 import type { ProcCoefficient } from '../lib/types'
 import {
@@ -555,5 +556,22 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     procCoefficient: { type: 'noProc' },
     halfActivations: true,
     note: 'Cannot proc other effects. Half activations on Dual Guns or Storm Caster. Grants +10% damage vs Poisoned per 1 of this perk.',
+  },
+  // ── Cauterize ──────────────────────────────────────────────────────────────
+  {
+    perkName: 'Cauterize',
+    condition: 'On Burn proc — replaces Burn DoT with a single Fire burst (Singed)',
+    getBaseDamage: ({ perkAmount, statuses }) => {
+      const burnPotency = (statuses?.burnPotency ?? 0) * 0.1
+      const mult = getDotPotencyMult(burnPotency)
+      const base = (2 + 0.2 * perkAmount) * mult
+      return Math.round(base * 1000) / 1000
+    },
+    dmgTypeMode: 'fixed',
+    dmgTypes: { fire: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { fire: 1.5 },
+    procCoefficient: { type: 'noProc' },
+    note: 'Singed counts as Burn for other perks but deals no DoT damage — only this initial burst. Not a separate debuff. Incompatible with Cursed Flames. Cannot proc other effects. Proccing Burn multiple times in one hit procs this multiple times.',
   },
 ]

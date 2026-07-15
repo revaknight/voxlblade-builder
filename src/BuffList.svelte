@@ -12,6 +12,7 @@
     getWeaponArtBuffs,
     convertTailwindToWhirlwind,
     applyToxinTransferDuration,
+    applyCauterizeConversion,
     type GrantedBuff,
   } from './data/BuffData'
   import { getDraconicInfusionBuff, getDraconicAbilityDebuffs, getDraconicInfusionPotMult, getDraconicInfusionDurMult } from './data/draconicBuffs'
@@ -83,7 +84,7 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
     })
     modified.push(...autoDebuffs)
 
-    return modified
+    return applyCauterizeConversion(modified, $result.perks)
   })()
 
   $: activeDebuffs = baseActiveBuffs.filter(b => BUFF_DEFS[b.buffName]?.isDebuff)

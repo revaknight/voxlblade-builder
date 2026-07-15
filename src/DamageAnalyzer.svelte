@@ -6,7 +6,7 @@
   import { WEAPON_ARTS } from './data/weaponArts'
   import { WEAPON_BASE_DMG } from './data/weapon base dmg'
   import { DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, SCALING_TO_BOOST, PERCENT_STATS, canProc, type WeaponBaseDmg, type ProcCoefficient } from './lib/types'
-  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect, getBuffDescription, convertTailwindToWhirlwind, getTrueBalanceBuffs, assembleActiveBuffs } from './data/BuffData'
+  import { BUFF_DEFS, getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, calcBuffEffect, getBuffDescription, convertTailwindToWhirlwind, getTrueBalanceBuffs, assembleActiveBuffs, applyCauterizeConversion, getBurnApplicationCount } from './data/BuffData'
   import { DEBUFF_COMBAT_EFFECTS } from './data/debuffCombatEffects'
   import { getDraconicInfusionBuff, getDraconicAbilityDebuffs, getEffectiveDraconicInfusionPotency, getDraconicInfusionPotMult, getDraconicInfusionDurMult } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat, calcMaxSummonCount } from './data/SummonData'
@@ -541,6 +541,8 @@ import {
   let _dotCollapsed = true
   $: _topDotTick = _dotTicks.length > 0 ? _dotTicks.reduce((best, dt) => dt.totalEffectivePct > best.totalEffectivePct ? dt : best) : null
 
+  $: _hasSingedBurn = _allActiveBuffs.some(b => b.burnMode === 'singed')
+
   $: _dotTicks = (() => {
     const ticks: Array<{
       type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
@@ -549,7 +551,7 @@ import {
       scalingMult: number; combatMult: number
       meltingShredFactor?: number
       scalingRows: ScalingRow[]; totalEffectivePct: number
-    }> = DOT_TYPE_LIST.map(type => {
+    }> = (_hasSingedBurn ? DOT_TYPE_LIST.filter(t => t !== 'Burn') : DOT_TYPE_LIST).map(type => {
       let dotPot = perks[`${type} Potency`] ?? 0
       if (__daBuildVal.draconicRuneInfusion === 'infusion') {
         const draconicBloodAmt = perks['Draconic Blood'] ?? 0
@@ -1851,7 +1853,10 @@ import {
 
       const _fhM2  = _m2FinisherHits
       const _fhM1f = _m1FinisherHits
-      const _perkCtxStatuses: Record<string, number> = { poisonPotency: perks['Poison Potency'] ?? 0 }
+      const _perkCtxStatuses: Record<string, number> = {
+        poisonPotency: perks['Poison Potency'] ?? 0,
+        burnPotency: perks['Burn Potency'] ?? 0,
+      }
       const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2,  draconicColor: $build.draconicColor, statuses: _perkCtxStatuses })
       const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _fhM1f, draconicColor: $build.draconicColor, statuses: _perkCtxStatuses })
 
