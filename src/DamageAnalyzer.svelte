@@ -3270,10 +3270,10 @@ import {
                       <span class="da-hit-num" style="--tc:{t.color}">{fmtNum(t.val)}</span>
                       <span class="da-hit-type">{t.label}</span>
                     </div>
-                    {#if hit.count > 1}
-                      <div class="da-hit-repeat">×{hit.count}<span>Hits</span></div>
-                    {/if}
                   {/each}
+                  {#if hit.count > 1}
+                    <span class="da-hit-repeat">×{hit.count}<span>Hits</span></span>
+                  {/if}
                   {#if finisher}<span class="da-finisher-crown">✦</span>{/if}
                 </div>
               </div>
@@ -4078,15 +4078,21 @@ import {
                 <div class="ds-col ds-col--op">×</div>
                 
                 <div class="ds-col ds-col--boost">
-                  <span class="ds-boost" style={boostVal < 0 ? 'color: #cf6679;' : ''}>
-                    {boostVal > 0 ? '+' : ''}{roundMultiplier(boostVal)}{isPct ? '%' : ''}
-                  </span>
+                  {#if boostVal !== 0}
+                    <span class="ds-boost" style={boostVal < 0 ? 'color: #cf6679;' : ''}>
+                      {boostVal > 0 ? '+' : ''}{roundMultiplier(boostVal)}{isPct ? '%' : ''}
+                    </span>
+                  {:else}
+                    <span class="ds-boost ds-boost--zero">+0%</span>
+                  {/if}
                 </div>
                 
                 <div class="ds-col ds-col--op">=</div>
                 
                 <div class="ds-col ds-col--contrib">
-                  <span class="ds-contrib" style="color: {contrib < 0 ? '#cf6679' : (SCALING_COLORS[key] ?? '#e8e4da')}">
+                  <span class="ds-contrib" 
+                        class:ds-contrib--zero={contrib === 0}
+                        style="color: {contrib < 0 ? '#cf6679' : (SCALING_COLORS[key] ?? '#e8e4da')}">
                     {contrib > 0 ? '+' : ''}{contrib}{isPct ? '%' : ''}
                   </span>
                 </div>
@@ -4283,6 +4289,7 @@ import {
 {#if runeScalingBreakdown || _draconicScalingBreakdown || _mountRuneScalingBreakdown}
 <div class="da-section da-section--scaling">
   <div class="da-section-title">📐 Rune Damage Scaling</div>
+  <div class="ds-formula-hint">Effective Boost = Σ (Scaling × Boost%) → adds to base as ×(1 + Effective%)</div>
 
   {#if runeScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:0">
@@ -4311,24 +4318,33 @@ import {
             </div>
             <div class="ds-col ds-col--op">×</div>
             <div class="ds-col ds-col--boost">
-              <span class="ds-boost" style={row.boostPct < 0 ? 'color: #cf6679;' : ''}>
-                {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}{isPct ? '%' : ''}
-              </span>
+              {#if row.boostPct !== 0}
+                <span class="ds-boost" style={row.boostPct < 0 ? 'color: #cf6679;' : ''}>
+                  {row.boostPct > 0 ? '+' : ''}{roundMultiplier(row.boostPct)}{isPct ? '%' : ''}
+                </span>
+              {:else}
+                <span class="ds-boost ds-boost--zero">+0%</span>
+              {/if}
             </div>
             <div class="ds-col ds-col--op">=</div>
             <div class="ds-col ds-col--contrib">
-              <span class="ds-contrib" style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
+              <span class="ds-contrib" 
+                    class:ds-contrib--zero={row.contribution === 0}
+                    style={row.contribution > 0 ? `color:${row.color}` : row.contribution < 0 ? 'color: #cf6679;' : ''}>
                 {row.contribution > 0 ? '+' : ''}{roundMultiplier(isPct ? row.contribution : row.contribution * 100)}%
               </span>
             </div>
           </div>
         {/each}
-        <div class="ds-row ds-row--total">
-          <div class="ds-col ds-col--type ds-total-label">Total</div>
+        <div class="ds-row">
+          <div class="ds-col ds-col--type">
+            <span class="ds-dot" style="background:#34d399"></span>
+            <span style="color:#34d399">Total</span>
+          </div>
           <div class="ds-col ds-col--val"></div><div class="ds-col ds-col--op"></div><div class="ds-col ds-col--boost"></div>
           <div class="ds-col ds-col--op">=</div>
           <div class="ds-col ds-col--contrib">
-            <span class="ds-total-pct">+{runeScalingBreakdown.totalEffectivePct}%</span>
+            <span class="ds-contrib" style="color:#34d399">+{runeScalingBreakdown.totalEffectivePct}%</span>
           </div>
         </div>
       </div>
@@ -4369,12 +4385,15 @@ import {
         {#each _draconicScalingBreakdown.rows as row}
           <ScalingBreakdownRow {row} />
         {/each}
-        <div class="ds-row ds-row--total">
-          <div class="ds-col ds-col--type ds-total-label">Total</div>
+        <div class="ds-row">
+          <div class="ds-col ds-col--type">
+            <span class="ds-dot" style="background:#34d399"></span>
+            <span style="color:#34d399">Total</span>
+          </div>
           <div class="ds-col ds-col--val"></div><div class="ds-col ds-col--op"></div><div class="ds-col ds-col--boost"></div>
           <div class="ds-col ds-col--op">=</div>
           <div class="ds-col ds-col--contrib">
-            <span class="ds-total-pct">+{_draconicScalingBreakdown.totalEffectivePct}%</span>
+            <span class="ds-contrib" style="color:#34d399">+{_draconicScalingBreakdown.totalEffectivePct}%</span>
           </div>
         </div>
       </div>
@@ -4406,12 +4425,15 @@ import {
         {#each _mountRuneScalingBreakdown.rows as row}
           <ScalingBreakdownRow {row} />
         {/each}
-        <div class="ds-row ds-row--total">
-          <div class="ds-col ds-col--type ds-total-label">Total</div>
+        <div class="ds-row">
+          <div class="ds-col ds-col--type">
+            <span class="ds-dot" style="background:#34d399"></span>
+            <span style="color:#34d399">Total</span>
+          </div>
           <div class="ds-col ds-col--val"></div><div class="ds-col ds-col--op"></div><div class="ds-col ds-col--boost"></div>
           <div class="ds-col ds-col--op">=</div>
           <div class="ds-col ds-col--contrib">
-            <span class="ds-total-pct">+{_mountRuneScalingBreakdown.totalEffectivePct}%</span>
+            <span class="ds-contrib" style="color:#34d399">+{_mountRuneScalingBreakdown.totalEffectivePct}%</span>
           </div>
         </div>
       </div>
@@ -4896,6 +4918,8 @@ import {
   border-radius: 7px;
   padding: 3px 7px 3px 6px;
   position: relative;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .da-hit-wrapper {
