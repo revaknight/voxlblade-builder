@@ -59,6 +59,7 @@ export interface BoostContext {
   hasFireDmg?: boolean
   burnPotency: number
   hasBurn: boolean
+  selfDebuffCount: number
 }
 
 export interface BoostDef {
@@ -306,6 +307,21 @@ export const BOOST_DEFS: BoostDef[] = [
         return {
           multiplier: 1 + 0.20 * stacks,
           condition: `Burning self · +${20 * stacks}% dmg`,
+        }
+      }
+      return null
+    },
+  },
+  {
+    sourceName: 'Dark One',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const stacks = ctx.perks['Dark One'] ?? 0
+      if (stacks > 0 && ctx.selfDebuffCount > 0) {
+        const mult = 1 + (ctx.selfDebuffCount * stacks) / 15
+        return {
+          multiplier: mult,
+          condition: `${ctx.selfDebuffCount} debuff(s) · +${(ctx.selfDebuffCount * stacks / 15 * 100).toFixed(2)}% dmg`,
         }
       }
       return null

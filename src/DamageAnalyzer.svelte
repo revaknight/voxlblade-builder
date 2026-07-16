@@ -1198,6 +1198,23 @@ import {
       entries.push({ sourceName: 'Frenzy', rawMultiplier: roundMultiplier(1 + pct), condition: `Rage active · potency ${Math.round(_ragePotency * 1000) / 1000}`, type: 'dmg' })
     }
 
+    const darkOneStacks = perks['Dark One'] ?? 0
+    if (darkOneStacks > 0) {
+      const uniqueSelfDebuffs = _allActiveBuffs.filter(b => {
+        const def = BUFF_DEFS[b.buffName]
+        return (b.isSelfDebuff || def?.isSelfDebuff) && def?.isDebuff
+      })
+      const debuffCount = new Set(uniqueSelfDebuffs.map(b => b.buffName)).size
+      if (debuffCount > 0) {
+        entries.push({
+          sourceName: 'Dark One',
+          rawMultiplier: 1 + (debuffCount * darkOneStacks) / 15,
+          condition: `${debuffCount} debuff${debuffCount > 1 ? 's' : ''} · ${darkOneStacks} stack${darkOneStacks > 1 ? 's' : ''}`,
+          type: 'dmg',
+        })
+      }
+    }
+
     const beAmt = perks['Bellowing Ember'] ?? 0
     if (beAmt > 0) {
       const threshold = BELLOWING_EMBER_HP_GATE_THRESHOLD + BELLOWING_EMBER_HP_GATE_PER_STACK * (beAmt - 1)
@@ -1224,7 +1241,7 @@ import {
 
     return entries
   })()
-  $: activeEntries = [...boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Golden Crits' && !showCritValues) && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive) && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Frenzy'), ..._syntheticDmgBoostEntries.filter(e => {
+  $: activeEntries = [...boosts.dmgEntries.filter(e => !disabledBoosts.has(e.sourceName) && !(e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Golden Crits' && !showCritValues) && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive) && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Frenzy' && e.sourceName !== 'Dark One'), ..._syntheticDmgBoostEntries.filter(e => {
     if (e.sourceName === 'Curse Rip' && disableCurseRip) return false
     if (e.sourceName === 'Reaper' && disableReaper) return false
     if (disabledBoosts.has(e.sourceName)) return false
@@ -1796,7 +1813,7 @@ import {
     }
   }
   $: _visibleDmgEntries = boosts.dmgEntries.filter(e =>
-    (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance'
+    (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Dark One'
   )
 
   $: _goldenCritsBaseChance = BOOST_DEF_MAP.get('Golden Crits')?.baseProcChance ?? 0.40

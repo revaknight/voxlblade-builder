@@ -119,6 +119,7 @@ function calcBoosts(
   selectedWeaponArt?: string,
   burnPotency:       number = 0,
   hasBurn:           boolean = false,
+  selfDebuffCount:   number = 0,
 ): BoostResult {
   const dmgMap  = new Map<string, BoostEntry>()
   const healMap = new Map<string, BoostEntry>()
@@ -141,7 +142,7 @@ function calcBoosts(
     perks, naturalCritChance, jumpBoost, summonCount,
     ragePotency, bouncePotency, quickdrawPotency,
     tailwindPotency, speedBoost, attackSpeed, tenacity, inDarkness, emotionalState, level,
-    mountActive, summonBoostPct, selectedWeaponArt, hpFillPct, burnPotency, hasBurn,
+    mountActive, summonBoostPct, selectedWeaponArt, hpFillPct, burnPotency, hasBurn, selfDebuffCount,
   }
 
   for (const def of BOOST_DEFS) {
@@ -499,6 +500,10 @@ function deriveResults(
   const tailwindPotency  = maxBuffPotency(allBuffs, ['Tailwind', 'Whirlwind'])
   const burnPotency      = maxBuffPotency(allBuffs, 'Burn')
   const hasBurn          = allBuffs.some((b: any) => b.buffName === 'Burn')
+  const selfDebuffCount  = new Set(allBuffs.filter((b: any) => {
+    const def = BUFF_DEFS[b.buffName]
+    return (b.isSelfDebuff || def?.isSelfDebuff) && def?.isDebuff
+  }).map((b: any) => b.buffName)).size
 
   const _rawFill = state.hpFill ?? 100
   const _protection = boostedStats.protection ?? 0
@@ -521,6 +526,7 @@ function deriveResults(
     state.selectedWeaponArt,
     burnPotency,
     hasBurn,
+    selfDebuffCount,
   )
   return { stats: boostedStats, perks: finalPerks, cdr, boosts, crit }
 }

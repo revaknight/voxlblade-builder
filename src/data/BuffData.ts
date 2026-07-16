@@ -1475,9 +1475,14 @@ export function applyBuffPerkModifiers(
       ? 1 + 0.33 * containedStacks
       : 1
 
+    const darkOneStacks = perks['Dark One'] ?? 0
+    const darkOneDurationMult = isSelfDebuff && def?.isDebuff && darkOneStacks > 0
+      ? 1 + 0.10 * darkOneStacks
+      : 1
+
     const bonus = specific.bonus + bastionBonus + tricksterBonus
     const durationMult =
-      specific.durationMult * generic.durationMult * containedMult
+      specific.durationMult * generic.durationMult * containedMult * darkOneDurationMult
 
     if (
       bonus === 0 &&
