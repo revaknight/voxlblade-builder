@@ -363,8 +363,10 @@
 
 {#if open}
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-  <div class="saves-panel" on:click|self={() => open = false}>
+  <div class="saves-backdrop" on:click={() => open = false}></div>
+  <div class="saves-panel">
     <div class="saves-header">
+      <div class="drag-handle" aria-hidden="true"></div>
       <span class="saves-title">Saved Builds</span>
       <span class="saves-hint">Click load/delete twice to confirm</span>
       <button class="saves-close" on:click={() => open = false} aria-label="Close saves panel">✕</button>
@@ -567,6 +569,8 @@
   }
   .btn-paste:hover { background: rgba(251,191,36,.18); }
 
+  .saves-backdrop { display: none; }
+  .drag-handle { display: none; }
   .saves-close {
     display:none; background:none; border:none; color:var(--ink-muted);
     font-size:1.1rem; cursor:pointer; padding:2px 6px; border-radius:4px;
@@ -575,8 +579,30 @@
   .saves-close:hover{background:var(--surface3);color:var(--ink);}
 
   @media (max-width:640px) {
-    .saves-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 100; border-radius: 0; min-width: unset; padding: 16px; }
-    .saves-list { max-height: calc(100vh - 200px); overflow-y: auto; }
+    .saves-backdrop {
+      display: block; position: fixed; inset: 0; z-index: 99;
+      background: rgba(0,0,0,.45);
+      animation: bdFadeIn .25s ease;
+    }
+    @keyframes bdFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .saves-panel {
+      position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 100;
+      border-radius: 14px 14px 0 0; min-width: unset; padding: 8px 16px 20px;
+      max-height: min(85vh, 560px); display: flex; flex-direction: column;
+      animation: bdSlideUp .3s cubic-bezier(.32,.72,0,1);
+      box-shadow: 0 -8px 30px rgba(0,0,0,.4);
+    }
+    @keyframes bdSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .drag-handle {
+      display: block; width: 32px; height: 4px; border-radius: 2px;
+      background: var(--ink-muted); opacity: .25; margin: 0 auto 8px;
+      flex-shrink: 0;
+    }
+
+    .saves-header { flex-shrink: 0; flex-wrap: wrap; }
+    .saves-list { flex: 1; overflow-y: auto; }
     .saves-close { display: block; }
     .saves-hint { display: none; }
   }
