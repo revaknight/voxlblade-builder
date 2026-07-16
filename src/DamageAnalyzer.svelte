@@ -2034,6 +2034,7 @@ import {
     dmgTypeIsCritExempt?: Record<string, boolean>
     procCoefficient?: ProcCoefficient
     canApplyBurn?: boolean
+    procCount?: number
   }
 
   $: _bdcWeaponHits = (() => {
@@ -2259,6 +2260,7 @@ import {
         isM1: entry.isM1,
         isM2: entry.isM2,
         procCoefficient: entry.procCoefficient,
+        ...(entry.isM2 && entry.isFinisher && entry.procCoefficient?.type !== 'noProc' ? { procCount: 1 } : {}),
         canApplyBurn: _hasSingedBurn,
         ...(_colorMult !== 1 ? {
           weaponBoostMult: _colorMult,

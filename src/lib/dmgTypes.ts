@@ -58,4 +58,5 @@ export interface ComputedHit {
     isHeal: boolean
     types: ComputedType[]
     procCoefficient?: ProcCoefficient
+    procCount?: number
 }

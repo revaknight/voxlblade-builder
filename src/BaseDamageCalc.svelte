@@ -113,6 +113,7 @@ export let cauterizeScalingMult: number = 1
     dmgTypeIsCritExempt?: Record<string, boolean>
     procCoefficient?: ProcCoefficient
     canApplyBurn?: boolean
+    procCount?: number
   }> = []
   export let typedBoostEntries: TypedDmgBoostEntry[] = []
   export let luminescentPct: number = 0
@@ -822,7 +823,7 @@ export let cauterizeScalingMult: number = 1
       }
     }
 
-    return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types }
+    return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types, procCount: hit.procCount }
   })
 
   $: m1Hits   = computedHits.filter(h => h.group === 'M1')
@@ -852,7 +853,8 @@ export let cauterizeScalingMult: number = 1
   function hitTypeSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
     const perHitSum = hit.types.filter(t => !t.isHeal && !t.isCurseRip && !t.oncePerGroup).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw) / (t.activationDivisor ?? 1), 0)
     const onceSum = hit.types.filter(t => t.oncePerGroup).reduce((s, t) => s + ((useCrit || t.forceCrit) ? t.critVal : t.raw) / (t.activationDivisor ?? 1), 0)
-    const dsCount = (hit.group === 'M1' || hit.group === 'M2') ? 1 : hit.count
+    const eventCount = hit.procCount ?? hit.count
+    const dsCount = (hit.group === 'M1' || hit.group === 'M2') ? 1 : eventCount
     return perHitSum * (includeCount ? hit.count : 1) + (includeCount ? onceSum * dsCount : onceSum)
   }
   function hitHealSum(hit: ComputedHit, useCrit: boolean, includeCount: boolean = false): number {
@@ -864,7 +866,8 @@ export let cauterizeScalingMult: number = 1
     for (const h of list) {
       if (!h.isHeal) {
         total += h.types.filter(t => !t.isHeal && !t.isCurseRip && !t.oncePerGroup).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw) / (t.activationDivisor ?? 1), 0) * h.count
-        const dsCount = (h.group === 'M1' || h.group === 'M2') ? 1 : h.count
+        const eventCount = h.procCount ?? h.count
+        const dsCount = (h.group === 'M1' || h.group === 'M2') ? 1 : eventCount
         total += h.types.filter(t => t.oncePerGroup).reduce((ts, t) => ts + ((useCrit || t.forceCrit) ? t.critVal : t.raw) / (t.activationDivisor ?? 1), 0) * dsCount
       }
     }
@@ -1115,7 +1118,7 @@ export let cauterizeScalingMult: number = 1
                                 {#if t.tag && BADGE_CONFIG[t.tag]}
                                   <span class="bdc-lum-badge" style="color:{BADGE_CONFIG[t.tag].color};background:{BADGE_CONFIG[t.tag].color}22;border:1px solid {BADGE_CONFIG[t.tag].color}44" title={BADGE_CONFIG[t.tag].title}>{BADGE_CONFIG[t.tag].label}</span>
                                   {#if t.tag === 'Dragon State'}
-                                    <span class="bdc-dragon-count">×{hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count}</span>
+                                    <span class="bdc-dragon-count">×{hit.procCount ?? (hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count)}</span>
                                   {/if}
                                   {#if t.tag === 'Blub'}
                                     <span class="bdc-dragon-count">×{t.hitCount ?? hit.count}</span>

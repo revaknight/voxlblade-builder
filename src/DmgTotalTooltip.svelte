@@ -23,10 +23,11 @@
   function buildGroups(h: typeof hit, crit: boolean) {
     const map = new Map<string, { label: string; color: string; total: number; entries: Array<{ label: string; val: number; badge: string }> }>()
     const count = h.count
+    const eventCount = h.procCount ?? count
     for (const t of h.types) {
       if (t.isHeal || t.isCurseRip) continue
       const val = ((crit || t.forceCrit) ? t.critVal : t.raw) / (t.activationDivisor ?? 1)
-      const dsCount = t.oncePerGroup && (h.group === 'M1' || h.group === 'M2') ? 1 : count
+      const dsCount = t.oncePerGroup && (h.group === 'M1' || h.group === 'M2') ? 1 : eventCount
       const total = t.oncePerGroup ? val * dsCount : val * count
       let g = map.get(t.key)
       if (!g) {
