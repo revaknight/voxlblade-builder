@@ -5,8 +5,8 @@
 export const CDR_CASTER_RUNE_PCT = 0.2
 export const CDR_CASTER_WA_PCT = 0.1
 
-export const CDR_CHANNELED_WEAPON_BASE = 0.8
-export const CDR_CHANNELED_WEAPON_PER_STACK = -0.05
+export const CDR_CHANNELED_WEAPON_BASE = 1.0
+export const CDR_CHANNELED_WEAPON_PER_STACK = 0.05
 
 export const CDR_MAGE_RAGE_RUNE_PCT = 0.1
 
