@@ -17,7 +17,7 @@
   {"name":"Insulated","category":"unAscended","stacking":"multi","stats":{"coldResistance":{"type":"addition","value":100},"heatResistance":{"type":"addition","value":100}},"effects":[]},
   {"name":"Vampiric","category":"unAscended","stacking":"multi","stats":{"holyDefense":{"type":"addition","value":-40}},"effects":[{"name":"Lifesteal","value":1}]},
   {"name":"Tanky","category":"unAscended","stacking":"multi","stats":{"defenseStats":{"type":"multiplier","value":1.5},"physicalDefense":{"type":"addition","value":10},"speedBoost":{"type":"addition","value":-5}},"effects":[]},
-  {"name":"Berserking","category":"unAscended","stacking":"multi","stats":{"physicalBoost":[{"type":"multiplier","value":1.2},{"type":"addition","value":20}],"protection":{"type":"addition","value":-10},"physicalDefense":{"type":"multiplier","value":0.5},"magicDefense":{"type":"multiplier","value":2}},"effects":[]},
+  {"name":"Berserking","category":"unAscended","stacking":"multi","stats":{"physicalBoost":[{"type":"multiplier","value":1.2},{"type":"addition","value":20}],"protection":{"type":"addition","value":-10},"positiveDefenses":{"type":"multiplier","value":0.5},"negativeDefenses":{"type":"multiplier","value":2}},"effects":[]},
   {"name":"Fragile","category":"unAscended","stacking":"multi","stats":{"physicalDefense":{"type":"addition","value":-20}},"effects":[]},
   {"name":"Worthless","category":"unAscended","stacking":"multi","stats":{"positiveStats":{"type":"multiplier","value":0.5},"negativeStats":{"type":"multiplier","value":2}},"effects":[]},
   {"name":"Thirsty","category":"unAscended","stacking":"multi","stats":{"physicalDefense":{"type":"addition","value":-5}},"effects":[],"additionalNotes":"Can only be obtained by killing mobs with the Bloody modifier."},

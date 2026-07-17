@@ -42,14 +42,16 @@ function applyModsWhere(
 // ─── Enchantment application ──────────────────────────────────────────────────
 
 type StatSelectorEntry = {
-  key:  'positiveStats' | 'negativeStats' | 'defenseStats'
+  key:  'positiveStats' | 'negativeStats' | 'defenseStats' | 'positiveDefenses' | 'negativeDefenses'
   pred: (v: number, k: StatKey) => boolean
 }
 
 const STAT_SELECTORS: StatSelectorEntry[] = [
-  { key: 'positiveStats', pred: (v)    => v > 0 },
-  { key: 'negativeStats', pred: (v)    => v < 0 },
-  { key: 'defenseStats',  pred: (v, k) => k.endsWith('Defense') && v > 0 },
+  { key: 'positiveStats',     pred: (v)    => v > 0 },
+  { key: 'negativeStats',     pred: (v)    => v < 0 },
+  { key: 'defenseStats',      pred: (v, k) => k.endsWith('Defense') && v > 0 },
+  { key: 'positiveDefenses',  pred: (v, k) => k.endsWith('Defense') && v > 0 },
+  { key: 'negativeDefenses',  pred: (v, k) => k.endsWith('Defense') && v < 0 },
 ]
 
 export function applyEnchantmentsToSlot(
