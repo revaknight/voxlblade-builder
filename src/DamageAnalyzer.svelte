@@ -1895,7 +1895,8 @@ import {
     for (const def of PERK_DMG_DEFS) {
       const perkAmount = perks[def.perkName] ?? 0
       if (perkAmount <= 0) continue
-      if (def.activeIf && !def.activeIf({ draconicRuneInfusion: $build.draconicRuneInfusion, draconicColor: $build.draconicColor })) continue
+      if (def.activeIf && !def.activeIf({ draconicRuneInfusion: $build.draconicRuneInfusion, draconicColor: $build.draconicColor, selectedWeaponArt: $build.selectedWeaponArt })) continue
+      if (def.perkName === 'Bomber Charge' && selectedWA.name === 'Retaliate') continue
 
       const hitType: BoostAttackType = def.isWA   ? 'wa'
                       : def.isRune ? 'rune'
@@ -1954,6 +1955,7 @@ import {
       const _perkCtxStatuses: Record<string, number> = {
         poisonPotency: perks['Poison Potency'] ?? 0,
         burnPotency: perks['Burn Potency'] ?? 0,
+        missingHpPct: Math.min(50, Math.max(0, 100 - (_hpFillPct ?? 100))),
       }
       const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2,  draconicColor: $build.draconicColor, statuses: _perkCtxStatuses })
       const baseDmg_m1f = def.getBaseDamage({ perkAmount, finisherHits: _fhM1f, draconicColor: $build.draconicColor, statuses: _perkCtxStatuses })
@@ -2022,7 +2024,7 @@ import {
     const out: Array<{
       tag: string; baseDmg: number; scalingMult: number; combatMult: number; totalDmg: number
       dmgTypes: Record<string, number>; procCoefficient?: ProcCoefficient; isProcHit?: boolean; canApplyBurn?: boolean
-      rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean
+      rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean; alwaysOnHit?: boolean
       getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
     }> = []
     for (const e of _activePerkDmgEntries) {
@@ -2043,6 +2045,7 @@ import {
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
+        ...(e.isProcHit ? { alwaysOnHit: true } : {}),
         ...(perkDef?.getFinisherHitBaseDmg ? { getFinisherHitBaseDmg: perkDef.getFinisherHitBaseDmg } : {}),
       })
     }
@@ -2156,6 +2159,18 @@ import {
           })
         }
     }
+    // Bomber Charge: override Retaliate WA hits
+    if ((perks['Bomber Charge'] ?? 0) > 0 && selectedWA.name === 'Retaliate') {
+      const missingPct = Math.min(0.5, Math.max(0, 100 - (_hpFillPct ?? 100)) / 100)
+      const base = Math.round(12.5 * (1 + 0.15 * perks['Bomber Charge']) * (1 + 12.8 * missingPct) * 1000) / 1000
+      const sc = _computePerkScalingMult({ holy: 0.4, magic: 0.4 })
+      result.push({
+        group: 'WA', index: 0, count: 1, base, scalingMult: sc, combatMult: _waCombatMult,
+        isFinisher: false, dmgTypes: { holy: 0.5, true: 0.5 },
+        label: 'Retaliate (modified by Bomber Charge)',
+        canApplyBurn: _hasSingedBurn,
+      })
+    }
     if (_waHitsSeq && Object.keys(_waDmgTypes).length > 0 && !(_activeMountRuneDef && mountActive)) {
       _waHitsSeq.forEach((h, i) => {
         const hss = selectedWA.hitScalings?.[Math.min(i, (selectedWA.hitScalings?.length ?? 1) - 1)]
@@ -2169,17 +2184,17 @@ import {
         } else if (hss === 'Same as weapon') sc = _scalingMult
         const hitDt = selectedWA.hitDamageTypes?.length
          ? (() => {
-             const _hdt = selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)]
-             return _hdt === 'Same as weapon'
-               ? _applyDmgBonuses({ ..._convertedWeaponDmgTypes }, _waOnlyBonuses)
-               : applyAirToMagicConversion(_resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses), _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
-           })()
+            const _hdt = selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)]
+            return _hdt === 'Same as weapon'
+              ? _applyDmgBonuses({ ..._convertedWeaponDmgTypes }, _waOnlyBonuses)
+              : applyAirToMagicConversion(_resolveHitDmgTypes(_hdt, _weaponDmgTypes, _waDmgTypeBonuses), _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
+          })()
          : _waDmgTypes
-         
+        
         const hitDtBase = selectedWA.hitDamageTypes?.length
          ? _resolveHitDmgTypesBase(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypesBase)
          : _waDmgTypesBase
-         
+        
         result.push({
           group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
           isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
@@ -2189,7 +2204,7 @@ import {
         })
       })
     }
-    if (_waHealSeq && !(_activeMountRuneDef && mountActive)) {
+    if (_waHealSeq && !(_activeMountRuneDef && mountActive) && !((perks['Bomber Charge'] ?? 0) > 0 && selectedWA.name === 'Retaliate')) {
       _waHealSeq.forEach((h) => {
         result.push({
           group: 'WA',
@@ -2435,12 +2450,12 @@ import {
   $: _allFinisherHitCounts = [...new Set(_bdcWeaponHits.filter(h => h.isFinisher).map(h => h.count))]
   $: if (_allFinisherHitCounts.length === 0) _allFinisherHitCounts = [1]
 
-  const SELF_DAMAGE_APPLIES_TO_GROUP: Record<string, 'WA' | 'Rune'> = { wa: 'WA', rune: 'Rune' }
+  const SELF_DAMAGE_APPLIES_TO_GROUP: Record<string, 'WA' | 'Rune' | 'M1' | 'M2' | 'Perk'> = { wa: 'WA', rune: 'Rune', m1: 'M1', m2: 'M2', perk: 'Perk' }
 
   let enemiesHit = 1
   $: if (!Number.isFinite(enemiesHit) || enemiesHit < 1) enemiesHit = 1
 
-  function _sumPreBoostHitDamage(hits: BDCHit[], group: 'WA' | 'Rune', label?: string): number {
+  function _sumPreBoostHitDamage(hits: BDCHit[], group: 'WA' | 'Rune' | 'M1' | 'M2' | 'Perk', label?: string): number {
     return hits
       .filter(h => h.group === group && !h.isHeal && (label === undefined || h.label === label))
       .reduce((sum, h) => {
@@ -2502,7 +2517,7 @@ import {
   interface SelfDamageSourceEntry {
     def: SelfDamagePerkDef
     amount: number
-    group: 'WA' | 'Rune'
+    group: string
     label: string
     result: { total: number; byType: Record<string, number> }
   }
@@ -2552,11 +2567,63 @@ import {
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
             sources.push({ def, amount, group, label: label ?? 'Rune', result })
           }
+        } else if (group === 'M1') {
+          const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'M1' && !h.isHeal).map(h => h.label ?? 'M1'))]
+          for (const label of labels) {
+            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'M1', label === 'M1' ? undefined : label)
+            if (preBoostDmg <= 0) continue
+            const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
+            sources.push({ def, amount, group, label, result })
+          }
+        } else if (group === 'M2') {
+          const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'M2' && !h.isHeal).map(h => h.label ?? 'M2'))]
+          for (const label of labels) {
+            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'M2', label === 'M2' ? undefined : label)
+            if (preBoostDmg <= 0) continue
+            const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
+            sources.push({ def, amount, group, label, result })
+          }
+        } else if (group === 'Perk') {
+          const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'Perk' && !h.isHeal).map(h => h.label ?? 'Perk'))]
+          for (const label of labels) {
+            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'Perk', label === 'Perk' ? undefined : label)
+            if (preBoostDmg <= 0) continue
+            const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
+            sources.push({ def, amount, group, label, result })
+          }
         }
       }
     }
     return sources
   })()
+
+interface SelfDamageGroup {
+  label: string
+  amount: number
+  sources: SelfDamageSourceEntry[]
+  total: number
+  byType: Record<string, number>
+}
+$: _groupedSelfDamageSources = (() => {
+  const groups = new Map<string, SelfDamageSourceEntry[]>()
+  for (const src of _selfDamageSources) {
+    const key = src.def.perkName
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(src)
+  }
+  const out: SelfDamageGroup[] = []
+  for (const [, sources] of groups) {
+    const total = sources.reduce((s, src) => s + src.result.total, 0)
+    const byType: Record<string, number> = {}
+    for (const src of sources) {
+      for (const [type, val] of Object.entries(src.result.byType)) {
+        byType[type] = (byType[type] ?? 0) + val
+      }
+    }
+    out.push({ label: sources[0].def.label, amount: sources[0].amount, sources, total, byType })
+  }
+  return out
+})()
 
 </script>
 
@@ -3418,7 +3485,23 @@ import {
             <span class="da-wbd-lbl-text da-wbd-lbl-text--wa">{selectedWA.name}</span>
           </div>
           <div class="da-hits-row">
-          {#if _waTyped}
+          {#if (perks['Bomber Charge'] ?? 0) > 0 && selectedWA.name === 'Retaliate'}
+            {@const _bcAmt = perks['Bomber Charge'] ?? 0}
+            {@const _bcMissingPct = Math.min(0.5, Math.max(0, 100 - (_hpFillPct ?? 100)) / 100)}
+            {@const _bcBase = Math.round(12.5 * (1 + 0.15 * _bcAmt) * (1 + 12.8 * _bcMissingPct) * 1000) / 1000}
+            <div class="da-hit-card">
+              <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS['holy']}">
+                <span class="da-hit-num">{fmtNum(Math.round(_bcBase * 0.5 * 10000) / 10000)}</span>
+                <span class="da-hit-type">Holy</span>
+              </div>
+              <span class="da-hit-plus">+</span>
+              <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS['true']}">
+                <span class="da-hit-num">{fmtNum(Math.round(_bcBase * 0.5 * 10000) / 10000)}</span>
+                <span class="da-hit-type">True</span>
+              </div>
+            </div>
+
+          {:else if _waTyped}
             {#each _waTyped as hit, hi}
               {#if hi > 0}<span class="da-hit-divider">›</span>{/if}
               <div class="da-hit-card"
@@ -3868,34 +3951,20 @@ import {
     />
   </div>
 
-  <div class="da-pbd-list">
+  <div class="da-pbd-list da-pbd-list--selfdmg">
     {#each _selfDamageSources as src (src.def.perkName + ':' + src.group + ':' + src.label)}
       <div class="da-pbd-card">
         <div class="da-pbd-head">
-          <span class="da-pbd-name">{src.def.label}</span>
+          <span class="da-pbd-name">{src.def.perkName}</span>
           <span class="da-pbd-amt">+{fmtNum(src.amount)}</span>
         </div>
         <div class="da-pbd-badges">
-          <span class="da-pbd-badge" class:da-pbd-badge--wa={src.group === 'WA'} class:da-pbd-badge--rune={src.group === 'Rune'}>
-            {src.group}
-          </span>
+          <span class="da-pbd-badge" class:da-pbd-badge--wa={src.group === 'WA'} class:da-pbd-badge--rune={src.group === 'Rune'}>{src.group}</span>
         </div>
         <div class="da-pbd-condition">
-          From {src.label}{enemiesHit > 1 ? ` · split across ${enemiesHit} enemies hit` : ''}
+          From {src.label}{enemiesHit > 1 && !src.def.noMultiTargetFalloff ? ` · split across ${enemiesHit} enemies` : ''}
         </div>
-
-        <div class="da-pbd-dmg-row">
-          <span class="da-pbd-ctx-label">Total Self Damage</span>
-          <div class="da-hits-row">
-            <div class="da-hit-card">
-              <div class="da-hit-chunk" style="--tc:var(--neg, #f87171)">
-                <span class="da-hit-num" style="--tc:var(--neg, #f87171)">{fmtNum(src.result.total)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="da-hits-row">
+        <div class="da-hits-row" style="margin-top:4px">
           {#each Object.entries(src.result.byType) as [type, val], i}
             <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">
               <span class="da-hit-num" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">{fmtNum(val)}</span>
@@ -3903,6 +3972,16 @@ import {
             </div>
             {#if i < Object.entries(src.result.byType).length - 1}<span class="da-hit-plus">+</span>{/if}
           {/each}
+        </div>
+        <div class="da-pbd-dmg-row">
+          <span class="da-pbd-ctx-label">Self Damage</span>
+          <div class="da-hits-row">
+            <div class="da-hit-card">
+              <div class="da-hit-chunk" style="--tc:var(--neg, #f87171)">
+                <span class="da-hit-num" style="--tc:var(--neg, #f87171)">{fmtNum(src.result.total)}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     {/each}
@@ -4063,6 +4142,56 @@ import {
       {#if waScalingBreakdown.rows.some(r => r.boostPct === 0)}
         <p class="ds-warn">⚠ Some WA scalings have no matching boost stat — those contribute 0%</p>
       {/if}
+  {/if}
+  {#if (perks['Bomber Charge'] ?? 0) > 0 && selectedWA.name === 'Retaliate'}
+    {@const bcHolyBoost = (stats as Record<string, number>)['holyBoost'] ?? 0}
+    {@const bcMagicBoost = (stats as Record<string, number>)['magicBoost'] ?? 0}
+    {@const bcTotalPct = Math.round((Math.round(0.4 * bcHolyBoost * 1000) / 1000 + Math.round(0.4 * bcMagicBoost * 1000) / 1000) * 100) / 100}
+    <div class="ds-wa-subsection" style="border-color:rgba(249,115,22,.3);margin-top:8px">
+      <div class="ds-wa-header">
+        <span class="ds-sub-badge">WA</span>
+        <span class="ds-wa-name">{selectedWA.name} (Bomber Charge)</span>
+      </div>
+      <div class="ds-table">
+        <div class="ds-head">
+          <div class="ds-col ds-col--type">Scaling</div>
+          <div class="ds-col ds-col--val">Scaling Val</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--boost">Your Boost</div>
+          <div class="ds-col ds-col--op"></div>
+          <div class="ds-col ds-col--contrib">Contribution</div>
+        </div>
+        {#each ['holy', 'magic'] as key}
+          {@const statVal = (stats as Record<string, number>)[key + 'Boost'] ?? 0}
+          {@const contribution = Math.round(0.4 * statVal * 1000) / 1000}
+          <div class="ds-row">
+            <div class="ds-col ds-col--type">
+              <span class="ds-dot" style="background:{DMG_TYPE_COLORS[key]}"></span>
+              <span style="color:{DMG_TYPE_COLORS[key]}">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            </div>
+            <div class="ds-col ds-col--val">
+              <span class="ds-num" style="color:{DMG_TYPE_COLORS[key]}">+0.4</span>
+            </div>
+            <div class="ds-col ds-col--op">×</div>
+            <div class="ds-col ds-col--boost">
+              <span class="ds-boost">{statVal > 0 ? '+' : ''}{Math.round(statVal * 1000) / 1000}%</span>
+            </div>
+            <div class="ds-col ds-col--op">=</div>
+            <div class="ds-col ds-col--contrib">
+              <span class="ds-contrib" style="color:{DMG_TYPE_COLORS[key]}">+{contribution}%</span>
+            </div>
+          </div>
+        {/each}
+      </div>
+      <div class="ds-result-row">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+          <span class="ds-result-label">Scaling Multiplier</span>
+          <span class="ds-applies-to">Weapon Art (Bomber Charge)</span>
+        </div>
+        <span class="ds-result-eq">1 + {bcTotalPct}% =</span>
+        <span class="ds-result-val">×{+(1 + bcTotalPct / 100).toFixed(4)}</span>
+      </div>
+    </div>
   {/if}
 </div>
 {:else if _weaponResult && Object.keys(_weaponResult.scalings).length > 0}
@@ -6340,6 +6469,55 @@ import {
 }
 .da-selfdmg-input::-webkit-inner-spin-button,
 .da-selfdmg-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.da-pbd-list--selfdmg {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.da-pbd-list--selfdmg .da-pbd-card {
+  min-width: 0;
+}
+.da-pbd-list--selfdmg .da-pbd-dmg-row {
+  margin-top: 4px;
+}
+.da-pbd-list--selfdmg .da-pbd-dmg-row .da-hit-card .da-hit-chunk {
+  padding: 2px 8px;
+}
+.da-pbd-list--selfdmg .da-pbd-dmg-row .da-hit-num {
+  font-size: .82rem;
+}
+.da-pbd-list--selfdmg .da-pbd-condition {
+  font-size: .58rem;
+  color: var(--ink-muted);
+  opacity: .6;
+  margin-top: 2px;
+}
+.da-selfdmg-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0;
+}
+.da-selfdmg-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(248,113,113,.04);
+}
+.da-selfdmg-source-label {
+  flex: 1;
+  font-size: .6rem;
+  color: var(--ink-muted);
+  opacity: .7;
+}
+.da-selfdmg-source-total {
+  font-family: 'Courier New', monospace;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--neg, #f87171);
+}
 .da-buff-list {
   display: flex;
   flex-wrap: wrap;

@@ -76,6 +76,7 @@
   $: _dragonStateAmt = $result.perks['Dragon State'] ?? 0
   $: _dragonStateThreshold = _dragonStateAmt > 0 ? gateThreshold(DRAGON_STATE_HP_GATE, _dragonStateAmt) : undefined
   $: _weightySlamAmt = $result.perks['Weighty Slam'] ?? 0
+  $: _bomberChargeAmt = $result.perks['Bomber Charge'] ?? 0
 
   let weaponStatFilter: Map<string, 'include' | 'exclude'> = new Map()
   let weaponStatFilterRef: WeaponStatFilter
@@ -2196,6 +2197,14 @@ $: _appWaAvgTotal = (() => {
               </div>
             {/each}
 
+          {:else if _bomberChargeAmt > 0 && selectedWA.name === 'Retaliate'}
+            <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02);">
+              <span class="wa-stat-val" style="flex-shrink:0;">12.5 × (1 + 0.15×{_bomberChargeAmt}) × (1 + 12.8×missingHP%)</span>
+              <div class="damage-type-grid">
+                <div class="damage-type-pill"><span class="dt-name">Holy</span><span class="dt-val">0.5x</span></div>
+                <div class="damage-type-pill"><span class="dt-name">True</span><span class="dt-val">0.5x</span></div>
+              </div>
+            </div>
           {:else}
             {@const dmgOnly = selectedWA.baseDamage ?.replace(/\+?\s*[\d.×x\s]+healing/gi,'').trim()}
             <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 4px;  border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02);">
@@ -2266,7 +2275,12 @@ $: _appWaAvgTotal = (() => {
     {#if selectedWA.scaling}
       <div class="wa-stat-row">
         <span class="wa-stat-key">Scaling</span>
-        {#if selectedWA.scaling === 'Same as weapon' && weaponResult}
+        {#if _bomberChargeAmt > 0 && selectedWA.name === 'Retaliate'}
+          <div class="scaling-grid" style="flex:1">
+            <div class="scaling-pill"><span class="sc-name">Holy Scaling</span><span class="sc-val">0.4</span></div>
+            <div class="scaling-pill"><span class="sc-name">Magic Scaling</span><span class="sc-val">0.4</span></div>
+          </div>
+        {:else if selectedWA.scaling === 'Same as weapon' && weaponResult}
           <div class="scaling-grid" style="flex:1">
             {#each Object.entries(weaponResult.scalings) as [k, v]}
               <div class="scaling-pill"><span class="sc-name">{formatScalingLabel(k)}</span><span class="sc-val">{fmtScaling(v)}</span></div>

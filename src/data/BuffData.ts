@@ -460,6 +460,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectUnit: 'flat',
     isNeutral: true,
   },
+  'Bursting': {
+    name: 'Bursting',
+    color: '#f97316',
+    description: 'Increases Bombardier explosion proc chance from 40% to 80%.',
+    effectPerTenthPotency: 0,
+    effectUnit: 'flat',
+    isNeutral: true,
+  },
 }
 
 const ITEM_BUFF_MAP: GrantedBuff[] = [
@@ -761,6 +769,16 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       sourceName: 'Smoldering',
       sourceType: 'perk',
       isSelfDebuff: true,
+    },
+  ],
+  'Bomber Spirit': () => [
+    {
+      buffName: 'Bursting',
+      potency: 0,
+      duration: 10,
+      condition: 'On RMB activation (Monk) · Bombardier proc rate 40% → 80%',
+      sourceName: 'Bomber Spirit',
+      sourceType: 'perk',
     },
   ],
   'Cursed Experiment': (amount) => [

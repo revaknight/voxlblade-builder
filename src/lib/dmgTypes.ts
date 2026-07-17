@@ -49,6 +49,7 @@ export interface PerkOnHitDmg {
   rawFinisherNumerator?: number
   halfActivations?: boolean
   oncePerFinisher?: boolean
+  alwaysOnHit?: boolean
   getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
   canApplyBurn?: boolean
 }

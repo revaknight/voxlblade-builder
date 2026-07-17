@@ -652,7 +652,7 @@ export let cauterizeScalingMult: number = 1
     }
 
     for (const ph of perkOnHitDamages) {
-      if (!isHeal && ph.totalDmg > 0 && hit.isFinisher && ph.tag !== 'Dragon State') {
+      if (!isHeal && ph.totalDmg > 0 && (ph.alwaysOnHit || hit.isFinisher) && ph.tag !== 'Dragon State') {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
           let resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))

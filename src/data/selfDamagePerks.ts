@@ -3,12 +3,13 @@ export const UNDEAD_MIGHT_DR_PCT_PER_STACK = 15
 
 export interface SelfDamagePerkDef {
   perkName: string
-  appliesTo: Array<'wa' | 'rune'>
+  appliesTo: Array<'wa' | 'rune' | 'm1' | 'm2' | 'perk'>
   selfDmgPct: number
   dmgTypes: Record<string, number>
   drPctPerStack: number
   label: string
   note?: string
+  noMultiTargetFalloff?: boolean
 }
 
 export const SELF_DAMAGE_PERK_DEFS: SelfDamagePerkDef[] = [
@@ -37,6 +38,16 @@ export const SELF_DAMAGE_PERK_DEFS: SelfDamagePerkDef[] = [
     drPctPerStack: 0,
     label: 'Dark Magic (Self Damage)',
   },
+  {
+    perkName: 'Bombardier',
+    appliesTo: ['m1', 'm2', 'wa', 'rune', 'perk'],
+    selfDmgPct: 0.0666,
+    dmgTypes: { magic: 0.5, holy: 0.5 },
+    drPctPerStack: 0,
+    label: 'Bombardier (Self Damage)',
+    note: '6.66% of pre-modifier explosion damage. Procs on ALL hit types (M1/M2/WA/Rune/Perk).',
+    noMultiTargetFalloff: true,
+  },
 ]
 
 export function calcSelfDamage(
@@ -51,10 +62,13 @@ export function calcSelfDamage(
   const base = preBoostDamageDealt * def.selfDmgPct
   const perkDrMult = 1 / (1 + (def.drPctPerStack * perkAmount) / 100)
   
-  // Harmonic series: 1 + 1/2 + 1/3 + ... for each enemy hit
-  let multiTargetMult = 0
-  for (let i = 1; i <= enemiesHit; i++) {
-    multiTargetMult += 1 / i
+  let multiTargetMult = 1
+  if (!def.noMultiTargetFalloff) {
+    // Harmonic series: 1 + 1/2 + 1/3 + ... for each enemy hit
+    multiTargetMult = 0
+    for (let i = 1; i <= enemiesHit; i++) {
+      multiTargetMult += 1 / i
+    }
   }
   
   const baseTotal = base * perkDrMult * multiTargetMult

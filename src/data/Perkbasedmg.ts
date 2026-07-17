@@ -28,8 +28,9 @@ export interface PerkDmgCtx {
   perkAmount: number
   finisherHits?: number
   m1FinisherHits?: number
-  statuses?: Record<string, number> 
+  statuses?: Record<string, number>
   draconicColor?: string
+  missingHpPct?: number
 }
 export type SecondaryEffectTone = 'defense' | 'offense' | 'utility'
 
@@ -107,7 +108,7 @@ export interface PerkDmgDef {
   note?: string
   hpGate?: HpGate
   secondaryEffects?: SecondaryEffect[]
-  activeIf?: (ctx: { draconicRuneInfusion: string; draconicColor: string }) => boolean
+  activeIf?: (ctx: { draconicRuneInfusion: string; draconicColor: string; selectedWeaponArt?: string }) => boolean
   requiredBuff?: string
 }
 
@@ -206,6 +207,20 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     isM2: true,
     note: 'Each hit has a chance to inflict random debuffs.',
   },
+  // ── Bomber Spirit ──────────────────────────────────────────────────────────
+  {
+    perkName: 'Bomber Spirit',
+    condition: 'On RMB (Monk)',
+    getBaseDamage: () => 9,
+    hits: 4,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { holy: 0.5, magic: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { holy: 1.0, magic: 1.0 },
+    isM2: true,
+    guardbreak: true,
+    note: 'Each hit counts as individual M1/M2 and procs related effects. Grants Bursting for 10s on activation (Bombardier proc rate 40% → 80% while active — proc-rate logic itself not modeled, see P2).',
+  },
   // ── Bounce Momentum ────────────────────────────────────────────────────────
   {
     perkName: 'Bounce Momentum',
@@ -217,6 +232,24 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalings: { water: 1.0 },
     guardbreak: true,
     note: 'Stuns and briefly immobilizes the target.',
+  },
+  // ── Bomber Charge ────────────────────────────────────────────────────────
+  {
+    perkName: 'Bomber Charge',
+    condition: 'Retaliate Weapon Art selected',
+    getBaseDamage: ({ perkAmount, statuses }) => {
+      const missingPct = Math.min(0.5, (statuses?.missingHpPct ?? 0) / 100)
+      const base = 12.5 * (1 + 0.15 * perkAmount) * (1 + 12.8 * missingPct)
+      return Math.round(base * 1000) / 1000
+    },
+    dmgTypeMode: 'fixed',
+    dmgTypes: { holy: 0.5, true: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { holy: 0.4, magic: 0.4 },
+    isWA: true,
+    guardbreak: true,
+    activeIf: (ctx) => ctx.selectedWeaponArt === 'Retaliate',
+    note: 'Replaces base Retaliate formula & Physical→Holy dmg type while equipped. Windup dmg-taken halving not modeled.',
   },
   {
     perkName: 'Protector Spirit',
@@ -535,6 +568,20 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     guardbreak: true,
     isProcHit: true,
     procCoefficient: { type: 'noProc' },
+  },
+  // ── Bombardier ───────────────────────────────────────────────────
+  {
+    perkName: 'Bombardier',
+    condition: 'On any hit · RNG chance (40% at 2 stacks per wiki — see TODO in note)',
+    getBaseDamage: ({ perkAmount }) => 10 + 1 * perkAmount,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { magic: 0.5, holy: 0.5 },
+    scalingMode: 'fixed',
+    scalings: { magic: 1.0, holy: 1.0 },
+    guardbreak: true,
+    isProcHit: true,
+    procCoefficient: { type: 'noProc' },
+    note: 'Cannot proc other effects. Deals 0.5s Stun (not modeled — no stun-duration system in codebase). Self-damage (~6.66% of pre-modifier explosion damage) implemented — applies to M1/M2/WA/Rune/Perk hit groups (no multi-target falloff). Proc-chance display not added (non-linear scaling undocumented).',
   },
   // ── Venom Spitter ────────────────────────────────────────────────
   {
