@@ -259,8 +259,8 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
   },
   Frostbite: {
     name: 'Frostbite',
-    color: '#54a4ec',
-    description: 'Inflict frostbite on enemy.',
+    color: '#59aff9',
+    description: 'Take 10% more Water and Air damage.',
     effectPerTenthPotency: 0.1,
     effectUnit: 'flat',
     isDebuff: true,

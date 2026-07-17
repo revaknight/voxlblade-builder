@@ -82,4 +82,8 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
     },
     damageMult: (p: number) => 1 + (p / 0.1) * 0.085,
   },
+  Frostbite: {
+    descFn: () => `+10% Water & Air Dmg Taken`,
+    typeDamageMult: () => ({ water: 1.1, air: 1.1 }),
+  },
 }

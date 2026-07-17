@@ -113,5 +113,17 @@ export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
     }
   }
 
+  const frostbiteAmt = perks['Frostbite'] ?? 0
+  if (frostbiteAmt > 0 && !existingBuffNames.includes('Slowness')) {
+    debuffs.push({
+      buffName: 'Slowness',
+      potency: 0.5 * frostbiteAmt,
+      duration: 0,
+      condition: `${10 * frostbiteAmt}% chance per hit · Potency = 0.5 × ${frostbiteAmt}`,
+      sourceName: 'Frostbite',
+      sourceType: 'perk',
+    })
+  }
+
   return debuffs
 }
