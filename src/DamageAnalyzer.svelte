@@ -2401,7 +2401,7 @@ import {
         const fpPerTick = preMit * _fpAmt / 30
         result.push({
           group: 'Perk', index: result.length, count: 10, base: fpPerTick,
-          scalingMult: 1, combatMult: _perkCombatMult,
+          scalingMult: 1, combatMult: 1,
           isFinisher: false, dmgTypes: _applyDmgBonuses({ hex: 1.0 }, _perkDmgTypeBonusesNoProc),
           label: 'Fungal Prototype (' + label + ' →)',
           procCoefficient: { type: 'noProc' },
@@ -2415,14 +2415,17 @@ import {
         const m1Scaling = _computePerkScalingMult(m1Def.getScalings())
         const waHits = waDef.getHits()
         if (waHits.length > 0) {
-          pushFp((typeof waHits[0] === 'number' ? waHits[0] : waHits[0].n) * waScaling, _activeMountRuneDef.mountLabel + ' WA')
+          pushFp((typeof waHits[0] === 'number' ? waHits[0] : waHits[0].n) * waScaling * _waCombatMult, _activeMountRuneDef.mountLabel + ' WA')
         }
-        pushFp(m1Def.getBaseDamage() * m1Scaling, _activeMountRuneDef.mountLabel + ' M1')
-      } else if (_waHitsSeq && _waHitsSeq.length > 0) {
-        pushFp(_waHitsSeq[0].n * _waScalingMult, selectedWA.name + ' WA')
-      } else if (_activeRuneDmgDef) {
-        pushFp(_activeRuneDmgDef.getBaseDamage({ potency: runePotency, sliderVal: _runeSliderVal })
-          * _computePerkScalingMult(_activeRuneDmgDef.scalings), 'Rune')
+        pushFp(m1Def.getBaseDamage() * m1Scaling * _runeCombatMult, _activeMountRuneDef.mountLabel + ' M1')
+      } else {
+        if (_waHitsSeq && _waHitsSeq.length > 0) {
+          pushFp(_waHitsSeq[0].n * _waScalingMult * _waCombatMult, selectedWA.name + ' WA')
+        }
+        if (_activeRuneDmgDef) {
+          pushFp(_activeRuneDmgDef.getBaseDamage({ potency: runePotency, sliderVal: _runeSliderVal })
+            * _computePerkScalingMult(_activeRuneDmgDef.scalings) * _runeCombatMult, 'Rune')
+        }
       }
     }
 
