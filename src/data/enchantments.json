@@ -35,7 +35,7 @@
   {"name":"Surging","category":"Ascended","stacking":"multi","stats":{"magicBoost":{"type":"addition","value":5}},"effects":[{"name":"Magic Surge","value":1}]},
   {"name":"Eldritch","category":"Ascended","stacking":"multi","stats":{},"effects":[{"name":"Dark One","value":1}]},
   {"name":"Tempestuous","category":"Ascended","stacking":"multi","stats":{"airBoost":{"type":"addition","value":5}},"effects":[{"name":"Tempest","value":1}]},
-  {"name":"Blessed","category":"Ascended","stacking":"multi","stats":{"holyBoost":{"type":"addition","value":5},"waterBoost":{"type":"addition","value":5}},"effects":[]},
+  {"name":"Blessed","category":"Ascended","stacking":"multi","stats":{"holyBoost":{"type":"addition","value":5},"waterBoost":{"type":"addition","value":5}},"effects":[{"name":"Heal Boost","value":1}]},
   {"name":"Sacrificial","category":"Ascended","stacking":"multi","stats":{"summonBoost":[{"type":"multiplier","value":1.1},{"type":"addition","value":5}]},"effects":[{"name":"Minion Absorption","value":1}]},
   {"name":"Wall of","category":"Ascended","stacking":"multi","stats":{},"effects":[{"name":"Wall","value":1}]},
   {"name":"Spell Proof","category":"Ascended","stacking":"multi","stats":{},"effects":[{"name":"Hex Shield","value":1}]},

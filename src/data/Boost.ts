@@ -8,8 +8,7 @@ import {
   SCOURGE_MULT_PER_STACK, SHARPSHOOTER_MULT_PER_STACK,
   VALOR_MULT_PER_STACK, GORECAST_MULT_PER_STACK,
   UNDEAD_MIGHT_MULT_PER_STACK, HIGHLANDER_MULT_PER_STACK,
-  EMOTIONAL_MULT_PER_STACK, HEAL_BOOST_MULT_PER_STACK,
-  OCEANS_RAGE_MULT_PER_STACK,
+  
   VENOM_EATER_DMG_MULT_PER_STACK, FEROCITY_TENACITY_MULT,
   SPIRIT_WINDS_TAILWIND_MULT, SPIRIT_WINDS_PER_STACK,
   GUARDIAN_SPIN_BASE, GUARDIAN_SPIN_MULT_PER_STACK,
@@ -19,7 +18,7 @@ import {
   THIEF_TRAINING_WOULD_CRIT_MULT, VASSALS_CROAK_MULT_PER_STACK,
   RAGING_BOUNCE_MULT, GUIDING_WINDS_MULT_PER_STACK,
   GUIDING_WINDS_WA_MULT_PER_STACK, CIVILIAN_MULT_PER_STACK,
-  VAMPIRE_DIVISOR, VAMPIRE_SUNLIGHT_HEAL_MULT,
+  VAMPIRE_DIVISOR,
 } from '../lib/constants'
 import type { BoostAttackType, ProcScalingType } from '../lib/types'
 
@@ -287,6 +286,7 @@ export const BOOST_DEFS: BoostDef[] = [
     },
   },
   {
+<<<<<<< Updated upstream
     sourceName: 'Vampire (Sunlight)',
     type: 'heal',
     calcFn: (ctx) => {
@@ -299,6 +299,8 @@ export const BOOST_DEFS: BoostDef[] = [
   },
 
   {
+=======
+>>>>>>> Stashed changes
     sourceName: 'Smoldering',
     type: 'dmg',
     calcFn: (ctx) => {
@@ -363,6 +365,7 @@ export const BOOST_DEFS: BoostDef[] = [
 
   // Level damage (handled specially in calcBoosts)
   { sourceName: 'Level Damage', multiplierPerPerk: 0, type: 'dmg', isLevel: true },
+<<<<<<< Updated upstream
 
   // Simple heal boosts
   { sourceName: 'Emotional', multiplierPerPerk: EMOTIONAL_MULT_PER_STACK, type: 'heal', condition: 'while you have both Buffs and Debuffs' },
@@ -383,6 +386,8 @@ export const BOOST_DEFS: BoostDef[] = [
       return null
     },
   },
+=======
+>>>>>>> Stashed changes
 ]
 
 export const BOOST_DEF_MAP = new Map(BOOST_DEFS.map(d => [d.sourceName, d]))

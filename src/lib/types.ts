@@ -243,9 +243,7 @@ export interface BoostEntry {
 
 export interface BoostResult {
   dmgEntries: BoostEntry[]
-  healEntries: BoostEntry[]
   dmgFinalMultiplier: number
-  healFinalMultiplier: number
 }
 
 export const DMG_TYPE_COLORS: Record<string, string> = {

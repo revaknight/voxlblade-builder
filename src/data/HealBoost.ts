@@ -1,4 +1,10 @@
 import { roundMultiplier } from '../lib/utils'
+import {
+  EMOTIONAL_MULT_PER_STACK,
+  HEAL_BOOST_MULT_PER_STACK,
+  OCEANS_RAGE_MULT_PER_STACK,
+  VAMPIRE_SUNLIGHT_HEAL_MULT,
+} from '../lib/constants'
 import { getEffectiveDraconicInfusionPotency } from './draconicBuffs'
 
 export type HealSource = 'perk' | 'rune' | 'weaponArt' | 'passive'
@@ -41,14 +47,14 @@ const HEAL_SCALING_DEFS: HealBoostDef[] = [
   },
   { 
     sourceName: 'Emotional', 
-    multiplierPerPerk: 0.20, 
+    multiplierPerPerk: EMOTIONAL_MULT_PER_STACK, 
     sourceType: 'perk',
     condition: 'while you have both Buffs and Debuffs',
     activeIf: (ctx) => ctx.emotionalState === 'both'
   },
   { 
     sourceName: 'Heal Boost', 
-    multiplierPerPerk: 0.10, 
+    multiplierPerPerk: HEAL_BOOST_MULT_PER_STACK, 
     sourceType: 'perk',
     condition: '10% per perk'
   },
@@ -59,8 +65,13 @@ const HEAL_SCALING_DEFS: HealBoostDef[] = [
       const stacks = ctx.perks['Oceans Rage'] ?? 0
       if (stacks > 0) {
         return {
+<<<<<<< Updated upstream
           multiplier: roundMultiplier(1 + stacks * 0.1),
           condition: `while you have Rage`,
+=======
+          multiplier: roundMultiplier(1 + stacks * OCEANS_RAGE_MULT_PER_STACK),
+          condition: `${stacks} stack × 10% outgoing heal`,
+>>>>>>> Stashed changes
         }
       }
       return null
@@ -72,7 +83,11 @@ const HEAL_SCALING_DEFS: HealBoostDef[] = [
     calcFn: (ctx) => {
       const stacks = ctx.perks['Vampire'] ?? 0
       if (stacks > 0 && !ctx.inDarkness) {
+<<<<<<< Updated upstream
         return { multiplier: 0.5, condition: 'while in Sunlight' }
+=======
+        return { multiplier: VAMPIRE_SUNLIGHT_HEAL_MULT, condition: 'Healing received halved in sunlight' }
+>>>>>>> Stashed changes
       }
       return null
     },

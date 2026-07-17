@@ -121,8 +121,7 @@ function calcBoosts(
   hasBurn:           boolean = false,
   selfDebuffCount:   number = 0,
 ): BoostResult {
-  const dmgMap  = new Map<string, BoostEntry>()
-  const healMap = new Map<string, BoostEntry>()
+  const dmgMap = new Map<string, BoostEntry>()
 
   const lvlMult = roundMultiplier(1 + Math.max(0, Math.min(80, level)) / 80)
   dmgMap.set('Level Damage', {
@@ -130,12 +129,6 @@ function calcBoosts(
     rawMultiplier: lvlMult,
     condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
     type:          'dmg',
-  })
-  healMap.set('Level Healing', {
-    sourceName:    'Level Healing',
-    rawMultiplier: lvlMult,
-    condition:     `LV0 → ×1.0 · LV80 → ×2.0`,
-    type:          'heal',
   })
 
   const ctx: BoostContext = {
@@ -161,8 +154,7 @@ function calcBoosts(
           procScaling:   def.procScaling,
           hasToggle:     def.hasToggle,
         }
-        if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
-        else                      healMap.set(def.sourceName, entry)
+        dmgMap.set(def.sourceName, entry)
       }
       continue
     }
@@ -170,8 +162,6 @@ function calcBoosts(
     if (def.multiplierPerPerk !== undefined) {
       const perkAmount = perks[def.sourceName] ?? 0
       if (perkAmount <= 0) continue
-
-      if (def.sourceName === 'Emotional' && def.type === 'heal' && emotionalState !== 'both') continue
 
       const entry: BoostEntry = {
         sourceName:    def.sourceName,
@@ -183,8 +173,7 @@ function calcBoosts(
         procScaling:   def.procScaling,
         hasToggle:     def.hasToggle,
       }
-      if (def.type === 'dmg') dmgMap.set(def.sourceName, entry)
-      else                      healMap.set(def.sourceName, entry)
+      dmgMap.set(def.sourceName, entry)
     }
   }
 
@@ -200,19 +189,14 @@ function calcBoosts(
     }
   }
 
-  const dmgEntries  = [...dmgMap.values()]
-  const healEntries = [...healMap.values()]
+  const dmgEntries = [...dmgMap.values()]
 
   let dmgFinal = 1.0
   for (let i = 0; i < dmgEntries.length; i++) dmgFinal *= dmgEntries[i].rawMultiplier
-  let healFinal = 1.0
-  for (let i = 0; i < healEntries.length; i++) healFinal *= healEntries[i].rawMultiplier
 
   return {
     dmgEntries,
-    healEntries,
-    dmgFinalMultiplier:  roundMultiplier(dmgFinal),
-    healFinalMultiplier: roundMultiplier(healFinal),
+    dmgFinalMultiplier: roundMultiplier(dmgFinal),
   }
 }
 
