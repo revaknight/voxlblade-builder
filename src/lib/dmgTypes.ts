@@ -15,6 +15,7 @@ export const BADGE_CONFIG: Record<string, { color: string; label: string; title:
   'Echo Incineration': { color: '#f97316', label: '✦ Echo', title: 'Echo Incineration: (10+2.5×perkAmount)% for Fire+Air on hit' },
   'Venom Spitter': { color: '#a855f7', label: '✦ Venom Spitter', title: 'Venom Spitter: Finisher hits deal Hex damage + Damage Boost vs Poisoned' },
   'Cauterize': { color: '#fd5d00', label: '✦ Cauterize', title: 'Cauterize: Burn bursts as instant Fire (Singed) on any hit that can proc' },
+  'Bombardier': { color: '#f97316', label: '✦ Bombardier', title: 'Bombardier: explosion on any hit · RNG chance · Cannot proc other effects' },
 }
 
 export interface ComputedType {

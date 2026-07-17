@@ -54,6 +54,8 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   export let crushingPressureAmt: number = 0
   export let echoIncinerationBaseDmg: number = 0
   export let echoIncinerationScalingMult: number = 1
+  export let bombardierBaseDmg: number = 0
+  export let bombardierScalingMult: number = 1
 export let cauterizeBaseDmg: number = 0
 export let cauterizeScalingMult: number = 1
   export let m1Label: string = 'M1'
@@ -561,6 +563,10 @@ export let cauterizeScalingMult: number = 1
       }
     }
 
+    if (!isHeal && bombardierBaseDmg > 0 && canProc(hit.procCoefficient)) {
+      addProcEffect(bombardierBaseDmg, 1, { magic: 0.5, holy: 0.5 }, 'Bombardier', bombardierScalingMult, hit.combatMult)
+    }
+
     if (!isHeal && luminescentPct > 0 && canProc(hit.procCoefficient)) {
       if (_hitDebuffedPreMitBase > 0) addProcEffect(_hitDebuffedPreMitBase, luminescentPct, { holy: 1.0 }, 'Luminescent')
     }
@@ -634,6 +640,9 @@ export let cauterizeScalingMult: number = 1
         if (echoIncinerationBaseDmg > 0) {
           addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, dragonStateCombatMult)
         }
+        if (bombardierBaseDmg > 0) {
+          addProcEffect(bombardierBaseDmg, 1, { magic: 0.5, holy: 0.5 }, 'Bombardier', bombardierScalingMult, dragonStateCombatMult)
+        }
         if (_bloodThirstyActive) {
           const btHeal = 0.3 * bloodThirstyStacks
           if (btHeal > 0) {
@@ -693,6 +702,9 @@ export let cauterizeScalingMult: number = 1
             if (echoIncinerationBaseDmg > 0) {
               addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, ph.combatMult)
               if (cauterizeBaseDmg > 0 && ph.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
+            }
+            if (bombardierBaseDmg > 0) {
+              addProcEffect(bombardierBaseDmg, 1, { magic: 0.5, holy: 0.5 }, 'Bombardier', bombardierScalingMult, ph.combatMult)
             }
             if (luminescentPct > 0) addProcEffect(preMitBase, luminescentPct, { holy: 1.0 }, 'Luminescent')
             if (lightningCloakPct > 0) addProcEffect(preMitBase, lightningCloakPct, { air: 0.5, magic: 0.5 }, 'Chain')
@@ -1085,7 +1097,7 @@ export let cauterizeScalingMult: number = 1
                             class:bdc-hit-type-chunk--rage={t.applicableBoosts?.some(b => b.perkName === 'Rage')}
                             class:bdc-hit-type-chunk--heal={t.isHeal}
                             class:bdc-hit-type-chunk--weaponboost={t.weaponBoostMult !== 1}
-                            class:bdc-hit-type-chunk--luminescent={!!t.tag}
+                            class:bdc-hit-type-chunk--luminescent={t.tag === 'Luminescent'}
                             class:bdc-hit-type-chunk--crit={(showCritValues && !t.isCritExempt) || t.forceCrit}
                             role="group"
                             on:mouseenter={(e) => {

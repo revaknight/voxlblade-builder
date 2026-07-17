@@ -671,6 +671,14 @@ import {
   $: _echoIncinerationScalings = _echoIncinerationDef?.scalings ?? {}
   $: _echoIncinerationScalingMult = _echoIncinerationAmt > 0 ? _computePerkScalingMult(_echoIncinerationScalings) : 1
 
+  $: _bombardierAmt = perks['Bombardier'] ?? 0
+  $: _bombardierDef = _bombardierAmt > 0 ? PERK_DMG_DEFS.find(d => d.perkName === 'Bombardier') : undefined
+  $: _bombardierBaseDmg = (_bombardierAmt > 0 && _bombardierDef)
+    ? _bombardierDef.getBaseDamage({ perkAmount: _bombardierAmt })
+    : 0
+  $: _bombardierScalings = _bombardierDef?.scalings ?? {}
+  $: _bombardierScalingMult = _bombardierAmt > 0 ? _computePerkScalingMult(_bombardierScalings) : 1
+
   $: _cauterizeAmt = (perks['Cauterize'] ?? 0)
   $: _cauterizeDef = PERK_DMG_DEFS.find(d => d.perkName === 'Cauterize')
   $: _burnApplicationCount = getBurnApplicationCount([..._allActiveBuffs, ..._cauterizedAbilityDebuffs]) + (_hasSingedBurn && _echoIncinerationAmt > 0 ? 1 : 0)
@@ -1247,7 +1255,7 @@ import {
     if (disabledBoosts.has(e.sourceName)) return false
     return true
   })]
-  $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName) || (e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0)) || (_curseRipPerkAmount > 0 && disableCurseRip) || (_reaperPerkAmount > 0 && disableReaper) || ((perks['True Balance'] ?? 0) > 0 && disabledBoosts.has('True Balance')) || ((perks['Frenzy'] ?? 0) > 0 && disabledBoosts.has('Frenzy'))
+  $: hasDisabledVisible = boosts.dmgEntries.some(e => disabledBoosts.has(e.sourceName) || (e.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) || (e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) || (e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) || (e.sourceName === 'Golden Crits' && !showCritValues) || (e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive)) || (_curseRipPerkAmount > 0 && disableCurseRip) || (_reaperPerkAmount > 0 && disableReaper) || ((perks['True Balance'] ?? 0) > 0 && disabledBoosts.has('True Balance')) || ((perks['Frenzy'] ?? 0) > 0 && disabledBoosts.has('Frenzy'))
 
   $: _levelMult = (() => {
     const levelEntry = boosts.dmgEntries.find(e => e.sourceName === 'Level Damage')
@@ -1813,7 +1821,7 @@ import {
     }
   }
   $: _visibleDmgEntries = boosts.dmgEntries.filter(e =>
-    (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Dark One'
+    (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Dark One' && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Golden Crits' && !showCritValues) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive)
   )
 
   $: _goldenCritsBaseChance = BOOST_DEF_MAP.get('Golden Crits')?.baseProcChance ?? 0.40
@@ -2030,7 +2038,7 @@ import {
     for (const e of _activePerkDmgEntries) {
       if (!e.isActive) continue
       if (!e.isProcHit && e.perkName !== 'Springblast') continue
-      if (e.perkName === 'Echo Incineration') continue
+      if (e.perkName === 'Echo Incineration' || e.perkName === 'Bombardier') continue
       const perkDef = PERK_DMG_DEFS.find(d => d.perkName === e.perkName)
       out.push({
         tag: e.displayName,
@@ -2653,6 +2661,8 @@ $: _groupedSelfDamageSources = (() => {
     crushingPressureAmt={_crushingPressureAmt}
     echoIncinerationBaseDmg={_echoIncinerationBaseDmg}
     echoIncinerationScalingMult={_echoIncinerationScalingMult}
+    bombardierBaseDmg={_bombardierBaseDmg}
+    bombardierScalingMult={_bombardierScalingMult}
     cauterizeBaseDmg={_cauterizeBaseDmg}
     cauterizeScalingMult={_cauterizeScalingMult}
     m1Label={_activeMountRuneDef && mountActive ? 'M1/M2' : 'M1'}
