@@ -1888,6 +1888,7 @@ import {
     condition?: string
     hits?: number
     isM1?: boolean; isM2?: boolean; isFinisher?: boolean;     isWA?: boolean; isRune?: boolean; isProcHit?: boolean
+    finisherOnly?: boolean
     guardbreak?: boolean
     procCoefficient?: ProcCoefficient
     note?: string
@@ -1986,7 +1987,7 @@ import {
       const rawFinisherNumerator = isSpringblast ? baseDmg : undefined
       const hasHalfActivations = def.halfActivations && perkAmount > 0 && ((_gunOverlay?.type === 'Dual Guns') || _baseWeaponType === 'Storm Caster')
       const halfActivations = hasHalfActivations || undefined
-      const oncePerFinisher = isSpringblast ? false : (def.isProcHit ? undefined : undefined)
+      const oncePerFinisher = isSpringblast ? false : (def.finisherOnly ? true : undefined)
 
       const isActive = isHpGateActive(def.hpGate, _hpFillPct, perkAmount) && (!isSpringblast || _allActiveBuffs.some(b => b.buffName === 'Bounce')) && (!def.requiredBuff || _allActiveBuffs.some(b => b.buffName === def.requiredBuff))
 
@@ -2014,7 +2015,7 @@ import {
         condition: def.condition,
         hits: def.getHits ? def.getHits({ perkAmount }) : def.hits,
         isM1: def.isM1, isM2: def.isM2, isFinisher: def.isFinisher,
-        isWA: def.isWA, isRune: def.isRune, isProcHit: def.isProcHit, guardbreak: def.guardbreak,
+        isWA: def.isWA, isRune: def.isRune, isProcHit: def.isProcHit, finisherOnly: def.finisherOnly, guardbreak: def.guardbreak,
         procCoefficient: def.procCoefficient,
         note: def.note,
         typedHits_m2: buildTypedHits(isSpringblast ? baseDmg : baseDmg_m2),
@@ -2042,7 +2043,7 @@ import {
     const out: Array<{
       tag: string; baseDmg: number; scalingMult: number; combatMult: number; totalDmg: number
       dmgTypes: Record<string, number>; procCoefficient?: ProcCoefficient; isProcHit?: boolean; canApplyBurn?: boolean
-      rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean; alwaysOnHit?: boolean
+      rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean; alwaysOnHit?: boolean; finisherOnly?: boolean
       getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
     }> = []
     for (const e of _activePerkDmgEntries) {
@@ -2063,7 +2064,8 @@ import {
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
-        ...(e.isProcHit ? { alwaysOnHit: true } : {}),
+        ...(e.isProcHit && !e.finisherOnly ? { alwaysOnHit: true } : {}),
+        ...(e.finisherOnly ? { finisherOnly: true } : {}),
         ...(perkDef?.getFinisherHitBaseDmg ? { getFinisherHitBaseDmg: perkDef.getFinisherHitBaseDmg } : {}),
       })
     }

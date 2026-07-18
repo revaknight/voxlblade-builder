@@ -102,6 +102,7 @@ export interface PerkDmgDef {
   isWA?: boolean
   isRune?: boolean
   isProcHit?: boolean
+  finisherOnly?: boolean
   halfActivations?: boolean
   guardbreak?: boolean
   procCoefficient?: ProcCoefficient
@@ -530,6 +531,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { dexterity: 1.0, hex: 1.0, earth: 1.0 },
     isProcHit: true,
+    finisherOnly: true,
     procCoefficient: { type: 'noProc' },
     note: 'Only activates once per finisher. Inflicts Poison on self and enemies.',
   },
@@ -544,6 +546,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { magic: 1.0 },
     isProcHit: true,
+    finisherOnly: true,
     note: 'Only activates once per finisher.',
   },
   // ── Grounded Despair ─────────────────────────────────────────────────
@@ -603,6 +606,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalingMode: 'fixed',
     scalings: { hex: 1.0, earth: 1.0 },
     isProcHit: true,
+    finisherOnly: true,
     isFinisher: true,
     procCoefficient: { type: 'noProc' },
     halfActivations: true,
