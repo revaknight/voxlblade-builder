@@ -246,11 +246,7 @@ export interface BoostResult {
   dmgFinalMultiplier: number
 }
 
-export const DMG_TYPE_COLORS: Record<string, string> = {
-  physical: '#fb923c', magic: '#818cf8', fire: '#f97316',
-  water: '#38bdf8', earth: '#a3e635', air: '#AAFFDB',
-  hex: '#e879f9', holy: '#facc15', true: '#ffffff', summon: '#c084fc',
-};
+export { DMG_TYPE_COLORS } from './constants/damage-types'
 
 const ONE_HANDED_TYPES = new Set([
   'Dagger','1-Handed Sword','Unbalanced Sword','Mallet','Rapier',
@@ -258,7 +254,7 @@ const ONE_HANDED_TYPES = new Set([
   'Shield','Lance','Chainsaw',
 ]);
 
-export const DMG_TYPE_PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy'];
+export { DMG_TYPE_PRIORITY } from './constants/damage-types'
 
 export const SCALING_TO_BOOST: Record<string, string> = {
   physical: 'physicalBoost', magic: 'magicBoost', fire: 'fireBoost',

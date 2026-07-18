@@ -1,5 +1,60 @@
 import { roundMultiplier } from '../lib/utils'
 import { BASTION_BLESS_MULT } from '../lib/constants'
+import {
+  BUFF_EFFECT_PER_TENTH, WHIRLWIND_EFFECT_PER_TENTH, GLYPH_CONDUIT_EFFECT_PER_TENTH,
+  DESPAIR_EFFECT_PER_TENTH, LUMINESCENT_PCT_PER_POTENCY,
+  RAGE_RUNE_BUFF_POTENCY, RAGE_RUNE_BUFF_DURATION, TOAD_SLAM_RAGE_POTENCY, TOAD_SLAM_RAGE_DURATION,
+  BOUNCE_RUNE_POTENCY, BOUNCE_RUNE_DURATION, BEENADE_RUNE_POTENCY,
+  ANCIENT_CLERIC_SHIELD_POTENCY, ANCIENT_CLERIC_SHIELD_DURATION,
+  BOOSTSHROOM_POISON_DURATION, SPORELING_POISON_DURATION,
+  THUNDEROUS_CLOAK_POTENCY, THUNDEROUS_CLOAK_DURATION,
+  WINTER_WOOF_SHATTER_POTENCY, WINTER_WOOF_SHATTER_DURATION,
+  GLACIAL_SNAPPER_SLOWNESS_POTENCY, GLACIAL_SNAPPER_SLOWNESS_DURATION,
+  GLACIAL_SNAPPER_BLEED_DURATION, CACITROPS_BLEED_DURATION,
+  BRAINBLAST_BURN_DURATION, BRAINBLAST_STICKY_POTENCY, BRAINBLAST_STICKY_DURATION,
+  HEX_WEB_STICKY_POTENCY, HEX_WEB_STICKY_DURATION,
+  BASIC_DEBUFF_POTENCY, BASIC_DEBUFF_DURATION, BASIC_SHATTER_POTENCY,
+  BASIC_SLOWNESS_POTENCY, BASIC_WEAKNESS_POTENCY,
+  WARRIOR_STOMP_RAGE_POTENCY, WARRIOR_STOMP_RAGE_DURATION,
+  WARRIOR_STOMP_TAUNT_POTENCY, WARRIOR_STOMP_TAUNT_DURATION,
+  JAVELIN_SLOWNESS_DURATION, LIGHTNING_CLOAK_DURATION_WA,
+  CURSED_GROUND_WEAKNESS_POTENCY, CURSED_GROUND_WEAKNESS_DURATION,
+  TRUE_BALANCE_POTENCY_COEFF, TRUE_BALANCE_REGEN_DURATION_BASE,
+  TRUE_BALANCE_TAILWIND_DURATION_BASE, TRUE_BALANCE_REINFORCE_POTENCY_BASE,
+  TRUE_BALANCE_RAGE_DURATION_BASE, TRUE_BALANCE_INSPIRED_DURATION_BASE,
+  PERFECTION_POTENCY_PER_AMOUNT,
+  BOUNCE_MOMENTUM_BUFF_POTENCY, BOUNCE_MOMENTUM_DURATION_PER_AMOUNT,
+  TOADZERKER_BUFF_POTENCY, TOADZERKER_BUFF_DURATION,
+  IRON_BOUNCE_DURATION_BASE, IRON_BOUNCE_DURATION_PER_AMOUNT,
+  SPRINGBLAST_BUFF_POTENCY_PER_AMOUNT, SPRINGBLAST_BUFF_DURATION_BASE, SPRINGBLAST_BUFF_DURATION_PER_AMOUNT,
+  WRATHFUL_CRITS_POTENCY_PER_AMOUNT, WRATHFUL_CRITS_DURATION_BASE, WRATHFUL_CRITS_DURATION_PER_AMOUNT,
+  BLOOD_LUST_POTENCY_PER_AMOUNT, BLOOD_LUST_DURATION_PER_AMOUNT,
+  LUMINESCENT_BUFF_POTENCY_PER_AMOUNT, LUMINESCENT_BUFF_DURATION,
+  BEASTIAL_RAGE_POTENCY_PER_AMOUNT, BEASTIAL_RAGE_DURATION,
+  VASSALS_CROAK_MAX_SUMMONS_BASE, VASSALS_CROAK_RAGE_DURATION,
+  IRON_SLAYER_POTENCY_PER_AMOUNT, IRON_SLAYER_DURATION,
+  BASTION_REGEN_POTENCY, BASTION_REINFORCE_POTENCY, BASTION_RATE_PER_AMOUNT, BASTION_BUFF_DURATION,
+  AIR_PRESSURE_BUFF_POTENCY_PER_AMOUNT, AIR_PRESSURE_BUFF_DURATION,
+  APOLLO_TAUNT_POTENCY, APOLLO_TAUNT_DURATION,
+  VALOR_TAUNT_POTENCY, VALOR_TAUNT_DURATION,
+  CHANNELED_REINFORCE_POTENCY, CHANNELED_REINFORCE_DURATION,
+  GLADIATORIAL_RAGE_POTENCY, GLADIATORIAL_RAGE_DURATION,
+  GLYPH_CONDUIT_POTENCY_PER_AMOUNT, GLYPH_CONDUIT_DURATION_MULT,
+  ROARING_WEAKNESS_POTENCY, ROARING_SHATTER_POTENCY, ROARING_ANTI_HEAL_POTENCY, ROARING_DEBUFF_DURATION,
+  STORM_REND_POTENCY_PER_AMOUNT, STORM_REND_DURATION,
+  EROSION_POTENCY_BASE, EROSION_POTENCY_PER_AMOUNT, EROSION_DURATION,
+  QUICKDRAW_POTENCY_PER_AMOUNT, QUICKDRAW_DURATION,
+  TAILWIND_BUFF_POTENCY, TAILWIND_BUFF_DURATION,
+  TOXIN_TRANSFER_DURATION_EXTRA,
+  GROUNDED_DESPAIR_POTENCY_PER_AMOUNT, GROUNDED_DESPAIR_DURATION_PER_AMOUNT,
+  BOUNCE_DURATION_BASE, BOUNCE_DURATION_PER_STACK,
+  MOD_GLADIATORIAL_POTENCY, MOD_MAGE_RAGE_POTENCY, MOD_OCEANS_RAGE_POTENCY,
+  MOD_SLAYER_RAGE_POTENCY, MOD_SLAYER_WEAKNESS_POTENCY,
+  MOD_IRON_SLAYER_POTENCY, MOD_IRON_SLAYER_DURATION,
+  MOD_FURY_DURATION, MOD_TAILWIND_POTENCY, MOD_WIND_WALKER_DURATION_DIVISOR, MOD_SLOW_LEAK_DURATION,
+  ENDLESS_DESPAIR_POTENCY_PER_STACK, ENDLESS_DESPAIR_FLAT_BONUS,
+  ENDLESS_DESPAIR_DURATION_PER_STACK, STORED_CORRUPTION_DURATION_PER_STACK,
+} from '../lib/constants/buffs'
 
 export interface BuffDefinition {
   name: string
@@ -29,7 +84,7 @@ export interface GrantedBuff {
   duration: number
   condition?: string
   sourceName: string
-  sourceType: 'perk' | 'weaponArt'| 'rune'| 'cantrip'
+  sourceType: 'perk' | 'weaponArt' | 'rune' | 'cantrip' | 'race'
   isSelfDebuff?: boolean
   burnMode?: 'dot' | 'singed'
 }
@@ -55,7 +110,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
 
       return desc
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'physicalBoost',
   },
@@ -63,14 +118,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Bounce',
     color: '#f438d7',
     description: "Jump x% higher.",
-    effectPerTenthPotency: 0.1, 
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH, 
     effectUnit: 'flat',
   },
   Regen: {
     name: 'Regen',
     color: '#18ff0d',
     description: 'Regenerate health over time.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'healing',
   },
@@ -78,7 +133,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Reinforce',
     color: '#fbed0a',
     description: 'Take x% less damage.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'physicalDefense',
   },
@@ -86,42 +141,42 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Tailwind',
     color: '#ffffff',
     description: 'Move x% faster.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   Whirlwind: {
     name: 'Whirlwind',
     color: '#a5f3fc',
     description: 'Move and jump x% faster/higher.',
-    effectPerTenthPotency: 0.0666,
+    effectPerTenthPotency: WHIRLWIND_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Critical Boost': {
     name: 'Critical Boost',
     color: '#ede714',
     description: 'Next attack will crit.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   Hexigen: {
     name: 'Hexigen',
     color: '#fc0279',
     description: 'Rage increases hex based on your rage boost.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   Inspired: {
     name: 'Inspired',
     color: '#818cf8',
     description: 'Gain x% inspiration.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Perfection': {
     name: 'Perfection',
     color: '#e5e7eb',
     description: '+2% damage · +1% crit chance & crit damage · +3% speed per potency. Indefinite — lose perkAmount potency on unblocked hit.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     potencyCapped: true,
   },
@@ -129,7 +184,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Air Pressure',
     color: '#AAFFDB',
     description: 'Take x% less damage and upon using a rune release an air burst.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'airDefense',
     potencyCapped: true,
@@ -143,7 +198,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const y = +(potency * 3).toFixed(4)
       return `Take ${x}% less damage and gain ${y} flat reduction to magic damage.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   Luminescent: {
@@ -154,7 +209,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const pct = +(potency * 50).toFixed(4)
       return `Deal ${pct}% of your damage as bonus holy damage that counts as the applier's damage.`
     },
-    effectPerTenthPotency: 5,
+    effectPerTenthPotency: LUMINESCENT_PCT_PER_POTENCY,
     effectUnit: '%',
   },
   'Draconic Infusion': {
@@ -165,14 +220,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const bonus = +potency.toFixed(4)
       return `All attacks gain +${bonus} draconic damage type. Lasts 20s. Does not apply without proc coefficient.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Lightning Cloak': {
     name: 'Lightning Cloak',
     color: '#AAFFDB',
     description: 'Gain 20% movement speed. Attacks trigger chain lightning dealing 1/3 of hit damage as Air+Magic to up to 4 additional targets.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Bloodlust': {
@@ -183,7 +238,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const pct = +(potency * 20).toFixed(4)
       return `Gain ${pct}% attack speed gain more upon hitting an opponent.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     potencyCapped: true,
   },
@@ -195,7 +250,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const pct = +(potency * 200).toFixed(4)
       return `Deal ${pct}% more magic damage.`
     },
-    effectPerTenthPotency: 0.2,
+    effectPerTenthPotency: GLYPH_CONDUIT_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'magicBoost',
   },
@@ -205,7 +260,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Slowness',
     color: '#7eb4ad',
     description: 'Move x% slower.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -213,7 +268,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Despair',
     color: '#54425d',
     description: 'Deal x% more damage.',
-    effectPerTenthPotency: 0.085,
+    effectPerTenthPotency: DESPAIR_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -221,7 +276,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Weakness',
     color: '#8b11e9',
     description: 'Deal x% less damage.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -229,7 +284,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Bleed',
     color: '#ff0004',
     description: 'bleeds over time.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -237,7 +292,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Burn',
     color: '#fd5d00',
     description: 'burns over time.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -245,7 +300,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Singed',
     color: '#fd5d00',
     description: 'Counts as Burn for all related effects. Bursts Fire damage on application instead of over time.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -253,7 +308,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Poison',
     color: '#d900ff',
     description: 'poisons over time.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -261,7 +316,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Frostbite',
     color: '#59aff9',
     description: 'Take 10% more Water and Air damage.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -277,7 +332,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       }
       return `Move ${slowPct}% slower and take 20% more magic damage.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -289,7 +344,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const slowPct = Math.round(potency * 10000) / 100
       return `Move ${slowPct}% slower and take 20% more magic, fire and earth damage.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -301,7 +356,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const slowPct = Math.round(potency * 10000) / 100
       return `Move ${slowPct}% slower and take 20% more hex, magic and earth damage.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -313,7 +368,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const slowPct = Math.round(potency * 10000) / 100
       return `Move ${slowPct}% slower and take 20% more hex and magic damage.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -321,7 +376,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Shatter',
     color: '#ff8183',
     description: 'Lose x Armor.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -329,7 +384,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Electrical Rend',
     color: '#fff27a',
     description: 'Rend enemy with electricity.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -337,7 +392,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Hypnotized',
     color: '#8b4aab',
     description: 'Hypnotize the enemy.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -345,7 +400,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Taunt',
     color: '#e50604',
     description: 'Enemies with this debuff will only target whoever applied it.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -353,7 +408,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Anti Heal',
     color: '#34ff00',
     description: 'Reduce healing by x%.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -366,7 +421,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const stunSec = Math.round(potency * 50) / 100
       return `Bleed deals ${trueDmgPct}% additional true damage and stuns for ${stunSec}s.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isDebuff: true,
   },
@@ -375,7 +430,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Minion Absorbed',
     color: '#ff004b',
     description: 'Deal x% more damage.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
 
@@ -384,7 +439,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Last Croak',
     color: '#94ff88',
     description: 'Neutral status. Consume on RMB hit to trigger an explosion and gain Rage. Rage potency = 0.1 + 0.01 × Potency × PerkAmount.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isNeutral: true,
   },
@@ -392,7 +447,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Tongue Shot',
     color: '#39d9c4',
     description: 'Next finisher will shoot out a tongue that roots the nearest enemy.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isNeutral: true,
   },
@@ -400,7 +455,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Beenades',
     color: '#ffe97a',
     description: 'Throw an additional x Beenades.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isNeutral: true,
   },
@@ -409,7 +464,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Ancient Shield',
     color: '#9aff00',
     description: 'Gain a shield equal to potency HP for 15s. Consumes buffs/neutrals applied to allies.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'protection',
     isNeutral: true,
@@ -422,7 +477,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const pct = Math.round(potency * 30000) / 100
       return `Deal ${pct}% more damage with your weapon arts and runes.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isNeutral: true,
   },
@@ -430,14 +485,14 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     name: 'Exhaust',
     color: '#fe8284',
     description: 'All hits apply burn.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Converted Energy': {
     name: 'Converted Energy',
     color: '#01fb67',
     description: 'Deal x% more damage.',
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
   },
   'Hex Shield': {
@@ -448,7 +503,7 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
       const heal = potency * 3
       return `Blocks ${potency} debuff(s). Heals ${heal} HP on block.`
     },
-    effectPerTenthPotency: 0.1,
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     isNeutral: true,
   },
@@ -473,36 +528,36 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
 const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Rage',
-    potency: 0.3,
-    duration: 10,
+    potency: RAGE_RUNE_BUFF_POTENCY,
+    duration: RAGE_RUNE_BUFF_DURATION,
     sourceName: 'Rage Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Rage',
-    potency: 0.2,
-    duration: 10,
+    potency: TOAD_SLAM_RAGE_POTENCY,
+    duration: TOAD_SLAM_RAGE_DURATION,
     sourceName: 'Toad Slam Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Bounce',
-    potency: 0.3,
-    duration: 10,
+    potency: BOUNCE_RUNE_POTENCY,
+    duration: BOUNCE_RUNE_DURATION,
     sourceName: 'Bounce Rune',
     sourceType: 'rune',
   },
     {
     buffName: 'Beenades',
-    potency: 5,
+    potency: BEENADE_RUNE_POTENCY,
     duration: 0,
     sourceName: 'Beenade Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Ancient Shield',
-    potency: 20,
-    duration: 15,
+    potency: ANCIENT_CLERIC_SHIELD_POTENCY,
+    duration: ANCIENT_CLERIC_SHIELD_DURATION,
     condition: 'On cast · potency = 20 + 4 × buffs consumed (allies also receive)',
     sourceName: 'Ancient Cleric Rune',
     sourceType: 'rune',
@@ -510,7 +565,7 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Poison',
     potency: 0,
-    duration: 5,
+    duration: BOOSTSHROOM_POISON_DURATION,
     condition: 'On hit',
     sourceName: 'Boostshroom Rune',
     sourceType: 'rune',
@@ -518,31 +573,31 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Poison',
     potency: 0,
-    duration: 5,
+    duration: SPORELING_POISON_DURATION,
     condition: 'On hit',
     sourceName: 'Sporeling Toss Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Lightning Cloak',
-    potency: 1.0,
-    duration: 5,
+    potency: THUNDEROUS_CLOAK_POTENCY,
+    duration: THUNDEROUS_CLOAK_DURATION,
     condition: 'Hold & release right before hitting enemy · hit crits',
     sourceName: 'Thunderous Charge Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Shatter',
-    potency: 0.2,
-    duration: 10,
+    potency: WINTER_WOOF_SHATTER_POTENCY,
+    duration: WINTER_WOOF_SHATTER_DURATION,
     condition: 'On Weapon Art hit',
     sourceName: 'Winter Woof Mount Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Slowness',
-    potency: 1,
-    duration: 12,
+    potency: GLACIAL_SNAPPER_SLOWNESS_POTENCY,
+    duration: GLACIAL_SNAPPER_SLOWNESS_DURATION,
     condition: 'On Weapon Art hit',
     sourceName: 'Glacial Snapper Mount Rune',
     sourceType: 'rune',
@@ -550,7 +605,7 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
     {
     buffName: 'Bleed',
     potency: 0,
-    duration: 4,
+    duration: GLACIAL_SNAPPER_BLEED_DURATION,
     condition: 'On Weapon Art hit',
     sourceName: 'Glacial Snapper Mount Rune',
     sourceType: 'rune',
@@ -558,7 +613,7 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Bleed',
     potency: 0,
-    duration: 5,
+    duration: CACITROPS_BLEED_DURATION,
     condition: 'On hit',
     sourceName: 'Cacitrops Rune',
     sourceType: 'rune',
@@ -566,23 +621,23 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
   {
     buffName: 'Burn',
     potency: 0,
-    duration: 5,
+    duration: BRAINBLAST_BURN_DURATION,
     condition: 'On cast',
     sourceName: 'Brainblast Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Sticky (Melting Slime)',
-    potency: 0.1,
-    duration: 5,
+    potency: BRAINBLAST_STICKY_POTENCY,
+    duration: BRAINBLAST_STICKY_DURATION,
     condition: 'On cast',
     sourceName: 'Brainblast Rune',
     sourceType: 'rune',
   },
   {
     buffName: 'Sticky (Hex Web)',
-    potency: 0.1,
-    duration: 5,
+    potency: HEX_WEB_STICKY_POTENCY,
+    duration: HEX_WEB_STICKY_DURATION,
     condition: 'On cast · each hit',
     sourceName: 'Hex Web Rune',
     sourceType: 'rune',
@@ -598,12 +653,12 @@ const ITEM_BUFF_MAP: GrantedBuff[] = [
 ]
 
 export const BASIC_DEBUFF_POOL: Array<{ buffName: string; potency: number; duration: number }> = [
-  { buffName: 'Bleed',    potency: 0,   duration: 5 },
-  { buffName: 'Burn',     potency: 0,   duration: 5 },
-  { buffName: 'Poison',   potency: 0,   duration: 5 },
-  { buffName: 'Shatter',  potency: 0.2, duration: 5 },
-  { buffName: 'Slowness', potency: 0.2, duration: 5 },
-  { buffName: 'Weakness', potency: 0.5, duration: 5 },
+  { buffName: 'Bleed',    potency: BASIC_DEBUFF_POTENCY,   duration: BASIC_DEBUFF_DURATION },
+  { buffName: 'Burn',     potency: BASIC_DEBUFF_POTENCY,   duration: BASIC_DEBUFF_DURATION },
+  { buffName: 'Poison',   potency: BASIC_DEBUFF_POTENCY,   duration: BASIC_DEBUFF_DURATION },
+  { buffName: 'Shatter',  potency: BASIC_SHATTER_POTENCY,  duration: BASIC_DEBUFF_DURATION },
+  { buffName: 'Slowness', potency: BASIC_SLOWNESS_POTENCY, duration: BASIC_DEBUFF_DURATION },
+  { buffName: 'Weakness', potency: BASIC_WEAKNESS_POTENCY, duration: BASIC_DEBUFF_DURATION },
 ]
 
 type PerkBuffFactory = (amount: number, allPerks: Record<string, number>) => GrantedBuff[]
@@ -613,7 +668,7 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Perfection': (amount) => [
     {
       buffName: 'Perfection',
-      potency: amount * 5,
+      potency: PERFECTION_POTENCY_PER_AMOUNT * amount,
       duration: 0,
       condition: `On dodge/parry · +${amount}/dodge · max ${amount * 5} · −${amount} on unblocked hit`,
       sourceName: 'Perfection',
@@ -624,8 +679,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Bounce Momentum': (amount) => [
     {
       buffName: 'Tongue Shot',
-      potency: 1.0,
-      duration: 3 * amount,
+      potency: BOUNCE_MOMENTUM_BUFF_POTENCY,
+      duration: BOUNCE_MOMENTUM_DURATION_PER_AMOUNT * amount,
       condition: 'On jump while Bounce is active',
       sourceName: 'Bounce Momentum',
       sourceType: 'perk',
@@ -636,15 +691,15 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     return [
       {
         buffName: 'Bounce',
-        potency: 0.2,
-        duration: 10,
+        potency: TOADZERKER_BUFF_POTENCY,
+        duration: TOADZERKER_BUFF_DURATION,
         sourceName: 'Toadzerker',
         sourceType: 'perk',
       },
       {
         buffName: 'Rage',
-        potency: 0.2,
-        duration: 10,
+        potency: TOADZERKER_BUFF_POTENCY,
+        duration: TOADZERKER_BUFF_DURATION,
         sourceName: 'Toadzerker',
         sourceType: 'perk',
       },
@@ -652,7 +707,7 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   },
 
   'Iron Bounce': (amount) => {
-    const bounceDuration = 8 + 2 * amount
+    const bounceDuration = IRON_BOUNCE_DURATION_BASE + IRON_BOUNCE_DURATION_PER_AMOUNT * amount
     return [
       {
         buffName: 'Bounce',
@@ -676,8 +731,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Springblast': (amount) => [
       {
         buffName: 'Bounce',
-        potency: 0.1 * amount,
-        duration: 8 + 2 * amount,
+        potency: SPRINGBLAST_BUFF_POTENCY_PER_AMOUNT * amount,
+        duration: SPRINGBLAST_BUFF_DURATION_BASE + SPRINGBLAST_BUFF_DURATION_PER_AMOUNT * amount,
         condition: '25% chance when blocking hits (?)',
         sourceName: 'Springblast',
         sourceType: 'perk',
@@ -707,14 +762,14 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   ],
 
   'Wrathful Crits': (amount) => [{ 
-    buffName: 'Rage', potency: 0.1 * amount, duration: 5 + 2 * amount, condition: 'On critical hit', sourceName: 'Wrathful Crits', sourceType: 'perk' 
+    buffName: 'Rage', potency: WRATHFUL_CRITS_POTENCY_PER_AMOUNT * amount, duration: WRATHFUL_CRITS_DURATION_BASE + WRATHFUL_CRITS_DURATION_PER_AMOUNT * amount, condition: 'On critical hit', sourceName: 'Wrathful Crits', sourceType: 'perk' 
   }],
 
   'Blood Lust': (amount) => [
     {
       buffName: 'Bloodlust',
-      potency: 2.5 * amount,
-      duration: 7 * amount,
+      potency: BLOOD_LUST_POTENCY_PER_AMOUNT * amount,
+      duration: BLOOD_LUST_DURATION_PER_AMOUNT * amount,
       condition: 'Hitting a bleeding target · +0.1 per hit · max 2.5 per perk',
       sourceName: 'Blood Lust',
       sourceType: 'perk',
@@ -753,8 +808,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Luminescent Fervor': (amount) => [
     {
       buffName: 'Luminescent',
-      potency: 0.1 * amount,
-      duration: 25,
+      potency: LUMINESCENT_BUFF_POTENCY_PER_AMOUNT * amount,
+      duration: LUMINESCENT_BUFF_DURATION,
       condition: 'On healing an Ally or self',
       sourceName: 'Luminescent Fervor',
       sourceType: 'perk',
@@ -794,11 +849,11 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   ],
 
   'Beastial Rage': (amount) => [{ 
-    buffName: 'Rage', potency: 0.3 * amount, duration: 15, condition: 'On kill or Poisebreak', sourceName: 'Beastial Rage', sourceType: 'perk' 
+    buffName: 'Rage', potency: BEASTIAL_RAGE_POTENCY_PER_AMOUNT * amount, duration: BEASTIAL_RAGE_DURATION, condition: 'On kill or Poisebreak', sourceName: 'Beastial Rage', sourceType: 'perk' 
   }],
   'Vassals Croak': (amount, allPerks) => {
     const swarm = allPerks['Swarm'] ?? 0
-    const maxStacks = Math.floor(15 + swarm)
+    const maxStacks = Math.floor(VASSALS_CROAK_MAX_SUMMONS_BASE + swarm)
     const minRage = roundMultiplier(0.1 + 0.01 * 1 * amount)
     const maxRage = roundMultiplier(0.1 + 0.01 * maxStacks * amount)
     return [
@@ -813,7 +868,7 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       {
         buffName: 'Rage',
         potency: maxRage,
-        duration: 10,
+        duration: VASSALS_CROAK_RAGE_DURATION,
         condition: `On RMB consume · ${minRage}–${maxRage} potency (1–${maxStacks} stacks)`,
         sourceName: 'Vassals Croak',
         sourceType: 'perk',
@@ -823,8 +878,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Iron Slayer Spirit': (amount) => [
     {
       buffName: 'Weakness',
-      potency: 0.2 * amount,
-      duration: 10,
+      potency: IRON_SLAYER_POTENCY_PER_AMOUNT * amount,
+      duration: IRON_SLAYER_DURATION,
       condition: 'Enemies within range on roar',
       sourceName: 'Iron Slayer Spirit',
       sourceType: 'perk',
@@ -832,22 +887,22 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   ],
 
   'Bastion Bless': (amount) => {
-    const rate = 5 * amount
+    const rate = BASTION_RATE_PER_AMOUNT * amount
     const condition = `~${rate}% chance on healing`
     
     return [
       {
         buffName: 'Regen',
-        potency: 0.5,
-        duration: 15,
+        potency: BASTION_REGEN_POTENCY,
+        duration: BASTION_BUFF_DURATION,
         condition,
         sourceName: 'Bastion Bless',
         sourceType: 'perk',
       },
       {
         buffName: 'Reinforce',
-        potency: 0.5,
-        duration: 15,
+        potency: BASTION_REINFORCE_POTENCY,
+        duration: BASTION_BUFF_DURATION,
         condition,
         sourceName: 'Bastion Bless',
         sourceType: 'perk',
@@ -886,8 +941,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Air Pressure': (amount) => [
     {
       buffName: 'Air Pressure',
-      potency: 0.1 * amount,
-      duration: 15,
+      potency: AIR_PRESSURE_BUFF_POTENCY_PER_AMOUNT * amount,
+      duration: AIR_PRESSURE_BUFF_DURATION,
       condition: 'Dealing Air Damage',
       sourceName: 'Air Pressure',
       sourceType: 'perk',
@@ -896,8 +951,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Apollo Boost': () => [
       {
         buffName: 'Taunt',
-        potency: 1.0, 
-        duration: 15,
+        potency: APOLLO_TAUNT_POTENCY, 
+        duration: APOLLO_TAUNT_DURATION,
         condition: 'Using a Rune',
         sourceName: 'Apollo Boost',
         sourceType: 'perk',
@@ -906,8 +961,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     'Valor': () => [
       {
         buffName: 'Taunt',
-        potency: 1.0,
-        duration: 16,
+        potency: VALOR_TAUNT_POTENCY,
+        duration: VALOR_TAUNT_DURATION,
         condition: 'Weapon Art hits an enemy',
         sourceName: 'Valor',
         sourceType: 'perk',
@@ -916,8 +971,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     'Channeled Weapon': () => [
     {
       buffName: 'Magic Reinforce',
-      potency: 0.1,
-      duration: 20,
+      potency: CHANNELED_REINFORCE_POTENCY,
+      duration: CHANNELED_REINFORCE_DURATION,
       condition: 'rank 2 in the Scholar Guild.',
       sourceName: 'PONDER(Scholar cantrip)',
       sourceType: 'cantrip',
@@ -926,8 +981,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Gladiatorial Rage': () => [
     {
       buffName: 'Rage',
-      potency: 0.1,
-      duration: 5,
+      potency: GLADIATORIAL_RAGE_POTENCY,
+      duration: GLADIATORIAL_RAGE_DURATION,
       condition: 'rank 2 in the Gladiator Guild.',
       sourceName: 'HUNT(Gladiator cantrip)',
       sourceType: 'cantrip',
@@ -946,8 +1001,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Glyph Conduit': (amount) => [
     {
       buffName: 'Glyph Conduit',
-      potency: 0.1 * amount,
-      duration: Math.round(7.5 * amount),
+      potency: GLYPH_CONDUIT_POTENCY_PER_AMOUNT * amount,
+      duration: Math.round(GLYPH_CONDUIT_DURATION_MULT * amount),
       condition: 'On RMB or Rune use',
       sourceName: 'Glyph Conduit',
       sourceType: 'perk',
@@ -956,8 +1011,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Roaring Heads': (amount) => [
     {
       buffName: 'Weakness',
-      potency: 0.4,
-      duration: 5,
+      potency: ROARING_WEAKNESS_POTENCY,
+      duration: ROARING_DEBUFF_DURATION,
       condition: '65% chance on hit',
       sourceName: 'Roaring Heads',
       sourceType: 'perk',
@@ -965,8 +1020,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     },
     {
       buffName: 'Shatter',
-      potency: 0.5,
-      duration: 5,
+      potency: ROARING_SHATTER_POTENCY,
+      duration: ROARING_DEBUFF_DURATION,
       condition: '65% chance on hit',
       sourceName: 'Roaring Heads',
       sourceType: 'perk',
@@ -974,8 +1029,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
     },
     {
       buffName: 'Anti Heal',
-      potency: 0.5,
-      duration: 5,
+      potency: ROARING_ANTI_HEAL_POTENCY,
+      duration: ROARING_DEBUFF_DURATION,
       condition: '65% chance on hit',
       sourceName: 'Roaring Heads',
       sourceType: 'perk',
@@ -1049,8 +1104,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Storm Rend': (amount) => [
     {
       buffName: 'Electrical Rend',
-      potency: 0.1 * amount,
-      duration: 10,
+      potency: STORM_REND_POTENCY_PER_AMOUNT * amount,
+      duration: STORM_REND_DURATION,
       condition: '≈20% chance on hit',
       sourceName: 'Storm Rend',
       sourceType: 'perk',
@@ -1059,8 +1114,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Erosion': (amount) => [
     {
       buffName: 'Shatter',
-      potency: 0.1 + 0.1 * amount,
-      duration: 5,
+      potency: EROSION_POTENCY_BASE + EROSION_POTENCY_PER_AMOUNT * amount,
+      duration: EROSION_DURATION,
       sourceName: 'Erosion',
       sourceType: 'perk',
     },
@@ -1068,8 +1123,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Quickdraw': (amount) => [
     {
       buffName: 'Quickdraw',
-      potency: 0.1 * amount,
-      duration: 5,
+      potency: QUICKDRAW_POTENCY_PER_AMOUNT * amount,
+      duration: QUICKDRAW_DURATION,
       condition: 'Upon equipping your weapon',
       sourceName: 'Quickdraw',
       sourceType: 'perk',
@@ -1100,8 +1155,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Tailwind': (amount) => [
     {
       buffName: 'Tailwind',
-      potency: 0.1,
-      duration: 8,
+      potency: TAILWIND_BUFF_POTENCY,
+      duration: TAILWIND_BUFF_DURATION,
       condition: 'On weapon art activation',
       sourceName: 'Tailwind',
       sourceType: 'perk',
@@ -1149,8 +1204,8 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
   'Grounded Despair': (amount) => [
     {
       buffName: 'Despair',
-      potency: 0.1 * amount,
-      duration: 3 * amount,
+      potency: GROUNDED_DESPAIR_POTENCY_PER_AMOUNT * amount,
+      duration: GROUNDED_DESPAIR_DURATION_PER_AMOUNT * amount,
       condition: 'On jump and land',
       sourceName: 'Grounded Despair',
       sourceType: 'perk',
@@ -1171,20 +1226,20 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
 
 const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
   'Warrior Stomp': [
-    { buffName: 'Rage', potency: 0.3, duration: 10, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
-    { buffName: 'Taunt', potency: 1.0, duration: 15, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
+    { buffName: 'Rage', potency: WARRIOR_STOMP_RAGE_POTENCY, duration: WARRIOR_STOMP_RAGE_DURATION, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
+    { buffName: 'Taunt', potency: WARRIOR_STOMP_TAUNT_POTENCY, duration: WARRIOR_STOMP_TAUNT_DURATION, sourceName: 'Warrior Stomp', sourceType: 'weaponArt' },
   ],
   'Javelin': [
-    { buffName: 'Slowness', potency: 0, duration: 6, sourceName: 'Javelin', sourceType: 'weaponArt' },
+    { buffName: 'Slowness', potency: 0, duration: JAVELIN_SLOWNESS_DURATION, sourceName: 'Javelin', sourceType: 'weaponArt' },
   ],
   'Lightning Cloak': [
-    { buffName: 'Lightning Cloak', potency: 0, duration: 40, sourceName: 'Lightning Cloak', sourceType: 'weaponArt' },
+    { buffName: 'Lightning Cloak', potency: 0, duration: LIGHTNING_CLOAK_DURATION_WA, sourceName: 'Lightning Cloak', sourceType: 'weaponArt' },
   ],
   'Cursed Ground': [
     { 
       buffName: 'Weakness', 
-      potency: 1.0, 
-      duration: 15, 
+      potency: CURSED_GROUND_WEAKNESS_POTENCY, 
+      duration: CURSED_GROUND_WEAKNESS_DURATION, 
       condition: 'On cast (All nearby opponents)',
       sourceName: 'Cursed Ground', 
       sourceType: 'weaponArt' 
@@ -1195,7 +1250,7 @@ const WEAPON_ART_BUFF_MAP: Record<string, GrantedBuff[]> = {
       duration: d.duration,
       condition: '50% chance from pool',
       sourceName: 'Cursed Ground',
-      sourceType: 'weaponArt' as any,
+      sourceType: 'weaponArt' as const,
     })),
   ],
 }
@@ -1290,21 +1345,21 @@ function durationMultFromStack(base: number, perStack: number): (stacks: number)
   return (stacks: number) => base + perStack * stacks
 }
 
-const BOUNCE_DURATION_MULT = durationMultFromStack(1.3, 0.3)
+const BOUNCE_DURATION_MULT = durationMultFromStack(BOUNCE_DURATION_BASE, BOUNCE_DURATION_PER_STACK)
 
 const BUFF_POTENCY_MODIFIERS: BuffPotencyModifier[] = [
   { buffName: 'Bounce', potencyPerStack: 0, label: 'Bounce Momentum', durationMultiplierFormula: BOUNCE_DURATION_MULT },
 
-  { buffName: 'Rage', potencyPerStack: 0.1, label: 'Gladiatorial Rage' },
-  { buffName: 'Rage', potencyPerStack: 0.1, label: 'Mage Rage' },
-  { buffName: 'Rage', potencyPerStack: 0.1, label: 'Oceans Rage' },
-  { buffName: 'Rage', potencyPerStack: 0.2, label: 'Slayer Rage', runeFilter: 'Rage Rune' },
-  { buffName: 'Weakness', potencyPerStack: 0.1, label: 'Slayer Rage', runeFilter: 'Weakening Roar Rune' },
-  { buffName: 'Rage', potencyPerStack: 0.2, label: 'Iron Slayer Spirit', durationMultiplierPerStack: 2 },
-  { buffName: 'Rage', potencyPerStack: 0,   label: 'Fury', durationMultiplierPerStack: 1.5 },
-  { buffName: 'Tailwind', potencyPerStack: 0.1, label: 'Tailwind' },
-  { buffName: 'Tailwind', potencyPerStack: 0, label: 'Wind Walker', durationMultiplierFormula: stacks => 1 + stacks / 8 },
-  { buffName: 'Bleed', potencyPerStack: 0, label: 'Slow Leak', durationMultiplierPerStack: 1.5 },
+  { buffName: 'Rage', potencyPerStack: MOD_GLADIATORIAL_POTENCY, label: 'Gladiatorial Rage' },
+  { buffName: 'Rage', potencyPerStack: MOD_MAGE_RAGE_POTENCY, label: 'Mage Rage' },
+  { buffName: 'Rage', potencyPerStack: MOD_OCEANS_RAGE_POTENCY, label: 'Oceans Rage' },
+  { buffName: 'Rage', potencyPerStack: MOD_SLAYER_RAGE_POTENCY, label: 'Slayer Rage', runeFilter: 'Rage Rune' },
+  { buffName: 'Weakness', potencyPerStack: MOD_SLAYER_WEAKNESS_POTENCY, label: 'Slayer Rage', runeFilter: 'Weakening Roar Rune' },
+  { buffName: 'Rage', potencyPerStack: MOD_IRON_SLAYER_POTENCY, label: 'Iron Slayer Spirit', durationMultiplierPerStack: MOD_IRON_SLAYER_DURATION },
+  { buffName: 'Rage', potencyPerStack: 0,   label: 'Fury', durationMultiplierPerStack: MOD_FURY_DURATION },
+  { buffName: 'Tailwind', potencyPerStack: MOD_TAILWIND_POTENCY, label: 'Tailwind' },
+  { buffName: 'Tailwind', potencyPerStack: 0, label: 'Wind Walker', durationMultiplierFormula: stacks => 1 + stacks / MOD_WIND_WALKER_DURATION_DIVISOR },
+  { buffName: 'Bleed', potencyPerStack: 0, label: 'Slow Leak', durationMultiplierPerStack: MOD_SLOW_LEAK_DURATION },
 ]
 
 const MODIFIERS_BY_BUFF = BUFF_POTENCY_MODIFIERS.reduce((acc, mod) => {
@@ -1323,15 +1378,15 @@ interface GenericDebuffModifier {
 const GENERIC_DEBUFF_MODIFIERS: GenericDebuffModifier[] = [
   {
     perkName: 'Endless Despair',
-    potencyMultiplierPerStack: 0.35,
-    flatPotencyBonus: 0.1,
-    durationMultiplierPerStack: 0.75,
+    potencyMultiplierPerStack: ENDLESS_DESPAIR_POTENCY_PER_STACK,
+    flatPotencyBonus: ENDLESS_DESPAIR_FLAT_BONUS,
+    durationMultiplierPerStack: ENDLESS_DESPAIR_DURATION_PER_STACK,
   },
   {
     perkName: 'Stored Corruption',
     potencyMultiplierPerStack: 0,
     flatPotencyBonus: 0,
-    durationMultiplierPerStack: 0.1,
+    durationMultiplierPerStack: STORED_CORRUPTION_DURATION_PER_STACK,
   },
 ]
 
@@ -1562,7 +1617,7 @@ export function applyToxinTransferDuration(
 
   return buffs.map(b => {
     if (b.sourceName !== 'Toxin Transfer' || b.buffName !== 'Poison') return b
-    return { ...b, duration: selfPoisonDuration + 5 }
+    return { ...b, duration: selfPoisonDuration + TOXIN_TRANSFER_DURATION_EXTRA }
   })
 }
 
@@ -1668,7 +1723,7 @@ const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
       duration: 10,
       condition: 'On successful dodge (passive)',
       sourceName: 'BUNIKIN',
-      sourceType: 'race' as any,
+      sourceType: 'race',
     },
   ],
   'DARK ELF': BASIC_DEBUFF_POOL.map(d => ({
@@ -1677,7 +1732,7 @@ const RACE_BUFF_MAP: Record<string, GrantedBuff[]> = {
     duration: d.duration,
     condition: 'On hit (passive - 8% chance)',
     sourceName: 'DARK ELF',
-    sourceType: 'race' as any,
+    sourceType: 'race' as const,
   })),
 }
 

@@ -950,8 +950,8 @@ export let cauterizeScalingMult: number = 1
 
         <div class="bdc-dummy-label">Training Dummy</div>
         <div class="bdc-no-hp">∞ No HP</div>
-        {#if armorPen > 0}
-          <div class="bdc-pen-badge">🗡 {fmt(armorPen)} Pen</div>
+        {#if armorPen + globalArmorPenetration > 0}
+          <div class="bdc-pen-badge">🗡 {fmt(armorPen + globalArmorPenetration)} Pen</div>
         {/if}
         {#if resolvedDebuffs.length > 0}
           <div class="bdc-debuff-row">

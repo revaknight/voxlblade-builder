@@ -7,7 +7,7 @@ export const DMG_TYPE_META: Record<string, { label: string; color: string }> = {
   air:      { label: 'Air',      color: '#AAFFDB' },
   hex:      { label: 'Hex',      color: '#e879f9' },
   holy:     { label: 'Holy',     color: '#facc15' },
-  true:     { label: 'True',     color: '#f87171' },
+  true:     { label: 'True',     color: '#ffffff' },
   summon:   { label: 'Summon',   color: '#c084fc' },
   heal:     { label: 'Heal',     color: '#4ade80' },
 }
@@ -27,4 +27,15 @@ export const PHYSICAL_INHERITED_TYPES = new Set(['air', 'earth'])
 
 export const MAGIC_INHERITED_TYPES = new Set(['fire', 'water', 'hex', 'holy'])
 
+export const DMG_TYPE_COLORS: Record<string, string> = Object.fromEntries(
+  Object.entries(DMG_TYPE_META).map(([k, v]) => [k, v.color])
+) as Record<string, string>
+
+export const DMG_TYPE_PRIORITY = ['hex','water','air','true','earth','magic','fire','physical','holy'] as const
+
+export const DEFAULT_DMG_TYPE = 'physical'
+
 export const FALLBACK_DMG_COLOR = '#e8e4da'
+
+export const ALL_DMG_TYPES = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'hex', 'holy', 'true', 'summon'] as const
+export const TRACKED_TYPES_WITH_TRUE = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'hex', 'holy', 'true'] as const

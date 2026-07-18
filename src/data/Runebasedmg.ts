@@ -1,6 +1,7 @@
 import type { BuildState } from '../lib/types';
 import { calculateHealBoost, type HealBoostContext } from './HealBoost';
 import { calcMaxSummonCount } from './SummonData';
+import { ANCIENT_CLERIC_BASE_DMG, ANCIENT_CLERIC_SLIDER_MAX, ANCIENT_CLERIC_SHIELD_BASE, ANCIENT_CLERIC_SHIELD_PER_VAL, BEENADE_BASE_DMG, BEENADE_MAX_POTENCY, BOOSTSHROOM_BASE_DMG, THUNDEROUS_CHARGE_BASE_DMG, SPORELING_TOSS_BASE_DMG, SPORELING_TOSS_HITS_BASE, SPORELING_TOSS_SLIDER_MAX, FOOT_DIVE_BASE_DMG, CACI_BASE_DMG, CACI_HITS, CACITROPS_BASE_DMG, CACITROPS_HITS, HEX_WEB_BASE_DMG, HEX_WEB_HITS, BRAINBLAST_BASE_DMG, BRAINBLAST_HITS, ROCKY_TAIL_BASE_DMG, ROCKY_TAIL_PROT_SCALE, ROCKY_TAIL_VS_BASE_RES, ROCKY_TAIL_VS_PER_LEVEL, ROCKY_TAIL_VS_DEFAULT_RES, ROCKY_TAIL_DIVISOR_COEFF, ROCKY_TAIL_DIVISOR_BASE, ROCKY_TAIL_HITS_MULT, ROCKY_TAIL_MIN_HITS } from '../lib/constants/rune-base-damage';
 
 export interface RuneDmgCtx {
   potency: number
@@ -68,7 +69,7 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
     {
       runeName: 'Ancient Cleric Rune',
       condition: 'On cast',
-      getBaseDamage: () => 0.5,
+      getBaseDamage: () => ANCIENT_CLERIC_BASE_DMG,
       dmgTypes: { heal: 1.0 },
       scalings: { holy: 0.5, earth: 0.5 },
       hits: 1,
@@ -78,27 +79,27 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
         buildKey: 'buffsConsumed',
         label: 'Buffs Consumed',
         min: 0,
-        max: 20,
+        max: ANCIENT_CLERIC_SLIDER_MAX,
         step: 1,
       },
       shield: {
-        getShieldHp: (val) => 20 + 4 * val,
+        getShieldHp: (val) => ANCIENT_CLERIC_SHIELD_BASE + ANCIENT_CLERIC_SHIELD_PER_VAL * val,
       },
     },
     {
         runeName: 'Beenade Rune',
         condition: 'On cast',
-        getBaseDamage: () => 11,
+        getBaseDamage: () => BEENADE_BASE_DMG,
         dmgTypes: { magic: 0.5, holy: 0.5 },
         scalings: { magic: 1.0, holy: 1.0 },
         getHits: ({ potency }) => 1 + potency,
-        maxPotency: 5,
+        maxPotency: BEENADE_MAX_POTENCY,
         potencyLabel: 'Beenades potency',
     },
     {
     runeName: 'Boostshroom Rune',
     condition: 'On activation (up to every ~2s · 20s duration)',
-    getBaseDamage: () => 3,
+    getBaseDamage: () => BOOSTSHROOM_BASE_DMG,
     dmgTypes: { hex: 1.0 },
     scalings: { hex: 1.0 },
     hits: 1,
@@ -107,7 +108,7 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
   {
     runeName: 'Thunderous Charge Rune',
     condition: 'On cast (dash through enemies)',
-    getBaseDamage: () => 20,
+    getBaseDamage: () => THUNDEROUS_CHARGE_BASE_DMG,
     dmgTypes: { air: 0.5, magic: 0.5 },
     scalings: { air: 1.0, magic: 1.0 },
     hits: 1,
@@ -116,15 +117,15 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
   {
     runeName: 'Sporeling Toss Rune',
     condition: 'On cast',
-    getBaseDamage: () => 3.5,
+    getBaseDamage: () => SPORELING_TOSS_BASE_DMG,
     dmgTypes: { hex: 0.5, physical: 0.5 },
     scalings: { hex: 1.0, physical: 1.0, summon: 1.0 },
-    getHits: ({ sliderVal = 0 }) => 2 + sliderVal,
+    getHits: ({ sliderVal = 0 }) => SPORELING_TOSS_HITS_BASE + sliderVal,
     slider: {
       buildKey: 'sporelingsSummoned',
       label: 'Already-summoned Sporelings',
       min: 0,
-      max: 15,
+      max: SPORELING_TOSS_SLIDER_MAX,
       step: 1,
       getMax: ({ perks }) => calcMaxSummonCount(perks),
     },
@@ -133,7 +134,7 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
   {
     runeName: 'Foot Dive Rune',
     condition: 'On cast',
-    getBaseDamage: () => 18,
+    getBaseDamage: () => FOOT_DIVE_BASE_DMG,
     dmgTypes: { physical: 1.0 },
     scalings: { physical: 1.0, dexterity: 1.0 },
     hits: 1,
@@ -142,37 +143,37 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
   {
     runeName: 'Caci Rune',
     condition: 'On cast',
-    getBaseDamage: () => 5,
+    getBaseDamage: () => CACI_BASE_DMG,
     dmgTypes: { physical: 1.0 },
     scalings: { summon: 1.0 },
-    hits: 3,
+    hits: CACI_HITS,
     note: 'Poise damage same as base damage (5 × 3 hits). Does not count as a summon.',
   },
   {
     runeName: 'Cacitrops Rune',
     condition: 'On cast',
-    getBaseDamage: () => 4,
+    getBaseDamage: () => CACITROPS_BASE_DMG,
     dmgTypes: { physical: 1.0 },
     scalings: { physical: 1.0, dexterity: 1.0 },
-    hits: 27,
+    hits: CACITROPS_HITS,
     note: 'Damage ticks every ~0.75s over 20.25s. Dodge incoming attacks during casting animation. Every hit applies Bleed for 5s.',
   },
   {
     runeName: 'Hex Web Rune',
     condition: 'On cast',
-    getBaseDamage: () => 2,
+    getBaseDamage: () => HEX_WEB_BASE_DMG,
     dmgTypes: { hex: 1.0 },
     scalings: { hex: 1.0 },
-    hits: 10,
+    hits: HEX_WEB_HITS,
     note: 'Applies Sticky (Hex Web) each hit for 5s. Damage ticks every ~0.5s over 5s. Guardbreaks. Counts as normal Sticky for perk effects.',
   },
     {
     runeName: 'Brainblast Rune',
     condition: 'On cast',
-    getBaseDamage: () => 10,
+    getBaseDamage: () => BRAINBLAST_BASE_DMG,
     dmgTypes: { fire: 0.33, earth: 0.33, magic: 0.33 },
     scalings: { fire: 1.0, earth: 1.0, magic: 1.0 },
-    hits: 2,
+    hits: BRAINBLAST_HITS,
     note: 'Guardbreaks. Applies Sticky (Melting Slime) and Burn for 5s.',
   },
   {
@@ -186,14 +187,14 @@ export const RUNE_DMG_DEFS: RuneDmgDef[] = [
   {
     runeName: 'Rocky Tail Rune',
     condition: 'On cast / hold for tail slap combo',
-    getBaseDamage: () => 8,
+    getBaseDamage: () => ROCKY_TAIL_BASE_DMG,
     dmgTypes: { earth: 0.5, physical: 0.5 },
-    scalings: { earth: 1.0, protection: 0.08 },
+    scalings: { earth: 1.0, protection: ROCKY_TAIL_PROT_SCALE },
     getHits: ({ stats, selfDamage = 0, perks = {} }) => {
       const p = stats?.protection ?? 0
       const vs = perks['Volatile Shell'] ?? 0
-      const protRes = vs > 0 ? 0.7 + 0.15 * vs : 0.75
-      return Math.max(1, Math.ceil(p / (0.01 * p + 5 + selfDamage * protRes)) * 2)
+      const protRes = vs > 0 ? ROCKY_TAIL_VS_BASE_RES + ROCKY_TAIL_VS_PER_LEVEL * vs : ROCKY_TAIL_VS_DEFAULT_RES
+      return Math.max(ROCKY_TAIL_MIN_HITS, Math.ceil(p / (ROCKY_TAIL_DIVISOR_COEFF * p + ROCKY_TAIL_DIVISOR_BASE + selfDamage * protRes)) * ROCKY_TAIL_HITS_MULT)
     },
   },
 ]

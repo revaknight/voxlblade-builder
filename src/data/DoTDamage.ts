@@ -1,3 +1,5 @@
+import { DOT_BASE_DAMAGE, DOT_INFLICTION_DIVISOR, DOT_POTENCY_POWER_CAP, DOT_ROUND_FACTOR, DOT_BUILDER_TO_GAME, DOT_SLOW_MULT_PER_SECOND } from '../lib/constants/dot-damage'
+
 const DOT_TYPES = ['Bleed', 'Burn', 'Poison'] as const
 export type DotType = typeof DOT_TYPES[number]
 export const DOT_TYPE_LIST: ReadonlyArray<DotType> = DOT_TYPES
@@ -33,7 +35,7 @@ export const DOT_DMG_TYPE_MAP: Record<string, string> = {
  * Formula: 1.75 × (1 + inflictionPotency / 1.1)
  */
 export function getDotBase(inflictionPotency: number): number {
-  return 1.75 * (1 + inflictionPotency / 1.1)
+  return DOT_BASE_DAMAGE * (1 + inflictionPotency / DOT_INFLICTION_DIVISOR)
 }
 
 /**
@@ -42,7 +44,7 @@ export function getDotBase(inflictionPotency: number): number {
  * Cap: exponent = 2 when dotPotency >= 1.0 (perkAmount >= 10).
  */
 export function getDotPotencyMult(dotPotency: number): number {
-  return Math.pow(1 + dotPotency, 1 + Math.min(1, dotPotency))
+  return Math.pow(1 + dotPotency, 1 + Math.min(DOT_POTENCY_POWER_CAP, dotPotency))
 }
 
 /**
@@ -57,7 +59,7 @@ export function calcDotTick(
 ): number {
   const baseDmg = getDotBase(inflictionPotency)
   const mult = getDotPotencyMult(dotPotency)
-  return Math.round(baseDmg * mult * 1000) / 1000
+  return Math.round(baseDmg * mult * DOT_ROUND_FACTOR) / DOT_ROUND_FACTOR
 }
 
 /**
@@ -72,10 +74,10 @@ export function calcCausticSlow(
   poisonPotencyBuilder: number,
   slowDuration: number,
 ): { baseTick: number; tickDamage: number; slowMult: number } {
-  const inflictionPotency = poisonPotencyBuilder * 0.1
+  const inflictionPotency = poisonPotencyBuilder * DOT_BUILDER_TO_GAME
   const baseTick = calcDotTick(inflictionPotency, inflictionPotency)
-  const slowMult = slowDuration > 0 ? 1 + slowDuration * 0.1 : 1
-  const tickDamage = Math.round(baseTick * slowMult * 1000) / 1000
+  const slowMult = slowDuration > 0 ? 1 + slowDuration * DOT_SLOW_MULT_PER_SECOND : 1
+  const tickDamage = Math.round(baseTick * slowMult * DOT_ROUND_FACTOR) / DOT_ROUND_FACTOR
   return { baseTick, tickDamage, slowMult }
 }
 
@@ -84,5 +86,5 @@ export function calcCausticSlow(
  * The game stores 0.1 per 1 display point.
  */
 export function toGamePotency(builderValue: number): number {
-  return builderValue * 0.1
+  return builderValue * DOT_BUILDER_TO_GAME
 }

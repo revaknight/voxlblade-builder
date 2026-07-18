@@ -12,16 +12,75 @@ import {
   DRAGON_CLAW_HOLY_HEAL_PER_STACK,
   DRAGON_CLAW_WATER_HEAL_BASE,
   DRAGON_CLAW_WATER_HEAL_PER_STACK,
+  DRAGON_CLAW_POISE_DAMAGE,
   DRAGON_BUBBLE_BASE_DAMAGE,
   DRAGON_BUBBLE_DAMAGE_PER_STACK,
   DRAGON_BUBBLE_HOLY_HEAL_BASE,
   DRAGON_BUBBLE_HOLY_HEAL_PER_STACK,
   DRAGON_BUBBLE_WATER_HEAL_BASE,
   DRAGON_BUBBLE_WATER_HEAL_PER_STACK,
+  DRAGON_BUBBLE_POISE_DAMAGE,
   BELLOWING_EMBER_HP_GATE_THRESHOLD,
   BELLOWING_EMBER_HP_GATE_PER_STACK,
   SPORE_BURST_BASE,
   SPORE_BURST_POTENCY_MULT,
+  SPORE_BURST_ROUND,
+  SPRINGBLAST_BASE_HIT,
+  SPRINGBLAST_PER_STACK_HIT,
+  SPRINGBLAST_MULT_PER_STACK,
+  SPRINGBLAST_DENOM_HALF,
+  SPRINGBLAST_ROUND,
+  BASIC_SPIRIT_BASE_DMG,
+  BASIC_SPIRIT_HITS,
+  BUNI_SPIRIT_BASE_DMG,
+  BUNI_SPIRIT_HITS,
+  MAGELING_SPIRIT_BASE_DMG,
+  TOADZERKER_SPIRIT_BASE_DMG,
+  DIRE_BUNI_SPIRIT_BASE_DMG,
+  VOID_ROOT_SPIRIT_BASE_DMG,
+  VOID_ROOT_SPIRIT_HITS,
+  BOUNCE_MOMENTUM_BASE_DMG,
+  BOUNCE_MOMENTUM_DMG_PER_STACK,
+  PROTECTOR_SPIRIT_BASE_DMG,
+  PROTECTOR_SPIRIT_DMG_PER_STACK,
+  PROTECTOR_SPIRIT_HP_GATE,
+  PROTECTOR_SPIRIT_ALWAYS_ACTIVE_AT,
+  AIR_PRESSURE_DMG_PER_STACK,
+  AIR_BARRIER_DMG_PER_STACK,
+  APOLLO_BOOST_BASE,
+  APOLLO_BOOST_SUB_BASE,
+  APOLLO_BOOST_PER_STACK,
+  APOLLO_BOOST_HITS_BASE,
+  APOLLO_BOOST_HITS_PER_STACK,
+  APOLLO_BOOST_TAUNT_DURATION,
+  ROARING_HEADS_BASE_DMG,
+  ROARING_HEADS_DMG_PER_STACK,
+  BARBED_FLURRY_BASE_DMG,
+  BARBED_FLURRY_DMG_PER_STACK,
+  HONEY_ARTS_BASE_DMG,
+  HONEY_ARTS_DMG_PER_STACK,
+  HONEY_ARTS_STICKY_DURATION,
+  SICKNESS_BASE_DMG,
+  SICKNESS_DMG_PER_STACK,
+  MELTING_SLIME_BASE_DMG,
+  MELTING_SLIME_FIRE_SCALE_BASE,
+  MELTING_SLIME_FIRE_SCALE_PER_STACK,
+  MELTING_SLIME_EARTH_SCALE_BASE,
+  MELTING_SLIME_EARTH_SCALE_PER_STACK,
+  WHIRLWIND_BASE_DMG,
+  WHIRLWIND_DMG_PER_STACK,
+  VOLATILE_SHELL_BASE_DMG,
+  VOLATILE_SHELL_DMG_PER_STACK,
+  VOLATILE_SHELL_POISON_DURATION,
+  ROYAL_FINISHER_BASE_DMG,
+  ROYAL_FINISHER_DMG_PER_STACK,
+  GROUNDED_DESPAIR_BASE_DMG,
+  GROUNDED_DESPAIR_DMG_PER_STACK,
+  ECHO_INCINERATION_BASE_DMG,
+  ECHO_INCINERATION_DMG_PER_STACK,
+  VENOM_SPITTER_BASE_DMG,
+  VENOM_SPITTER_DMG_PER_STACK,
+  VENOM_SPITTER_HIT_DIVISOR,
 } from '../lib/constants'
 
 export interface PerkDmgCtx {
@@ -114,7 +173,7 @@ export interface PerkDmgDef {
 }
 
 export function calcSpringblastBaseDamage(perkAmount: number): number {
-  return (6 + 2 * perkAmount) * (1 + 0.1 * perkAmount)
+  return (SPRINGBLAST_BASE_HIT + SPRINGBLAST_PER_STACK_HIT * perkAmount) * (1 + SPRINGBLAST_MULT_PER_STACK * perkAmount)
 }
 
 export const PERK_DMG_DEFS: PerkDmgDef[] = [
@@ -124,9 +183,9 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     condition: 'On Finisher while Bounce active',
     getBaseDamage: ({ perkAmount, finisherHits = 1 }) =>
       Math.round(
-        calcSpringblastBaseDamage(perkAmount) /
-          (0.5 + finisherHits / 2) * 1000
-      ) / 1000,
+          calcSpringblastBaseDamage(perkAmount) /
+          (SPRINGBLAST_DENOM_HALF + finisherHits / 2) * SPRINGBLAST_ROUND
+      ) / SPRINGBLAST_ROUND,
     dmgTypeMode: 'fixed',
     dmgTypes: { physical: 1.0 },
     scalingMode: 'fixed',
@@ -138,8 +197,8 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Basic Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 9,
-    hits: 3,
+    getBaseDamage: () => BASIC_SPIRIT_BASE_DMG,
+    hits: BASIC_SPIRIT_HITS,
     dmgTypeMode: 'weapon',
     scalingMode: 'weapon',
     isM2: true,
@@ -151,8 +210,8 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Buni Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 2,
-    hits: 20,
+    getBaseDamage: () => BUNI_SPIRIT_BASE_DMG,
+    hits: BUNI_SPIRIT_HITS,
     dmgTypeMode: 'weapon',
     scalingMode: 'weapon',
     isM2: true,
@@ -163,7 +222,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Mageling Spirit',
     condition: 'On WA or Rune use (Monk)',
-    getBaseDamage: () => 27.5,
+    getBaseDamage: () => MAGELING_SPIRIT_BASE_DMG,
     dmgTypeMode: 'fixed',
     dmgTypes: { magic: 1.0 },
     scalingMode: 'fixed',
@@ -176,7 +235,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Toadzerker Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 30,
+    getBaseDamage: () => TOADZERKER_SPIRIT_BASE_DMG,
     dmgTypeMode: 'fixed',
     dmgTypes: { physical: 1.0 },
     scalingMode: 'fixed',
@@ -188,7 +247,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Dire Buni Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 25,
+    getBaseDamage: () => DIRE_BUNI_SPIRIT_BASE_DMG,
     dmgTypeMode: 'fixed',
     dmgTypes: { physical: 1.0 },
     scalingMode: 'weapon',
@@ -199,8 +258,8 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Void Root Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 1,
-    hits: 23,
+    getBaseDamage: () => VOID_ROOT_SPIRIT_BASE_DMG,
+    hits: VOID_ROOT_SPIRIT_HITS,
     dmgTypeMode: 'fixed',
     dmgTypes: { hex: 0.5, physical: 0.5 },
     scalingMode: 'fixed',
@@ -212,7 +271,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Bomber Spirit',
     condition: 'On RMB (Monk)',
-    getBaseDamage: () => 9,
+    getBaseDamage: () => BASIC_SPIRIT_BASE_DMG,
     hits: 4,
     dmgTypeMode: 'fixed',
     dmgTypes: { holy: 0.5, magic: 0.5 },
@@ -226,7 +285,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Bounce Momentum',
     condition: 'On Finisher (Tongue Shot active after jumping with Bounce)',
-    getBaseDamage: ({ perkAmount }) => 5 + 2.5 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => BOUNCE_MOMENTUM_BASE_DMG + BOUNCE_MOMENTUM_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { water: 0.5, physical: 0.5 },
     scalingMode: 'fixed',
@@ -255,12 +314,12 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Protector Spirit',
     condition: 'While above 50% HP the spirit guardian will fire a tiny beam attack at an enemy struck by your M1/M2',
-    getBaseDamage: ({ perkAmount }) => 0.4 + 0.1 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => PROTECTOR_SPIRIT_BASE_DMG + PROTECTOR_SPIRIT_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { earth: 0.5, magic: 0.5 },
     scalingMode: 'fixed',
     scalings: { earth: 0.5, magic: 0.5 },
-    hpGate: { hpThreshold: 50, aboveThreshold: true, alwaysActiveAtPerkAmount: 2 },
+    hpGate: { hpThreshold: PROTECTOR_SPIRIT_HP_GATE, aboveThreshold: true, alwaysActiveAtPerkAmount: PROTECTOR_SPIRIT_ALWAYS_ACTIVE_AT },
     secondaryEffects: [
       {
         label: 'DR below 50% HP',
@@ -268,7 +327,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
         format: v => `${v}%`,
         condition: 'Flat, non-diminishing · 3s CD per activation',
         tone: 'defense',
-        hpGate: { hpThreshold: 50, aboveThreshold: false, alwaysActiveAtPerkAmount: 2 },
+        hpGate: { hpThreshold: PROTECTOR_SPIRIT_HP_GATE, aboveThreshold: false, alwaysActiveAtPerkAmount: PROTECTOR_SPIRIT_ALWAYS_ACTIVE_AT },
       },
     ],
     note: 'Spirit fires one beam at a time. Beam + DR both active simultaneously at 2+ stacks.',
@@ -277,7 +336,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Air Pressure',
     condition: 'Upon using a rune release an air burst',
-    getBaseDamage: ({ perkAmount }) => 7.5 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => AIR_PRESSURE_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { air: 1.0 },
     scalingMode: 'fixed',
@@ -296,7 +355,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Air Barrier',
     condition: 'Blocking an attack',
-    getBaseDamage: ({perkAmount}) => 3*perkAmount,
+    getBaseDamage: ({perkAmount}) => AIR_BARRIER_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { air: 1.0 },
     scalingMode: 'fixed',
@@ -308,8 +367,8 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Apollo Boost',
     condition: 'On Rune use (after cast finishes)',
-    getBaseDamage: ({ perkAmount }) => 5 - (0.15 + 0.25 * perkAmount),
-    getHits: ({ perkAmount }) => Math.floor(1 + 2 * perkAmount),
+    getBaseDamage: ({ perkAmount }) => APOLLO_BOOST_BASE - (APOLLO_BOOST_SUB_BASE + APOLLO_BOOST_PER_STACK * perkAmount),
+    getHits: ({ perkAmount }) => Math.floor(APOLLO_BOOST_HITS_BASE + APOLLO_BOOST_HITS_PER_STACK * perkAmount),
     dmgTypeMode: 'fixed',
     dmgTypes: { magic: 0.5, physical: 0.5 },
     scalingMode: 'fixed',
@@ -318,7 +377,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     secondaryEffects: [
       {
         label: 'Taunt',
-        getValue: () => 15,
+        getValue: () => APOLLO_BOOST_TAUNT_DURATION,
         format: v => `~${v}s`,
         condition: 'Enemies hit by the shockwave',
         tone: 'utility',
@@ -340,7 +399,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     isRune: true,
     activeIf: ({ draconicRuneInfusion }) => draconicRuneInfusion === 'claw',
     secondaryEffects: [
-      { label: 'Poise Damage', getValue: () => 60, tone: 'offense' },
+      { label: 'Poise Damage', getValue: () => DRAGON_CLAW_POISE_DAMAGE, tone: 'offense' },
       {
         label: 'Color Damage Multiplier',
         getValue: ({ draconicColor }) => getDraconicColorDmgMultiplier(draconicColor ?? ''),
@@ -376,7 +435,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     isRune: true,
     activeIf: ({ draconicRuneInfusion }) => draconicRuneInfusion === 'bubble',
     secondaryEffects: [
-      { label: 'Poise Damage', getValue: () => 45, tone: 'offense' },
+      { label: 'Poise Damage', getValue: () => DRAGON_BUBBLE_POISE_DAMAGE, tone: 'offense' },
       {
         label: 'Color Damage Multiplier',
         getValue: ({ draconicColor }) => getDraconicColorDmgMultiplier(draconicColor ?? ''),
@@ -402,7 +461,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Roaring Heads',
     label: 'Roaring Heads (Roar)',
-    getBaseDamage: ({ perkAmount }) => 5 + 2.5 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => ROARING_HEADS_BASE_DMG + ROARING_HEADS_DMG_PER_STACK * perkAmount,
     dmgTypes: { hex: 1.0 },
     dmgTypeMode: 'fixed',
     scalingMode: 'fixed',
@@ -415,7 +474,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Barbed Flurry',
     condition: 'Reapplying Bleed on already Bleeding enemies',
-    getBaseDamage: ({ perkAmount }) => 1.6 + 0.32 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => BARBED_FLURRY_BASE_DMG + BARBED_FLURRY_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { physical: 1.0 },
     scalingMode: 'fixed',
@@ -427,7 +486,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Honey Arts',
     condition: 'On Weapon Art use',
-    getBaseDamage: ({ perkAmount }) => 0.625 + 0.6725 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => HONEY_ARTS_BASE_DMG + HONEY_ARTS_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { magic: 1.0 },
     scalingMode: 'fixed',
@@ -436,7 +495,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     secondaryEffects: [
       {
         label: 'Sticky',
-        getValue: () => 5,
+        getValue: () => HONEY_ARTS_STICKY_DURATION,
         format: v => `${v}s`,
         condition: 'Applied on hit',
         tone: 'utility',
@@ -448,7 +507,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Sickness',
     condition: 'On sneeze',
-    getBaseDamage: ({ perkAmount }) => 2 + 0.5 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => SICKNESS_BASE_DMG + SICKNESS_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { earth: 0.5, hex: 0.5 },
     scalingMode: 'fixed',
@@ -459,13 +518,13 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Melting Slime',
     condition: 'On Sticky DoT tick',
-    getBaseDamage: () => 2.5,
+    getBaseDamage: () => MELTING_SLIME_BASE_DMG,
     dmgTypeMode: 'fixed',
     dmgTypes: { fire: 0.5, earth: 0.5 },
     scalingMode: 'dynamic',
     getScalings: ({ perkAmount }) => ({
-      fire: 0.75 + 0.25 * (perkAmount ?? 1),
-      earth: 1.5 + 0.25 * (perkAmount ?? 1),
+      fire: MELTING_SLIME_FIRE_SCALE_BASE + MELTING_SLIME_FIRE_SCALE_PER_STACK * (perkAmount ?? 1),
+      earth: MELTING_SLIME_EARTH_SCALE_BASE + MELTING_SLIME_EARTH_SCALE_PER_STACK * (perkAmount ?? 1),
     }),
     note: 'Fire/Earth DoT · Multi-hit over duration · Poise Damage',
   },
@@ -473,7 +532,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Whirlwind',
     condition: 'On Weapon Art or Rune use',
-    getBaseDamage: ({ perkAmount }) => 3 + 0.3 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => WHIRLWIND_BASE_DMG + WHIRLWIND_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { air: 1.0 },
     scalingMode: 'fixed',
@@ -498,7 +557,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Volatile Shell',
     condition: 'When your Shield is depleted completely',
-    getBaseDamage: ({ perkAmount }) => 25 + 20 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => VOLATILE_SHELL_BASE_DMG + VOLATILE_SHELL_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { hex: 1.0 },
     scalingMode: 'fixed',
@@ -506,7 +565,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     secondaryEffects: [
       {
         label: 'Poison',
-        getValue: () => 5,
+        getValue: () => VOLATILE_SHELL_POISON_DURATION,
         format: v => `${v}s`,
         condition: 'Applies Poison for 5s',
         tone: 'offense',
@@ -523,7 +582,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       const poisonPotency = (statuses?.poisonPotency ?? 0) * SPORE_BURST_POTENCY_MULT
       const base = SPORE_BURST_BASE * (1 + perkPotency)
       const mult = Math.pow(1 + poisonPotency, 1 + Math.min(1, poisonPotency))
-      return Math.round(base * mult * 1000) / 1000
+      return Math.round(base * mult * SPORE_BURST_ROUND) / SPORE_BURST_ROUND
     },
     hits: 1,
     dmgTypeMode: 'fixed',
@@ -539,7 +598,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Royal Finisher',
     condition: 'On Finisher',
-    getBaseDamage: ({ perkAmount }) => 3 + perkAmount * 1,
+    getBaseDamage: ({ perkAmount }) => ROYAL_FINISHER_BASE_DMG + ROYAL_FINISHER_DMG_PER_STACK * perkAmount,
     hits: 1,
     dmgTypeMode: 'fixed',
     dmgTypes: { magic: 1.0 },
@@ -553,7 +612,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Grounded Despair',
     condition: 'On jump and land',
-    getBaseDamage: ({ perkAmount }) => 0.45 + 0.45 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => GROUNDED_DESPAIR_BASE_DMG + GROUNDED_DESPAIR_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { physical: 0.5, hex: 0.5 },
     scalingMode: 'fixed',
@@ -563,7 +622,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
   {
     perkName: 'Echo Incineration',
     condition: 'On hit · (10 + 2.5 × perkAmount)% chance',
-    getBaseDamage: ({ perkAmount }) => 7 + 1.25 * perkAmount,
+    getBaseDamage: ({ perkAmount }) => ECHO_INCINERATION_BASE_DMG + ECHO_INCINERATION_DMG_PER_STACK * perkAmount,
     dmgTypeMode: 'fixed',
     dmgTypes: { fire: 0.5, air: 0.5 },
     scalingMode: 'fixed',
@@ -592,15 +651,15 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     label: 'Venom Spitter',
     condition: 'On Finisher hit',
     getBaseDamage: ({ perkAmount, finisherHits = 1 }) => {
-      const base = 2 + 0.6 * perkAmount
+      const base = VENOM_SPITTER_BASE_DMG + VENOM_SPITTER_DMG_PER_STACK * perkAmount
       let total = 0
       for (let i = 0; i < finisherHits; i++) {
-        total += base / (1 + i / 3)
+        total += base / (1 + i / VENOM_SPITTER_HIT_DIVISOR)
       }
       return Math.round(total * 1000) / 1000
     },
     getFinisherHitBaseDmg: ({ baseDmg, hitIndex }) =>
-      Math.round(baseDmg * 1000 / (1 + hitIndex / 3)) / 1000,
+      Math.round(baseDmg * 1000 / (1 + hitIndex / VENOM_SPITTER_HIT_DIVISOR)) / 1000,
     dmgTypeMode: 'fixed',
     dmgTypes: { hex: 1.0 },
     scalingMode: 'fixed',

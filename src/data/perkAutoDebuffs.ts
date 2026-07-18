@@ -1,6 +1,7 @@
 import { PENANCE_HP_THRESHOLD, PENANCE_BLEED_POTENCY, PENANCE_BLEED_DURATION } from './Boost'
 import type { GrantedBuff } from './BuffData'
 import { canProc, type ProcCoefficient } from '../lib/types'
+import { calcBaseMaxHP } from '../lib/constants/game'
 
 export interface AutoDebuffInput {
   existingBuffNames: string[]
@@ -18,7 +19,7 @@ export function calcActualHpFillPct(
   protection: number
 ): number {
   if (protection >= 0) return hpFill
-  const baseMaxHP = Math.round(120 * (1 + (level ?? 80) * 0.0125))
+  const baseMaxHP = calcBaseMaxHP(level ?? 80)
   const effMaxHP = Math.max(Math.round(baseMaxHP * 0.1), baseMaxHP + Math.round(protection))
   return Math.min(100, hpFill * effMaxHP / baseMaxHP)
 }
@@ -139,6 +140,18 @@ export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
         sourceType: 'perk',
       })
     }
+  }
+
+  const weakeningAmt = perks['Weakening'] ?? 0
+  if (weakeningAmt > 0 && !existingBuffNames.includes('Weakness')) {
+    debuffs.push({
+      buffName: 'Weakness',
+      potency: 0.2 * weakeningAmt,
+      duration: 5,
+      condition: `${5 * weakeningAmt}% chance per hit · Potency = 0.2 × ${weakeningAmt}`,
+      sourceName: 'Weakening',
+      sourceType: 'perk',
+    })
   }
 
   return debuffs

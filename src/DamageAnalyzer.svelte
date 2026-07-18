@@ -26,6 +26,7 @@
   import { SELF_DAMAGE_PERK_DEFS, calcSelfDamage, UNDEAD_MIGHT_SELF_DMG_FRACTION, UNDEAD_MIGHT_DR_PCT_PER_STACK, type SelfDamagePerkDef } from './data/selfDamagePerks'
   import { resolveDamageTypes, applyAirToMagicConversion } from './lib/damageTypeResolve'
 import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
+import { TRACKED_TYPES_WITH_TRUE } from './lib/constants/damage-types'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
@@ -57,6 +58,8 @@ import {
   DRACONIC_BLOOD_PCT_PER_STACK,
   BELLOWING_EMBER_BASE_MULT,
   BELLOWING_EMBER_FIRE_MULT,
+  BELLOWING_EMBER_HP_GATE_THRESHOLD,
+  BELLOWING_EMBER_HP_GATE_PER_STACK,
 } from './lib/constants'
 
 
@@ -64,7 +67,7 @@ import {
   $: _m2WeaponBoost         = getWeaponConditionalBoost(perks, _baseWeaponType, 'm2')
 
   $: _activeRaceEffect = getActiveRaceEffect($build.race, _hpFillPct)
-  const _DEF_TYPE_LIST = ['physical','magic','fire','water','earth','air','hex','holy','true'] as const
+  const _DEF_TYPE_LIST = TRACKED_TYPES_WITH_TRUE
   
   $: _activeDefensivePerkSources = computeActiveDefensivePerkSources(
     __daResultVal, __daBuildVal, perks, _hpFillPct, _adaptivePlateTriggered, _effectiveInDarkness, _ragePotency, mountActive, _dummyDebuffs, disabledDebuffs,
@@ -624,8 +627,8 @@ import {
 
     return ticks
   })()
-  $: _showCrit = crit.effectiveCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks || _venomEaterCanShow
-  $: _critMult = crit.critDamageMultiplier / 100  
+  $: _showCrit = _filteredEffCritChance > 0 || _hasCritBoostBuff || crit.hasCritRelevantPerks || _venomEaterCanShow
+  $: _critMult = _filteredCritDmgMult / 100  
   let showCritValues = false
 
   $: crit = $result.crit
@@ -782,6 +785,13 @@ import {
       else disabledBoosts.delete('Smoldering')
       disabledBoosts = new Set(disabledBoosts)
     }
+
+    const buffName = key.split(':')[0]
+    if (buffName === 'Perfection') {
+      if (disabledBuffKeys.has(key)) disabledBoosts.add('Perfection')
+      else disabledBoosts.delete('Perfection')
+      disabledBoosts = new Set(disabledBoosts)
+    }
   }
   function toggleBuffByName(name: string) {
     const sources = _dedupedActiveBuffs.find(b => b.buffName === name)?._allSources ?? _allActiveBuffsRaw.filter(b => b.buffName === name).map(b => b.sourceName)
@@ -792,6 +802,12 @@ import {
       else disabledBuffKeys.add(`${name}:${s}`)
     }
     disabledBuffKeys = disabledBuffKeys
+
+    if (name === 'Perfection') {
+      if (allDisabled) disabledBoosts.delete('Perfection')
+      else disabledBoosts.add('Perfection')
+      disabledBoosts = new Set(disabledBoosts)
+    }
   }
   const HANDLED_BUFF_NAMES = new Set(['Rage', 'Glyph Conduit', 'Extinguish', 'Lightning Cloak', 'Storm Rend'])
   let extinguishDisabled = false
@@ -1137,8 +1153,45 @@ import {
   }
 
   $: natSources = crit.naturalBreakdown
-  $: allCritSources = crit.allCritBreakdown
-  $: critDmgSources = crit.critDmgBreakdown
+  $: _critDisabledPerkNames = (() => {
+    const names = new Set<string>()
+    for (const key of _disabledKeysArr) {
+      const buffName = key.split(':')[0]
+      names.add(buffName)
+    }
+    return names
+  })()
+  $: _isCritSourceDisabled = (gatingPerks?: readonly string[]) => {
+    if (!gatingPerks || gatingPerks.length === 0) return false
+    return gatingPerks.some(p => _critDisabledPerkNames.has(p))
+  }
+  $: allCritSources = crit.allCritBreakdown.filter(s => !_isCritSourceDisabled(s.gatingPerks))
+  $: critDmgSources = crit.critDmgBreakdown.filter(s => !_isCritSourceDisabled(s.gatingPerks))
+
+  $: _filteredNaturalCrit = (() => {
+    const sum = allCritSources.filter(s => !s.isExtra).reduce((a, b) => a + b.amount, 0)
+    return crit.primalActive ? Math.round(sum / 1.5 * 100) / 100 : sum
+  })()
+  $: _filteredNatCritRaw = allCritSources.filter(s => !s.isExtra).reduce((a, b) => a + b.amount, 0)
+  $: _filteredExtraCrits = allCritSources.filter(s => s.isExtra).map(s => s.amount)
+  $: _filteredEffCritChance = (() => {
+    const chances = [
+      Math.min(_filteredNaturalCrit, 100) / 100,
+      ..._filteredExtraCrits.map(c => Math.min(c, 100) / 100),
+    ]
+    return Math.round((1 - chances.reduce((acc, c) => acc * (1 - c), 1)) * 100 * 100) / 100
+  })()
+  $: _filteredCritDmgMult = (() => {
+    let sum = 0
+    for (const s of critDmgSources) {
+      if (crit.primalActive && s.gatingPerks && s.gatingPerks.length > 0 && s.amount >= 0) {
+        sum += Math.round(s.amount / 1.5 * 100) / 100
+      } else {
+        sum += s.amount
+      }
+    }
+    return Math.round(sum * 100) / 100
+  })()
 
   let disabledBoosts = new Set<string>([
     'Thief Training (would-crit bonus)'
@@ -1832,7 +1885,16 @@ import {
   }
   $: _visibleDmgEntries = boosts.dmgEntries.filter(e =>
     (e.sourceName !== 'Rider' || mountActive) && e.sourceName !== 'Frenzy' && e.sourceName !== 'Curse Rip' && e.sourceName !== 'Reaper' && e.sourceName !== 'True Balance' && e.sourceName !== 'Dark One' && !(e.sourceName === 'Blood Thirsty' && !_dummyHasBleedActive) && !(e.sourceName === 'Gelid Lance' && !_dummyHasBleedActive) && !(e.sourceName === 'Venom Eater' && (!showCritValues || !_dummyHasPoisonActive)) && !(e.sourceName === 'Golden Crits' && !showCritValues) && !(e.sourceName === 'Venom Spitter' && !_dummyHasPoisonActive) && !(e.sourceName === 'Frostbite' && !_dummyHasSlowActive && !_dummyHasFrostbiteActive)
-  )
+  ).map(e => {
+    if (e.sourceName === 'Primal' && _critDisabledPerkNames.size > 0) {
+      const stacks = perks['Primal'] ?? 0
+      const natCrit = _filteredNatCritRaw
+      if (stacks > 0 && natCrit > 0) {
+        return { ...e, rawMultiplier: roundMultiplier(1 + (natCrit * stacks) / 100), condition: `${natCrit.toFixed(1)}% nat. crit × ${stacks} stack` }
+      }
+    }
+    return e
+  })
 
   $: _goldenCritsBaseChance = BOOST_DEF_MAP.get('Golden Crits')?.baseProcChance ?? 0.40
   $: _goldenCritsEffectiveChance = (() => {
@@ -2714,7 +2776,7 @@ $: _groupedSelfDamageSources = (() => {
 
         <div class="da-stat-card da-stat-card--crit">
           <div class="da-stat-label"><CritIcon size={12}/> Crit Chance</div>
-          <div class="da-stat-val" style="color:#e2b203">{crit.effectiveCritChance.toFixed(1)}%</div>
+          <div class="da-stat-val" style="color:#e2b203">{_filteredEffCritChance.toFixed(1)}%</div>
           {#if allCritSources.length > 0}
             <div class="da-sources">
               {#each allCritSources as s}
@@ -2736,7 +2798,7 @@ $: _groupedSelfDamageSources = (() => {
 
         <div class="da-stat-card da-stat-card--critdmg">
           <div class="da-stat-label">Crit Damage Multiplier</div>
-          <div class="da-stat-val" style="color:#a78bfa">{fmtCritMult(crit.critDamageMultiplier)}</div>
+          <div class="da-stat-val" style="color:#a78bfa">{fmtCritMult(_filteredCritDmgMult)}</div>
           <div class="da-sources">
             {#each critDmgSources as s}
               <div class="da-source-row">
@@ -2791,6 +2853,7 @@ $: _groupedSelfDamageSources = (() => {
               if (_venomSpitterDisabled) return
               if (_frostbiteDisabled) return
               if (_goldenCritsDisabled) return
+              if (_critDisabledPerkNames.has(entry.sourceName)) return
               if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
               else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
               else toggleBoost(entry.sourceName)
@@ -2836,6 +2899,7 @@ $: _groupedSelfDamageSources = (() => {
                 if (_venomSpitterDisabled) return
                 if (_frostbiteDisabled) return
                 if (_goldenCritsDisabled) return
+                if (_critDisabledPerkNames.has(entry.sourceName)) return
                 if (entry.sourceName === 'Curse Rip') disableCurseRip = !disableCurseRip
                 else if (entry.sourceName === 'Reaper') disableReaper = !disableReaper
                 else toggleBoost(entry.sourceName)
@@ -2874,7 +2938,7 @@ $: _groupedSelfDamageSources = (() => {
                     class="da-boost-chip da-boost-chip--sm"
                     class:da-boost-chip--off={disabled}
                     title={entry.condition ?? ''}
-                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; if (_venomEaterDisabled) return; if (_bloodThirstyDisabled) return; if (_gelidLanceDisabled) return; if (_venomSpitterDisabled) return; if (_frostbiteDisabled) return; if (_goldenCritsDisabled) return; toggleBoost(entry.sourceName) }}
+                    on:click={() => { if (entry.sourceName === 'Spirit Winds' && _effectiveTailwindPotency <= 0) return; if (_venomEaterDisabled) return; if (_bloodThirstyDisabled) return; if (_gelidLanceDisabled) return; if (_venomSpitterDisabled) return; if (_frostbiteDisabled) return; if (_goldenCritsDisabled) return; if (_critDisabledPerkNames.has(entry.sourceName)) return; toggleBoost(entry.sourceName) }}
                   >
                     <span class="da-bc-name">{entry.sourceName}</span>
                     <span class="da-bc-val">{disabled ? '—' : `×${+entry.rawMultiplier.toFixed(4)}`}</span>

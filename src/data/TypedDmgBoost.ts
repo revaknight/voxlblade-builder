@@ -1,4 +1,5 @@
 import type { GrantedBuff } from './BuffData'
+import { ALL_DMG_TYPES } from '../lib/constants/damage-types'
 
 export interface TypedDmgBoostCtx {
   perks: Record<string, number>
@@ -20,7 +21,7 @@ interface TypedDmgBoostDef {
   appliesToGroups?: string[]
 }
 
-const ALL_DMG_TYPES = ['physical', 'magic', 'fire', 'water', 'earth', 'air', 'hex', 'holy', 'true']
+
 
 const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
   {
@@ -63,7 +64,7 @@ const TYPED_DMG_BOOST_DEFS: TypedDmgBoostDef[] = [
     label: 'Converted Energy',
     potencySource: 'buff',
     buffName: 'Converted Energy',
-    getAffectedTypes: () => ALL_DMG_TYPES,
+    getAffectedTypes: () => [...ALL_DMG_TYPES],
     getDamageMultiplier: (potency) => 1 + potency,
     conditionLabel: 'When Hex Shield blocks a debuff',
   },

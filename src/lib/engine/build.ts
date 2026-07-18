@@ -458,7 +458,7 @@ function deriveResults(
   for (let i = 0; i < STAT_KEYS.length; i++) {
     const k = STAT_KEYS[i]
     if (rawStats[k] != null && rawStats[k] !== 0) {
-      finalStats[k] = rawStats[k]
+      finalStats[k] = Math.round((rawStats[k]! + Number.EPSILON) * 100) / 100
     }
   }
 
@@ -474,6 +474,13 @@ function deriveResults(
   const boostedStats = applyStatBoostPerks(finalStats, finalPerks)
   applyEmotionalAttackSpeed(boostedStats, finalPerks, state.emotionalState)
   applyGladiatorialRage(boostedStats, finalPerks)
+
+  for (let i = 0; i < STAT_KEYS.length; i++) {
+    const k = STAT_KEYS[i]
+    if (boostedStats[k] != null) {
+      boostedStats[k] = Math.round((boostedStats[k]! + Number.EPSILON) * 100) / 100
+    }
+  }
 
   const crit = calcCrit(boostedStats, finalPerks)
 

@@ -3,7 +3,7 @@
   import DraconicAbilityStats from './DraconicAbilityStats.svelte'
   import {
     races, guilds, armors, rings, runes, blades, handles, gloves, essences,
-    getGuild, getArmorPart, getRing, getRune, getEnchant, getPerk,
+    getGuild, getRace, getArmorPart, getRing, getRune, getEnchant, getPerk,
     getBlade, getHandle, getGlove, getEssence,
     formatStat, formatLabel, applyEnchantmentsToSlot, applyInfusion,
     calcWeapon, calcMonkWeapon, isMonkGuild, MONK_RANK_MULTIPLIER,
@@ -27,6 +27,7 @@
     DRAGON_BUBBLE_WATER_HEAL_BASE, DRAGON_BUBBLE_WATER_HEAL_PER_STACK,
     UNDO_WINDOW_MS, SEARCH_BLUR_DELAY_MS,
   } from './lib/constants'
+  import { DEFAULT_DMG_TYPE } from './lib/constants/damage-types'
   import {
     DRAGON_STATE_HP_GATE,
     gateThreshold
@@ -236,7 +237,7 @@ function weaponMatchesFilter(item: any): boolean {
   $: isMonk = isMonkGuild($build.guild)
 
   $: raceArmorPen = (() => {
-    const race = races.find(r => r.name === $build.race)
+    const race = getRace($build.race)
     return (race?.statModifiers as Record<string,number> | undefined)?.armorPenetration ?? 0
   })()
 $: gladRageArmorPen = (() => {
@@ -302,7 +303,7 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     const p = $result.perks['Draconic Blood'] ?? 0
     return Math.round(p * 100) / 100
   })()
-  $: dragonInfusionPreviewPotency = getEffectiveDraconicInfusionPotency($build.guild, 'infusion', $build.draconicColor || 'physical', draconicPerkAmt, $result.perks)
+  $: dragonInfusionPreviewPotency = getEffectiveDraconicInfusionPotency($build.guild, 'infusion', $build.draconicColor || DEFAULT_DMG_TYPE, draconicPerkAmt, $result.perks)
 
   $: draconicBaseCDs = { claw: 5, infusion: 35, bubble: 7 }
   $: draconicColorEffectRows = (() => {
@@ -975,7 +976,7 @@ $: highestDamageType = (() => {
 
   $: identityCards = (() => {
     const cards: DetailCard[] = []
-    const race = races.find(r => r.name === $build.race)
+    const race = getRace($build.race)
     if (race) cards.push({ title: 'Race', label: race.name, description: race.passive, stats: (race.statModifiers ?? {}) as Record<string, number>, perks: [] })
     const guild = getGuild($build.guild)
     const rank = guild?.ranks.find(r => r.rank === $build.guildRank)
@@ -1482,7 +1483,7 @@ $: _appWaAvgTotal = (() => {
                   <span class="sg-label">Race</span>
                   <span class="sg-value">{$build.race || '—'}</span>
                   {#if $build.race}
-                    {@const race = races.find(r => r.name === $build.race)}
+                    {@const race = getRace($build.race)}
                     {#if race?.passive}
                       <span class="sg-sub">{race.passive}</span>
                     {/if}

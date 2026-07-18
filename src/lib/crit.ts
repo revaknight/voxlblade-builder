@@ -195,14 +195,14 @@ export interface CritResult {
   effectiveNaturalCrit: number
   effectiveNaturalCritWithProc: number
   critDamageMultiplier: number
-  naturalBreakdown: Array<{ source: string; amount: number }>
+  naturalBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }>
   extraCritChance: number
-  extraBreakdown: Array<{ source: string; amount: number }>
-  allCritBreakdown: Array<{ source: string; amount: number; isExtra: boolean }>
+  extraBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }>
+  allCritBreakdown: Array<{ source: string; amount: number; isExtra: boolean; gatingPerks?: readonly string[] }>
   effectiveCritChance: number
   effectiveCritChanceWithProc: number
   critFormula: string
-  critDmgBreakdown: Array<{ source: string; amount: number }>
+  critDmgBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }>
   primalActive: boolean
   primalStacks: number
   hasCritRelevantPerks: boolean
@@ -223,10 +223,10 @@ function round(n: number): number {
 }
 
 export function calcCrit(stats: StatMap, perks: Record<string, number>, hitProcCoeff?: ProcCoefficient): CritResult {
-  const naturalBreakdown: Array<{ source: string; amount: number }> = []
+  const naturalBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }> = []
   for (const src of NATURAL_CRIT_SOURCES) {
     const amount = src.calc(stats, perks)
-    if (amount !== 0) naturalBreakdown.push({ source: src.label, amount })
+    if (amount !== 0) naturalBreakdown.push({ source: src.label, amount, gatingPerks: src.gatingPerks })
   }
   const naturalCritChance = round(naturalBreakdown.reduce((a, b) => a + b.amount, 0))
   const primalStacks = perks['Primal'] ?? 0
@@ -238,10 +238,10 @@ export function calcCrit(stats: StatMap, perks: Record<string, number>, hitProcC
     ? round(calcProcChance(effectiveNaturalCrit / 100, hitProcCoeff, 'positiveOnly') * 100)
     : effectiveNaturalCrit
 
-  const extraBreakdown: Array<{ source: string; amount: number }> = []
+  const extraBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }> = []
   for (const src of EXTRA_CRIT_SOURCES) {
     const amount = src.calc(stats, perks)
-    if (amount !== 0) extraBreakdown.push({ source: src.label, amount })
+    if (amount !== 0) extraBreakdown.push({ source: src.label, amount, gatingPerks: src.gatingPerks })
   }
   const extraCritChance = round(extraBreakdown.reduce((a, b) => a + b.amount, 0))
 
@@ -279,17 +279,17 @@ export function calcCrit(stats: StatMap, perks: Record<string, number>, hitProcC
     ? naturalBreakdown.map(s => ({ ...s, amount: round(s.amount / PRIMAL_DIVISOR) }))
     : naturalBreakdown
 
-  const allCritBreakdown: Array<{ source: string; amount: number; isExtra: boolean }> = [
+  const allCritBreakdown: Array<{ source: string; amount: number; isExtra: boolean; gatingPerks?: readonly string[] }> = [
     ...displayedNaturalBreakdown.map(s => ({ ...s, isExtra: false })),
     ...extraBreakdown.map(s => ({ ...s, isExtra: true })),
   ]
 
-  const critDmgBreakdown: Array<{ source: string; amount: number; naturalEquivalent?: boolean }> = [
+  const critDmgBreakdown: Array<{ source: string; amount: number; naturalEquivalent?: boolean; gatingPerks?: readonly string[] }> = [
     { source: 'Base', amount: BASE_CRIT_DAMAGE },
   ]
   for (const src of CRIT_DMG_SOURCES) {
     const amount = src.calc(stats, perks)
-    if (amount !== 0) critDmgBreakdown.push({ source: src.label, amount, naturalEquivalent: src.naturalEquivalent })
+    if (amount !== 0) critDmgBreakdown.push({ source: src.label, amount, naturalEquivalent: src.naturalEquivalent, gatingPerks: src.gatingPerks })
   }
 
   let critDamageMultiplier = BASE_CRIT_DAMAGE
@@ -307,13 +307,13 @@ export function calcCrit(stats: StatMap, perks: Record<string, number>, hitProcC
     critDamageMultiplier = round(critDmgBreakdown.reduce((a, b) => a + b.amount, 0))
   }
 
-  const displayedCritDmgBreakdown: Array<{ source: string; amount: number }> = primalStacks > 0
+  const displayedCritDmgBreakdown: Array<{ source: string; amount: number; gatingPerks?: readonly string[] }> = primalStacks > 0
     ? critDmgBreakdown.map(s => 
         (s.source === 'Base' || s.amount < 0 || !s.naturalEquivalent) 
-          ? { source: s.source, amount: s.amount }
-          : { source: s.source, amount: round(s.amount / PRIMAL_DIVISOR) }
+          ? { source: s.source, amount: s.amount, gatingPerks: s.gatingPerks }
+          : { source: s.source, amount: round(s.amount / PRIMAL_DIVISOR), gatingPerks: s.gatingPerks }
       )
-    : critDmgBreakdown.map(s => ({ source: s.source, amount: s.amount }))
+    : critDmgBreakdown.map(s => ({ source: s.source, amount: s.amount, gatingPerks: s.gatingPerks }))
 
   const hasCritRelevantPerks = hasActiveGatingPerks(ALL_CRIT_SOURCES, perks)
 

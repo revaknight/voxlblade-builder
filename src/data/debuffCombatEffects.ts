@@ -1,3 +1,5 @@
+import { DEBUFF_STICKY_DMG_MULT, DEBUFF_DESPAIR_DISPLAY_DIVISOR, DEBUFF_DESPAIR_DISPLAY_MULT, DEBUFF_DESPAIR_DMG_COEFF } from '../lib/constants/debuff-effects'
+
 const ALL_DEF_STAT_KEYS = ['physicalDefense', 'magicDefense', 'fireDefense', 'waterDefense','earthDefense', 'airDefense', 'hexDefense', 'holyDefense',] as const
 
   export interface DebuffCombatEffect {
@@ -36,10 +38,10 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
       return `Move ${slowPct}% slower · +20% Magic Dmg Taken`
     },
     typeDamageMult: (_p: number, perks?: Record<string, number>) => {
-      const base = { magic: 1.2 }
+      const base = { magic: DEBUFF_STICKY_DMG_MULT }
       const hasMelting = (perks?.['Melting Slime'] ?? 0) > 0
       if (hasMelting) {
-        return { ...base, fire: 1.2, earth: 1.2 }
+        return { ...base, fire: DEBUFF_STICKY_DMG_MULT, earth: DEBUFF_STICKY_DMG_MULT }
       }
       return base
     },
@@ -49,21 +51,21 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
       const slowPct = Math.round(p * 10000) / 100
       return `Move ${slowPct}% slower and take 20% more magic, fire and earth damage.`
     },
-    typeDamageMult: () => ({ magic: 1.2, fire: 1.2, earth: 1.2 }),
+    typeDamageMult: () => ({ magic: DEBUFF_STICKY_DMG_MULT, fire: DEBUFF_STICKY_DMG_MULT, earth: DEBUFF_STICKY_DMG_MULT }),
   },
   'Sticky (Sickness)': {
     descFn: (p: number) => {
       const slowPct = Math.round(p * 10000) / 100
       return `Move ${slowPct}% slower · +20% Hex, Magic & Earth Dmg Taken [Sickness]`
     },
-    typeDamageMult: () => ({ magic: 1.2, hex: 1.2, earth: 1.2 }),
+    typeDamageMult: () => ({ magic: DEBUFF_STICKY_DMG_MULT, hex: DEBUFF_STICKY_DMG_MULT, earth: DEBUFF_STICKY_DMG_MULT }),
   },
   'Sticky (Hex Web)': {
     descFn: (p: number) => {
       const slowPct = Math.round(p * 10000) / 100
       return `Move ${slowPct}% slower · +20% Hex & Magic Dmg Taken [Hex Web]`
     },
-    typeDamageMult: () => ({ magic: 1.2, hex: 1.2 }),
+    typeDamageMult: () => ({ magic: DEBUFF_STICKY_DMG_MULT, hex: DEBUFF_STICKY_DMG_MULT }),
   },
   'Electrical Rend': {
     descFn: (p: number) => `Lose ${(p * 100).toFixed(2)} Armor`,
@@ -77,10 +79,10 @@ export const DEBUFF_COMBAT_EFFECTS: Record<string, DebuffCombatEffect> = {
   },
   Despair: {
     descFn: (p: number) => {
-      const pct = Math.round((p / 0.1) * 8.5 * 100) / 100
+      const pct = Math.round((p / DEBUFF_DESPAIR_DISPLAY_DIVISOR) * DEBUFF_DESPAIR_DISPLAY_MULT * 100) / 100
       return `+${pct}% all damage dealt`
     },
-    damageMult: (p: number) => 1 + (p / 0.1) * 0.085,
+    damageMult: (p: number) => 1 + (p / DEBUFF_DESPAIR_DISPLAY_DIVISOR) * DEBUFF_DESPAIR_DMG_COEFF,
   },
   Frostbite: {
     descFn: () => `+10% Water & Air Dmg Taken`,
