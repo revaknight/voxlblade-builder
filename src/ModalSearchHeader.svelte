@@ -123,29 +123,29 @@
 :global(.modal-search-input) {
   width: 100%;
   background: var(--surface3);
-  border: 1px solid rgba(167,139,250,.35);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: .85rem;
-  padding: 9px 14px;
+  padding: 10px 14px;
   outline: none;
   margin-bottom: 12px;
   caret-color: var(--accent3);
-  transition: border-color .15s, box-shadow .15s;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-:global(.modal-search-input::placeholder) { color: var(--ink-muted); opacity: .5; }
+:global(.modal-search-input::placeholder) { color: var(--ink-muted); opacity: .45; }
 :global(.modal-search-input:focus) {
-  border-color: rgba(167,139,250,.6);
-  box-shadow: 0 0 0 2px rgba(167,139,250,.12);
+  border-color: rgba(167,139,250,0.45);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.08);
 }
 
 :global(.modal-hl) {
   display: inline;
-  background: rgba(167,139,250,.3);
+  background: rgba(167,139,250,0.25);
   color: var(--accent3);
   border-radius: 2px;
-  padding: 0 1px;
+  padding: 0 2px;
   font-weight: 800;
   font-style: normal;
 }
@@ -163,35 +163,38 @@
     letter-spacing: .14em;
     font-weight: 700;
     color: var(--ink-muted);
-    opacity: .6;
+    opacity: .55;
     margin-right: 2px;
 }
 .armor-sort-btn {
     font-size: .7rem;
     font-weight: 700;
-    padding: 4px 11px;
+    padding: 4px 12px;
     border-radius: 999px;
     border: 1px solid var(--border-strong);
     background: var(--surface3);
     color: var(--ink-muted);
     cursor: pointer;
     font-family: var(--font-body);
-    transition: all .15s;
+    transition: all var(--transition-fast);
 }
-.armor-sort-btn:hover { color: var(--ink); border-color: rgba(255,255,255,.2); }
+.armor-sort-btn:hover { color: var(--ink); border-color: var(--border-hover); }
 .armor-sort-btn--active {
-    background: rgba(74,222,128,.12);
-    border-color: rgba(74,222,128,.35);
+    background: rgba(74,222,128,0.1);
+    border-color: rgba(74,222,128,0.3);
     color: var(--accent);
+    box-shadow: 0 0 8px rgba(74,222,128,0.08);
 }
 .armor-sort-btn--eff.armor-sort-btn--active {
-    background: rgba(167,139,250,.14);
-    border-color: rgba(167,139,250,.4);
+    background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.35);
     color: var(--accent3);
+    box-shadow: 0 0 8px rgba(167,139,250,0.08);
 }
 .armor-sort-btn--brawny.armor-sort-btn--active {
-    background: rgba(251,146,60,.14);
-    border-color: rgba(251,146,60,.4);
+    background: rgba(251,146,60,0.12);
+    border-color: rgba(251,146,60,0.35);
     color: var(--weapon-blade);
+    box-shadow: 0 0 8px rgba(251,146,60,0.08);
 }
 </style>

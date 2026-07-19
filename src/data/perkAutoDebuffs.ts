@@ -2,6 +2,7 @@ import { PENANCE_HP_THRESHOLD, PENANCE_BLEED_POTENCY, PENANCE_BLEED_DURATION } f
 import type { GrantedBuff } from './BuffData'
 import { canProc, type ProcCoefficient } from '../lib/types'
 import { calcBaseMaxHP } from '../lib/constants/game'
+import { getActiveEnemyHpDebuffs } from './enemyHpEffects'
 
 export interface AutoDebuffInput {
   existingBuffNames: string[]
@@ -11,6 +12,7 @@ export interface AutoDebuffInput {
   level: number
   protection: number
   selectedWAProcCoefficient?: ProcCoefficient
+  enemyHpFillPct: number
 }
 
 export function calcActualHpFillPct(
@@ -26,7 +28,7 @@ export function calcActualHpFillPct(
 
 export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
   const debuffs: GrantedBuff[] = []
-  const { existingBuffNames, playerBuffNames, perks, hpFill, level, protection, selectedWAProcCoefficient } = input
+  const { existingBuffNames, playerBuffNames, perks, hpFill, level, protection, selectedWAProcCoefficient, enemyHpFillPct } = input
 
   const hasExhaust = playerBuffNames.includes('Exhaust')
   const hasBurn = existingBuffNames.includes('Burn')
@@ -163,6 +165,19 @@ export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
       duration: 5,
       condition: `${burnChance}% chance on Holy attacks`,
       sourceName: 'Sunburn',
+      sourceType: 'perk',
+    })
+  }
+
+  const enemyHpDebuffs = getActiveEnemyHpDebuffs(perks, enemyHpFillPct, existingBuffNames)
+  for (const d of enemyHpDebuffs) {
+    if (existingBuffNames.includes(d.buffName)) continue
+    debuffs.push({
+      buffName: d.buffName,
+      potency: d.potency,
+      duration: d.duration,
+      condition: d.condition,
+      sourceName: d.sourceName,
       sourceType: 'perk',
     })
   }

@@ -38,9 +38,12 @@
 </script>
 
 <header>
-  <h1>Voxl<span class="accent">Builder</span></h1>
-  <div class="header-right">
-    <span class="header-hint">Click any cell to edit · Click ✦ to enchant</span>
+  <div class="header-bg"></div>
+  <div class="header-content">
+    <h1>Voxl<span class="accent">Builder</span></h1>
+    <div class="header-right">
+      <span class="header-hint">Click any cell to edit · Click ✦ to enchant</span>
+    </div>
   </div>
 </header>
 
@@ -54,20 +57,58 @@
 
 <style>
   header {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 24px 32px; border-radius: 20px;
-    background: linear-gradient(135deg,#161a16 0%,#1c201c 100%);
-    border: 1px solid var(--border-strong); margin-bottom: 16px; position: relative; overflow: hidden;
+    position: relative;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    margin-bottom: 16px;
+    overflow: hidden;
   }
-  header::before {
-    content:""; position:absolute; inset:0;
-    background: radial-gradient(ellipse at 90% 0%,rgba(74,222,128,.07) 0%,transparent 50%),
-                radial-gradient(ellipse at 10% 100%,rgba(245,158,11,.05) 0%,transparent 40%);
-    pointer-events:none;
+  .header-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #0d100e 0%, #141815 50%, #0f1310 100%);
   }
-  h1 { font-family:var(--font-display); font-size:clamp(1.8rem,4vw,3rem); font-weight:400; letter-spacing:-.02em; }
-  .accent { color:var(--accent); }
-  .header-hint { font-size:.72rem; color:var(--ink-muted); letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .header-bg::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 85% -10%, rgba(74,222,128,0.08) 0%, transparent 55%),
+      radial-gradient(ellipse at 15% 110%, rgba(245,158,11,0.05) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(167,139,250,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-bg::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .header-content {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 24px 32px;
+    z-index: 1;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 400;
+    letter-spacing: -.02em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .accent {
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(74,222,128,0.2);
+  }
+  .header-hint {
+    font-size: .72rem;
+    color: var(--ink-muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .5;
+  }
 
   .app-tabs {
     position: relative;
@@ -87,15 +128,15 @@
     border-radius: 8px;
     z-index: 0;
     pointer-events: none;
-    border: 1px solid rgba(74,222,128,0.28);
-    background: linear-gradient(180deg, rgba(74,222,128,0.16), rgba(74,222,128,0.08));
-    box-shadow: 0 0 14px rgba(74,222,128,0.16), inset 0 1px 0 rgba(255,255,255,0.05);
+    border: 1px solid rgba(74,222,128,0.22);
+    background: linear-gradient(180deg, rgba(74,222,128,0.12), rgba(74,222,128,0.05));
+    box-shadow: 0 0 16px rgba(74,222,128,0.12), inset 0 1px 0 rgba(255,255,255,0.04);
     transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), width 0.42s cubic-bezier(0.22, 1, 0.36, 1), background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
   }
   .tab-bubble--analyze {
-    border-color: rgba(226,178,3,0.32);
-    background: linear-gradient(180deg, rgba(226,178,3,0.16), rgba(226,178,3,0.08));
-    box-shadow: 0 0 14px rgba(226,178,3,0.14), inset 0 1px 0 rgba(255,255,255,0.05);
+    border-color: rgba(226,178,3,0.28);
+    background: linear-gradient(180deg, rgba(226,178,3,0.12), rgba(226,178,3,0.05));
+    box-shadow: 0 0 16px rgba(226,178,3,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
   }
   .app-tab {
     position: relative;
@@ -110,7 +151,7 @@
     font-weight: 700;
     letter-spacing: .05em;
     text-transform: uppercase;
-    transition: color .18s ease, transform .18s ease;
+    transition: color var(--transition-fast), transform var(--transition-fast);
   }
   .app-tab:hover { color: var(--ink); transform: translateY(-1px); }
   .app-tab--active { color: var(--accent); }
@@ -123,7 +164,7 @@
   }
 
   @media (max-width:640px) {
-    header { flex-direction:column; align-items:flex-start; gap:4px; }
+    .header-content { flex-direction: column; align-items: flex-start; gap: 4px; }
     .header-hint { display: none; }
     .app-tab { padding: 6px 14px; font-size: .7rem; }
   }

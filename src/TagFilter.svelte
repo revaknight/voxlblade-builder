@@ -151,29 +151,33 @@
 
 <style>
   .tf-container {
-    background: rgba(255,255,255,.02);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--font-body);
+    transition: border-color var(--transition-fast);
+  }
+  .tf-container:hover {
+    border-color: var(--border-hover);
   }
 
   .tf-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px;
+    padding: 8px 12px;
     gap: 12px;
     user-select: none;
-    transition: background 0.15s ease, color 0.15s ease;
-    color: #8a8d85;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    color: var(--ink-muted);
   }
   .tf-bar:hover {
-    background: rgba(255, 255, 255, 0.02);
-    color: #e8e4da;
+    background: rgba(255, 255, 255, 0.015);
+    color: var(--ink);
   }
   .tf-bar--open {
-    color: #e8e4da;
+    color: var(--ink);
   }
 
   .tf-bar-left {
@@ -194,11 +198,11 @@
   .tf-chevron {
     font-size: .65rem;
     display: inline-block;
-    transition: transform .15s ease;
+    transition: transform var(--transition-fast);
     transform: translateX(1px);
-    opacity: .6;
+    opacity: .5;
   }
-  .tf-chevron--rot { transform: rotate(90deg) translateY(-1px); opacity: .9; }
+  .tf-chevron--rot { transform: rotate(90deg) translateY(-1px); opacity: .8; }
 
   .tf-bar-title {
     font-size: .62rem;
@@ -210,14 +214,13 @@
   .tf-count-badge {
     font-size: .55rem;
     font-weight: 800;
-    background: #fb923c;
+    background: var(--accent2);
     color: #000;
-    padding: 0px 5px;
-    border-radius: 4px;
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
     line-height: 1.3;
   }
 
-  /* Summary Active Row */
   .tf-summary-chips {
     display: flex;
     align-items: center;
@@ -231,50 +234,50 @@
   .tf-sum-chip {
     font-size: .58rem;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 7px;
+    border-radius: var(--radius-xs);
     background: color-mix(in srgb, var(--c) 10%, rgba(255,255,255,0.02));
-    border: 1px solid color-mix(in srgb, var(--c) 35%, rgba(255,255,255,0.08));
-    color: color-mix(in srgb, var(--c) 85%, #d1d5db);
+    border: 1px solid color-mix(in srgb, var(--c) 30%, rgba(255,255,255,0.06));
+    color: color-mix(in srgb, var(--c) 80%, #d1d5db);
     cursor: pointer;
     white-space: nowrap;
     display: flex;
     align-items: center;
     gap: 3px;
     font-family: inherit;
-    transition: all .1s;
+    transition: all var(--transition-fast);
   }
   .tf-sum-chip:hover {
-    background: color-mix(in srgb, var(--c) 20%, rgba(255,255,255,0.05));
+    background: color-mix(in srgb, var(--c) 20%, rgba(255,255,255,0.04));
     border-color: var(--c);
     color: #fff;
   }
-  .tf-sum-chip-x { opacity: .5; font-size: .65rem; font-weight: 400; }
+  .tf-sum-chip-x { opacity: .45; font-size: .65rem; font-weight: 400; }
 
   .tf-clear-btn {
     background: none;
     border: none;
-    padding: 2px 6px;
+    padding: 2px 8px;
     font-size: .58rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .06em;
-    color: #f87171;
-    opacity: .7;
+    color: var(--neg);
+    opacity: .6;
     cursor: pointer;
     font-family: inherit;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
+    transition: all var(--transition-fast);
   }
-  .tf-clear-btn:hover { opacity: 1; background: rgba(248,113,113,0.08); }
+  .tf-clear-btn:hover { opacity: 1; background: rgba(248,113,113,0.06); }
 
-  /* Drawer Panel */
   .tf-panel {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 8px 10px 10px;
-    border-top: 1px solid rgba(255,255,255,.06);
-    animation: tfOpen .12s ease;
+    gap: 5px;
+    padding: 8px 12px 10px;
+    border-top: 1px solid var(--border);
+    animation: tfOpen .15s cubic-bezier(0.4, 0, 0.2, 1);
   }
   @keyframes tfOpen {
     from { opacity: 0; transform: translateY(-4px); }
@@ -293,7 +296,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .14em;
-    opacity: .7;
+    opacity: .65;
     flex-shrink: 0;
     min-width: 50px;
     text-align: right;
@@ -306,37 +309,36 @@
     flex: 1;
   }
 
-  /* Chips inside panel */
   .tf-chip {
     font-size: .62rem;
     font-weight: 600;
     padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,.08);
-    background: rgba(255,255,255,.03);
-    color: #8a8d85;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface3);
+    color: var(--ink-muted);
     cursor: pointer;
-    transition: all .12s;
+    transition: all var(--transition-fast);
     font-family: inherit;
     line-height: 1.5;
     user-select: none;
   }
   .tf-chip:hover {
-    border-color: color-mix(in srgb, var(--c) 50%, transparent);
+    border-color: color-mix(in srgb, var(--c) 45%, transparent);
     color: var(--c);
-    background: color-mix(in srgb, var(--c) 10%, transparent);
+    background: color-mix(in srgb, var(--c) 8%, transparent);
   }
   .tf-chip--active {
-    background: color-mix(in srgb, var(--c) 15%, transparent) !important;
-    border-color: color-mix(in srgb, var(--c) 60%, transparent) !important;
+    background: color-mix(in srgb, var(--c) 12%, transparent) !important;
+    border-color: color-mix(in srgb, var(--c) 50%, transparent) !important;
     color: var(--c) !important;
     font-weight: 700;
-    box-shadow: 0 0 6px color-mix(in srgb, var(--c) 15%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--c) 12%, transparent);
   }
   .tf-chip--active:hover {
-    background: color-mix(in srgb, var(--c) 25%, transparent) !important;
+    background: color-mix(in srgb, var(--c) 20%, transparent) !important;
     border-color: var(--c) !important;
   }
-  .sf-hint { font-size:.58rem;opacity:.35;font-style:italic; }
+  .sf-hint { font-size:.58rem;opacity:.3;font-style:italic; }
 
 </style>

@@ -1,15 +1,47 @@
 :root {
-  --bg: #0d0f0e; --surface: #141715; --surface2: #1a1d1b; --surface3: #212420;
-  --border: rgba(255,255,255,0.06); --border-strong: rgba(255,255,255,0.1);
-  --ink: #e8e4da; --ink-muted: #8a8d85;
-  --accent: #4ade80; --accent2: #f59e0b; --accent3: #a78bfa;
-  --infusion: #38bdf8; --infusion-border: rgba(56,189,248,0.22);
+  --bg: #080a09;
+  --surface: #0f1210;
+  --surface2: #161a17;
+  --surface3: #1e2320;
+  --surface4: #272d29;
+  --border: rgba(255,255,255,0.05);
+  --border-strong: rgba(255,255,255,0.09);
+  --border-hover: rgba(255,255,255,0.14);
+  --ink: #e8e4da;
+  --ink-muted: #7a7d75;
+  --ink-dim: #5a5d55;
+  --accent: #4ade80;
+  --accent-dim: rgba(74,222,128,0.5);
+  --accent2: #f59e0b;
+  --accent3: #a78bfa;
+  --infusion: #38bdf8;
+  --infusion-border: rgba(56,189,248,0.22);
   --neg: #f87171;
-  --weapon-blade: #fb923c; --weapon-handle: #34d399; --weapon-combined: #fbbf24;
-  --monk-glove: #e879f9; --monk-essence: #818cf8; --monk-combined: #c084fc;
-  --radius: 14px; --radius-sm: 8px;
+  --neg-dim: rgba(248,113,113,0.5);
+  --weapon-blade: #fb923c;
+  --weapon-handle: #34d399;
+  --weapon-combined: #fbbf24;
+  --monk-glove: #e879f9;
+  --monk-essence: #818cf8;
+  --monk-combined: #c084fc;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-xs: 5px;
   --font-display: 'Georgia','Times New Roman',serif;
   --font-body: 'Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  --font-mono: 'Cascadia Code','Fira Code','JetBrains Mono','Courier New',monospace;
+  --transition-fast: 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-base: 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
+  --shadow-glow-green: 0 0 20px rgba(74,222,128,0.15);
+  --shadow-glow-purple: 0 0 20px rgba(167,139,250,0.15);
+  --shadow-glow-amber: 0 0 20px rgba(251,191,36,0.12);
+  --glass-bg: rgba(15,18,16,0.75);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-blur: blur(20px) saturate(1.2);
 
   --z-base: 0;
   --z-dropdown: 100;
@@ -17,26 +49,89 @@
   --z-modal: 1001;
   --z-toast: 9999;
 }
+
+:root {
+  /* Draconic Theme */
+  --draco-primary: #ff6336;
+  --draco-primary-rgb: 255, 99, 54;
+
+  --draco-text: #ff9b7d;
+  --draco-text-strong: #ffb29d;
+
+  --draco-bg-1: rgba(var(--draco-primary-rgb), .16);
+  --draco-bg-2: rgba(var(--draco-primary-rgb), .10);
+  --draco-bg-3: rgba(var(--draco-primary-rgb), .06);
+  --draco-bg-4: rgba(var(--draco-primary-rgb), .04);
+
+  --draco-border-soft: rgba(var(--draco-primary-rgb), .15);
+  --draco-border: rgba(var(--draco-primary-rgb), .25);
+  --draco-border-strong: rgba(var(--draco-primary-rgb), .40);
+
+  --draco-shadow:
+    0 0 0 1px rgba(var(--draco-primary-rgb), .30),
+    0 4px 14px rgba(var(--draco-primary-rgb), .18);
+  --draco-text: #ff9b7d;
+  --draco-text-strong: #ffb29d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
+::selection {
+  background: rgba(74,222,128,0.25);
+  color: var(--ink);
+}
+
+/* ── Global scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.18);
+}
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+
+/* ── Weapon Art avg total box ── */
 .wa-avg-total-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-top: 6px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  background: rgba(167,139,250,.08);
-  border: 1px solid rgba(167,139,250,.2);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(167,139,250,0.02));
+  border: 1px solid rgba(167,139,250,0.15);
   flex-wrap: wrap;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.wa-avg-total-box:hover {
+  border-color: rgba(167,139,250,0.28);
+  box-shadow: var(--shadow-glow-purple);
 }
 .wa-atb-left {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 .wa-atb-label {
   font-size: .6rem;
@@ -52,22 +147,28 @@ body { background: var(--bg); }
   opacity: .5;
 }
 .wa-atb-base {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: .95rem;
   font-weight: 800;
   color: var(--accent3);
-  text-shadow: 0 0 10px rgba(167,139,250,.35);
+  text-shadow: 0 0 12px rgba(167,139,250,0.35);
 }
 
+/* ── Wild Bolt box ── */
 .da-wild-bolt-box {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   margin-top: 6px;
-  padding: 7px 10px;
-  border-radius: 7px;
-  background: rgba(251,191,36,.08);
-  border: 1px solid rgba(251,191,36,.25);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02));
+  border: 1px solid rgba(251,191,36,0.18);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.da-wild-bolt-box:hover {
+  border-color: rgba(251,191,36,0.3);
+  box-shadow: var(--shadow-glow-amber);
 }
 .da-wb-row {
   display: flex;
@@ -83,18 +184,20 @@ body { background: var(--bg); }
   flex: 1;
 }
 .da-wb-btn {
-  background: rgba(251,191,36,.15);
-  border: 1px solid rgba(251,191,36,.3);
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.22);
   color: #fbbf24;
   font-size: .7rem;
-  padding: 1px 7px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   line-height: 1.6;
   font-family: inherit;
+  transition: all var(--transition-fast);
 }
 .da-wb-btn:hover {
-  background: rgba(251,191,36,.25);
+  background: rgba(251,191,36,0.2);
+  border-color: rgba(251,191,36,0.4);
 }
 .da-wb-line {
   font-size: .6rem;

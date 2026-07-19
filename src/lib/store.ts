@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store'
 import type { BuildState, EnchantSlot } from './types'
 import { calcBuild, races, enforceEnchantSlot } from './engine'
-import { STORAGE_KEY_BUILD, DEFAULT_LEVEL, DEFAULT_HP_FILL, SAVE_DEBOUNCE_MS } from './constants'
+import { STORAGE_KEY_BUILD, DEFAULT_LEVEL, DEFAULT_HP_FILL, DEFAULT_ENEMY_HP_FILL, SAVE_DEBOUNCE_MS } from './constants'
 
 const DEFAULT_BUILD: BuildState = {
   race: races[0]?.name ?? "",
@@ -40,6 +40,7 @@ const DEFAULT_BUILD: BuildState = {
   emotionalState: 'buffs',
   level: DEFAULT_LEVEL,
   hpFill: DEFAULT_HP_FILL,
+  enemyHpFill: DEFAULT_ENEMY_HP_FILL,
   summonCount: 0,
   buffsConsumed: 0,
   sporelingsSummoned: 0,

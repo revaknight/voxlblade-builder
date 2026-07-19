@@ -205,6 +205,7 @@ export interface BuildState {
   emotionalState: 'buffs' | 'debuffs' | 'both'
   level: number
   hpFill: number
+  enemyHpFill: number
   summonCount: number
   buffsConsumed: number
   sporelingsSummoned: number

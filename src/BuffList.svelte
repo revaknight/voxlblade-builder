@@ -81,6 +81,7 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
       level: $build.level ?? 80,
       protection: ($result.stats as Record<string, number>).protection ?? 0,
       selectedWAProcCoefficient: WA_PROC_COEFFS[$build.selectedWeaponArt] ?? DEFAULT_PROC_COEFF,
+      enemyHpFillPct: $build.enemyHpFill ?? 100,
     })
     modified.push(...autoDebuffs)
 

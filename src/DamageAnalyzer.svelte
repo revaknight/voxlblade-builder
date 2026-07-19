@@ -29,9 +29,10 @@ import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
 import { TRACKED_TYPES_WITH_TRUE } from './lib/constants/damage-types'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
+import { getEnemyHpDotMultiplier } from './data/enemyHpEffects'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
-import { BOOST_DEF_MAP, calcFrenzyPct } from './data/Boost'
+import { BOOST_DEF_MAP, calcFrenzyPct, calcMinionAbsorptionPotency } from './data/Boost'
 import {
   WILD_BOLT_ELEMENTS,
   LIGHTNING_CLOAK_FRACTION,
@@ -264,6 +265,7 @@ import {
     }).filter(r => r.percentSources.length > 0 || r.flatSources.length > 0)
 
   $: _hpFillPct = calcActualHpFillPct($build.hpFill ?? 100, $build.level ?? 80, $result.stats.protection ?? 0)
+  $: _enemyHpFillPct = $build.enemyHpFill ?? 100
   let _adaptivePlateTriggered = false
 
   $: _waSummonDef = (() => {
@@ -287,6 +289,17 @@ import {
 
   $: _allActiveBuffsRaw = (() => {
     const baseBuffs = assembleActiveBuffs($build, $result.perks, wardingDebuffMult)
+
+    const _minionAbsAmt = $result.perks['Minion Absorption'] ?? 0
+    const _minionAbsSB  = (($result.stats as Record<string, number>).summonBoost ?? 0)
+    if (_minionAbsAmt > 0 && _minionAbsSB > 0) {
+      const _minionAbsPotency = calcMinionAbsorptionPotency(_minionAbsSB, _minionAbsAmt)
+      for (let i = 0; i < baseBuffs.length; i++) {
+        if (baseBuffs[i].buffName === 'Minion Absorbed') {
+          baseBuffs[i] = { ...baseBuffs[i], potency: _minionAbsPotency }
+        }
+      }
+    }
 
     const _exhaustIdx = baseBuffs.findIndex(b => b.buffName === 'Exhaust')
     if (_exhaustIdx !== -1) {
@@ -451,6 +464,7 @@ import {
       level: __daBuildVal.level ?? 80,
       protection: __daResultVal.stats.protection ?? 0,
       selectedWAProcCoefficient: WA_PROC_COEFFS[selectedWA.name] ?? DEFAULT_PROC_COEFF,
+      enemyHpFillPct: _enemyHpFillPct,
     })
     for (const d of autoDebuffs) {
       if (!groups.has(d.buffName)) groups.set(d.buffName, new Map())
@@ -599,7 +613,7 @@ import {
         type, tickDamage: tick, dotPotency: dotPot, inflictionPotency: inflictionPot,
         dotBase: base, potencyMult: mult, levelMult: 1,
         baseTick: tick,
-        scalingMult: dotScalingMult(type), combatMult: _dotCombatMult,
+        scalingMult: dotScalingMult(type), combatMult: roundMultiplier(_dotCombatMult * getEnemyHpDotMultiplier(perks, _enemyHpFillPct, type)),
         scalingRows: rows, totalEffectivePct: totalPct,
       }
     })
@@ -771,9 +785,9 @@ import {
       const dmgPct = Math.round(MORTAL_WILL_DMG_PER_HOLY_BOOST_PCT * (stats.holyBoost ?? 0) * _mortalWillAmt * 10000) / 100
       chips.push({
         key: 'mortalWill', name: 'Mortal Will',
-        title: `Mortal Will (${_mortalWillAmt}): +${holyBonus} Holy Type on finishers · +${dmgPct}% finisher dmg · Holy Type can proc Sunburn`,
-        val: disabledEffects.has('mortalWill') ? '—' : `+${holyBonus} Holy`,
-        cond: disabledEffects.has('mortalWill') ? 'disabled' : `finishers · +${dmgPct}%`,
+        title: `Mortal Will (${_mortalWillAmt}): +${dmgPct}% finisher dmg · +${holyBonus} Holy Type on finishers · Holy Type can proc Sunburn`,
+        val: disabledEffects.has('mortalWill') ? '—' : `+${dmgPct}%`,
+        cond: disabledEffects.has('mortalWill') ? 'disabled' : `finishers · +${holyBonus} Holy`,
       })
     }
     return chips
@@ -836,6 +850,11 @@ import {
       else disabledBoosts.delete('Perfection')
       disabledBoosts = new Set(disabledBoosts)
     }
+    if (buffName === 'Minion Absorbed') {
+      if (disabledBuffKeys.has(key)) disabledBoosts.add('Minion Absorption')
+      else disabledBoosts.delete('Minion Absorption')
+      disabledBoosts = new Set(disabledBoosts)
+    }
   }
   function toggleBuffByName(name: string) {
     const sources = _dedupedActiveBuffs.find(b => b.buffName === name)?._allSources ?? _allActiveBuffsRaw.filter(b => b.buffName === name).map(b => b.sourceName)
@@ -850,6 +869,12 @@ import {
     if (name === 'Perfection') {
       if (allDisabled) disabledBoosts.delete('Perfection')
       else disabledBoosts.add('Perfection')
+      disabledBoosts = new Set(disabledBoosts)
+    }
+
+    if (name === 'Minion Absorbed') {
+      if (allDisabled) disabledBoosts.delete('Minion Absorption')
+      else disabledBoosts.add('Minion Absorption')
       disabledBoosts = new Set(disabledBoosts)
     }
   }
@@ -1166,7 +1191,7 @@ import {
     if (!_gunOverlay) return _weaponDmgTypes
     const entries = Object.entries(_weaponDmgTypes)
     if (entries.length === 0) return _weaponDmgTypes
-    const priority = DMG_TYPE_PRIORITY
+    const priority = DMG_TYPE_PRIORITY as readonly string[]
     const [highestKey] = entries.reduce((a, b) => {
       if (b[1] > a[1]) return b
       if (b[1] === a[1]) {
@@ -1711,8 +1736,8 @@ import {
       const [highestKey] = entries.reduce((a, b) => {
         if (b[1] > a[1]) return b
         if (b[1] === a[1]) {
-          const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
-          const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
+          const ia = (DMG_TYPE_PRIORITY as readonly string[]).indexOf(a[0])
+          const ib = (DMG_TYPE_PRIORITY as readonly string[]).indexOf(b[0])
           return (ib === -1 ? 999 : ib) < (ia === -1 ? 999 : ia) ? b : a
         }
         return a
@@ -1757,8 +1782,8 @@ import {
       const [highestKey] = entries.reduce((a, b) => {
         if (b[1] > a[1]) return b
         if (b[1] === a[1]) {
-          const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
-          const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
+          const ia = (DMG_TYPE_PRIORITY as readonly string[]).indexOf(a[0])
+          const ib = (DMG_TYPE_PRIORITY as readonly string[]).indexOf(b[0])
           return (ib === -1 ? 999 : ib) < (ia === -1 ? 999 : ia) ? b : a
         }
         return a
@@ -2029,6 +2054,8 @@ import {
                       : def.isM1  ? 'm1'
                       : 'perk'
       const combatMult = _categoryMult(hitType, canProc(def.procCoefficient))
+      const mwMult = (def.isFinisher || def.isM2) && _mortalWillFinisherDmgMult !== 1 ? _mortalWillFinisherDmgMult : 1
+      const finalCombatMult = combatMult * mwMult
 
       const baseDmgTypes = def.dmgTypeMode === 'weapon'
         ? _weaponDmgTypes
@@ -2051,6 +2078,9 @@ import {
           )
         : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
       const resolvedDmgTypes = applyAirToMagicConversion(baseResolvedDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
+      const resolvedDmgTypesWithMw = (def.isFinisher || def.isM2) && _mortalWillHolyTypeBonus > 0
+        ? { ...resolvedDmgTypes, holy: Math.round(((resolvedDmgTypes.holy ?? 0) + _mortalWillHolyTypeBonus) * 10000) / 10000 }
+        : resolvedDmgTypes
 
       // Store base damage types without Draconic Runes bonus for self damage calculation
       const baseDmgTypesForSelfDmg = def.isRune ? baseDmgTypes : baseResolvedDmgTypes
@@ -2068,7 +2098,7 @@ import {
         : 1
 
       const buildTypedHits = (baseDmg: number) =>
-      Object.entries(resolvedDmgTypes).map(([k, mult]) => ({
+      Object.entries(resolvedDmgTypesWithMw).map(([k, mult]) => ({
         rawVal: roundMultiplier(baseDmg),
         val: roundMultiplier(baseDmg * mult),
         color: DMG_TYPE_COLORS[k] ?? '#e8e4da',
@@ -2089,7 +2119,7 @@ import {
       const baseDmg = isSpringblast
         ? Math.round(calcSpringblastBaseDamage(perkAmount) * 1000) / 1000
         : baseDmg_m1f
-      const totalDmg = isSpringblast ? 1 : baseDmg * scalingMult * combatMult
+      const totalDmg = isSpringblast ? 1 : baseDmg * scalingMult * finalCombatMult
       const rawFinisherNumerator = isSpringblast ? baseDmg : undefined
       const hasHalfActivations = def.halfActivations && perkAmount > 0 && ((_gunOverlay?.type === 'Dual Guns') || _baseWeaponType === 'Storm Caster')
       const halfActivations = hasHalfActivations || undefined
@@ -2127,8 +2157,8 @@ import {
         typedHits_m2: buildTypedHits(isSpringblast ? baseDmg : baseDmg_m2),
         typedHits_m1f: buildTypedHits(isSpringblast ? baseDmg : baseDmg_m1f),
         scalingMult,
-        combatMult,
-        resolvedDmgTypes,
+        combatMult: finalCombatMult,
+        resolvedDmgTypes: resolvedDmgTypesWithMw,
         baseDmgTypes: baseDmgTypesForSelfDmg,
         resolvedScalings,
         dmgTypeMode: def.dmgTypeMode,
@@ -2150,6 +2180,7 @@ import {
       tag: string; baseDmg: number; scalingMult: number; combatMult: number; totalDmg: number
       dmgTypes: Record<string, number>; procCoefficient?: ProcCoefficient; isProcHit?: boolean; canApplyBurn?: boolean
       rawFinisherNumerator?: number; halfActivations?: boolean; oncePerFinisher?: boolean; alwaysOnHit?: boolean; finisherOnly?: boolean
+      weaponBoostMult?: number; weaponBoostLabel?: string
       getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
     }> = []
     for (const e of _activePerkDmgEntries) {
@@ -2157,6 +2188,13 @@ import {
       if (!e.isProcHit && e.perkName !== 'Springblast') continue
       if (e.perkName === 'Echo Incineration' || e.perkName === 'Bombardier') continue
       const perkDef = PERK_DMG_DEFS.find(d => d.perkName === e.perkName)
+
+      const perkSunburnMult = _sunburnActive && _sunburnEnemyBurning
+        ? ((e.resolvedDmgTypes.holy ?? 0) > 0 ? _sunburnHolyDmgMult : _sunburnUniversalDmgMult) : 1
+      const perkLabel = [
+        perkSunburnMult !== 1 ? 'Sunburn' : '',
+      ].filter(Boolean).join(', ')
+
       out.push({
         tag: e.displayName,
         baseDmg: e.baseDmg,
@@ -2167,6 +2205,7 @@ import {
         procCoefficient: e.procCoefficient,
         isProcHit: e.isProcHit,
         canApplyBurn: _hasSingedBurn,
+        ...(perkSunburnMult !== 1 ? { weaponBoostMult: perkSunburnMult, weaponBoostLabel: perkLabel } : {}),
         ...(e.rawFinisherNumerator != null ? { rawFinisherNumerator: e.rawFinisherNumerator } : {}),
         ...(e.halfActivations != null ? { halfActivations: e.halfActivations } : {}),
         ...(e.oncePerFinisher != null ? { oncePerFinisher: e.oncePerFinisher } : {}),
@@ -2345,14 +2384,24 @@ import {
          ? _resolveHitDmgTypesBase(selectedWA.hitDamageTypes[Math.min(i, selectedWA.hitDamageTypes.length - 1)], _weaponDmgTypesBase)
          : _waDmgTypesBase
         
+        const waIsFinisher = selectedWA.hits?.[i]?.isFinisher ?? false
+        const mwMult = waIsFinisher && _mortalWillFinisherDmgMult !== 1 ? _mortalWillFinisherDmgMult : 1
+        const hitDmgTypesForMw = waIsFinisher && _mortalWillHolyTypeBonus > 0
+          ? { ...hitDt, holy: Math.round(((hitDt.holy ?? 0) + _mortalWillHolyTypeBonus) * 10000) / 10000 }
+          : hitDt
         const waSunburnMult = _sunburnActive && _sunburnEnemyBurning
-          ? ((hitDt.holy ?? 0) > 0 ? _sunburnHolyDmgMult : _sunburnUniversalDmgMult) : 1
+          ? ((hitDmgTypesForMw.holy ?? 0) > 0 ? _sunburnHolyDmgMult : _sunburnUniversalDmgMult) : 1
+        const combinedWbMult = roundMultiplier(mwMult * waSunburnMult)
+        const wbLabel = [
+          _mortalWillFinisherDmgMult !== 1 ? 'Mortal Will' : '',
+          waSunburnMult !== 1 ? 'Sunburn' : '',
+        ].filter(Boolean).join(', ')
         result.push({
           group: 'WA', index: i, count: h.count, base: h.n, scalingMult: sc, combatMult: _waCombatMult,
-          isFinisher: selectedWA.hits?.[i]?.isFinisher ?? false, dmgTypes: hitDt,
+          isFinisher: waIsFinisher, dmgTypes: hitDmgTypesForMw,
           baseDmgTypes: hitDtBase, label: selectedWA.name,
           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
-          ...(waSunburnMult !== 1 ? { weaponBoostMult: waSunburnMult, weaponBoostLabel: 'Sunburn' } : {}),
+          ...(combinedWbMult !== 1 ? { weaponBoostMult: combinedWbMult, weaponBoostLabel: wbLabel } : {}),
           canApplyBurn: _hasSingedBurn,
         })
       })
@@ -2793,7 +2842,6 @@ $: _groupedSelfDamageSources = (() => {
   <BaseDamageCalc {boosts} {crit} {stats} {disabledBoosts} {activeFinalMult}
     weaponHits={_bdcWeaponHits}
     perkDmgTypeBonuses={_perkDmgTypeBonuses}
-    perkDmgTypeBonusesNoProc={_perkDmgTypeBonusesNoProc}
     perkDmgTypeBonusesDoT={_perkDmgTypeBonusesDoT}
     typedBoostEntries={_typedBoostEntries}
     luminescentPct={_luminescentPct}
@@ -2838,10 +2886,13 @@ $: _groupedSelfDamageSources = (() => {
     venomEaterStacks={perks['Venom Eater'] ?? 0}
     bloodThirstyStacks={perks['Blood Thirsty'] ?? 0}
     lifeDrinkerAmt={perks['Life Drinker'] ?? 0}
+    sunburnUniversalDmgMult={_sunburnEnemyBurning ? _sunburnUniversalDmgMult : 1}
     dotTicks={_dotTicks}
+    enemyHpFill={_enemyHpFillPct}
     {mountActive}
     mountLabel={_activeMountRuneDef?.mountLabel ?? ''}
     on:mountToggle={() => mountActive = !mountActive}
+    on:enemyHpChange={e => build.update(s => ({ ...s, enemyHpFill: e.detail }))}
     bind:disabledDebuffs
     bind:showCritValues
   />

@@ -25,7 +25,6 @@ import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
   } from './lib/constants'
 
   export let perkDmgTypeBonuses: Record<string, number> = {}
-  export let perkDmgTypeBonusesNoProc: Record<string, number> = {}
   export let perkDmgTypeBonusesDoT: Record<string, number> = {}
   export let boosts: any
   export let crit: any
@@ -136,6 +135,8 @@ export let cauterizeScalingMult: number = 1
   export let venomEaterStacks: number = 0
   export let bloodThirstyStacks: number = 0
   export let lifeDrinkerAmt: number = 0
+  export let sunburnUniversalDmgMult: number = 1
+  export let enemyHpFill: number = 100
   export let dotTicks: Array<{
     type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
     debuffName?: string; slowDuration?: number; baseTick?: number
@@ -171,6 +172,7 @@ export let cauterizeScalingMult: number = 1
     defMult: number
     typeDebuffMult: number
     debuffMult: number
+    sunburnMult: number
     finalDmg: number
   } | null = null
 
@@ -391,6 +393,7 @@ export let cauterizeScalingMult: number = 1
     const dmgType = DOT_DMG_TYPE_MAP[d.type] ?? 'hex'
     const scalingMult = d.scalingMult
     const combatMult = d.combatMult
+    const sunburnMult = sunburnUniversalDmgMult
     const preMitBase = d.tickDamage * scalingMult * combatMult
 
     const resolvedTypes = resolveDamageTypes({ [dmgType]: 1.0 }, perkDmgTypeBonusesDoT)
@@ -407,7 +410,7 @@ export let cauterizeScalingMult: number = 1
     const debuffMult = _activeDebuffDamageMult
 
     const primaryMult = resolvedTypes[dmgType] ?? 1
-    const finalDmgPrimary = preMitBase * primaryMult * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
+    const finalDmgPrimary = preMitBase * sunburnMult * primaryMult * typedMult * defMult * typeDebuffMult * debuffMult * selfDebuffDamageMult
 
     const bonusTypes = Object.entries(resolvedTypes)
       .filter(([k]) => k !== dmgType)
@@ -418,7 +421,7 @@ export let cauterizeScalingMult: number = 1
         const bCrushPen = crushingPenForType(k)
         const { mult: bDefMult } = calcArmorMult(bDefPct, (totalPen + bCrushPen) / 100)
         const bTypeDebuffMult = _activeDebuffTypeDamageMult[k] ?? 1
-        const raw = preMitBase * mult * bTypedMult * bDefMult * bTypeDebuffMult * debuffMult * selfDebuffDamageMult
+        const raw = preMitBase * sunburnMult * mult * bTypedMult * bDefMult * bTypeDebuffMult * debuffMult * selfDebuffDamageMult
         const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
         return { key: k, label: info.label, color: info.color, raw }
       })
@@ -426,20 +429,20 @@ export let cauterizeScalingMult: number = 1
     const finalDmg = finalDmgPrimary + bonusTypes.reduce((s, b) => s + b.raw, 0)
 
     const trueDmg = d.meltingShredFactor != null
-      ? preMitBase * d.meltingShredFactor
+      ? preMitBase * sunburnMult * d.meltingShredFactor
       : 0
 
     const woundPotency = d.type === 'Bleed'
       ? (resolvedDebuffs.find(r => r.name === 'Wound' && !disabledDebuffs.has(r.name))?.potency ?? 0)
       : 0
-    const woundTrueDmg = woundPotency > 0 ? preMitBase * woundPotency : 0
+    const woundTrueDmg = woundPotency > 0 ? preMitBase * sunburnMult * woundPotency : 0
     const woundAmt = woundPotency > 0 ? Math.round(woundPotency * 10) : 0
 
     const lifeDrinkerHeal = lifeDrinkerAmt > 0
       ? 0.01 * preMitBase  * lifeDrinkerAmt + 0.1
       : 0
 
-    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, woundTrueDmg, woundPotency, woundAmt, lifeDrinkerHeal }
+    return { ...d, dmgType, scalingMult, combatMult, preMitBase, applicableBoosts, typedMult, defPct, defMult, typeDebuffMult, debuffMult, finalDmg, finalDmgPrimary, bonusTypes, trueDmg, woundTrueDmg, woundPotency, woundAmt, lifeDrinkerHeal, weaponBoostMult: sunburnMult, weaponBoostLabel: sunburnMult !== 1 ? 'Sunburn' : undefined }
   })
 
   function defPctForType(k: string): number {
@@ -586,7 +589,7 @@ export let cauterizeScalingMult: number = 1
     if (!isHeal && blubBlubAmt > 0 && canProc(hit.procCoefficient)) {
       const preMitSum = Object.values(hit.baseDmgTypes ?? hit.dmgTypes)
         .reduce((s, m) => s + hit.base * m, 0)
-      const preMitBase = preMitSum * (hit.scalingMult ?? 1) * _activeDebuffDamageMult * selfDebuffDamageMult
+      const preMitBase = preMitSum * (hit.scalingMult ?? 1) * (hit.weaponBoostMult ?? 1) * _activeDebuffDamageMult * selfDebuffDamageMult
 
       if (preMitBase > 0) {
         const blubPerHit = preMitBase * 0.15 * blubBlubAmt
@@ -612,24 +615,28 @@ export let cauterizeScalingMult: number = 1
 
     if (!isHeal && dragonStateTotalDmg > 0 && (hit.group === 'M1' || hit.group === 'M2' || hit.isM1 || hit.isM2 || hit.isFinisher)) {
       const dsDebuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
+      const dsSunburnMult = sunburnUniversalDmgMult
       // Cache Dragon State pre-mit base for proc effects below
-      const _dsPreMitBase = dragonStateBaseDmg * dragonStateScalingMult * dragonStateCombatMult * dsDebuffMult
+      const _dsPreMitBase = dragonStateBaseDmg * dragonStateScalingMult * dragonStateCombatMult * dsSunburnMult * dsDebuffMult
       if (dsDebuffMult > 0) {
         const dsResolvedTypes = withDarkMagicHex(resolveDamageTypes({ magic: 1.0 }, perkDmgTypeBonuses))
         for (const [k, mult] of Object.entries(dsResolvedTypes)) {
           const dsCrushPen = crushingPenForType(k)
           const { info, applicableBoosts, typedMultUsed, typeDebuffMult: dsTypeDebuffMult, defPct: dsDefPct, defMult: dsDefMult } = resolveTypeInfo(k, basePenDecimal + dsCrushPen / 100)
           const dsTypeBase = dragonStateBaseDmg * mult
-          const dsRaw = dsTypeBase * dragonStateScalingMult * dragonStateCombatMult * dsDebuffMult * typedMultUsed * dsDefMult * dsTypeDebuffMult
+          const dsRaw = dsTypeBase * dragonStateScalingMult * dragonStateCombatMult * dsSunburnMult * dsDebuffMult * typedMultUsed * dsDefMult * dsTypeDebuffMult
 
           types.push({
             key: k, label: info.label, color: info.color,
             typeBase: dsTypeBase, scalingMult: dragonStateScalingMult, combatMult: dragonStateCombatMult,
-            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: dsTypeDebuffMult,
+            applicableBoosts, weaponBoostMult: dsSunburnMult, weaponBoostLabel: dsSunburnMult !== 1 ? 'Sunburn' : undefined, typeDebuffMult: dsTypeDebuffMult,
             defMult: dsDefMult, enemyDefPct: dsDefPct,
             raw: dsRaw, critVal: Math.round(dsRaw * critDmgMult / 100 * 10000) / 10000,
             isHeal: false, tag: 'Dragon State', forceCrit: false, oncePerGroup: true,
           })
+          if (luminescentPct > 0) {
+            if (_dsPreMitBase > 0) addProcEffect(_dsPreMitBase, luminescentPct, { holy: 1.0 }, 'Luminescent')
+          }
           if (lightningCloakPct > 0) {
             if (_dsPreMitBase > 0) addProcEffect(_dsPreMitBase, lightningCloakPct, { air: 0.5, magic: 0.5 }, 'Chain')
           }
@@ -684,12 +691,13 @@ export let cauterizeScalingMult: number = 1
               baseForType = ph.baseDmg
             }
             const typeBase = baseForType * mult
-            const raw = typeBase * ph.scalingMult * ph.combatMult * debuffMult * typedMultUsed * defMult * typeDebuffMult
+            const phWbMult = ph.weaponBoostMult ?? 1
+            const raw = typeBase * ph.scalingMult * ph.combatMult * phWbMult * debuffMult * typedMultUsed * defMult * typeDebuffMult
 
             types.push({
               key: k, label: info.label, color: info.color,
               typeBase, scalingMult: ph.scalingMult, combatMult: ph.combatMult,
-              applicableBoosts, weaponBoostMult: 1, typeDebuffMult,
+              applicableBoosts, weaponBoostMult: phWbMult, typeDebuffMult,
               defMult, enemyDefPct: defPct,
               raw, critVal: Math.round(raw * critDmgMult / 100 * 10000) / 10000,
               isHeal: false, tag: ph.tag, oncePerGroup: ph.oncePerFinisher ?? true, forceCrit: false,
@@ -698,7 +706,7 @@ export let cauterizeScalingMult: number = 1
           }
 
           if (canProc(ph.procCoefficient)) {
-            const preMitBase = ph.totalDmg * debuffMult
+            const preMitBase = ph.totalDmg * (ph.weaponBoostMult ?? 1) * debuffMult
             if (echoIncinerationBaseDmg > 0) {
               addProcEffect(echoIncinerationBaseDmg, 1, { fire: 0.5, air: 0.5 }, 'Echo Incineration', echoIncinerationScalingMult, ph.combatMult)
               if (cauterizeBaseDmg > 0 && ph.canApplyBurn) addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
@@ -712,7 +720,7 @@ export let cauterizeScalingMult: number = 1
             if (explosiveChargePct > 0 && hit.group === 'WA') addProcEffect(preMitBase, explosiveChargePct, { physical: 0.5, fire: 0.5 }, 'Explosive')
             if (blubBlubAmt > 0) {
               const blubDmgSum = Object.values(ph.dmgTypes).reduce((s, m) => s + m, 0)
-              const blubPreMitBase = ph.baseDmg * blubDmgSum * ph.scalingMult * debuffMult
+              const blubPreMitBase = ph.baseDmg * blubDmgSum * ph.scalingMult * (ph.weaponBoostMult ?? 1) * debuffMult
               const blubPerHit = blubPreMitBase * 0.15 * blubBlubAmt
               const blubResolvedTypes = resolveDamageTypes({ water: 1.0 }, perkDmgTypeBonuses)
               for (const [k, mult] of Object.entries(blubResolvedTypes)) {
@@ -728,23 +736,6 @@ export let cauterizeScalingMult: number = 1
                   raw: blubRaw, critVal: Math.round(blubRaw * critDmgMult / 100 * 10000) / 10000,
                   isHeal: false, tag: 'Blub', forceCrit: false, procCoefficient: { type: 'noProc' }, hitCount: 2,
                 })
-              }
-            }
-            if (curseRipPerkAmount > 0 && curseRipActiveDebuffCount > 0 && !disableCurseRip) {
-              if (preMitBase > 0) {
-                const healAmount = preMitBase / CURSE_RIP_DIVISOR
-                if (healAmount > 0) {
-                  const healRaw = healAmount * curseRipHealMult * antiHealSelfMult
-                  types.push({
-                    key: 'heal', label: 'Heal', color: '#4ade80',
-                    typeBase: healAmount, scalingMult: 1, combatMult: 1,
-                    applicableBoosts: [], weaponBoostMult: 1, typeDebuffMult: 1,
-                    defMult: 1, enemyDefPct: 0,
-                    raw: healRaw, critVal: healRaw,
-                    isHeal: true, isCurseRip: true, tag: 'Curse Rip', isCritExempt: true, forceCrit: false,
-                    healBoostMult: curseRipHealMult !== 1 ? curseRipHealMult : undefined,
-                  })
-                }
               }
             }
             if (_venomEaterActive) {
@@ -904,7 +895,29 @@ export let cauterizeScalingMult: number = 1
       document.removeEventListener('mouseup', onOutside)
     }
   })
+
+  let enemyHpDragging = false
+  let enemyHpBarEl: HTMLDivElement
+  function calcEnemyHpFromMouse(e: MouseEvent): number {
+    if (!enemyHpBarEl) return enemyHpFill
+    const rect = enemyHpBarEl.getBoundingClientRect()
+    const clampedX = Math.max(rect.left, Math.min(e.clientX, rect.right))
+    const frac = (clampedX - rect.left) / rect.width
+    return Math.round(Math.max(0, Math.min(1, frac)) * 100)
+  }
+  function onEnemyHpMouseDown(e: MouseEvent) {
+    enemyHpDragging = true
+    dispatch('enemyHpChange', calcEnemyHpFromMouse(e))
+  }
+  function onEnemyHpMouseMove(e: MouseEvent) {
+    if (enemyHpDragging) dispatch('enemyHpChange', calcEnemyHpFromMouse(e))
+  }
+  function onEnemyHpMouseUp() {
+    enemyHpDragging = false
+  }
 </script>
+
+<svelte:window on:mousemove={onEnemyHpMouseMove} on:mouseup={onEnemyHpMouseUp} />
 
 <div class="bdc-root da-section">
   <div class="da-section-title">Damage Calculator</div>
@@ -949,7 +962,14 @@ export let cauterizeScalingMult: number = 1
 </svg>
 
         <div class="bdc-dummy-label">Training Dummy</div>
-        <div class="bdc-no-hp">∞ No HP</div>
+        <div class="bdc-enemy-hp-wrap" bind:this={enemyHpBarEl}
+          role="slider" aria-valuenow={enemyHpFill} aria-valuemin="0" aria-valuemax="100"
+          tabindex="0"
+          on:mousedown={onEnemyHpMouseDown}
+          title="Enemy HP: {enemyHpFill}% — drag to set">
+          <div class="bdc-enemy-hp-fill {enemyHpFill > 50 ? 'hp-high' : enemyHpFill > 25 ? 'hp-medium' : 'hp-low'}" style="width:{enemyHpFill}%"></div>
+          <span class="bdc-enemy-hp-label">{enemyHpFill}% HP</span>
+        </div>
         {#if armorPen + globalArmorPenetration > 0}
           <div class="bdc-pen-badge">🗡 {fmt(armorPen + globalArmorPenetration)} Pen</div>
         {/if}
@@ -1309,6 +1329,7 @@ export let cauterizeScalingMult: number = 1
                           defMult: dot.defMult,
                           typeDebuffMult: dot.typeDebuffMult,
                           debuffMult: dot.debuffMult,
+                          sunburnMult: dot.weaponBoostMult ?? 1,
                           finalDmg: dot.finalDmg,
                           style: spaceBelow > 180
                             ? `left:${left}px;top:${r.bottom + 4}px;`
@@ -1462,6 +1483,12 @@ export let cauterizeScalingMult: number = 1
       <div class="bdc-fr">
         <span class="bdc-fr-label">Combat Multipliers</span>
         <span class="bdc-fr-val bdc-fr-val--combat">× {fmtMult(_dotTooltip.combatMult)}</span>
+      </div>
+    {/if}
+    {#if _dotTooltip.sunburnMult !== 1}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Sunburn</span>
+        <span class="bdc-fr-val bdc-fr-val--weaponboost">× {fmtMult(_dotTooltip.sunburnMult)}</span>
       </div>
     {/if}
     {#if _hasBoosts}
@@ -1720,16 +1747,50 @@ export let cauterizeScalingMult: number = 1
   opacity: .9;
 }
 
-.bdc-no-hp {
-  font-size: .6rem;
+.bdc-enemy-hp-wrap {
+  position: relative;
+  height: 16px;
+  width: 100%;
+  max-width: 130px;
+  border-radius: 3px;
+  background: #1b1b1d;
+  border: 1px solid #303036;
+  cursor: ew-resize;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.6), inset 0 -1px 0 rgba(255,255,255,0.06);
+  z-index: 1;
+}
+.bdc-enemy-hp-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 2px 0 0 2px;
+  min-width: 0;
+  overflow: hidden;
+  transition: background 0.2s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.bdc-enemy-hp-fill.hp-high {
+  background: linear-gradient(180deg, #52c96b 0%, #43b35b 100%);
+}
+.bdc-enemy-hp-fill.hp-medium {
+  background: linear-gradient(180deg, #e2b93d 0%, #d4a72c 100%);
+}
+.bdc-enemy-hp-fill.hp-low {
+  background: linear-gradient(180deg, #e06b80 0%, #dc4c64 100%);
+}
+.bdc-enemy-hp-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .55rem;
   font-weight: 800;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgba(248,113,113,.12);
-  border: 1px solid rgba(248,113,113,.28);
-  color: #f87171;
-  letter-spacing: .1em;
-  text-shadow: 0 0 8px rgba(248,113,113,.4);
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  letter-spacing: .06em;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .bdc-pen-badge {

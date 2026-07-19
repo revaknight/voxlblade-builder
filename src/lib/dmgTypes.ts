@@ -51,8 +51,11 @@ export interface PerkOnHitDmg {
   halfActivations?: boolean
   oncePerFinisher?: boolean
   alwaysOnHit?: boolean
+  finisherOnly?: boolean
   getFinisherHitBaseDmg?: (ctx: { baseDmg: number; hitIndex: number }) => number
   canApplyBurn?: boolean
+  weaponBoostMult?: number
+  weaponBoostLabel?: string
 }
 
 export interface ComputedHit {
