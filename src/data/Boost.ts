@@ -89,7 +89,7 @@ export const BOOST_DEFS: BoostDef[] = [
   // Simple dmg boosts
   {sourceName: 'Blood Thirsty', multiplierPerPerk: BLOOD_THIRSTY_MULT_PER_STACK, type: 'dmg', condition: 'against Bleeding opponents', needsProcCoeff: true},
   {sourceName: 'Venom Spitter', multiplierPerPerk: VENOM_SPITTER_MULT_PER_STACK, type: 'dmg', condition: 'against Poisoned opponents'},
-  {sourceName: 'Frostbite', multiplierPerPerk: 0.10, type: 'dmg', condition: 'against Slowness or Frostbite targets'},
+  {sourceName: 'Frostbite', multiplierPerPerk: 0.10, type: 'dmg', condition: 'against Slowed or Frostbitten opponents'},
   {sourceName: 'Gelid Lance', multiplierPerPerk: 0.10, type: 'dmg', condition: 'against Bleeding opponents'},
   {sourceName:'Perfection',multiplierPerPerk: PERFECTION_MULT_PER_STACK, type: 'dmg', condition: 'at max potency',},
   {sourceName:'Stealth',multiplierPerPerk: STEALTH_MULT_PER_STACK, type: 'dmg', condition: "against opponents not targeting you",},

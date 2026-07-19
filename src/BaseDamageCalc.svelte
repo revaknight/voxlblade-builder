@@ -1440,7 +1440,7 @@ export let cauterizeScalingMult: number = 1
   <div class="bdc-tt-formula-fixed" style={_dotTooltip.style}>
       <div class="bdc-fr">
         {#if _dotTooltip.type === 'Caustic Slow'}
-          <span class="bdc-fr-label">Caustic Base <span class="bdc-tt-muted">((1.5 + perk×5) × (1 + slowPot/2))</span></span>
+          <span class="bdc-fr-label">Caustic Base <span class="bdc-tt-muted">((1.5 + perk×0.5) × (1 + slowPot/2))</span></span>
         {:else}
           <span class="bdc-fr-label">DoT Base <span class="bdc-tt-muted">(1.75 × (1 + {fmt(_dotTooltip.inflictionPotency)}/1.1))</span></span>
         {/if}

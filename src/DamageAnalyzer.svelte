@@ -608,7 +608,7 @@ import {
       const poisonPot = perks['Poison Potency'] ?? 0
       const gamePot = toGamePotency(poisonPot)
       const potencyMult = getDotPotencyMult(gamePot)
-      const csBase = (1.5 + (csAmt * 5)) * (1 + (_slowPotency / 2))
+      const csBase = (1.5 + (csAmt * 0.5)) * (1 + (_slowPotency / 2))
       const tickDamage = csBase * potencyMult
       const csRows = buildScalingRows(DOT_SCALINGS['Caustic Slow'])
       const csTotalPct = Math.round(csRows.reduce((a, r) => a + r.contribution, 0) * 1000) / 1000
