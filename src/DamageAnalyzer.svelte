@@ -29,6 +29,7 @@ import { calcTypedDmgBoosts } from './data/TypedDmgBoost'
 import { TRACKED_TYPES_WITH_TRUE } from './lib/constants/damage-types'
 import { resolveStanceOverlay } from './data/stanceOverlays'
 import { getAutoDebuffs, calcActualHpFillPct } from './data/perkAutoDebuffs'
+import Badge from './lib/ui/Badge.svelte'
 import { getEnemyHpDotMultiplier } from './data/enemyHpEffects'
 import { calcDotTick, getDotBase, getDotPotencyMult, toGamePotency, DOT_TYPE_LIST, DOT_SCALINGS } from './data/DoTDamage'
 import { WEAPON_PROC_COEFFS, DEFAULT_PROC_COEFF, WA_PROC_COEFFS } from './data/procCoefficients'
@@ -552,6 +553,12 @@ import {
   $: _dummyHasSlowActive = _dummyDebuffs.some(d => d.name === 'Slowness' && !disabledDebuffs.has(d.name))
   $: _dummyHasFrostbiteActive = _dummyDebuffs.some(d => d.name === 'Frostbite' && !disabledDebuffs.has(d.name))
   $: _venomEaterCanShow = (perks['Venom Eater'] ?? 0) > 0 && _dummyHasPoisonActive
+
+  // ── Mycotic Bloom: below 50% enemy HP → Poison DoT multiplier ──
+  $: _mycoticBloomAmt = perks['Mycotic Bloom'] ?? 0
+  $: _mycoticBloomBelow50Active = _mycoticBloomAmt > 0 && _enemyHpFillPct <= 50 && _dummyHasPoisonActive
+  $: _mycoticBloomDotMult = _mycoticBloomBelow50Active ? 1 + 0.25 * _mycoticBloomAmt : 1
+  let mycoticBloomDotDisabled = false
   $: _slowActive = _allActiveBuffsRaw.filter(b => b.buffName === 'Slowness' && !b.isSelfDebuff)
   $: _slowPotency = Math.max(0, ..._slowActive.map(b => b.potency ?? 0))
   $: _slowDuration = Math.max(0, ..._slowActive.map(b => b.duration ?? 0))
@@ -613,7 +620,7 @@ import {
         type, tickDamage: tick, dotPotency: dotPot, inflictionPotency: inflictionPot,
         dotBase: base, potencyMult: mult, levelMult: 1,
         baseTick: tick,
-        scalingMult: dotScalingMult(type), combatMult: roundMultiplier(_dotCombatMult * getEnemyHpDotMultiplier(perks, _enemyHpFillPct, type)),
+        scalingMult: dotScalingMult(type), combatMult: roundMultiplier(_dotCombatMult * getEnemyHpDotMultiplier(perks, _enemyHpFillPct, type) / (type === 'Poison' && mycoticBloomDotDisabled && _mycoticBloomDotMult !== 1 ? _mycoticBloomDotMult : 1)),
         scalingRows: rows, totalEffectivePct: totalPct,
       }
     })
@@ -3089,6 +3096,26 @@ $: _groupedSelfDamageSources = (() => {
       </div>
     {/if}
 
+      {#if _mycoticBloomBelow50Active}
+        <div class="da-boost-row" style="margin-top:6px">
+          <button
+            class="da-boost-chip"
+            class:da-boost-chip--off={mycoticBloomDotDisabled}
+            style="background:rgba(217,0,255,.08);border-color:rgba(217,0,255,.25)"
+            on:click={() => mycoticBloomDotDisabled = !mycoticBloomDotDisabled}
+          >
+            <span class="da-bc-name">Mycotic Bloom</span>
+            <span class="da-bc-val" style="color:#d900ff">{mycoticBloomDotDisabled ? '—' : `×${+_mycoticBloomDotMult.toFixed(4)}`}</span>
+            <span class="da-bc-cond">Poison DoT · below 50% HP</span>
+            <span class="da-bc-toggle" style={mycoticBloomDotDisabled ? '' : 'background:rgba(217,0,255,.15);color:#d900ff'}>{mycoticBloomDotDisabled ? 'OFF' : 'ON'}</span>
+          </button>
+          <span class="da-chain-op">×</span>
+          <span class="da-chain-result" style="color:#d900ff">
+            Poison DoT ×{mycoticBloomDotDisabled ? '1.0000' : +_mycoticBloomDotMult.toFixed(4)}
+          </span>
+        </div>
+      {/if}
+
       {#if _procChips.length > 0}
         <div class="da-boost-row" style="margin-top: 6px;">
           {#each _procChips as chip}
@@ -3405,7 +3432,7 @@ $: _groupedSelfDamageSources = (() => {
     <span class="da-section-title">Base Damage</span>
     <div class="da-wbd-controls">
       {#if _currentLabel}
-        <span class="da-wbd-current-badge">{_currentLabel}</span>
+        <Badge color="#fb923c">{_currentLabel}</Badge>
       {/if}
       {#if showAllWeapons}
         <button class="da-wbd-toggle da-wbd-toggle--open" on:click={() => showAllWeapons = false}>
@@ -3439,13 +3466,13 @@ $: _groupedSelfDamageSources = (() => {
         {#if isGunActive}<span class="da-wbd-dot da-wbd-dot--gun"></span>{/if}
 
         <span class="da-wbd-card-name">{row.type}</span>
-        {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
+        {#if gunLabel}<Badge color="#38bdf8">{gunLabel}</Badge>{/if}
 
         {#if showAllWeapons && isActive}
-          <span class="da-wbd-equipped-badge">✦ Equipped</span>
+          <Badge color="#fb923c" class="da-wbd-equipped-badge">✦ Equipped</Badge>
         {/if}
         {#if isGunActive}
-          <span class="da-wbd-gun-active-badge">✦ Active Gun</span>
+          <Badge color="#38bdf8" class="da-wbd-gun-active-badge">✦ Active Gun</Badge>
         {/if}
       </div>
       <div class="da-wbd-card-divider"></div>
@@ -3453,7 +3480,7 @@ $: _groupedSelfDamageSources = (() => {
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m1">
-          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m1">M1</span>
+          <Badge color="#fb923c" square size="xs">M1</Badge>
           <span class="da-wbd-lbl-text">Combo</span>
         </div>
         <div class="da-hits-row">
@@ -3492,7 +3519,7 @@ $: _groupedSelfDamageSources = (() => {
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m2">
-          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m2">M2</span>
+          <Badge color="#fbbf24" square size="xs">M2</Badge>
           <span class="da-wbd-lbl-text">Heavy
             {#if !m2Only && gunLabel}
               <span class="da-wbd-gun-lbl">(Gun)</span>
@@ -3542,7 +3569,7 @@ $: _groupedSelfDamageSources = (() => {
       {#if isActive && _showWACol}
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--wa">
-          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--wa">WA</span>
+          <Badge color="#a78bfa" square size="xs">WA</Badge>
           <span class="da-wbd-lbl-text da-wbd-lbl-text--wa">{selectedWA.name}</span>
         </div>
         <div class="da-hits-row">
@@ -3582,10 +3609,10 @@ $: _groupedSelfDamageSources = (() => {
         {#if isGunActive}<span class="da-wbd-dot da-wbd-dot--gun"></span>{/if}
 
         <span class="da-wbd-card-name">{row.type}</span>
-        {#if gunLabel}<span class="da-wbd-gun-badge">{gunLabel}</span>{/if}
+        {#if gunLabel}<Badge color="#38bdf8">{gunLabel}</Badge>{/if}
 
         {#if isGunActive}
-          <span class="da-wbd-gun-active-badge">✦ Active Gun</span>
+          <Badge color="#38bdf8" class="da-wbd-gun-active-badge">✦ Active Gun</Badge>
         {/if}
       </div>
       <div class="da-wbd-card-divider"></div>
@@ -3593,7 +3620,7 @@ $: _groupedSelfDamageSources = (() => {
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m1">
-          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m1">M1</span>
+          <Badge color="#fb923c" square size="xs">M1</Badge>
           <span class="da-wbd-lbl-text">Combo</span>
         </div>
         <div class="da-hits-row">
@@ -3640,7 +3667,7 @@ $: _groupedSelfDamageSources = (() => {
 
       <div class="da-wbd-section">
         <div class="da-wbd-row-label da-wbd-row-label--m2">
-          <span class="da-wbd-lbl-badge da-wbd-lbl-badge--m2">M2</span>
+          <Badge color="#fbbf24" square size="xs">M2</Badge>
           <span class="da-wbd-lbl-text">Heavy</span>
         </div>
         <div class="da-hits-row">
@@ -3708,7 +3735,7 @@ $: _groupedSelfDamageSources = (() => {
       {#if _showWACol && isActive}
         <div class="da-wbd-section">
           <div class="da-wbd-row-label da-wbd-row-label--wa">
-            <span class="da-wbd-lbl-badge da-wbd-lbl-badge--wa">WA</span>
+            <Badge color="#a78bfa" square size="xs">WA</Badge>
             <span class="da-wbd-lbl-text da-wbd-lbl-text--wa">{selectedWA.name}</span>
           </div>
           <div class="da-hits-row">
@@ -3830,10 +3857,10 @@ $: _groupedSelfDamageSources = (() => {
                 {/each}
               {/if}
               {#if (_waOnlyBonuses.air ?? 0) > 0}
-                <span class="da-ww-badge" title="+{_waOnlyBonuses.air.toFixed(2)} Air from WA-specific bonuses while Tailwind is active">
+                <Badge color="#AAFFDB" title="+{_waOnlyBonuses.air.toFixed(2)} Air from WA-specific bonuses while Tailwind is active">
                   <span class="da-ww-air">+{_waOnlyBonuses.air.toFixed(2)} Air</span>
                   <span class="da-ww-label">WA+</span>
-                </span>
+                </Badge>
               {/if}
               {#if selectedWA.scaling && selectedWA.scaling !== 'Same as weapon'}
                 <span class="da-range-scl">{selectedWA.scaling === 'None' ? 'No Scaling' : `Scaling: ${selectedWA.scaling}`}</span>
@@ -3850,7 +3877,7 @@ $: _groupedSelfDamageSources = (() => {
                       <span class="da-hit-num" style="--tc:#c084fc">{atk.baseDmg}</span>
                       <span class="da-hit-type">{atk.label}</span>
                     </div>
-                    {#if atk.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb" style="align-self:center">GB</span>{/if}
+                    {#if atk.guardbreak}<Badge color="#f87171" square size="xs" class="da-badge-self-center">GB</Badge>{/if}
                   {/each}
                 {:else}
                   <div class="da-hit-chunk" style="--tc:#c084fc">
@@ -3874,7 +3901,7 @@ $: _groupedSelfDamageSources = (() => {
                 <div class="da-hit-card da-hit-card--heal">
                   <div class="da-hit-chunk" style="--tc:#4ade80">
                     <span class="da-hit-num" style="--tc:#4ade80">{fmtNum(h.n)}</span>
-                    <span class="da-heal-badge">✦ Heal</span>
+                    <Badge color="#4ade80">✦ Heal</Badge>
                   </div>
                   {#if h.count > 1}<span class="da-hit-repeat">×{h.count}</span>{/if}
                 </div>
@@ -3970,12 +3997,12 @@ $: _groupedSelfDamageSources = (() => {
             </div>
           {/if}
           <div class="da-wbd-row-label da-wbd-row-label--rune">
-            <span class="da-wbd-lbl-badge da-wbd-lbl-badge--rune">Rune</span>
+            <Badge color="#38bdf8" square size="xs">Rune</Badge>
             <span class="da-wbd-lbl-text">{_activeRuneDmgDef.runeName}</span>
             {#if !_runeIsHeal && Object.keys(_draconicBonuses).length > 0}
               {@const totalBonus = Object.values(_draconicBonuses).reduce((a, b) => a + b, 0)}
               {@const bonusTypes = Object.keys(_draconicBonuses).map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' + ')}
-              <span class="da-wbd-scaling-badge" style="background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.3);color:#c084fc">{+totalBonus.toFixed(4)} {bonusTypes}</span>
+              <Badge color="#c084fc">{+totalBonus.toFixed(4)} {bonusTypes}</Badge>
             {/if}
           </div>
           <div class="da-hits-row">
@@ -4002,7 +4029,7 @@ $: _groupedSelfDamageSources = (() => {
       <div class="da-wbd-card-head">
         <span class="da-wbd-dot da-wbd-dot--gun"></span>
         <span class="da-wbd-card-name">{_draconicBloodEntry.displayName}</span>
-        <span class="da-wbd-gun-badge" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.25);color:#38bdf8">Rune</span>
+        <Badge color="#38bdf8">Rune</Badge>
       </div>
       <div class="da-wbd-card-divider"></div>
       <div class="da-wbd-section">
@@ -4015,7 +4042,7 @@ $: _groupedSelfDamageSources = (() => {
                 <span class="da-hit-type">{t.label}</span>
               </div>
             {/each}
-            {#if _draconicBloodEntry.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb" style="align-self:center">GB</span>{/if}
+            {#if _draconicBloodEntry.guardbreak}<Badge color="#f87171" square size="xs" class="da-badge-self-center">GB</Badge>{/if}
           </div>
         </div>
       </div>
@@ -4060,13 +4087,13 @@ $: _groupedSelfDamageSources = (() => {
         </div>
         <!-- Badges -->
         <div class="da-pbd-badges">
-          {#if entry.isFinisher}<span class="da-pbd-badge da-pbd-badge--finisher">Finisher</span>{/if}
-          {#if entry.isM1}<span class="da-pbd-badge da-pbd-badge--m1">M1</span>{/if}
-          {#if entry.isM2}<span class="da-pbd-badge da-pbd-badge--m2">M2</span>{/if}
-          {#if entry.isWA}<span class="da-pbd-badge da-pbd-badge--wa">WA</span>{/if}
-          {#if entry.isRune}<span class="da-pbd-badge da-pbd-badge--rune">Rune</span>{/if}
-          {#if entry.guardbreak}<span class="da-pbd-badge da-pbd-badge--gb">Guardbreak</span>{/if}
-          {#if entry.dmgTypeMode === 'weapon'}<span class="da-pbd-badge da-pbd-badge--weapon">Weapon Type</span>{/if}
+          {#if entry.isFinisher}<Badge color="#facc15" square size="xs">Finisher</Badge>{/if}
+          {#if entry.isM1}<Badge color="#fb923c" square size="xs">M1</Badge>{/if}
+          {#if entry.isM2}<Badge color="#fbbf24" square size="xs">M2</Badge>{/if}
+          {#if entry.isWA}<Badge color="#a78bfa" square size="xs">WA</Badge>{/if}
+          {#if entry.isRune}<Badge color="#38bdf8" square size="xs">Rune</Badge>{/if}
+          {#if entry.guardbreak}<Badge color="#f87171" square size="xs">Guardbreak</Badge>{/if}
+          {#if entry.dmgTypeMode === 'weapon'}<Badge color="#34d399" square size="xs">Weapon Type</Badge>{/if}
         </div>
         <!-- Condition -->
         {#if entry.condition}
@@ -4078,7 +4105,7 @@ $: _groupedSelfDamageSources = (() => {
             <span class="da-pbd-ctx-label">M2 ({_m2FinisherHits} hits)</span>
           {/if}
           {#if !entry.isActive}
-            <span class="da-pbd-inactive-badge">Inactive</span>
+            <Badge variant="muted" size="xs">Inactive</Badge>
           {/if}
           <div class="da-hits-row">
             <div class="da-hit-card" class:da-hit-card--finisher={entry.isFinisher}>
@@ -4186,7 +4213,7 @@ $: _groupedSelfDamageSources = (() => {
           <span class="da-pbd-amt">+{fmtNum(src.amount)}</span>
         </div>
         <div class="da-pbd-badges">
-          <span class="da-pbd-badge" class:da-pbd-badge--wa={src.group === 'WA'} class:da-pbd-badge--rune={src.group === 'Rune'}>{src.group}</span>
+          <Badge square size="xs" color={src.group === 'WA' ? '#a78bfa' : src.group === 'Rune' ? '#38bdf8' : undefined}>{src.group}</Badge>
         </div>
         <div class="da-pbd-condition">
           From {src.label}{enemiesHit > 1 && !src.def.noMultiTargetFalloff ? ` · split across ${enemiesHit} enemies` : ''}
@@ -4298,7 +4325,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if waScalingBreakdown && !waScalingIsHealOnly}
     <div class="ds-wa-subsection">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge">WA</span>
+        <Badge color="#4ade80">WA</Badge>
         <span class="ds-wa-name">{selectedWA.name}</span>
       </div>
       <div class="ds-table">
@@ -4376,7 +4403,7 @@ $: _groupedSelfDamageSources = (() => {
     {@const bcTotalPct = Math.round((Math.round(0.4 * bcHolyBoost * 1000) / 1000 + Math.round(0.4 * bcMagicBoost * 1000) / 1000) * 100) / 100}
     <div class="ds-wa-subsection" style="border-color:rgba(249,115,22,.3);margin-top:8px">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge">WA</span>
+        <Badge color="#4ade80">WA</Badge>
         <span class="ds-wa-name">{selectedWA.name} (Bomber Charge)</span>
       </div>
       <div class="ds-table">
@@ -4681,10 +4708,10 @@ $: _groupedSelfDamageSources = (() => {
           <span class="ds-result-eq">1 + {dt.totalEffectivePct}% =</span>
           <span class="ds-result-val">×{+dt.scalingMult.toFixed(4)}</span>
         </div>
-      {/if}
-      {/each}
-    {/if}
-  </div>
+          {/if}
+             {/each}
+          {/if}
+        </div>
 {/if}
 
 {#if runeScalingBreakdown || _draconicScalingBreakdown || _mountRuneScalingBreakdown}
@@ -4695,7 +4722,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if runeScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:0">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge" style="background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.35);color:#38bdf8">Rune</span>
+        <Badge color="#38bdf8">Rune</Badge>
         <span class="ds-wa-name" style="color:#38bdf8">{_activeRuneDmgDef?.runeName}</span>
       </div>
       <div class="ds-table">
@@ -4771,7 +4798,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if _draconicScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:{runeScalingBreakdown ? '12px' : '0'}">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge" style="background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.35);color:#38bdf8">Rune</span>
+        <Badge color="#38bdf8">Rune</Badge>
         <span class="ds-wa-name" style="color:#38bdf8">{_draconicBloodEntry?.displayName}</span>
       </div>
       <div class="ds-table">
@@ -4811,7 +4838,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if _mountRuneScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:{(runeScalingBreakdown || _draconicScalingBreakdown) ? '12px' : '0'}">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge" style="background:rgba(251,146,60,.16);border-color:rgba(251,146,60,.35);color:#fb923c">Mount</span>
+        <Badge color="#fb923c">Mount</Badge>
         <span class="ds-wa-name" style="color:#fb923c">{_activeMountRuneDef?.mountLabel} (M1 · WA)</span>
       </div>
       <div class="ds-table">
@@ -4858,7 +4885,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if _waHealScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:12px">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge" style="background:rgba(74,222,128,.16);border-color:rgba(74,222,128,.35);color:#4ade80">WA</span>
+        <Badge color="#4ade80">WA</Badge>
         <span class="ds-wa-name" style="color:#4ade80">{selectedWA.name}</span>
       </div>
       <div class="ds-table">
@@ -4894,7 +4921,7 @@ $: _groupedSelfDamageSources = (() => {
   {#if _perkHealScalingBreakdown}
     <div class="ds-wa-subsection" style="margin-top:{_waHealScalingBreakdown ? '12px' : '0'}">
       <div class="ds-wa-header">
-        <span class="ds-sub-badge" style="background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.35);color:#38bdf8">Perk</span>
+        <Badge color="#38bdf8">Perk</Badge>
         <span class="ds-wa-name" style="color:#38bdf8">{_perkHealScalingBreakdown.label}</span>
       </div>
       <div class="ds-table">
@@ -5199,15 +5226,6 @@ $: _groupedSelfDamageSources = (() => {
   gap: 8px;
   position: relative;
 }
-.da-wbd-current-badge {
-  font-size: .65rem;
-  font-weight: 700;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(251,146,60,.14);
-  border: 1px solid rgba(251,146,60,.3);
-  color: #fb923c;
-}
 .da-wbd-toggle {
   display: inline-flex;
   align-items: center;
@@ -5266,17 +5284,6 @@ $: _groupedSelfDamageSources = (() => {
 .da-wbd-dot--gun {
   background: linear-gradient(135deg, #fb923c, #38bdf8);
   box-shadow: 0 0 5px rgba(56,189,248,.5);
-}
-.da-wbd-gun-badge {
-  font-size: .6rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(56,189,248,.1);
-  border: 1px solid rgba(56,189,248,.25);
-  color: #38bdf8;
-  font-family: var(--font-body, 'Trebuchet MS', sans-serif);
-  flex-shrink: 0;
 }
 .da-wbd-m2-src {
   font-size: .58rem;
@@ -5386,17 +5393,6 @@ $: _groupedSelfDamageSources = (() => {
   opacity: .3;
   margin: 0 1px;
   user-select: none;
-}
-
-.da-wbd-scaling-badge {
-  font-size: .62rem;
-  font-weight: 700;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: rgba(52,211,153,.12);
-  border: 1px solid rgba(52,211,153,.3);
-  color: #34d399;
-  white-space: nowrap;
 }
 
 .da-hit-num {
@@ -5734,35 +5730,6 @@ $: _groupedSelfDamageSources = (() => {
   color: #38bdf8;
   opacity: 0.7;
 }
-.da-wbd-lbl-badge {
-  font-size: .58rem;
-  font-weight: 900;
-  letter-spacing: .1em;
-  padding: 2px 7px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-.da-wbd-lbl-badge--m1 {
-  background: rgba(251,146,60,.18);
-  border: 1px solid rgba(251,146,60,.35);
-  color: #fb923c;
-}
-.da-wbd-lbl-badge--m2 {
-  background: rgba(251,191,36,.14);
-  border: 1px solid rgba(251,191,36,.3);
-  color: #fbbf24;
-}
-.da-wbd-lbl-badge--wa {
-  background: rgba(167,139,250,.16);
-  border: 1px solid rgba(167,139,250,.35);
-  color: var(--accent3);
-}
-.da-wbd-lbl-badge--rune {
-  background: rgba(56,189,248,.16);
-  border: 1px solid rgba(56,189,248,.35);
-  color: #38bdf8;
-}
 .da-wbd-lbl-text {
   font-size: .6rem;
   font-weight: 600;
@@ -5825,12 +5792,6 @@ $: _groupedSelfDamageSources = (() => {
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.07);
 }
-.da-ww-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: .6rem; padding: 1px 6px;
-  background: rgba(170,255,219,.1); border: 1px solid rgba(170,255,219,.25);
-  border-radius: 999px;
-}
 .da-ww-air { color: #AAFFDB; font-weight: 700; }
 .da-ww-label { color: rgba(170,255,219,.6); font-size: .52rem; }
 .da-heal-hits-row {
@@ -5841,16 +5802,6 @@ $: _groupedSelfDamageSources = (() => {
   margin-top: 4px;
   padding-top: 4px;
   border-top: 1px dashed rgba(74,222,128,.15);
-}
-.da-heal-badge {
-  font-size: .58rem;
-  font-weight: 800;
-  color: #4ade80;
-  padding: 1px 6px;
-  background: rgba(74,222,128,.1);
-  border: 1px solid rgba(74,222,128,.2);
-  border-radius: 999px;
-  flex-shrink: 0;
 }
 .da-hit-card--heal {
   border-color: rgba(74,222,128,.2);
@@ -5939,35 +5890,13 @@ $: _groupedSelfDamageSources = (() => {
   font-family: 'Courier New', monospace;
   letter-spacing: .02em;
 }
-.da-wbd-equipped-badge {
-  font-size: .55rem;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(251,146,60,.18);
-  border: 1px solid rgba(251,146,60,.4);
-  color: #fb923c;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  animation: da-pulse 2s ease-in-out infinite;
-}
+:global(.da-wbd-equipped-badge) { animation: da-pulse 2s ease-in-out infinite; }
 
 @keyframes da-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,.4); }
   50%       { box-shadow: 0 0 0 4px rgba(251,146,60,.0); }
 }
-.da-wbd-gun-active-badge {
-  font-size: .55rem;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(56,189,248,.18);
-  border: 1px solid rgba(56,189,248,.4);
-  color: #38bdf8;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  animation: da-pulse-gun 2s ease-in-out infinite;
-}
+:global(.da-wbd-gun-active-badge) { animation: da-pulse-gun 2s ease-in-out infinite; }
 
 @keyframes da-pulse-gun {
   0%, 100% { box-shadow: 0 0 0 0 rgba(56,189,248,.4); }
@@ -6134,22 +6063,7 @@ $: _groupedSelfDamageSources = (() => {
   flex-wrap: wrap;
   gap: 3px;
 }
-.da-pbd-badge {
-  font-size: .52rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  padding: 1px 5px;
-  border-radius: 3px;
-  border: 1px solid;
-}
-.da-pbd-badge--finisher { color: #facc15; background: rgba(250,204,21,.1); border-color: rgba(250,204,21,.3); }
-.da-pbd-badge--m1      { color: #fb923c; background: rgba(251,146,60,.1); border-color: rgba(251,146,60,.28); }
-.da-pbd-badge--m2      { color: #fbbf24; background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.28); }
-.da-pbd-badge--wa      { color: #a78bfa; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.28); }
-.da-pbd-badge--rune    { color: #38bdf8; background: rgba(56,189,248,.1); border-color: rgba(56,189,248,.28); }
-.da-pbd-badge--gb      { color: #f87171; background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.25); }
-.da-pbd-badge--weapon  { color: #34d399; background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.22); }
+.da-badge-self-center { align-self: center; }
 
 .da-pbd-condition {
   font-size: .62rem;
@@ -6542,11 +6456,6 @@ $: _groupedSelfDamageSources = (() => {
 .da-pbd-secondary-val { font-family:'Courier New',monospace; font-size:.85rem; font-weight:800; color:var(--sc); }
 .da-pbd-secondary-cond { font-size:.58rem; color:var(--ink-muted,#8a8d85); opacity:.55; font-style:italic; flex-basis:100%; }
 .da-pbd-dmg-row--inactive { opacity: .35; filter: grayscale(.5); }
-.da-pbd-inactive-badge {
-  font-size: .55rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--ink-muted, #8a8d85); padding: 1px 6px; border-radius: 4px;
-  background: rgba(255,255,255,.05); border: 1px dashed rgba(255,255,255,.15);
-}
 .da-pbd-secondary--inactive { opacity: .35; filter: grayscale(.5); }
 .da-pbd-secondary-inactive {
   font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;

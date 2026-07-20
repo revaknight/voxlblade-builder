@@ -4,6 +4,7 @@
   import { SCALING_TO_BOOST } from '../types'
   import { OFFENSIVE_BOOSTS } from '../../data/statboost'
   import Modal from '../Modal.svelte'
+  import Badge from '../ui/Badge.svelte'
   import ModalSearchHeader from '../../ModalSearchHeader.svelte'
   import DidYouMean from '../../DidYouMean.svelte'
   import Highlight from '../../Highlight.svelte'
@@ -161,16 +162,16 @@
             {#if isInfusion}<span class="inf-label">×0.5</span>{/if}
           </span>
           {#if statFilterSortMode === 'most-effective' && weaponResult?.scalings}
-            <span class="modal-ef-badge">+{computeItemEffectiveBoost(item)}%</span>
+            <Badge color="#a78bfa" size="xs">+{computeItemEffectiveBoost(item)}%</Badge>
           {:else if statFilterSortMode === 'brawny' && weaponResult?.scalings}
-            <span class="modal-ef-badge modal-ef-badge--brawny">+{computeItemBrawnyBoost(item)}%</span>
+            <Badge color="#fb923c" size="xs">+{computeItemBrawnyBoost(item)}%</Badge>
           {/if}
         </div>
         {#if getItemDesc(item)}
           <span class="modal-item-desc">{getItemDesc(item)}</span>
         {/if}
         {#if isRune}
-          <span class="modal-cd-badge">CD: {item.cooldown}s</span>
+          <Badge color="#34d399" size="xs">CD: {item.cooldown}s</Badge>
         {/if}
         {#each [getItemPerk(item)] as perk}
           {#if perk}
@@ -196,19 +197,4 @@
 </Modal>
 
 <style>
-  .modal-ef-badge {
-    font-size: .62rem;
-    font-weight: 800;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: rgba(167,139,250,.15);
-    border: 1px solid rgba(167,139,250,.3);
-    color: #a78bfa;
-    flex-shrink: 0;
-  }
-  .modal-ef-badge--brawny {
-    background: rgba(251,146,60,.15);
-    border-color: rgba(251,146,60,.3);
-    color: #fb923c;
-  }
 </style>

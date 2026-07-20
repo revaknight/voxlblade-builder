@@ -1,0 +1,240 @@
+{
+  "batch": 2,
+  "files": [
+    {
+      "path": "src/data/Boost.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 357,
+      "description": "Damage boost definitions and calculations. Defines the BOOST_DEFS array (30+ boost entries) and helper functions for specific boost mechanics like Penance (HP-threshold damage scaling), Frenzy, and Minion Absorption. Each BoostDef specifies source name, multiplier, type (dmg/heal), condition, optional attack-type restrictions, proc scaling, and toggle support.",
+      "keyExports": [
+        "calcMinionAbsorptionPotency",
+        "calcFrenzyPct",
+        "PENANCE_HP_THRESHOLD",
+        "PENANCE_MAX_BOOST",
+        "BOOST_DEFS",
+        "BOOST_DEF_MAP"
+      ],
+      "keyInterfaces": [
+        "BoostContext",
+        "BoostDef"
+      ],
+      "purpose": "Central registry of all conditional damage/heal boosts in the game, used by the build engine to compute total damage multipliers"
+    },
+    {
+      "path": "src/data/BuffData.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 1848,
+      "description": "Massive buff/debuff data module. Defines BUFF_DEFS (100+ buff/debuff definitions with colors, descriptions, effects), BASIC_DEBUFF_POOL, and the entire buff pipeline: weapon art buffs, True Balance conversions, perk-specific modifiers, generic debuff modifiers, Trickster reflection, Tailwind→Whirlwind conversion, Toxin Transfer duration, Cauterize conversion, burn application counting, and the assembleActiveBuffs orchestrator. Also provides getBuffDescription, calcBuffEffect, calcPotencyPercent, and formatPerkDescription utilities.",
+      "keyExports": [
+        "BUFF_DEFS",
+        "BASIC_DEBUFF_POOL",
+        "getWeaponArtBuffs",
+        "getTrueBalanceBuffs",
+        "applyBuffPerkModifiers",
+        "applyToxinTransferDuration",
+        "convertTailwindToWhirlwind",
+        "getBuffDescription",
+        "getPerkBuffs",
+        "getActiveBuildBuffs",
+        "applyCauterizeConversion",
+        "getBurnApplicationCount",
+        "assembleActiveBuffs",
+        "calcBuffEffect",
+        "formatPerkDescription"
+      ],
+      "keyInterfaces": [
+        "BuffDefinition",
+        "GrantedBuff"
+      ],
+      "purpose": "Core data and logic for all buffs/debuffs in the game. Defines what buffs exist, how they are modified by perks, and orchestrates the full active buff assembly pipeline"
+    },
+    {
+      "path": "src/data/TypedDmgBoost.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 138,
+      "description": "Typed damage boost calculations. Defines TYPED_DMG_BOOST_DEFS for element-specific multipliers (Glyph Conduit→magic, Rage→physical+conditional, Photosynthesis→holy+earth, Hex Shield→all types). calcTypedDmgBoosts iterates defs, resolves potency from either buff state or perk amount, and returns per-type damage multipliers and heal multipliers.",
+      "keyExports": [
+        "calcTypedDmgBoosts"
+      ],
+      "keyInterfaces": [
+        "TypedDmgBoostCtx",
+        "TypedDmgBoostResult",
+        "TypedDmgBoostEntry"
+      ],
+      "purpose": "Computes element-specific damage and heal multipliers that stack multiplicatively per damage type"
+    },
+    {
+      "path": "src/data/perkAutoDebuffs.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 186,
+      "description": "Automatic debuff generation based on player perks and conditions. getAutoDebuffs evaluates Exhaust→Burn, Penance→Bleed (HP threshold), Melting Shred→Anti Heal, Fungal Prototype→Poison, Venom Spitter→Poison, Bellowing Ember→Burn (HP threshold), Frostbite→Slowness, Gelid Lance→Bleed (requires Slowness), Weakening→Weakness, Sunburn→Burn, and enemy HP-based debuffs. calcActualHpFillPct adjusts HP fill percentage when negative protection reduces effective max HP.",
+      "keyExports": [
+        "calcActualHpFillPct",
+        "getAutoDebuffs"
+      ],
+      "keyInterfaces": [
+        "AutoDebuffInput"
+      ],
+      "purpose": "Determines which debuffs are automatically applied to enemies based on the player's perk configuration and current state"
+    },
+    {
+      "path": "src/lib/constants/buffs.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 147,
+      "description": "Pure constants file exporting 120+ numeric constants for buff/debuff potency, duration, scaling coefficients, and modifier values. Covers rune-granted buffs, weapon art buffs, True Balance conversions, perk buff factories, buff potency modifiers, generic debuff modifiers, and specific item/perk constants like Bounce duration, Gladiatorial Rage, Glyph Conduit, Endless Despair, and Stored Corruption.",
+      "keyExports": [
+        "BUFF_EFFECT_PER_TENTH",
+        "WHIRLWIND_EFFECT_PER_TENTH",
+        "GLYPH_CONDUIT_EFFECT_PER_TENTH",
+        "DESPAIR_EFFECT_PER_TENTH",
+        "LUMINESCENT_PCT_PER_POTENCY",
+        "RAGE_RUNE_BUFF_POTENCY",
+        "BOUNCE_DURATION_BASE",
+        "MOD_GLADIATORIAL_POTENCY",
+        "ENDLESS_DESPAIR_POTENCY_PER_STACK",
+        "STORED_CORRUPTION_DURATION_PER_STACK"
+      ],
+      "purpose": "Single source of truth for all buff/debuff numeric tuning constants, consumed by BuffData.ts and other modules"
+    },
+    {
+      "path": "src/lib/crit.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 341,
+      "description": "Critical hit calculation system. Defines natural crit sources (Dexterity, Seismic Momentum, Flowing Crits/Air, Spell Slinger/Magic, Sharp Crits/Physical, Perfection), extra crit sources (Carrying Winds, Caci King Spirit), and crit damage sources (Thief Training, Venom Eater, Vital Strikes, Spark, Critical Master, Splinter). calcCrit computes natural + extra crit chances (combined via 1-∏(1-p)), applies Primal divisor, proc coefficient scaling (positiveOnly for natural, ignore for Carrying Winds), and crit damage multiplier. Returns detailed CritResult with breakdowns.",
+      "keyExports": [
+        "calcCrit"
+      ],
+      "keyInterfaces": [
+        "CritResult"
+      ],
+      "purpose": "Computes critical hit chance, effective crit chance with proc coefficient, crit damage multiplier, and detailed breakdowns for display"
+    },
+    {
+      "path": "src/lib/engine/build.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 530,
+      "description": "Main build calculation engine. calcBuild orchestrates the full pipeline: accumulateEquipment (race, guild, armor×3 with enchantments, ring, rune, weapon [monk vs standard], infusions) → finalizePerks (apply Perk Effectiveness/Cursed, Buckler→Parry, grantor→potency tags) → deriveResults (round stats, calcCDR, applyStatBoostPerks, Emotional attack speed, Gladiatorial Rage armor pen, calcCrit, calcWardingDebuffMultiplier, computeBuffs, maxBuffPotency for rage/bounce/quickdraw/tailwind/burn, self-debuff count, HP fill adjustment, calcBoosts). Exports BuildResult with stats, perks, CDR, boosts, and crit.",
+      "keyExports": [
+        "calcBuild"
+      ],
+      "keyInterfaces": [
+        "CDRStep",
+        "CDRResult",
+        "BuildResult"
+      ],
+      "purpose": "Top-level orchestrator that takes a BuildState and produces the complete build calculation result including stats, perks, cooldown reduction, damage boosts, and crit analysis"
+    }
+  ],
+  "edges": [
+    {
+      "source": "src/data/Boost.ts",
+      "target": "src/lib/types.ts",
+      "relationship": "imports",
+      "description": "Imports BoostAttackType and ProcScalingType"
+    },
+    {
+      "source": "src/data/BuffData.ts",
+      "target": "src/lib/constants/buffs.ts",
+      "relationship": "imports",
+      "description": "Imports 80+ buff/debuff numeric constants"
+    },
+    {
+      "source": "src/data/TypedDmgBoost.ts",
+      "target": "src/data/BuffData.ts",
+      "relationship": "imports",
+      "description": "Imports GrantedBuff type"
+    },
+    {
+      "source": "src/data/perkAutoDebuffs.ts",
+      "target": "src/data/Boost.ts",
+      "relationship": "imports",
+      "description": "Imports PENANCE_HP_THRESHOLD, PENANCE_BLEED_POTENCY, PENANCE_BLEED_DURATION"
+    },
+    {
+      "source": "src/data/perkAutoDebuffs.ts",
+      "target": "src/data/BuffData.ts",
+      "relationship": "imports",
+      "description": "Imports GrantedBuff type"
+    },
+    {
+      "source": "src/lib/constants/buffs.ts",
+      "target": "src/lib/types.ts",
+      "relationship": "none",
+      "description": "No imports (pure constants)"
+    },
+    {
+      "source": "src/lib/crit.ts",
+      "target": "src/lib/types.ts",
+      "relationship": "imports",
+      "description": "Imports ProcCoefficient and StatMap types"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/lib/types.ts",
+      "relationship": "imports",
+      "description": "Imports StatKey, StatMap, ArmorPart, EnchantSlot, BuildState, STAT_KEYS, applyUpgrade, BoostEntry, BoostResult"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/lib/crit.ts",
+      "relationship": "imports",
+      "description": "Imports calcCrit and CritResult"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/data/BuffData.ts",
+      "relationship": "imports",
+      "description": "Imports getActiveBuildBuffs, getPerkBuffs, getWeaponArtBuffs, applyBuffPerkModifiers, convertTailwindToWhirlwind, assembleActiveBuffs, BUFF_DEFS"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/data/Boost.ts",
+      "relationship": "uses",
+      "description": "Uses BOOST_DEFS and BoostContext for damage boost calculations"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/data/TypedDmgBoost.ts",
+      "relationship": "uses",
+      "description": "Calls calcTypedDmgBoosts for element-specific multipliers (via deriveResults indirectly)"
+    },
+    {
+      "source": "src/data/BuffData.ts",
+      "target": "src/data/TypedDmgBoost.ts",
+      "relationship": "data-flow",
+      "description": "BuffData provides buff state that TypedDmgBoost consumes"
+    },
+    {
+      "source": "src/data/perkAutoDebuffs.ts",
+      "target": "src/data/BuffData.ts",
+      "relationship": "data-flow",
+      "description": "Auto-debuffs produce GrantedBuff instances following BuffData's interface"
+    },
+    {
+      "source": "src/lib/crit.ts",
+      "target": "src/data/Boost.ts",
+      "relationship": "data-flow",
+      "description": "Crit results feed into Boost calculations (naturalCritChance used in BoostContext)"
+    },
+    {
+      "source": "src/lib/engine/build.ts",
+      "target": "src/lib/constants/buffs.ts",
+      "relationship": "transitive",
+      "description": "Transitively depends on buff constants through BuffData.ts"
+    },
+    {
+      "source": "src/data/BuffData.ts",
+      "target": "src/data/perkAutoDebuffs.ts",
+      "relationship": "transitive",
+      "description": "Both contribute to the active buff assembly in the build pipeline"
+    }
+  ],
+  "summary": "Batch 2 covers the damage calculation core: boost definitions (Boost.ts), buff/debuff data and assembly pipeline (BuffData.ts), typed damage multipliers (TypedDmgBoost.ts), automatic debuff generation (perkAutoDebuffs.ts), buff constants (crit.ts), critical hit math (crit.ts), and the main build engine (build.ts). These 7 files form the computational heart of the damage calculator, processing equipment stats through perk finalization, crit computation, buff assembly, and boost aggregation."
+}

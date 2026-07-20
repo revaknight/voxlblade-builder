@@ -1,0 +1,346 @@
+{
+  "batch": 3,
+  "status": "complete",
+  "nodes": [
+    {
+      "id": "file::src/data/HealBoost.ts",
+      "kind": "file",
+      "label": "HealBoost.ts",
+      "filePath": "src/data/HealBoost.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 215,
+      "metadata": {
+        "functions": 2,
+        "exports": 1,
+        "classes": 0,
+        "imports": 1,
+        "description": "Healing multiplier calculation system. Defines HealBoostContext and HealBoostDef for composable healing sources (perks, runes, passives). calculateHealBoost aggregates multipliers from level, emotional state, Vampire, Frenzy, Dragon Infusion, and Anti Heal debuff. Returns per-source breakdown and final multiplier."
+      }
+    },
+    {
+      "id": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "function",
+      "label": "calculateHealBoost",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [132, 207],
+      "params": ["ctx", "appliesToType"],
+      "metadata": {
+        "description": "Main entry point for healing boost calculation. Iterates HEAL_SCALING_DEFS, evaluates active conditions and calcFn callbacks, aggregates multipliers multiplicatively, then applies Anti Heal reduction from self-debuffs. Returns HealBoostResult with per-source entries and finalMultiplier."
+      }
+    },
+    {
+      "id": "function::src/data/HealBoost.ts::getHealScalingMultiplier",
+      "kind": "function",
+      "label": "getHealScalingMultiplier",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [209, 215],
+      "params": ["ctx", "appliesToType"],
+      "metadata": {
+        "description": "Convenience wrapper that returns only the finalMultiplier from calculateHealBoost."
+      }
+    },
+    {
+      "id": "type::src/data/HealBoost.ts::HealBoostContext",
+      "kind": "type",
+      "label": "HealBoostContext",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Context object for healing calculations: perks map, emotional state, darkness flag, level, draconic color, slider value, guild, rune infusion type, rage potency, and active buffs array."
+      }
+    },
+    {
+      "id": "type::src/data/HealBoost.ts::HealSource",
+      "kind": "type",
+      "label": "HealSource",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Union type for healing sources: 'perk' | 'rune' | 'weaponArt' | 'passive'."
+      }
+    },
+    {
+      "id": "type::src/data/HealBoost.ts::HealBoostResult",
+      "kind": "type",
+      "label": "HealBoostResult",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Result of heal boost calculation: entries array with per-source rawMultiplier/condition/sourceType, and finalMultiplier."
+      }
+    },
+    {
+      "id": "data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "kind": "data",
+      "label": "HEAL_SCALING_DEFS",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [40, 118],
+      "metadata": {
+        "description": "Array of HealBoostDef objects defining all healing multiplier sources: Level Healing, Emotional, Heal Boost, Oceans Rage, Vampire (Sunlight), Frenzy (Self), Dragon Infusion."
+      }
+    },
+    {
+      "id": "file::src/data/Runebasedmg.ts",
+      "kind": "file",
+      "label": "Runebasedmg.ts",
+      "filePath": "src/data/Runebasedmg.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 200,
+      "metadata": {
+        "functions": 1,
+        "exports": 1,
+        "classes": 0,
+        "imports": 3,
+        "description": "Rune damage definition system. Defines RUNE_DMG_DEFS array with 11 rune entries (Ancient Cleric, Beenade, Boostshroom, Thunderous Charge, Sporeling Toss, Foot Dive, Caci, Cacitrops, Hex Web, Brainblast, Fireball, Rocky Tail). Each entry has base damage, damage type distribution, stat scalings, hit counts, optional slider/shield definitions, and notes. Includes calculateRuneHealScaling helper that bridges to HealBoost for heal-only runes."
+      }
+    },
+    {
+      "id": "function::src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "kind": "function",
+      "label": "calculateRuneHealScaling",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [44, 66],
+      "params": ["runeDef", "ctx"],
+      "metadata": {
+        "description": "Helper that constructs a HealBoostContext from a rune context and calls calculateHealBoost with 'rune' type. Returns 1.0 for non-heal-only runes."
+      }
+    },
+    {
+      "id": "type::src/data/Runebasedmg.ts::RuneDmgDef",
+      "kind": "type",
+      "label": "RuneDmgDef",
+      "filePath": "src/data/Runebasedmg.ts",
+      "metadata": {
+        "description": "Interface for rune damage definitions: runeName, condition, getBaseDamage function, dmgTypes distribution, scalings map, optional hits/getHits, maxPotency, slider, shield, isHealOnly flag, notes."
+      }
+    },
+    {
+      "id": "type::src/data/Runebasedmg.ts::RuneDmgCtx",
+      "kind": "type",
+      "label": "RuneDmgCtx",
+      "filePath": "src/data/Runebasedmg.ts",
+      "metadata": {
+        "description": "Context for rune damage calculations: potency, sliderVal, stats, perks, selfDamage."
+      }
+    },
+    {
+      "id": "data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "kind": "data",
+      "label": "RUNE_DMG_DEFS",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [68, 200],
+      "metadata": {
+        "description": "Array of 11 rune damage definitions covering all rune types in Voxel Blade. Includes Ancient Cleric (heal), Beenade (multi-hit magic/holy), Boostshroom (hex), Thunderous Charge (air/magic), Sporeling Toss (hex/physical with summon scaling), Foot Dive (physical/dex), Caci/Cacitrops (physical), Hex Web (hex), Brainblast (fire/earth/magic), Fireball (fire), Rocky Tail (earth/physical with protection scaling)."
+      }
+    },
+    {
+      "id": "file::src/data/SummonData.ts",
+      "kind": "file",
+      "label": "SummonData.ts",
+      "filePath": "src/data/SummonData.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 84,
+      "metadata": {
+        "functions": 2,
+        "exports": 4,
+        "classes": 0,
+        "imports": 1,
+        "description": "Summon data and utility functions. Provides calcSummonStat for scaling summon stats by boost% and level, calcMaxSummonCount for the summon cap (15 + Swarm perk), SUMMON_MAP for mage/blessedling definitions, and WA_SUMMON_MAP mapping weapon art names to summon names."
+      }
+    },
+    {
+      "id": "function::src/data/SummonData.ts::calcSummonStat",
+      "kind": "function",
+      "label": "calcSummonStat",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [3, 5],
+      "params": ["base", "summonBoostPct", "level"],
+      "metadata": {
+        "description": "Calculates a summon's stat value: base * (1 + (summonBoostPct/100) * (1 + level/MAX_LEVEL)), rounded to 2 decimal places."
+      }
+    },
+    {
+      "id": "function::src/data/SummonData.ts::calcMaxSummonCount",
+      "kind": "function",
+      "label": "calcMaxSummonCount",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [9, 11],
+      "params": ["perks"],
+      "metadata": {
+        "description": "Returns the maximum summon count: BASE_SUMMON_CAP (15) + floor(Swarm perk stacks)."
+      }
+    },
+    {
+      "id": "data::src/data/SummonData.ts::SUMMON_MAP",
+      "kind": "data",
+      "label": "SUMMON_MAP",
+      "filePath": "src/data/SummonData.ts",
+      "metadata": {
+        "description": "Lookup map of summon definitions keyed by name (Mage Bomber, Blessedling)."
+      }
+    },
+    {
+      "id": "data::src/data/SummonData.ts::WA_SUMMON_MAP",
+      "kind": "data",
+      "label": "WA_SUMMON_MAP",
+      "filePath": "src/data/SummonData.ts",
+      "metadata": {
+        "description": "Maps weapon art summon names to their base summon names (e.g., 'Mage Bomber Summon' -> 'Mage Bomber')."
+      }
+    },
+    {
+      "id": "file::src/data/draconicBuffs.ts",
+      "kind": "file",
+      "label": "draconicBuffs.ts",
+      "filePath": "src/data/draconicBuffs.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 112,
+      "metadata": {
+        "functions": 5,
+        "exports": 5,
+        "classes": 0,
+        "imports": 1,
+        "description": "Draconic guild buff/debuff calculation system. Provides potency/duration multiplier getters, color-specific infusion effects (air/fire/hex/holy/water/earth), buff generation for Dragon Infusion, and debuff generation for Dragon Claw/Bubble abilities with Hex and Fire color variants."
+      }
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionPotMult",
+      "kind": "function",
+      "label": "getDraconicInfusionPotMult",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [4, 6],
+      "params": ["perkAmt"],
+      "metadata": {
+        "description": "Returns draconic infusion potency multiplier: 1 + perkAmt * DRACONIC_INFUSION_POT_MULT."
+      }
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionDurMult",
+      "kind": "function",
+      "label": "getDraconicInfusionDurMult",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [7, 9],
+      "params": ["perkAmt"],
+      "metadata": {
+        "description": "Returns draconic infusion duration multiplier: 1 + perkAmt * DRACONIC_INFUSION_DUR_MULT."
+      }
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "kind": "function",
+      "label": "getEffectiveDraconicInfusionPotency",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [19, 30],
+      "params": ["guildName", "draconicRuneInfusion", "draconicColor", "draconicBloodPerkAmt", "perks"],
+      "metadata": {
+        "description": "Computes the effective draconic infusion potency after applying perk modifiers. Calls getDraconicInfusionBuff to get raw buffs, then applyBuffPerkModifiers to modify them, returning the final potency."
+      }
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "kind": "function",
+      "label": "getDraconicInfusionBuff",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [32, 72],
+      "params": ["guildName", "draconicRuneInfusion", "draconicColor", "draconicBloodPerkAmt"],
+      "metadata": {
+        "description": "Generates GrantedBuff array for Dragon Infusion. Creates the base Draconic Infusion buff with potency/duration/condition based on color-specific effects. For Fire color, also appends a Burn buff."
+      }
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicAbilityDebuffs",
+      "kind": "function",
+      "label": "getDraconicAbilityDebuffs",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [74, 112],
+      "params": ["guildName", "draconicRuneInfusion", "draconicColor", "draconicBloodPerkAmt"],
+      "metadata": {
+        "description": "Generates debuff arrays for Dragon Claw and Dragon Bubble abilities. For Hex color: guaranteed Weakness + 3 random from BASIC_DEBUFF_POOL. For Fire color: Burn on hit. Returns empty array for other colors or non-claw/bubble abilities."
+      }
+    },
+    {
+      "id": "data::src/data/draconicBuffs.ts::DRACONIC_INFUSION_COLOR_EFFECTS",
+      "kind": "data",
+      "label": "DRACONIC_INFUSION_COLOR_EFFECTS",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [11, 18],
+      "metadata": {
+        "description": "Record mapping draconic colors (air/fire/hex/holy/water/earth) to description generator functions that return color-specific effect text based on perk amount."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge::src/data/HealBoost.ts->src/data/draconicBuffs.ts::import",
+      "source": "file::src/data/HealBoost.ts",
+      "target": "file::src/data/draconicBuffs.ts",
+      "kind": "import",
+      "label": "imports getEffectiveDraconicInfusionPotency"
+    },
+    {
+      "id": "edge::src/data/Runebasedmg.ts->src/data/HealBoost.ts::import",
+      "source": "file::src/data/Runebasedmg.ts",
+      "target": "file::src/data/HealBoost.ts",
+      "kind": "import",
+      "label": "imports calculateHealBoost, HealBoostContext"
+    },
+    {
+      "id": "edge::src/data/Runebasedmg.ts->src/data/SummonData.ts::import",
+      "source": "file::src/data/Runebasedmg.ts",
+      "target": "file::src/data/SummonData.ts",
+      "kind": "import",
+      "label": "imports calcMaxSummonCount"
+    },
+    {
+      "id": "edge::src/data/draconicBuffs.ts->src/data/BuffData.ts::import",
+      "source": "file::src/data/draconicBuffs.ts",
+      "target": "file::src/data/BuffData.ts",
+      "kind": "import",
+      "label": "imports applyBuffPerkModifiers, BASIC_DEBUFF_POOL, GrantedBuff"
+    },
+    {
+      "id": "edge::function::getHealScalingMultiplier->calculateHealBoost::calls",
+      "source": "function::src/data/HealBoost.ts::getHealScalingMultiplier",
+      "target": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "calls",
+      "label": "calls calculateHealBoost"
+    },
+    {
+      "id": "edge::function::calculateRuneHealScaling->calculateHealBoost::calls",
+      "source": "function::src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "target": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "calls",
+      "label": "calls calculateHealBoost (cross-file)"
+    },
+    {
+      "id": "edge::function::calculateHealBoost->getEffectiveDraconicInfusionPotency::calls",
+      "source": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "target": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "kind": "calls",
+      "label": "calls getEffectiveDraconicInfusionPotency (via Dragon Infusion calcFn)"
+    },
+    {
+      "id": "edge::function::getEffectiveDraconicInfusionPotency->getDraconicInfusionBuff::calls",
+      "source": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "target": "function::src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "kind": "calls",
+      "label": "calls getDraconicInfusionBuff"
+    },
+    {
+      "id": "edge::function::calculateHealBoost->data::HEAL_SCALING_DEFS::reads",
+      "source": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "target": "data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "kind": "reads",
+      "label": "iterates HEAL_SCALING_DEFS"
+    },
+    {
+      "id": "edge::data::RUNE_DMG_DEFS->data::SUMMON_MAP::references",
+      "source": "data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "target": "data::src/data/SummonData.ts::SUMMON_MAP",
+      "kind": "references",
+      "label": "Sporeling Toss slider references calcMaxSummonCount"
+    }
+  ],
+  "summary": "Batch 3 covers 4 data-layer files totaling ~610 lines. HealBoost.ts implements composable healing multiplier aggregation from perks/runes/passives with Anti Heal debuff support. Runebasedmg.ts defines 11 rune damage entries with type distributions, stat scalings, hit counts, and slider mechanics. SummonData.ts provides summon stat scaling, cap calculation (15 + Swarm), and summon lookup maps. draconicBuffs.ts implements the Draconic guild's color-based infusion buff/debuff system with potency modifiers and ability debuff generation."
+}

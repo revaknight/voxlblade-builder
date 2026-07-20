@@ -1,0 +1,447 @@
+{
+  "batch": 11,
+  "nodes": [
+    {
+      "id": "file::src/lib/ui/Stat.svelte",
+      "kind": "file",
+      "label": "Stat.svelte",
+      "path": "src/lib/ui/Stat.svelte",
+      "language": "svelte",
+      "sizeLines": 90,
+      "description": "Reusable stat display component showing a label-value pair with color variants and size options. Supports Svelte 5 snippets for custom content."
+    },
+    {
+      "id": "component::Stat",
+      "kind": "component",
+      "label": "Stat",
+      "path": "src/lib/ui/Stat.svelte",
+      "description": "Displays a stat row with optional label and value. Supports 7 color variants (green, amber, red, purple, blue, teal, default), 3 sizes (sm, md, lg), and optional hover effect. Uses Svelte 5 $props and Snippet API.",
+      "props": [
+        {"name": "label", "type": "string", "optional": true},
+        {"name": "variant", "type": "'default' | 'green' | 'amber' | 'red' | 'purple' | 'blue' | 'teal'", "optional": true, "default": "'default'"},
+        {"name": "size", "type": "'sm' | 'md' | 'lg'", "optional": true, "default": "'md'"},
+        {"name": "hoverable", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "value", "type": "string | number", "optional": true},
+        {"name": "children", "type": "Snippet", "optional": true}
+      ]
+    },
+    {
+      "id": "file::src/lib/uiConstants.ts",
+      "kind": "file",
+      "label": "uiConstants.ts",
+      "path": "src/lib/uiConstants.ts",
+      "language": "typescript",
+      "sizeLines": 78,
+      "description": "Shared UI constants defining color maps for damage types, tag groups, source types, enchant rarities, and label mappings for stats and tags."
+    },
+    {
+      "id": "constant::UI_COLORS",
+      "kind": "constant",
+      "label": "UI_COLORS",
+      "path": "src/lib/uiConstants.ts:1",
+      "description": "Color map object with hex values for physical/magic/elemental damage types, tag groups (combat/support/status/weaponArtRune/special), source types (rune/perk/weaponArt/race/cantrip), enchant rarities (refined/strengthened/dexterous/burning/wet/earthen/magical), and negative stat colors.",
+      "type": "Readonly<Record<string, string>>"
+    },
+    {
+      "id": "constant::SOURCE_LABELS",
+      "kind": "constant",
+      "label": "SOURCE_LABELS",
+      "path": "src/lib/uiConstants.ts:41",
+      "description": "Display label map for source types: rune, perk, weaponArt, race, cantrip.",
+      "type": "Readonly<Record<string, string>>"
+    },
+    {
+      "id": "file::src/main.ts",
+      "kind": "file",
+      "label": "main.ts",
+      "path": "src/main.ts",
+      "language": "typescript",
+      "sizeLines": 7,
+      "description": "Application entry point. Mounts the Svelte App component and injects Vercel analytics."
+    },
+    {
+      "id": "file::src/ModalSearchHeader.svelte",
+      "kind": "file",
+      "label": "ModalSearchHeader.svelte",
+      "path": "src/ModalSearchHeader.svelte",
+      "language": "svelte",
+      "sizeLines": 199,
+      "description": "Composite modal header component combining search input with autocomplete suggestions, tag filtering, stat filtering (armor or weapon), and sort mode buttons (Highest/Most Effective/Brawny)."
+    },
+    {
+      "id": "component::ModalSearchHeader",
+      "kind": "component",
+      "label": "ModalSearchHeader",
+      "path": "src/ModalSearchHeader.svelte",
+      "description": "Full-featured modal header with search, tag filter, stat filter, and sort controls. Acts as an orchestrator composing SuggestDrop, TagFilter, StatFilter, and WeaponStatFilter.",
+      "props": [
+        {"name": "title", "type": "string"},
+        {"name": "modalSearch", "type": "string"},
+        {"name": "showSuggestions", "type": "boolean"},
+        {"name": "modalSuggestions", "type": "any[]"},
+        {"name": "modalSelectedTags", "type": "Set<string>"},
+        {"name": "hideTagFilter", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "hideTags", "type": "string[]", "optional": true, "default": "['Stance Change']"},
+        {"name": "hideStatFilter", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "useWeaponStatFilter", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "weaponStatFilter", "type": "any", "optional": true, "default": "null"},
+        {"name": "showSortButtons", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "weaponResult", "type": "any", "optional": true, "default": "null"},
+        {"name": "statFilterSortMode", "type": "string", "optional": true, "default": "'highest'"},
+        {"name": "effectiveLabel", "type": "string", "optional": true, "default": "'boost'"}
+      ],
+      "events": ["select", "toggle", "clear", "change", "weaponStatFilterChange"]
+    },
+    {
+      "id": "file::src/MountIcon.svelte",
+      "kind": "file",
+      "label": "MountIcon.svelte",
+      "path": "src/MountIcon.svelte",
+      "language": "svelte",
+      "sizeLines": 14,
+      "description": "Small inline SVG icon component depicting a mount (a blade/weapon silhouette) with a blue-to-cyan gradient."
+    },
+    {
+      "id": "component::MountIcon",
+      "kind": "component",
+      "label": "MountIcon",
+      "path": "src/MountIcon.svelte",
+      "description": "Renders an SVG mount icon with a linear gradient (blue to cyan). Uses a random UID for gradient to avoid ID collisions.",
+      "props": [
+        {"name": "size", "type": "number", "optional": true, "default": "16"}
+      ]
+    },
+    {
+      "id": "file::src/ScalingBreakdownRow.svelte",
+      "kind": "file",
+      "label": "ScalingBreakdownRow.svelte",
+      "path": "src/ScalingBreakdownRow.svelte",
+      "language": "svelte",
+      "sizeLines": 102,
+      "description": "Single-row display for damage scaling breakdown showing: element icon/label × scaling value × boost percentage = contribution percentage."
+    },
+    {
+      "id": "component::ScalingBreakdownRow",
+      "kind": "component",
+      "label": "ScalingBreakdownRow",
+      "path": "src/ScalingBreakdownRow.svelte",
+      "description": "Renders one row of a scaling breakdown table: colored dot + label, scaling value, × operator, boost percentage, = operator, and contribution percentage.",
+      "props": [
+        {"name": "row", "type": "any"},
+        {"name": "useRoundMultiplier", "type": "boolean", "optional": true, "default": "false"},
+        {"name": "showZeroBoost", "type": "boolean", "optional": true, "default": "false"}
+      ]
+    },
+    {
+      "id": "file::src/StatFilter.svelte",
+      "kind": "file",
+      "label": "StatFilter.svelte",
+      "path": "src/StatFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 339,
+      "description": "Collapsible stat filter panel for armor items with positive/negative stat tabs, include/exclude three-state toggling, and Highest/Lowest/Alphabetical sort modes."
+    },
+    {
+      "id": "component::StatFilter",
+      "kind": "component",
+      "label": "StatFilter",
+      "path": "src/StatFilter.svelte",
+      "description": "Armor stat filter with positive/negative stat tabs. Each stat chip cycles through Off→Must Have→Must Not Have. Groups stats by Boost/Defense/Utility. Dispatches change events with filter map and sort mode.",
+      "events": ["change"]
+    },
+    {
+      "id": "file::src/SuggestDrop.svelte",
+      "kind": "file",
+      "label": "SuggestDrop.svelte",
+      "path": "src/SuggestDrop.svelte",
+      "language": "svelte",
+      "sizeLines": 67,
+      "description": "Dropdown overlay showing search suggestions with highlighted matching text. Items are categorized as 'name' or 'perk' types."
+    },
+    {
+      "id": "component::SuggestDrop",
+      "kind": "component",
+      "label": "SuggestDrop",
+      "path": "src/SuggestDrop.svelte",
+      "description": "Autocomplete suggestion dropdown. Renders a list of suggestions with type badges (Name/Perk) and highlighted matching text segments.",
+      "props": [
+        {"name": "show", "type": "boolean"},
+        {"name": "suggestions", "type": "Array<{ label: string; type: 'name' | 'perk' }>"},
+        {"name": "suggestQuery", "type": "string"}
+      ],
+      "events": ["select"]
+    },
+    {
+      "id": "file::src/TagFilter.svelte",
+      "kind": "file",
+      "label": "TagFilter.svelte",
+      "path": "src/TagFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 334,
+      "description": "Collapsible tag filter panel with color-coded tag groups (Combat, Support, Status, Weapon Art/Rune, Special). Supports hiding specific tags and multi-select toggle."
+    },
+    {
+      "id": "component::TagFilter",
+      "kind": "component",
+      "label": "TagFilter",
+      "path": "src/TagFilter.svelte",
+      "description": "Tag-based filter with collapsible panel. Organizes tags into 5 color-coded groups. Shows summary chips in the header bar when tags are active. Supports clearing all and hiding individual tags.",
+      "props": [
+        {"name": "selectedTags", "type": "Set<string>"},
+        {"name": "hideTags", "type": "string[]", "optional": true, "default": "[]"}
+      ],
+      "events": ["toggle", "change"]
+    },
+    {
+      "id": "file::src/WeaponStatFilter.svelte",
+      "kind": "file",
+      "label": "WeaponStatFilter.svelte",
+      "path": "src/WeaponStatFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 250,
+      "description": "Collapsible weapon-specific stat filter panel with three groups: Damage Type, Scaling, and Boost/Stats. Exposes a matchesFilter method for parent components."
+    },
+    {
+      "id": "component::WeaponStatFilter",
+      "kind": "component",
+      "label": "WeaponStatFilter",
+      "path": "src/WeaponStatFilter.svelte",
+      "description": "Weapon stat filter with three groups (DMG type, Scaling, Boost/Stats). Uses same three-state include/exclude pattern as StatFilter. Exposes matchesFilter() method for imperative filtering.",
+      "props": [
+        {"name": "filterValue", "type": "Map<string, 'include' | 'exclude'>", "optional": true, "default": "new Map()"}
+      ],
+      "methods": ["matchesFilter"],
+      "events": ["change"]
+    },
+    {
+      "id": "file::src/WeaponStatsDisplay.svelte",
+      "kind": "file",
+      "label": "WeaponStatsDisplay.svelte",
+      "path": "src/WeaponStatsDisplay.svelte",
+      "language": "svelte",
+      "sizeLines": 118,
+      "description": "Read-only weapon stats display that splits stats into three visual groups: Damage Type, Scaling, and general Stats (boosts/defenses)."
+    },
+    {
+      "id": "component::WeaponStatsDisplay",
+      "kind": "component",
+      "label": "WeaponStatsDisplay",
+      "path": "src/WeaponStatsDisplay.svelte",
+      "description": "Renders weapon stats grouped into Dmg Type (×multipliers), Scaling (numeric values), and Stats (percentage boosts/defenses) with color-coded pill styling.",
+      "props": [
+        {"name": "stats", "type": "Record<string, number>", "optional": true, "default": "{}"}
+      ]
+    },
+    {
+      "id": "file::vite.config.ts",
+      "kind": "file",
+      "label": "vite.config.ts",
+      "path": "vite.config.ts",
+      "language": "typescript",
+      "sizeLines": 56,
+      "description": "Vite build configuration. Configures Svelte plugin, VitePWA with service worker and offline caching, and a configurable base path."
+    },
+    {
+      "id": "config::vite",
+      "kind": "config",
+      "label": "ViteConfig",
+      "path": "vite.config.ts",
+      "description": "Vite build config with Svelte plugin, VitePWA (autoUpdate registerType, workbox StaleWhileRevalidate for HTML), configurable base path via VITE_BASE_PATH env var, and manualChunks disabled."
+    }
+  ],
+  "edges": [
+    {
+      "source": "file::src/main.ts",
+      "target": "file::src/lib/ui/Stat.svelte",
+      "kind": "indirect",
+      "label": "serves app that uses"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "component::SuggestDrop",
+      "kind": "imports",
+      "label": "imports SuggestDrop"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "component::TagFilter",
+      "kind": "imports",
+      "label": "imports TagFilter"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "component::StatFilter",
+      "kind": "imports",
+      "label": "imports StatFilter"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "component::WeaponStatFilter",
+      "kind": "imports",
+      "label": "imports WeaponStatFilter"
+    },
+    {
+      "source": "component::ModalSearchHeader",
+      "target": "component::SuggestDrop",
+      "kind": "renders",
+      "label": "renders"
+    },
+    {
+      "source": "component::ModalSearchHeader",
+      "target": "component::TagFilter",
+      "kind": "renders",
+      "label": "renders (conditional)"
+    },
+    {
+      "source": "component::ModalSearchHeader",
+      "target": "component::StatFilter",
+      "kind": "renders",
+      "label": "renders (conditional)"
+    },
+    {
+      "source": "component::ModalSearchHeader",
+      "target": "component::WeaponStatFilter",
+      "kind": "renders",
+      "label": "renders (conditional)"
+    },
+    {
+      "source": "file::src/ScalingBreakdownRow.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "indirect",
+      "label": "uses UI_COLORS via row.color"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports ELEMENTAL_BOOST_STATS, NEGATIVE_ELEMENTAL_BOOST_STATS"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports createFilterActions"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports StatChip, buildStatMaps"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports Badge"
+    },
+    {
+      "source": "file::src/TagFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS"
+    },
+    {
+      "source": "file::src/TagFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports Badge"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports ELEMENTAL_BOOST_STATS"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports createFilterActions"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports StatChip, buildStatMaps"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports Badge"
+    },
+    {
+      "source": "file::src/SuggestDrop.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports highlightTextParts"
+    },
+    {
+      "source": "file::src/ScalingBreakdownRow.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports roundMultiplier, PERCENT_STATS"
+    },
+    {
+      "source": "constant::UI_COLORS",
+      "target": "component::StatFilter",
+      "kind": "uses",
+      "label": "provides color palette"
+    },
+    {
+      "source": "constant::UI_COLORS",
+      "target": "component::TagFilter",
+      "kind": "uses",
+      "label": "provides group colors"
+    },
+    {
+      "source": "constant::UI_COLORS",
+      "target": "component::WeaponStatFilter",
+      "kind": "uses",
+      "label": "provides group colors"
+    },
+    {
+      "source": "component::StatFilter",
+      "target": "component::SuggestDrop",
+      "kind": "indirect",
+      "label": "sibling in ModalSearchHeader"
+    },
+    {
+      "source": "component::TagFilter",
+      "target": "component::StatFilter",
+      "kind": "indirect",
+      "label": "sibling in ModalSearchHeader"
+    },
+    {
+      "source": "config::vite",
+      "target": "file::src/main.ts",
+      "kind": "configures",
+      "label": "builds and serves app"
+    },
+    {
+      "source": "component::WeaponStatFilter",
+      "target": "component::WeaponStatsDisplay",
+      "kind": "indirect",
+      "label": "complementary filter/display pair"
+    }
+  ],
+  "metadata": {
+    "filesAnalyzed": 12,
+    "componentsFound": 8,
+    "constantsFound": 2,
+    "configsFound": 1,
+    "totalEdges": 31
+  }
+}

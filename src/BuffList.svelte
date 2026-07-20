@@ -1,6 +1,7 @@
 <script lang="ts">
   import { build, result } from './lib/store'
   import { calcWardingDebuffMultiplier, roundMultiplier } from './lib/utils'
+  import Badge from './lib/ui/Badge.svelte'
   import {
     BUFF_DEFS,
     getActiveBuildBuffs,
@@ -394,12 +395,12 @@ $: groupedBuffs = (() => {
                         </div>
 
                         {#if source.bonusPotency && source.bonusPotency > 0}
-                          <span class="bl-perk-badge">perk +{fmtPotency(source.bonusPotency)}</span>
+                          <Badge color="#4ade80" size="xs" square mono>perk +{fmtPotency(source.bonusPotency)}</Badge>
                         {/if}
 
                         {#if isSelf && wardingDebuffMult !== 1}
                           {@const effP = Math.round(source.potency * wardingDebuffMult * 1000) / 1000}
-                          <span class="bl-warding-badge">warding ×{fmtPotency(wardingDebuffMult)}</span>
+                          <Badge color="#7eb4ad" size="xs" square mono>warding ×{fmtPotency(wardingDebuffMult)}</Badge>
                           
                           <div class="bl-potency-cell">
                             <span class="bl-base-val">{fmtPotency(source.potency)}</span>
@@ -721,18 +722,6 @@ $: groupedBuffs = (() => {
     color: var(--ink-muted, #8a8d85);
     opacity: .5;
   }
-  .bl-perk-badge {
-    font-size: .52rem;
-    font-weight: 700;
-    font-family: 'Courier New', monospace;
-    color: #4ade80;
-    background: rgba(74,222,128,.12);
-    border: 1px solid rgba(74,222,128,.25);
-    padding: 1px 5px;
-    border-radius: 3px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
   .bl-tag--self {
     background: rgba(148,163,184,.12);
     border: 1px solid rgba(148,163,184,.28);
@@ -752,16 +741,4 @@ $: groupedBuffs = (() => {
     opacity: .7;
     font-weight: 700;
   }
-  .bl-warding-badge {
-  font-size: .52rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #7eb4ad;
-  background: rgba(126,180,173,.12);
-  border: 1px solid rgba(126,180,173,.25);
-  padding: 1px 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 </style>

@@ -1,0 +1,920 @@
+{
+  "nodes": [
+    {
+      "id": "file::src/lib/engine/_utils.ts",
+      "type": "file",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "_utils.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 2,
+        "nonEmptyLines": 2,
+        "functionCount": 2,
+        "exportCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "id": "func::src/lib/engine/_utils.ts::round2",
+      "type": "function",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "round2",
+      "meta": {
+        "startLine": 1,
+        "endLine": 1,
+        "params": ["v"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/_utils.ts::round4",
+      "type": "function",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "round4",
+      "meta": {
+        "startLine": 2,
+        "endLine": 2,
+        "params": ["v"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "file::src/lib/engine/enchant.ts",
+      "type": "file",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "enchant.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 221,
+        "nonEmptyLines": 189,
+        "functionCount": 9,
+        "exportCount": 5,
+        "classCount": 0
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyMod",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyMod",
+      "meta": {
+        "startLine": 8,
+        "endLine": 10,
+        "params": ["value", "mod"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::normalizeModifiers",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "normalizeModifiers",
+      "meta": {
+        "startLine": 12,
+        "endLine": 14,
+        "params": ["m"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyModsToKey",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyModsToKey",
+      "meta": {
+        "startLine": 16,
+        "endLine": 26,
+        "params": ["key", "mods", "mult", "add"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyModsWhere",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyModsWhere",
+      "meta": {
+        "startLine": 28,
+        "endLine": 40,
+        "params": ["mods", "baseStats", "mult", "add", "predicate"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyEnchantmentsToSlot",
+      "meta": {
+        "startLine": 57,
+        "endLine": 148,
+        "params": ["baseStats", "basePerks", "enchantNames", "upgradeLevel"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyPerkEffectiveness",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyPerkEffectiveness",
+      "meta": {
+        "startLine": 163,
+        "endLine": 177,
+        "params": ["perks", "perkEffectivenessStacks", "cursedStacks"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::applyInfusion",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyInfusion",
+      "meta": {
+        "startLine": 181,
+        "endLine": 192,
+        "params": ["baseStats", "basePerks"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::isExclusiveEnchant",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "isExclusiveEnchant",
+      "meta": {
+        "startLine": 196,
+        "endLine": 198,
+        "params": ["e"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/enchant.ts::enforceEnchantSlot",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "enforceEnchantSlot",
+      "meta": {
+        "startLine": 200,
+        "endLine": 221,
+        "params": ["selections", "changedIndex"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "file::src/lib/engine/shrine.ts",
+      "type": "file",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "shrine.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 33,
+        "nonEmptyLines": 30,
+        "functionCount": 2,
+        "exportCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "id": "func::src/lib/engine/shrine.ts::applyShrineToScalings",
+      "type": "function",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "applyShrineToScalings",
+      "meta": {
+        "startLine": 9,
+        "endLine": 20,
+        "params": ["scalings", "tier"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/shrine.ts::applyShrineToStats",
+      "type": "function",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "applyShrineToStats",
+      "meta": {
+        "startLine": 22,
+        "endLine": 33,
+        "params": ["stats", "tier"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "file::src/lib/engine/weapon.ts",
+      "type": "file",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "weapon.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 443,
+        "nonEmptyLines": 388,
+        "functionCount": 15,
+        "exportCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::checkHybrid",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "checkHybrid",
+      "meta": {
+        "startLine": 20,
+        "endLine": 43,
+        "params": ["part1", "part2"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::getWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "getWeaponType",
+      "meta": {
+        "startLine": 53,
+        "endLine": 55,
+        "params": ["handleType", "bladeType"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::resolveWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "resolveWeaponType",
+      "meta": {
+        "startLine": 81,
+        "endLine": 99,
+        "params": ["handleType", "bladeType", "perks"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::getMonkWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "getMonkWeaponType",
+      "meta": {
+        "startLine": 108,
+        "endLine": 110,
+        "params": ["essenceType", "gloveType"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::resolveMonkWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "resolveMonkWeaponType",
+      "meta": {
+        "startLine": 112,
+        "endLine": 121,
+        "params": ["essenceType", "gloveType", "perks"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::extractDamageAndScalings",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "extractDamageAndScalings",
+      "meta": {
+        "startLine": 171,
+        "endLine": 192,
+        "params": ["part"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::mergePartPerks",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergePartPerks",
+      "meta": {
+        "startLine": 194,
+        "endLine": 222,
+        "params": ["part1", "part2"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::applyShrineToPart",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "applyShrineToPart",
+      "meta": {
+        "startLine": 224,
+        "endLine": 226,
+        "params": ["data", "part", "shrineActive", "fn"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::mergeRecords",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergeRecords",
+      "meta": {
+        "startLine": 228,
+        "endLine": 234,
+        "params": ["a", "b"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergeScalingsAndStats",
+      "meta": {
+        "startLine": 236,
+        "endLine": 280,
+        "params": ["p1Data", "p2Data", "part1", "part2", "shrineActive"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "buildWeaponResult",
+      "meta": {
+        "startLine": 282,
+        "endLine": 362,
+        "params": ["opts"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcWeaponGeneric",
+      "meta": {
+        "startLine": 364,
+        "endLine": 385,
+        "params": ["part1", "part2", "part1TypeLabel", "part2TypeLabel", "part1TypeKey", "part2TypeKey", "isMonk", "shrineActive"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::applyMonkStatBonus",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "applyMonkStatBonus",
+      "meta": {
+        "startLine": 393,
+        "endLine": 412,
+        "params": ["baseStats", "shrineMult", "monkPct", "result", "finalKey", "rawKey"],
+        "isExported": false
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::calcWeapon",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcWeapon",
+      "meta": {
+        "startLine": 416,
+        "endLine": 418,
+        "params": ["bladeName", "handleName", "shrineActive"],
+        "isExported": true
+      }
+    },
+    {
+      "id": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcMonkWeapon",
+      "meta": {
+        "startLine": 420,
+        "endLine": 443,
+        "params": ["gloveName", "essenceName", "shrineActive", "monkRank"],
+        "isExported": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge::src/lib/engine/enchant.ts::import::src/lib/types.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/enchant.ts",
+      "to": "file::src/lib/types.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["StatKey", "StatModifier", "StatMap", "Enchantment", "STAT_KEYS", "PERCENT_STATS", "applyUpgrade"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/enchant.ts::import::src/lib/engine/_utils.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/enchant.ts",
+      "to": "file::src/lib/engine/_utils.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["round2"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/shrine.ts::import::src/lib/types.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/shrine.ts",
+      "to": "file::src/lib/types.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["StatMap", "STAT_KEYS"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/shrine.ts::import::src/lib/engine/_utils.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/shrine.ts",
+      "to": "file::src/lib/engine/_utils.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["round2"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/weapon.ts::import::src/lib/types.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/weapon.ts",
+      "to": "file::src/lib/types.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["StatMap", "WeaponBlade", "WeaponHandle", "MonkGlove", "MonkEssence", "STAT_KEYS"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/weapon.ts::import::src/lib/engine/_utils.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/weapon.ts",
+      "to": "file::src/lib/engine/_utils.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["round2", "round4"]
+      }
+    },
+    {
+      "id": "edge::src/lib/engine/weapon.ts::import::src/lib/engine/shrine.ts",
+      "type": "import",
+      "from": "file::src/lib/engine/weapon.ts",
+      "to": "file::src/lib/engine/shrine.ts",
+      "label": "imports from",
+      "meta": {
+        "importedSymbols": ["applyShrineToScalings", "applyShrineToStats", "SHRINE_MULTIPLIERS"]
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/_utils.ts::round2::calls::Math.round",
+      "type": "calls",
+      "from": "func::src/lib/engine/_utils.ts::round2",
+      "to": "Math.round",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 1
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/_utils.ts::round4::calls::Math.round",
+      "type": "calls",
+      "from": "func::src/lib/engine/_utils.ts::round4",
+      "to": "Math.round",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 2
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyModsWhere::calls::applyModsToKey",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyModsWhere",
+      "to": "func::src/lib/engine/enchant.ts::applyModsToKey",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 38
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::applyModsWhere",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "func::src/lib/engine/enchant.ts::applyModsWhere",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 80
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::normalizeModifiers",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "func::src/lib/engine/enchant.ts::normalizeModifiers",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 80
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::applyModsToKey",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "func::src/lib/engine/enchant.ts::applyModsToKey",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 117
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::applyMod",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "func::src/lib/engine/enchant.ts::applyMod",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 125
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::getEnchant",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "getEnchant",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 73
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot::calls::applyUpgrade",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "to": "applyUpgrade",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 95
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::enforceEnchantSlot::calls::isExclusiveEnchant",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::enforceEnchantSlot",
+      "to": "func::src/lib/engine/enchant.ts::isExclusiveEnchant",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 214
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::enforceEnchantSlot::calls::getEnchant",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::enforceEnchantSlot",
+      "to": "getEnchant",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 214
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/enchant.ts::applyPerkEffectiveness::calls::Object.prototype.hasOwnProperty.call",
+      "type": "calls",
+      "from": "func::src/lib/engine/enchant.ts::applyPerkEffectiveness",
+      "to": "Object.prototype.hasOwnProperty.call",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 172
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/shrine.ts::applyShrineToStats::calls::round2",
+      "type": "calls",
+      "from": "func::src/lib/engine/shrine.ts::applyShrineToStats",
+      "to": "func::src/lib/engine/_utils.ts::round2",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 30
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/shrine.ts::applyShrineToScalings::calls::Object.prototype.hasOwnProperty.call",
+      "type": "calls",
+      "from": "func::src/lib/engine/shrine.ts::applyShrineToScalings",
+      "to": "Object.prototype.hasOwnProperty.call",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 17
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::resolveWeaponType::calls::getWeaponType",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::resolveWeaponType",
+      "to": "func::src/lib/engine/weapon.ts::getWeaponType",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 86
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::resolveMonkWeaponType::calls::getMonkWeaponType",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::resolveMonkWeaponType",
+      "to": "func::src/lib/engine/weapon.ts::getMonkWeaponType",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 117
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::applyShrineToPart",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/weapon.ts::applyShrineToPart",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 252
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::checkHybrid",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/weapon.ts::checkHybrid",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 257
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::mergeRecords",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/weapon.ts::mergeRecords",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 259
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::round2",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/_utils.ts::round2",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 274
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::applyShrineToScalings",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/shrine.ts::applyShrineToScalings",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 252
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeScalingsAndStats::calls::applyShrineToStats",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "to": "func::src/lib/engine/shrine.ts::applyShrineToStats",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 254
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::buildWeaponResult::calls::resolveWeaponType",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "to": "func::src/lib/engine/weapon.ts::resolveWeaponType",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 313
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::buildWeaponResult::calls::resolveMonkWeaponType",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "to": "func::src/lib/engine/weapon.ts::resolveMonkWeaponType",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 313
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::buildWeaponResult::calls::round4",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "to": "func::src/lib/engine/_utils.ts::round4",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 305
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::buildWeaponResult::calls::round2",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "to": "func::src/lib/engine/_utils.ts::round2",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 335
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::buildWeaponResult::calls::Math.max",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "to": "Math.max",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 332
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeaponGeneric::calls::extractDamageAndScalings",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "to": "func::src/lib/engine/weapon.ts::extractDamageAndScalings",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 376
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeaponGeneric::calls::mergePartPerks",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "to": "func::src/lib/engine/weapon.ts::mergePartPerks",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 378
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeaponGeneric::calls::mergeScalingsAndStats",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "to": "func::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 379
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeaponGeneric::calls::buildWeaponResult",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "to": "func::src/lib/engine/weapon.ts::buildWeaponResult",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 381
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeapon::calls::calcWeaponGeneric",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeapon",
+      "to": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 417
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeapon::calls::getBlade",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeapon",
+      "to": "getBlade",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 417
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcWeapon::calls::getHandle",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcWeapon",
+      "to": "getHandle",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 417
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcMonkWeapon::calls::getGlove",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "to": "getGlove",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 421
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcMonkWeapon::calls::calcWeaponGeneric",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "to": "func::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 422
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcMonkWeapon::calls::getEssence",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "to": "getEssence",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 422
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcMonkWeapon::calls::applyMonkStatBonus",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "to": "func::src/lib/engine/weapon.ts::applyMonkStatBonus",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 429
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::calcMonkWeapon::calls::Math.max",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "to": "Math.max",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 425
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::applyMonkStatBonus::calls::round2",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::applyMonkStatBonus",
+      "to": "func::src/lib/engine/_utils.ts::round2",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 405
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergePartPerks::calls::processPart",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergePartPerks",
+      "to": "processPart",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 211
+      }
+    },
+    {
+      "id": "edge::func::src/lib/engine/weapon.ts::mergeRecords::calls::Object.prototype.hasOwnProperty.call",
+      "type": "calls",
+      "from": "func::src/lib/engine/weapon.ts::mergeRecords",
+      "to": "Object.prototype.hasOwnProperty.call",
+      "label": "calls",
+      "meta": {
+        "lineNumber": 231
+      }
+    }
+  ]
+}

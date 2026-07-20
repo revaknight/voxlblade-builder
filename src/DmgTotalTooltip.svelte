@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte'
   import { BADGE_CONFIG, type ComputedHit } from './lib/dmgTypes'
+  import Badge from './lib/ui/Badge.svelte'
 
   let { hit, useCrit = false }: {
     hit: ComputedHit
@@ -72,7 +73,7 @@
             <span class="dtt-entry-val">{e.val.toFixed(4)}</span>
             {#if e.badge}
               {@const cfg = BADGE_CONFIG[e.badge]}
-              <span class="dtt-badge" style="background:{cfg.color}22;color:{cfg.color}">{cfg.label}</span>
+              <Badge color={cfg.color} size="xs" square>{cfg.label}</Badge>
             {/if}
           </div>
         {/each}
@@ -163,13 +164,6 @@
   .dtt-entry-val {
     font-variant-numeric: tabular-nums;
     color: #c4c0b8;
-  }
-  .dtt-badge {
-    font-size: .55rem;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-weight: 600;
-    letter-spacing: .02em;
   }
 
 </style>

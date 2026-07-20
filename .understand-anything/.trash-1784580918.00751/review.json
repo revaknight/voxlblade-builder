@@ -1,0 +1,34 @@
+{
+  "issues": [
+    "Layer refs missing node file:src/lib/crit.ts",
+    "Layer refs missing node file:src/lib/crit.ts",
+    "Layer refs missing node file:tsconfig.json",
+    "Layer refs missing node file:tsconfig.app.json",
+    "Layer refs missing node file:tsconfig.node.json",
+    "Layer refs missing node file:package.json",
+    "Layer refs missing node file:vercel.json",
+    "Layer refs missing node file:index.html",
+    "Tour step[0] refs missing node file:package.json",
+    "Tour step[0] refs missing node file:index.html",
+    "Tour step[6] refs missing node file:src/lib/WeaponStatsDisplay.svelte",
+    "Tour step[7] refs missing node file:vercel.json"
+  ],
+  "warnings": [],
+  "stats": {
+    "totalNodes": 341,
+    "totalEdges": 76,
+    "totalLayers": 6,
+    "tourSteps": 8,
+    "nodeTypes": {
+      "file": 147,
+      "function": 136,
+      "class": 56,
+      "Readonly<Record<string, string>>": 2
+    },
+    "edgeTypes": {
+      "related": 68,
+      "imports": 6,
+      "contains": 2
+    }
+  }
+}

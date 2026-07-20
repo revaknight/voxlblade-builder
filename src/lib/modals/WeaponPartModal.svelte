@@ -2,6 +2,7 @@
   import { build } from '../store'
   import { formatStat } from '../engine'
   import Modal from '../Modal.svelte'
+  import Badge from '../ui/Badge.svelte'
   import ModalSearchHeader from '../../ModalSearchHeader.svelte'
   import DidYouMean from '../../DidYouMean.svelte'
   import Highlight from '../../Highlight.svelte'
@@ -110,12 +111,12 @@
         on:click={() => select(item.name)}>
         <div class="modal-item-head">
           <span class="modal-item-name"><Highlight text={item.name} query={modalSearch} /></span>
-          <span class="modal-tier-badge" class:modal-tier-badge--handle={isHandle} class:modal-tier-badge--glove={isGlove}>T{item.tier}</span>
+          <Badge color={isGlove ? '#e879f9' : isHandle ? '#34d399' : '#fb923c'} size="xs" square>T{item.tier}</Badge>
           {#if (isBlade && item.bladeType) || (isHandle && item.handleType)}
-            <span class="modal-type-badge" class:modal-type-badge--blade={isBlade} class:modal-type-badge--handle={isHandle}>{item.bladeType || item.handleType}</span>
+            <Badge color={isBlade ? '#fb923c' : '#34d399'} size="xs" square>{item.bladeType || item.handleType}</Badge>
           {/if}
           {#if item.attackSpeed != null}
-            <span class="modal-cd-badge">{item.attackSpeed}x spd</span>
+            <Badge color="#34d399" size="xs">{item.attackSpeed}x spd</Badge>
           {/if}
         </div>
         <WeaponStatsDisplay stats={item.stats ?? {}} />

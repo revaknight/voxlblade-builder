@@ -1,0 +1,1630 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 25,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "fileCategory": "code",
+      "totalLines": 263,
+      "nonEmptyLines": 236,
+      "functions": [
+        {
+          "name": "getPerk",
+          "startLine": 24,
+          "endLine": 24,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "getArmorPart",
+          "startLine": 35,
+          "endLine": 35,
+          "params": [
+            "name",
+            "type"
+          ]
+        },
+        {
+          "name": "applyUpgrade",
+          "startLine": 40,
+          "endLine": 52,
+          "params": [
+            "stats",
+            "level"
+          ]
+        },
+        {
+          "name": "applyEnchantmentsToSlot",
+          "startLine": 61,
+          "endLine": 111,
+          "params": [
+            "baseStats",
+            "basePerks",
+            "enchantNames",
+            "upgradeLevel"
+          ]
+        },
+        {
+          "name": "applyShrine",
+          "startLine": 114,
+          "endLine": 121,
+          "params": [
+            "stats",
+            "tier"
+          ]
+        },
+        {
+          "name": "applyInfusion",
+          "startLine": 123,
+          "endLine": 127,
+          "params": [
+            "baseStats",
+            "basePerks"
+          ]
+        },
+        {
+          "name": "addStats",
+          "startLine": 141,
+          "endLine": 141,
+          "params": [
+            "s"
+          ]
+        },
+        {
+          "name": "addPerkMap",
+          "startLine": 142,
+          "endLine": 142,
+          "params": [
+            "m"
+          ]
+        },
+        {
+          "name": "finalizePerks",
+          "startLine": 207,
+          "endLine": 227,
+          "params": [
+            "raw"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getArmorPart",
+          "callee": "a.parts.find",
+          "lineNumber": 35
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "[...enchantNames].reverse",
+          "lineNumber": 62
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "Array.isArray",
+          "lineNumber": 70
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "pred",
+          "lineNumber": 74
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "applyUpgrade",
+          "lineNumber": 86
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "Array.isArray",
+          "lineNumber": 96
+        },
+        {
+          "caller": "applyEnchantmentsToSlot",
+          "callee": "Array.isArray",
+          "lineNumber": 103
+        },
+        {
+          "caller": "applyShrine",
+          "callee": "Math.round",
+          "lineNumber": 119
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "enchants.flatMap",
+          "lineNumber": 213
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "(e.effects ?? []).map",
+          "lineNumber": 213
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "EXEMPT.has",
+          "lineNumber": 216
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "Object.keys",
+          "lineNumber": 221
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "POT.has",
+          "lineNumber": 222
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "getPerk",
+          "lineNumber": 223
+        },
+        {
+          "caller": "finalizePerks",
+          "callee": "POT.has",
+          "lineNumber": 224
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 9,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "docs/ONBOARDING.md",
+      "language": "markdown",
+      "fileCategory": "docs",
+      "totalLines": 405,
+      "nonEmptyLines": 346,
+      "sections": [
+        {
+          "heading": "Onboarding Guide — voxlblade",
+          "level": 1,
+          "line": 1
+        },
+        {
+          "heading": "Project Overview",
+          "level": 2,
+          "line": 7
+        },
+        {
+          "heading": "Architecture Layers",
+          "level": 2,
+          "line": 19
+        },
+        {
+          "heading": "1. Root Configuration",
+          "level": 3,
+          "line": 21
+        },
+        {
+          "heading": "2. Source Root",
+          "level": 3,
+          "line": 33
+        },
+        {
+          "heading": "3. Data Layer",
+          "level": 3,
+          "line": 48
+        },
+        {
+          "heading": "4. Library Layer",
+          "level": 3,
+          "line": 78
+        },
+        {
+          "heading": "5. Constants Layer",
+          "level": 3,
+          "line": 98
+        },
+        {
+          "heading": "6. Engine Layer",
+          "level": 3,
+          "line": 121
+        },
+        {
+          "heading": "7. Modals Layer",
+          "level": 3,
+          "line": 137
+        },
+        {
+          "heading": "8. Statistics Layer",
+          "level": 3,
+          "line": 147
+        },
+        {
+          "heading": "9. Stores Layer",
+          "level": 3,
+          "line": 154
+        },
+        {
+          "heading": "Key Concepts",
+          "level": 2,
+          "line": 162
+        },
+        {
+          "heading": "Damage Calculation Pipeline",
+          "level": 3,
+          "line": 164
+        },
+        {
+          "heading": "Buff/Debuff System",
+          "level": 3,
+          "line": 167
+        },
+        {
+          "heading": "Engine Architecture",
+          "level": 3,
+          "line": 170
+        },
+        {
+          "heading": "State Management",
+          "level": 3,
+          "line": 177
+        },
+        {
+          "heading": "Component Hierarchy",
+          "level": 3,
+          "line": 180
+        },
+        {
+          "heading": "Guided Tour",
+          "level": 2,
+          "line": 190
+        },
+        {
+          "heading": "Step 1: Project Overview",
+          "level": 3,
+          "line": 192
+        },
+        {
+          "heading": "Step 2: Project Configuration",
+          "level": 3,
+          "line": 195
+        },
+        {
+          "heading": "Step 3: Application Entry Point",
+          "level": 3,
+          "line": 198
+        },
+        {
+          "heading": "Step 4: Core Data Layer",
+          "level": 3,
+          "line": 201
+        },
+        {
+          "heading": "Step 5: Game Engine",
+          "level": 3,
+          "line": 204
+        },
+        {
+          "heading": "Step 6: UI Components",
+          "level": 3,
+          "line": 207
+        },
+        {
+          "heading": "Step 7: Library Utilities",
+          "level": 3,
+          "line": 210
+        },
+        {
+          "heading": "Step 8: Modal Interfaces",
+          "level": 3,
+          "line": 213
+        },
+        {
+          "heading": "Step 9: State Management",
+          "level": 3,
+          "line": 216
+        },
+        {
+          "heading": "Step 10: Build System",
+          "level": 3,
+          "line": 219
+        },
+        {
+          "heading": "File Map",
+          "level": 2,
+          "line": 224
+        },
+        {
+          "heading": "Root Configuration",
+          "level": 3,
+          "line": 226
+        },
+        {
+          "heading": "Source Root Components",
+          "level": 3,
+          "line": 239
+        },
+        {
+          "heading": "Data Layer",
+          "level": 3,
+          "line": 266
+        },
+        {
+          "heading": "Engine Layer",
+          "level": 3,
+          "line": 306
+        },
+        {
+          "heading": "Library Utilities",
+          "level": 3,
+          "line": 321
+        },
+        {
+          "heading": "Constants",
+          "level": 3,
+          "line": 340
+        },
+        {
+          "heading": "Modals",
+          "level": 3,
+          "line": 362
+        },
+        {
+          "heading": "Statistics",
+          "level": 3,
+          "line": 371
+        },
+        {
+          "heading": "Stores",
+          "level": 3,
+          "line": 377
+        },
+        {
+          "heading": "Complexity Hotspots",
+          "level": 2,
+          "line": 384
+        },
+        {
+          "heading": "Recommended approach for hotspots:",
+          "level": 3,
+          "line": 401
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 41
+      }
+    },
+    {
+      "path": "src/app.css",
+      "language": "css",
+      "fileCategory": "markup",
+      "totalLines": 315,
+      "nonEmptyLines": 293,
+      "metrics": {}
+    },
+    {
+      "path": "src/App.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 3733,
+      "nonEmptyLines": 3479,
+      "metrics": {}
+    },
+    {
+      "path": "src/BaseDamageCalc.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 2503,
+      "nonEmptyLines": 2366,
+      "metrics": {}
+    },
+    {
+      "path": "src/BuffList.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 744,
+      "nonEmptyLines": 675,
+      "metrics": {}
+    },
+    {
+      "path": "src/BuildSaves.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 609,
+      "nonEmptyLines": 557,
+      "metrics": {}
+    },
+    {
+      "path": "src/CdrStepsCalc.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 93,
+      "nonEmptyLines": 86,
+      "metrics": {}
+    },
+    {
+      "path": "src/CritIcon.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 13,
+      "metrics": {}
+    },
+    {
+      "path": "src/DamageAnalyzer.svelte",
+      "language": "svelte",
+      "fileCategory": "code",
+      "totalLines": 6666,
+      "nonEmptyLines": 6258,
+      "metrics": {}
+    },
+    {
+      "path": "src/data/cdr.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 64,
+      "nonEmptyLines": 59,
+      "exports": [
+        {
+          "name": "CDR_PERK_DATA",
+          "line": 31,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/debuffCombatEffects.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 91,
+      "nonEmptyLines": 87,
+      "exports": [
+        {
+          "name": "DEBUFF_COMBAT_EFFECTS",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/defensivePerks.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 207,
+      "nonEmptyLines": 196,
+      "functions": [
+        {
+          "name": "getActiveDefensivePerkSources",
+          "startLine": 147,
+          "endLine": 187,
+          "params": [
+            "perks",
+            "hpFillPct",
+            "adaptivePlateTriggered",
+            "inDarkness",
+            "rageActive",
+            "isMounted",
+            "hasProtection",
+            "uniqueDebuffCount"
+          ]
+        },
+        {
+          "name": "calcDefensivePotencyMult",
+          "startLine": 189,
+          "endLine": 207,
+          "params": [
+            "perks",
+            "draconicRuneInfusion",
+            "draconicColor"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getActiveDefensivePerkSources",
+          "line": 147,
+          "isDefault": false
+        },
+        {
+          "name": "calcDefensivePotencyMult",
+          "line": 189,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getActiveDefensivePerkSources",
+          "callee": "def.dependsOn",
+          "lineNumber": 171
+        },
+        {
+          "caller": "getActiveDefensivePerkSources",
+          "callee": "def.drPctFn",
+          "lineNumber": 173
+        },
+        {
+          "caller": "getActiveDefensivePerkSources",
+          "callee": "Math.min",
+          "lineNumber": 174
+        },
+        {
+          "caller": "getActiveDefensivePerkSources",
+          "callee": "Math.round",
+          "lineNumber": 175
+        },
+        {
+          "caller": "getActiveDefensivePerkSources",
+          "callee": "out.push",
+          "lineNumber": 177
+        },
+        {
+          "caller": "calcDefensivePotencyMult",
+          "callee": "getDraconicInfusionPotMult",
+          "lineNumber": 203
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 90,
+      "nonEmptyLines": 81,
+      "functions": [
+        {
+          "name": "getDotBase",
+          "startLine": 37,
+          "endLine": 39,
+          "params": [
+            "inflictionPotency"
+          ]
+        },
+        {
+          "name": "getDotPotencyMult",
+          "startLine": 46,
+          "endLine": 48,
+          "params": [
+            "dotPotency"
+          ]
+        },
+        {
+          "name": "calcDotTick",
+          "startLine": 56,
+          "endLine": 63,
+          "params": [
+            "dotPotency",
+            "inflictionPotency"
+          ]
+        },
+        {
+          "name": "calcCausticSlow",
+          "startLine": 73,
+          "endLine": 82,
+          "params": [
+            "poisonPotencyBuilder",
+            "slowDuration"
+          ]
+        },
+        {
+          "name": "toGamePotency",
+          "startLine": 88,
+          "endLine": 90,
+          "params": [
+            "builderValue"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DOT_TYPE_LIST",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "DOT_SCALINGS",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "DOT_DMG_TYPE_MAP",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "getDotBase",
+          "line": 37,
+          "isDefault": false
+        },
+        {
+          "name": "getDotPotencyMult",
+          "line": 46,
+          "isDefault": false
+        },
+        {
+          "name": "calcDotTick",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "calcCausticSlow",
+          "line": 73,
+          "isDefault": false
+        },
+        {
+          "name": "toGamePotency",
+          "line": 88,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getDotPotencyMult",
+          "callee": "Math.pow",
+          "lineNumber": 47
+        },
+        {
+          "caller": "getDotPotencyMult",
+          "callee": "Math.min",
+          "lineNumber": 47
+        },
+        {
+          "caller": "calcDotTick",
+          "callee": "getDotBase",
+          "lineNumber": 60
+        },
+        {
+          "caller": "calcDotTick",
+          "callee": "getDotPotencyMult",
+          "lineNumber": 61
+        },
+        {
+          "caller": "calcDotTick",
+          "callee": "Math.round",
+          "lineNumber": 62
+        },
+        {
+          "caller": "calcCausticSlow",
+          "callee": "calcDotTick",
+          "lineNumber": 78
+        },
+        {
+          "caller": "calcCausticSlow",
+          "callee": "Math.round",
+          "lineNumber": 80
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 8,
+        "functionCount": 5,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/draconicColorEffects.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 50,
+      "nonEmptyLines": 45,
+      "functions": [
+        {
+          "name": "getDraconicColorDmgMultiplier",
+          "startLine": 44,
+          "endLine": 46,
+          "params": [
+            "color"
+          ]
+        },
+        {
+          "name": "getDraconicColorAttackStats",
+          "startLine": 48,
+          "endLine": 50,
+          "params": [
+            "color"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DRACONIC_COLOR_ATTACK_STATS",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "getDraconicColorDmgMultiplier",
+          "line": 44,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getDraconicColorDmgMultiplier",
+          "callee": "DRACONIC_COLOR_MAP.get",
+          "lineNumber": 45
+        },
+        {
+          "caller": "getDraconicColorAttackStats",
+          "callee": "DRACONIC_COLOR_MAP.get",
+          "lineNumber": 49
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 104,
+      "nonEmptyLines": 81,
+      "functions": [
+        {
+          "name": "applyDraconicRunesBonus",
+          "startLine": 12,
+          "endLine": 29,
+          "params": [
+            "dmgTypes",
+            "ctx"
+          ]
+        },
+        {
+          "name": "getDraconicRunesBonus",
+          "startLine": 32,
+          "endLine": 45,
+          "params": [
+            "ctx"
+          ]
+        },
+        {
+          "name": "applyDragonInfusionBonus",
+          "startLine": 47,
+          "endLine": 64,
+          "params": [
+            "dmgTypes",
+            "ctx"
+          ]
+        },
+        {
+          "name": "getDragonInfusionBonus",
+          "startLine": 66,
+          "endLine": 79,
+          "params": [
+            "ctx"
+          ]
+        },
+        {
+          "name": "applyDraconicBonuses",
+          "startLine": 81,
+          "endLine": 90,
+          "params": [
+            "dmgTypes",
+            "runesCtx",
+            "infusionCtx"
+          ]
+        },
+        {
+          "name": "getDraconicBonuses",
+          "startLine": 92,
+          "endLine": 104,
+          "params": [
+            "runesCtx",
+            "infusionCtx"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "applyDraconicBonuses",
+          "line": 81,
+          "isDefault": false
+        },
+        {
+          "name": "getDraconicBonuses",
+          "line": 92,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "applyDraconicBonuses",
+          "callee": "applyDraconicRunesBonus",
+          "lineNumber": 87
+        },
+        {
+          "caller": "applyDraconicBonuses",
+          "callee": "applyDragonInfusionBonus",
+          "lineNumber": 88
+        },
+        {
+          "caller": "getDraconicBonuses",
+          "callee": "getDraconicRunesBonus",
+          "lineNumber": 96
+        },
+        {
+          "caller": "getDraconicBonuses",
+          "callee": "getDragonInfusionBonus",
+          "lineNumber": 97
+        },
+        {
+          "caller": "getDraconicBonuses",
+          "callee": "Object.entries",
+          "lineNumber": 100
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 90,
+      "nonEmptyLines": 83,
+      "functions": [
+        {
+          "name": "isEnemyHpGateActive",
+          "startLine": 6,
+          "endLine": 8,
+          "params": [
+            "gate",
+            "enemyHpFillPct"
+          ]
+        },
+        {
+          "name": "getActiveEnemyHpDebuffs",
+          "startLine": 53,
+          "endLine": 74,
+          "params": [
+            "perks",
+            "enemyHpFillPct",
+            "activeDebuffNames"
+          ]
+        },
+        {
+          "name": "getEnemyHpDotMultiplier",
+          "startLine": 76,
+          "endLine": 90,
+          "params": [
+            "perks",
+            "enemyHpFillPct",
+            "dotType"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "isEnemyHpGateActive",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "ENEMY_HP_EFFECT_DEFS",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "getActiveEnemyHpDebuffs",
+          "line": 53,
+          "isDefault": false
+        },
+        {
+          "name": "getEnemyHpDotMultiplier",
+          "line": 76,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getActiveEnemyHpDebuffs",
+          "callee": "activeDebuffNames.includes",
+          "lineNumber": 63
+        },
+        {
+          "caller": "getActiveEnemyHpDebuffs",
+          "callee": "isEnemyHpGateActive",
+          "lineNumber": 64
+        },
+        {
+          "caller": "getActiveEnemyHpDebuffs",
+          "callee": "out.push",
+          "lineNumber": 65
+        },
+        {
+          "caller": "getActiveEnemyHpDebuffs",
+          "callee": "def.debuff.getPotency",
+          "lineNumber": 67
+        },
+        {
+          "caller": "getEnemyHpDotMultiplier",
+          "callee": "isEnemyHpGateActive",
+          "lineNumber": 86
+        },
+        {
+          "caller": "getEnemyHpDotMultiplier",
+          "callee": "def.dotBoost.getMultiplier",
+          "lineNumber": 87
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/mountRunes.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 89,
+      "nonEmptyLines": 84,
+      "functions": [
+        {
+          "name": "getMountRuneDef",
+          "startLine": 87,
+          "endLine": 89,
+          "params": [
+            "runeName"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "MOUNT_RUNE_DEFS",
+          "line": 28,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 708,
+      "nonEmptyLines": 697,
+      "functions": [
+        {
+          "name": "gateThreshold",
+          "startLine": 103,
+          "endLine": 107,
+          "params": [
+            "gate",
+            "perkAmount"
+          ]
+        },
+        {
+          "name": "isHpGateActive",
+          "startLine": 109,
+          "endLine": 114,
+          "params": [
+            "gate",
+            "hpFillPct",
+            "perkAmount"
+          ]
+        },
+        {
+          "name": "calcSpringblastBaseDamage",
+          "startLine": 175,
+          "endLine": 177,
+          "params": [
+            "perkAmount"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "gateThreshold",
+          "line": 103,
+          "isDefault": false
+        },
+        {
+          "name": "isHpGateActive",
+          "line": 109,
+          "isDefault": false
+        },
+        {
+          "name": "DRAGON_STATE_HP_GATE",
+          "line": 116,
+          "isDefault": false
+        },
+        {
+          "name": "BELLOWING_EMBER_HP_GATE",
+          "line": 122,
+          "isDefault": false
+        },
+        {
+          "name": "SECONDARY_TONE_COLORS",
+          "line": 138,
+          "isDefault": false
+        },
+        {
+          "name": "calcSpringblastBaseDamage",
+          "line": 175,
+          "isDefault": false
+        },
+        {
+          "name": "PERK_DMG_DEFS",
+          "line": 179,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "gateThreshold",
+          "callee": "gate.getThreshold",
+          "lineNumber": 106
+        },
+        {
+          "caller": "isHpGateActive",
+          "callee": "gateThreshold",
+          "lineNumber": 111
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 7,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/procCoefficients.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 67,
+      "nonEmptyLines": 61,
+      "exports": [
+        {
+          "name": "WEAPON_PROC_COEFFS",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "WA_PROC_COEFFS",
+          "line": 43,
+          "isDefault": false
+        },
+        {
+          "name": "RUNE_PROC_COEFFS",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "PERK_PROC_COEFFS",
+          "line": 57,
+          "isDefault": false
+        },
+        {
+          "name": "DEFAULT_PROC_COEFF",
+          "line": 64,
+          "isDefault": false
+        },
+        {
+          "name": "DEFAULT_RUNE_PROC_COEFF",
+          "line": 67,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 6,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 45,
+      "nonEmptyLines": 39,
+      "functions": [
+        {
+          "name": "getActiveRaceEffect",
+          "startLine": 24,
+          "endLine": 26,
+          "params": [
+            "raceName",
+            "hpFillPct"
+          ]
+        },
+        {
+          "name": "getOrkTenacityBuffs",
+          "startLine": 30,
+          "endLine": 38,
+          "params": [
+            "buffs",
+            "buffDefs"
+          ]
+        },
+        {
+          "name": "calcOrkTenacityBonus",
+          "startLine": 40,
+          "endLine": 45,
+          "params": [
+            "buffs",
+            "buffDefs"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getActiveRaceEffect",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "getOrkTenacityBuffs",
+          "line": 30,
+          "isDefault": false
+        },
+        {
+          "name": "calcOrkTenacityBonus",
+          "line": 40,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getActiveRaceEffect",
+          "callee": "RACE_CONDITIONAL_EFFECTS.find",
+          "lineNumber": 25
+        },
+        {
+          "caller": "getActiveRaceEffect",
+          "callee": "isHpGateActive",
+          "lineNumber": 25
+        },
+        {
+          "caller": "getOrkTenacityBuffs",
+          "callee": "buffs.filter",
+          "lineNumber": 34
+        },
+        {
+          "caller": "calcOrkTenacityBonus",
+          "callee": "getOrkTenacityBuffs",
+          "lineNumber": 44
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/selfDamagePerks.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 76,
+      "functions": [
+        {
+          "name": "calcSelfDamage",
+          "startLine": 53,
+          "endLine": 83,
+          "params": [
+            "def",
+            "perkAmount",
+            "preBoostDamageDealt",
+            "enemiesHit",
+            "defenseMultipliers"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "UNDEAD_MIGHT_SELF_DMG_FRACTION",
+          "line": 1,
+          "isDefault": false
+        },
+        {
+          "name": "UNDEAD_MIGHT_DR_PCT_PER_STACK",
+          "line": 2,
+          "isDefault": false
+        },
+        {
+          "name": "SELF_DAMAGE_PERK_DEFS",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "calcSelfDamage",
+          "line": 53,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "calcSelfDamage",
+          "callee": "Object.entries",
+          "lineNumber": 77
+        },
+        {
+          "caller": "calcSelfDamage",
+          "callee": "Object.values(byType).reduce",
+          "lineNumber": 81
+        },
+        {
+          "caller": "calcSelfDamage",
+          "callee": "Object.values",
+          "lineNumber": 81
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 4,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/stanceOverlays.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 59,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "resolveStanceOverlay",
+          "startLine": 54,
+          "endLine": 59,
+          "params": [
+            "ctx"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "resolveStanceOverlay",
+          "line": 54,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "resolveStanceOverlay",
+          "callee": "def.condition",
+          "lineNumber": 56
+        },
+        {
+          "caller": "resolveStanceOverlay",
+          "callee": "def.resolve",
+          "lineNumber": 56
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/weapon base dmg.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 42,
+      "nonEmptyLines": 39,
+      "exports": [
+        {
+          "name": "WEAPON_BASE_DMG",
+          "line": 3,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 144,
+      "nonEmptyLines": 125,
+      "functions": [
+        {
+          "name": "passesAtLeastOneScaling",
+          "startLine": 32,
+          "endLine": 41,
+          "params": [
+            "req",
+            "scalings"
+          ]
+        },
+        {
+          "name": "meetsScalingReqs",
+          "startLine": 43,
+          "endLine": 49,
+          "params": [
+            "req",
+            "scalings"
+          ]
+        },
+        {
+          "name": "meetsStatReqs",
+          "startLine": 51,
+          "endLine": 57,
+          "params": [
+            "req",
+            "stats"
+          ]
+        },
+        {
+          "name": "buildUnmetStatReqs",
+          "startLine": 59,
+          "endLine": 66,
+          "params": [
+            "req",
+            "stats"
+          ]
+        },
+        {
+          "name": "buildUnmetScalingReqs",
+          "startLine": 68,
+          "endLine": 89,
+          "params": [
+            "req",
+            "scalings"
+          ]
+        },
+        {
+          "name": "checkWA",
+          "startLine": 91,
+          "endLine": 114,
+          "params": [
+            "wa",
+            "scalings",
+            "stats",
+            "finalWeaponType",
+            "isMonk",
+            "bladeName",
+            "handleName"
+          ]
+        },
+        {
+          "name": "getUnmetReqs",
+          "startLine": 116,
+          "endLine": 144,
+          "params": [
+            "wa",
+            "scalings",
+            "stats",
+            "finalWeaponType",
+            "isMonk",
+            "bladeName",
+            "handleName"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "checkWA",
+          "line": 91,
+          "isDefault": false
+        },
+        {
+          "name": "getUnmetReqs",
+          "line": 116,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "passesAtLeastOneScaling",
+          "callee": "Object.entries(req.atLeastOneScaling).some",
+          "lineNumber": 37
+        },
+        {
+          "caller": "passesAtLeastOneScaling",
+          "callee": "Object.entries",
+          "lineNumber": 37
+        },
+        {
+          "caller": "meetsScalingReqs",
+          "callee": "Object.entries",
+          "lineNumber": 44
+        },
+        {
+          "caller": "buildUnmetStatReqs",
+          "callee": "result.push",
+          "lineNumber": 63
+        },
+        {
+          "caller": "buildUnmetStatReqs",
+          "callee": "fmt.replace",
+          "lineNumber": 63
+        },
+        {
+          "caller": "buildUnmetStatReqs",
+          "callee": "String",
+          "lineNumber": 63
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "result.push",
+          "lineNumber": 73
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "Object.entries(req.atLeastOneScaling).some",
+          "lineNumber": 76
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "Object.entries",
+          "lineNumber": 76
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "SCALE_MAP_LABELS.find",
+          "lineNumber": 77
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "Object.entries(req.atLeastOneScaling).map",
+          "lineNumber": 81
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "Object.entries",
+          "lineNumber": 81
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "SCALE_MAP_LABELS.find",
+          "lineNumber": 82
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "result.push",
+          "lineNumber": 85
+        },
+        {
+          "caller": "buildUnmetScalingReqs",
+          "callee": "parts.join",
+          "lineNumber": 85
+        },
+        {
+          "caller": "checkWA",
+          "callee": "req.bothParts.every",
+          "lineNumber": 105
+        },
+        {
+          "caller": "checkWA",
+          "callee": "passesAtLeastOneScaling",
+          "lineNumber": 106
+        },
+        {
+          "caller": "checkWA",
+          "callee": "req.scalingExemptWeaponTypes?.includes",
+          "lineNumber": 108
+        },
+        {
+          "caller": "checkWA",
+          "callee": "meetsScalingReqs",
+          "lineNumber": 109
+        },
+        {
+          "caller": "checkWA",
+          "callee": "meetsStatReqs",
+          "lineNumber": 110
+        },
+        {
+          "caller": "checkWA",
+          "callee": "req.weaponType.some",
+          "lineNumber": 111
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "Object.keys",
+          "lineNumber": 126
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "unmet.push",
+          "lineNumber": 130
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "req.weaponType.some",
+          "lineNumber": 131
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "unmet.push",
+          "lineNumber": 132
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "req.weaponType.join",
+          "lineNumber": 132
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "req.bothParts.every",
+          "lineNumber": 133
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "unmet.push",
+          "lineNumber": 134
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "req.bothParts.join",
+          "lineNumber": 134
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "req.scalingExemptWeaponTypes?.includes",
+          "lineNumber": 136
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "unmet.push",
+          "lineNumber": 138
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "buildUnmetScalingReqs",
+          "lineNumber": 138
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "unmet.push",
+          "lineNumber": 141
+        },
+        {
+          "caller": "getUnmetReqs",
+          "callee": "buildUnmetStatReqs",
+          "lineNumber": 141
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 7,
+        "classCount": 0
+      }
+    }
+  ]
+}

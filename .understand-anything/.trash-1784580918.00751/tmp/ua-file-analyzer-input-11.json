@@ -1,0 +1,31 @@
+{
+  "projectRoot": "C:\\Users\\Administrator\\Downloads\\voxlblade-builder",
+  "batchFiles": [
+    {"path": "src/lib/ui/Stat.svelte", "language": "svelte", "sizeLines": 90, "fileCategory": "code"},
+    {"path": "src/lib/uiConstants.ts", "language": "typescript", "sizeLines": 78, "fileCategory": "code"},
+    {"path": "src/main.ts", "language": "typescript", "sizeLines": 7, "fileCategory": "code"},
+    {"path": "src/ModalSearchHeader.svelte", "language": "svelte", "sizeLines": 199, "fileCategory": "code"},
+    {"path": "src/MountIcon.svelte", "language": "svelte", "sizeLines": 14, "fileCategory": "code"},
+    {"path": "src/ScalingBreakdownRow.svelte", "language": "svelte", "sizeLines": 102, "fileCategory": "code"},
+    {"path": "src/StatFilter.svelte", "language": "svelte", "sizeLines": 339, "fileCategory": "code"},
+    {"path": "src/SuggestDrop.svelte", "language": "svelte", "sizeLines": 67, "fileCategory": "code"},
+    {"path": "src/TagFilter.svelte", "language": "svelte", "sizeLines": 334, "fileCategory": "code"},
+    {"path": "src/WeaponStatFilter.svelte", "language": "svelte", "sizeLines": 250, "fileCategory": "code"},
+    {"path": "src/WeaponStatsDisplay.svelte", "language": "svelte", "sizeLines": 118, "fileCategory": "code"},
+    {"path": "vite.config.ts", "language": "typescript", "sizeLines": 56, "fileCategory": "code"}
+  ],
+  "batchImportData": {
+    "src/lib/ui/Stat.svelte": [],
+    "src/lib/uiConstants.ts": [],
+    "src/main.ts": ["src/app.css", "src/App.svelte"],
+    "src/ModalSearchHeader.svelte": [],
+    "src/MountIcon.svelte": [],
+    "src/ScalingBreakdownRow.svelte": [],
+    "src/StatFilter.svelte": [],
+    "src/SuggestDrop.svelte": [],
+    "src/TagFilter.svelte": [],
+    "src/WeaponStatFilter.svelte": [],
+    "src/WeaponStatsDisplay.svelte": [],
+    "vite.config.ts": []
+  }
+}

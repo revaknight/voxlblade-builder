@@ -7,6 +7,7 @@
   import { resolveDamageTypes, applyFireAirConversion } from './lib/damageTypeResolve'
   import type { TypedDmgBoostEntry } from './data/TypedDmgBoost'
   import { BADGE_CONFIG, type ComputedType, type ComputedHit, type PerkOnHitDmg } from './lib/dmgTypes'
+  import Badge from './lib/ui/Badge.svelte'
   import type { ProcCoefficient } from './lib/types'
   import { SCALING_TO_BOOST, PERCENT_STATS, canProc } from './lib/types'
 import { DOT_DMG_TYPE_MAP } from './data/DoTDamage'
@@ -971,7 +972,7 @@ export let cauterizeScalingMult: number = 1
           <span class="bdc-enemy-hp-label">{enemyHpFill}% HP</span>
         </div>
         {#if armorPen + globalArmorPenetration > 0}
-          <div class="bdc-pen-badge">🗡 {fmt(armorPen + globalArmorPenetration)} Pen</div>
+          <Badge color="#e5e5e5" size="xs">🗡 {fmt(armorPen + globalArmorPenetration)} Pen</Badge>
         {/if}
         {#if resolvedDebuffs.length > 0}
           <div class="bdc-debuff-row">
@@ -1148,7 +1149,7 @@ export let cauterizeScalingMult: number = 1
                               <div class="bdc-hit-type-label-row">
                                 <span class="bdc-hit-type-label">{t.label}{t.isHeal && t.label.toLowerCase() !== 'heal' ? ' Heal' : ''}</span>
                                 {#if t.tag && BADGE_CONFIG[t.tag]}
-                                  <span class="bdc-lum-badge" style="color:{BADGE_CONFIG[t.tag].color};background:{BADGE_CONFIG[t.tag].color}22;border:1px solid {BADGE_CONFIG[t.tag].color}44" title={BADGE_CONFIG[t.tag].title}>{BADGE_CONFIG[t.tag].label}</span>
+                                  <Badge color={BADGE_CONFIG[t.tag].color} size="xs" square mono title={BADGE_CONFIG[t.tag].title}>{BADGE_CONFIG[t.tag].label}</Badge>
                                   {#if t.tag === 'Dragon State'}
                                     <span class="bdc-dragon-count">×{hit.procCount ?? (hit.group === 'M1' || hit.group === 'M2' ? 1 : hit.count)}</span>
                                   {/if}
@@ -1160,9 +1161,9 @@ export let cauterizeScalingMult: number = 1
                                   {/if}
                                 {/if}
                                 {#if hit.group === 'Rune' && !t.procCoefficient && draconicRunesBonus[t.label.toLowerCase()]}
-                                  <span class="bdc-dr-badge" title="Draconic Bonus: +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))} {t.label} damage type">
+                                  <Badge color="#c084fc" size="xs" square mono title="Draconic Bonus: +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))} {t.label} damage type">
                                     ✦ +{fmt((draconicRunesBonus[t.label.toLowerCase()] || 0))}
-                                  </span>
+                                  </Badge>
                                 {/if}
                               </div>
                             </div>
@@ -1793,18 +1794,6 @@ export let cauterizeScalingMult: number = 1
   z-index: 1;
 }
 
-.bdc-pen-badge {
-  font-size: .6rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(229,229,229,.1);
-  border: 1px solid rgba(229,229,229,.25);
-  color: #e5e5e5;
-  letter-spacing: .06em;
-  white-space: nowrap;
-}
-
 .bdc-debuff-row {
   display: flex;
   flex-wrap: wrap;
@@ -2308,31 +2297,11 @@ export let cauterizeScalingMult: number = 1
   gap: 3px;
   flex-wrap: wrap;
 }
-.bdc-lum-badge {
-  font-size: .45rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
 .bdc-dragon-count {
   font-size: .45rem;
   font-weight: 700;
   color: rgba(167,139,250,.6);
   margin-left: 2px;
-}
-.bdc-dr-badge {
-  font-size: .45rem;
-  font-weight: 700;
-  color: #c084fc;
-  background: rgba(192,132,252,.12);
-  border: 1px solid rgba(192,132,252,.3);
-  padding: 1px 4px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
 }
 .bdc-hit-type-formula {
   display: flex;

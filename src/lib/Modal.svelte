@@ -171,28 +171,6 @@
     background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.18);
     color:var(--accent2); width:fit-content;
   }
-  :global(.modal-cd-badge) {
-    font-size:.67rem; font-weight:700; padding:2px 7px; border-radius:999px;
-    background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.18);
-    color:var(--weapon-handle); width:fit-content;
-  }
-  :global(.modal-tier-badge) {
-    font-size:.62rem; font-weight:800; padding:2px 6px; border-radius:var(--radius-xs);
-    background:rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.2);
-    color:var(--weapon-blade);
-  }
-  :global(.modal-tier-badge--handle) {
-    background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.2); color: var(--weapon-handle);
-  }
-  :global(.modal-tier-badge--glove) {
-    background: rgba(232,121,249,0.1); border-color: rgba(232,121,249,0.2); color: var(--monk-glove);
-  }
-  :global(.modal-type-badge) {
-    font-size:.62rem; padding:2px 6px; border-radius:var(--radius-xs);
-    background:var(--surface3); color:var(--ink-muted); border:1px solid var(--border);
-  }
-  :global(.modal-type-badge--blade) { color:var(--weapon-blade); }
-  :global(.modal-type-badge--handle) { color:var(--weapon-handle); }
   :global(.modal-rank-row) { display:flex; gap:6px; margin-top:4px; }
   :global(.rank-btn) {
     padding:4px 12px; border-radius:var(--radius-xs);

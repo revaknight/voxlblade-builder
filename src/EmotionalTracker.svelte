@@ -1,5 +1,6 @@
 <script lang="ts">
   import { build } from './lib/store'
+  import Badge from './lib/ui/Badge.svelte'
 
   type EmotionalState = 'debuff' | 'both' | 'buff'
 
@@ -63,7 +64,7 @@
 
   <div class="et-head">
     <span class="et-title">Emotional State</span>
-    <span class="et-badge">{cur.label}</span>
+    <Badge color={cur.color} size="sm">{cur.label}</Badge>
   </div>
 
   <div class="et-btns">
@@ -134,11 +135,6 @@
   .et-title {
     font-size:.6rem; text-transform:uppercase; letter-spacing:.16em;
     font-weight:700; color:var(--c); opacity:.7;
-  }
-  .et-badge {
-    font-size:.65rem; font-weight:700; padding:2px 9px; border-radius:999px;
-    background:var(--bg); border:1px solid var(--border-c); color:var(--c);
-    transition:all .25s; white-space:nowrap;
   }
 
   /* Quick buttons */

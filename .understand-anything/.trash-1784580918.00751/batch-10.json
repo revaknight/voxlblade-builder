@@ -1,0 +1,881 @@
+{
+  "batch": 10,
+  "nodes": [
+    {
+      "id": "src/lib/constants/storage.ts",
+      "type": "file",
+      "path": "src/lib/constants/storage.ts",
+      "name": "storage.ts",
+      "dir": "src/lib/constants",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 37,
+      "sha": "hash-10-storage",
+      "description": "localStorage keys, build state defaults, save map/unmap utilities, and constants for the voxlblade builder"
+    },
+    {
+      "id": "src/lib/constants/thresholds.ts",
+      "path": "src/lib/constants/thresholds.ts",
+      "type": "file",
+      "name": "thresholds.ts",
+      "dir": "src/lib/constants",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 5,
+      "sha": "hash-10-thresholds",
+      "description": "Defines game balance thresholds: armor pen branch threshold, CD minimum, and base crit dmg percentage"
+    },
+    {
+      "id": "src/lib/defense.ts",
+      "path": "src/lib/defense.ts",
+      "type": "file",
+      "name": "defense.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "callFunctions": null,
+      "language": "typescript",
+      "sizeLines": 82,
+      "sha": "hash-10-defense",
+      "description": "Core defense calculation engine: calcDefMultiplier, calcTrueDrPercent, resolveDefenseSources, calcBaseArmorDefPct, and DEF_GROUP mapping for each damage type"
+    },
+    {
+      "id": "src/lib/EnchantSelect.svelte",
+      "path": "src/lib/EnchantSelect.svelte",
+      "type": "file",
+      "name": "EnchantSelect.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 467,
+      "sha": "hash-10-EnchantSelect",
+      "description": "Custom searchable select dropdown for enchantments with color-coded options, keyboard navigation, and scroll-aware positioning"
+    },
+    {
+      "id": "src/lib/enchantTooltip.ts",
+      "type": "file",
+      "path": "src/lib/enchantTooltip.ts",
+      "name": "enchantTooltip.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 26,
+      "sha": "hash-10-enchantTooltip",
+      "description": "Formats enchantment tooltip text from stats, effects, and additional notes"
+    },
+    {
+      "id": "src/lib/engine.ts",
+      "type": "file",
+      "path": "src/lib/engine.ts",
+      "name": "engine.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 5,
+      "sha": "hash-10-enginebarrel",
+      "description": "Barrel export for all engine submodules: data, shrine, enchant, weapon, build, format"
+    },
+    {
+      "id": "src/lib/engine/data.ts",
+      "type": "file",
+      "path": "src/lib/engine/data.ts",
+      "name": "data.ts",
+      "dir": "src/lib/engine",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 3,
+      "sha": "hash-10-enginedata",
+      "description": "Barrel export for data submodules: character, equipment, weapons"
+    },
+    {
+      "id": "src/lib/Modal.svelte",
+      "type": "file",
+      "path": "src/lib/Modal.svelte",
+      "name": "Modal.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 210,
+      "sha": "hash-10-modal",
+      "description": "Generic modal dialog with overlay, focus trapping, close button, and slot for children; includes global CSS for modal-list, modal-item, modal-stat-pill, etc."
+    },
+    {
+      "id": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "file",
+      "path": "src/lib/modals/AccessorySelectModal.svelte",
+      "name": "AccessorySelectModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 200,
+      "sha": "hash-10-AccessoryModal",
+      "description": "Modal for selecting armor parts (helmet/chestplate/leggings), rings, and runes with stat display, perk tags, and brawny/effective boost computation"
+    },
+    {
+      "id": "src/lib/modals/GuildModal.svelte",
+      "rank": null,
+      "type": "file",
+      "path": "src/lib/modals/GuildModal.svelte",
+      "name": "GuildModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 98,
+      "sha": "hash-10-GuildModal",
+      "description": "Modal for selecting a guild and assigning a rank, with premium/rank stats and perks display"
+    },
+    {
+      "id": "src/lib/modals/index.ts",
+      "type": "file",
+      "path": "src/lib/modals/index.ts",
+      "name": "index.ts",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 4,
+      "sha": "hash-10-modals-index",
+      "description": "Barrel exports for all modal components: RaceModal, GuildModal, AccessorySelectModal, WeaponPartModal"
+    },
+    {
+      "id": "src/lib/modals/RaceModal.svelte",
+      "type": "file",
+      "path": "src/lib/modals/RaceModal.svelte",
+      "name": "RaceModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 60,
+      "sha": "hash-10-RaceModal",
+      "description": "Modal for selecting a race with passive description and stat modifiers display"
+    },
+    {
+      "id": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "file",
+      "category": "code",
+      "path": "src/lib/modals/WeaponPartModal.svelte",
+      "name": "WeaponPartModal.svelte",
+      "dir": "src/lib/modals",
+      "language": "svelte",
+      "sizeLines": 137,
+      "sha": "hash-10-WeaponPart",
+      "description": "Modal for selecting weapon parts: blade, handle, glove, or essence, with tier/type filters and stat/perk/perks display"
+    },
+    {
+      "id": "src/lib/StatFilterShared.svelte",
+      "key": null,
+      "type": "file",
+      "path": "src/lib/StatFilterShared.svelte",
+      "name": "StatFilterShared.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 97,
+      "sha": "hash-10-StatFilter",
+      "description": "Reactive filter chip component for include/exclude state on stats, with buildStatMaps utility for creating lookup maps"
+    },
+    {
+      "id": "src/lib/stats/elementalBoosts.ts",
+      "type": "file",
+      "path": "src/lib/stats/elementalBoosts.ts",
+      "name": "elementalBoosts.ts",
+      "dir": "src/lib/stats",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 21,
+      "sha": "hash-10-elem-boosts",
+      "abilities": null,
+      "description": "Defines StatDef interface and provides ELEMENTAL_BOOST_STATS and NEGATIVE_ELEMENTAL_BOOST_STATS arrays for the 10 elements"
+    },
+    {
+      "id": "src/lib/stats/filterActions.ts",
+      "id": null,
+      "type": "file",
+      "path": "src/lib/stats/filterActions.ts",
+      "name": "filterActions.ts",
+      "dir": "src/lib/stats",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 40,
+      "sha": "hash-10-filterActions",
+      "description": "Factory function createFilterActions producing toggle/remove/clear/handleChipKeyDown for filter state management"
+    },
+    {
+      "id": "src/lib/stores/toast.ts",
+      "type": "file",
+      "path": "src/lib/stores/toast.ts",
+      "filterMap": null,
+      "name": "toast.ts",
+      "dir": "src/lib/stores",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 28,
+      "sha": "hash-10-toaststore",
+      "description": "Svelte store for managing transient toast notifications (addToast, removeToast)",
+      "getState": null,
+      "setState": null
+    },
+    {
+      "id": "src/lib/Toast.svelte",
+      "type": "file",
+      "path": "src/lib/Toast.svelte",
+      "name": "Toast.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "toasts": null,
+      "removeToast": null,
+      "language": "svelte",
+      "sizeLines": 99,
+      "sha": "hash-10-toast",
+      "description": "Toast notification component rendering a stack of dismissible, type-colored (success/error/info/warning) messages in the top-right"
+    },
+    {
+      "id": "src/lib/ui/Badge.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Badge.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 132,
+      "sha": "Badge",
+      "name": "Badge.svelte",
+      "sizeMin": null,
+      "description": "Versatile badge/pill component with size, color, variant, solid/mono options, and customizable color"
+    },
+    {
+      "id": "src/lib/ui/Button.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Button.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 143,
+      "sha": "hash-10-button",
+      "name": "Button.svelte",
+      "description": "Buttons with size, variant (positive/negative/warning/info/neutral), and active state"
+    },
+    {
+      "id": "src/lib/ui/Card.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Card.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 103,
+      "sha": "hash-10-card",
+      "name": "Card.svelte",
+      "description": "Container card with variant (default/surface/ghost), hover, accent color, padding, and gap options"
+    },
+    {
+      "id": "src/lib/ui/Divider.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Divider.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 42,
+      "sha": "hash-10-divider",
+      "name": "Divider.svelte",
+      "description": "Thematic hr element with color variant and spacing toggle"
+    },
+    {
+      "id": "src/lib/ui/index.ts",
+      "type": "file",
+      "path": "src/lib/ui/index.ts",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 7,
+      "sha": "hash-10-ui-index",
+      "name": "index.ts",
+      "description": "Barrel exports for all UI components: Card, Badge, Button, Stat, Section, Divider, Panel"
+    },
+    {
+      "id": "src/lib/ui/Panel.svelte",
+      "type": "file",
+      "path": "src/lib/lib/ui/Panel.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 94,
+      "sha": "hash-10-panel",
+      "name": "Panel.svelte",
+      "description": "Panel layout container with optional header, body, color variants, and padding"
+    },
+    {
+      "id": "src/lib/ui/Section.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Section.svelte",
+      "name": "Section.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 129,
+      "sha": "hash-10-section",
+      "description": "Section layout component with title, color variant, gap, and optional custom header"
+    },
+    {
+      "id": "src/lib/constants/storage.ts/BUILD_STATE_DEFAULTS",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage.ts",
+      "name": "BUILD_STATE_DEFAULTS",
+      "line": 9,
+      "description": "Default values for all build state properties"
+    },
+    {
+      "id": "src/lib/constants/storage.ts/SAVE_KEY_MAP",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage.ts",
+      "name": "SAVE_KEY_MAP",
+      "line": 20,
+      "description": "Mapping of build keys to short save keys"
+    },
+    {
+      "id": "src/lib/constants/storage.ts/ENCH_MAP",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage/ts",
+      "name": "ENCH_MAP",
+      "line": 31,
+      "description": "Mapping of equipment slots to short enchantment keys"
+    },
+    {
+      "id": "src/lib/constants/thresholds.ts/ARMOR_PEN_BRANCH_THRESHOLD",
+      "type": "constant",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "ARMOR_PEN_BRANCH_THRESHOLD",
+      "parent": "src/lib/constants/thresholds.ts",
+      "line": 1,
+      "description": "Threshold for armor penetration branch: 0.2"
+    },
+    {
+      "id": "src/lib/constants/thresholds.ts/CD_MINIMUM",
+      "type": "constant",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "CD_MINIMUM",
+      "parent": "src/lib/constants/thresholds ts",
+      "line": 3,
+      "description": "Minimum cooldown value: 1"
+    },
+    {
+      "constants/thresholds.ts/ARMOR_PEN_BRANCH_THRESHOLD": null,
+      "id": "src/lib/constants/thresholds.ts/BASE_CRIT_DMG_PCT",
+      "type": "constant",
+      "parent": "src/lib/constants/thresholds.ts",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "BASE_CRIT_DMG_PCT",
+      "line": 5,
+      "description": "Base crit damage percentage: 100"
+    },
+    {
+      "id": "src/lib/defense.ts/resolveDefenseSources",
+      "type": "function",
+      "path": "src/lib/defense.ts",
+      "name": "resolveDefenseSources",
+      "line": 34,
+      "description": "Takes array of DefenseSource, returns DefenseBreakdown with resolved percent and flat defense"
+    },
+    {
+      "id": "src/lib/defense.ts/DEF_GROUP",
+      "type": "constant",
+      "path": "src/lib/defense.ts",
+      "name": "DEF_GROUP",
+      "line": 64,
+      "description": "Mapping of damage types to defensive stat keys"
+    },
+    {
+      "id": "src/lib/defense.ts/calcBaseArmorDefPct",
+      "type": "function",
+      "path": "src/lib/defense:ts",
+      "name": "calcBaseArmorDefPct",
+      "line": 77,
+      "description": "sums up base armor defense percentage given a dmgType and stats"
+    },
+    {
+      "id": "src/lib/enchantTooltip.ts/getEnchantTooltipText",
+      "type": "function",
+      "path": "src/lib/enchantTooltip.ts",
+      "name": "getEnchantTooltipText",
+      "line": 3,
+      "description": "Generates formatted tooltip text for an enchant by name"
+    },
+    {
+      "id": "src/lib/modals/index.ts/RaceModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index ts",
+      "name": "RaceModal",
+      "line": 1,
+      "description": "Re-export RaceModal"
+    },
+    {
+      "id": "src/lib/modals/index.ts/GuildModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index.ts",
+      "name": "GuildModal",
+      "line": 2,
+      "description": "Re-export GuildModal"
+    },
+    {
+      "id": "src/lib/modals/index.ts/AccessorySelectModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index.ts",
+      "name": "AccessorySelectModal",
+      "line": 3,
+      "description": "Re-export AccessorySelectModal"
+    },
+    {
+      "id": "src/lib/modals/index.ts/WeaponPartModal",
+      "type": "function",
+      "path": "src/lib/modals/index.ts",
+      "name": "WeaponPartModal",
+      "line": 4,
+      "description": "Re-export WeaponPartModal"
+    },
+    {
+      "id": "src/lib/stats/elementalBoosts.ts/ELEMENTAL_BOOST_STATS",
+      "type": "constant",
+      "path": "src/lib/stats/elementalBoosts.ts",
+      "name": "ELEMENTAL_BOOST_STATS",
+      "line": 6,
+      "description": "Array of StatDef for the 10 elemental boosts"
+    },
+    {
+      "id": "src/lib/stats/elementalBoosts.ts/NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "type": "constant",
+      "path": "src/lib/stats/elementalBoosts ts",
+      "name": "NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "line": 19,
+      "description": "Array of StatDef for the negative (neg:) version of elemental boosts"
+    },
+    {
+      "id": "src/lib/stats/filterActions.ts/createFilterActions",
+      "type": "function",
+      "path": "src/lib/stats/filterActions.ts",
+      "name": "createFilterActions",
+      "line": 4,
+      "description": "Factory returning {toggle, remove, clear, handleChipKeyDown} for filter management"
+    },
+    {
+      "id": "src/lib/stores/toast.ts/toasts",
+      "type": "store",
+      "path": "src/lib/stores/toast.ts",
+      "name": "toasts",
+      "line": 13,
+      "description": "Writable Svelte store containing the array of Toast objects"
+    },
+    {
+      "id": "src/lib/stores/toast.ts/addToast",
+      "type": "constant",
+      "path": "src/lib/stores/toas.ts",
+      "name": "addToast",
+      "line": 17,
+      "description": "Add a toast notification with auto-dismiss"
+    },
+    {
+      "id": "src/lib/stores/toast.ts/removeToast",
+      "type": "constant",
+      "path": "src/lib/stores/toast.ts",
+      "name": "removeToast",
+      "line": 25,
+      "description": "Remove a toast by id"
+    },
+    {
+      "id": "src/lib/ui/Badge.svelte/Badge",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Badge.svelte",
+      "name": "Badge",
+      "parent": "src/lib/ui/Badge.svelte",
+      "default export": null,
+      "line": 1,
+      "description": "Versatile badge/pill ui component"
+    },
+    {
+      "id": "src/lib/ui/Button.svelte/Button",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Button.svelte",
+      "name": "Button",
+      "parent": "src/lib/ui/Button.svelte",
+      "description": "ui button component"
+    },
+    {
+      "id": "src/lib/ui/Card.svelte/Card",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Card.svelte",
+      "parent": "src/lib/ui/Card.svelte",
+      "name": "Card",
+      "description": "Card ui component"
+    },
+    {
+      "id": "src/lib/ui/Divider.svelte/Divider",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Divider.svelte",
+      "parent": "src/lib/ui/Divider.svelte",
+      "name": "Divider",
+      "description": "Divider ui component"
+    },
+    {
+      "id": "src/lib/ui/Panel.svelte/Panel",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Panel.svelte",
+      "parent": "src/lib/ui/Panel.svelte",
+      "name": "Panel",
+      "description": "Panel layout container ui component"
+    },
+    {
+      "Flowers.svelte/Page": null,
+      "id": "src/lib/ui/Section.svelte/Section",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Section.svelte",
+      "parent": "srv/lib/ui/Section.svelte",
+      "name": "Section",
+      "description": "Section ui component"
+    },
+    {
+      "id": "src/lib/Modal.svelte/Modal",
+      "type": "svelte-component",
+      "path": "src/lib/Modal.svelte",
+      "parent": "src/lib/Modal.svelte",
+      "name": "Modal",
+      "description": "Modal overlay component"
+    }
+  ],
+  "imports": [],
+  "exports": {
+    "src/lib/constants/storage-:dtsexports": [
+      "STORAGE_KEY_BUILD",
+      "STORAGE_KEY_DEFENSES",
+      "STORAGE_KEY_LEVEL",
+      "STORAGE_KEY_HP_FILL",
+      "STORAGE_KEY_SAVES",
+      "BUILD_STATE_DEFAULTS",
+      "SAVE_KEY_MAP",
+      "SAVE_KEY_UNMAP",
+      "ENCH_MAP",
+      "ENCH_UNMAP",
+      "MAX_BUILD_SLOTS",
+      "CONFIRM_TIMEOUT_MS"
+    ],
+    "src/lib/constants/thresholds.ts": [
+      "ARMOR_PEN_BRANCH_THRESHOLD",
+      "CD_MINIMUM",
+      "BASE_CRIT_DMG_PCT"
+    ],
+    "src/lib/defense.ts": [
+      "resolveDefenseSources",
+      "DEF_GROUP",
+      "resolveDefenseSources",
+      "calcBaseArmorDefPct"
+    ],
+    "src/lib/enchantTooltip.ts": [
+      "getEnchantTooltipText"
+    ],
+    "src/lib/stats/elementalBoosts.ts": [
+      "ELEMENTAL_BOOST_STATS",
+      "NEGATIVE_ELEMENTAL_BOOST_STATS"
+    ],
+    "src/lib/stats/filterActions.ts": [
+      "createFilterActions"
+    ],
+    "src/lib/stores/toast.ts": [
+      "toasts",
+      "addToast",
+      "removeToast"
+    ],
+    "src/lib/modals/index.ts": [
+      "RaceModal",
+      "GuildModal",
+      "AccessorySelectModal",
+      "WeaponPartModal"
+    ],
+    "src/lib/ui/index.ts": [
+      "Card",
+      "Badge",
+      "Button",
+      "Stat",
+      "Section",
+      "Divider",
+      "Panel"
+    ]
+  },
+  "edges": [
+    {
+      "source": "src/lib/constants/storage.ts",
+      "target": "src/lib/constants/game.ts",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports DEFAULT_LEVEL, DEFAULT_HP_FILL"
+    },
+    {
+      "source": "src/lib/enchantTooltip.ts",
+      "target": "src/lib/engine.ts",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports getEnchant"
+    },
+    {
+      "source": "src/lib/stores/toast.ts",
+      "target": "svelte/store",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports writable"
+    },
+    {
+      "source": "src/stores/toast.ts",
+      "target": "src/lib/constants",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports DEFAULT_TOAST_DURATION_MS"
+    },
+    {
+      "source": "src/lib/Toast.svelte",
+      "target": "src/lib/stores/toast.ts",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports toasts, removeToast"
+    },
+    {
+      "source": "src/lib/EnchantSelect.svelte",
+      "target": "svelte",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports createEventDispatcher, onMount, onDestroy"
+    },
+    {
+      "source": "src/lib/EnchantSelect.svelte",
+      "target": "src/lib/constants",
+      "force": null,
+      "type": "imports",
+      "weight": 1,
+      "description": "imports FOCUS_DELAY_MS"
+    },
+    {
+      "source": "src/lib/modals/RaceModal.svelte",
+      "type": "imports",
+      "target": "src/lib/store",
+      "weight": 1,
+      "description": "imports build"
+    },
+    {
+      "source": "src/lib/modals/RaceModal.svelte",
+      "type": "imports",
+      "target": "src/lib/engine",
+      "weight": 1,
+      "description": "imports races, formatStat, formatLabel"
+    },
+    {
+      "source": "src/lib/modals/RaceModal.svelte",
+      "type": "imports",
+      "target": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal"
+    },
+    {
+      "source": "src/lib/modals/GuildModal.svelte",
+      "type": "imports",
+      "target": "src/lib/store",
+      "weight": 1,
+      "description": "imports build, setGuild"
+    },
+    {
+      "source": "src/lib/modals/GuildModal.svelte",
+      "type": "area",
+      "target": "src/lib/engine",
+      "weight": 1,
+      "description": "imports guilds, formatStat, formatLabel"
+    },
+    {
+      "source": "src/lib/modals/GuildModal.svelte",
+      "type": "imports",
+      "target": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/lib/store",
+      "weight": 1,
+      "description": "imports build"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/lib/engine",
+      "weight": 1,
+      "description": "imports getArmorPart, formatStat, formatLabel"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/lib/types",
+      "weight": 1,
+      "description": "imports SCALING_TO_BOOST"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/data/statboost",
+      "weight": 1,
+      "description": "imports OFFENSIVE_BOOSTS"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/u/Badge.svelte",
+      "weight": 1,
+      "description": "imports Badge"
+    },
+    {
+      "source": "src/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/ModalSearchHeader.svelte",
+      "weight": 1,
+      "description": "imports ModalSearchHeader"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/DidYouMean.svelte",
+      "weight": 1,
+      "description": "imports DidYouMean"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "src/Highlight.svelte",
+      "weight": 1,
+      "description": "imports Highlight"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "contains",
+      "target": "src/lib/ui/Badge.svelte",
+      "weight": 1,
+      "description": "uses Badge component"
+    },
+    {
+      "source": "src/lib/modals/AccessorySelectModal.svelte",
+      "type": "contains",
+      "targ7t": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "wraps content in Modal"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/lib/store",
+      "weight": 1,
+      "description": "imports build"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/lib/engine",
+      "weight": 1,
+      "description": "imports formatStat"
+    },
+    {
+      "source": "src/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/lib/Modal.svelte",
+      "weight": 1,
+      "desaription": "imports Modal"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/lib/ui/Badge.svelte",
+      "weight": 1,
+      "desoription": "imports Badge"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "targst": "src/ModalSearchHeader.svelte",
+      "weight": 1,
+      "description": "imports ModalSearchHeader"
+    },
+    {
+      "sourcs": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/DidYouMean.svelte",
+      "weight": 1,
+      "description": "imports DidYouMean"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/Highlight.svelte",
+      "weight": 1,
+      "desoription": "imports Highlight"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "src/WeaponStatsDisplay.svelte",
+      "weight": 1,
+      "desoription": "imports WeaponStatsDisplay"
+    },
+    {
+      "source": "src/lib/modals/WeaponPartModal.svelte",
+      "target": "src/lib/Modal.svelte",
+      "type": "contains",
+      "weight": 1,
+      "description": "wraps in Modal"
+    },
+    {
+      "source": "src/modals/WeaponPartModal.svelte",
+      "type": "contains",
+      "target": "src/lib/ui/Badge.svelte",
+      "weight": 1,
+      "description": "uses Badge"
+    },
+    {
+      "source": "src/lib/modals/RaceModal.svelte",
+      "type": "contains",
+      "targ3t": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "wraps in Modal"
+    },
+    {
+      "source": "src/modals/GuildModal.svelte",
+      "type": "contains",
+      "target": "src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "wraps in Modal"
+    },
+    {
+      "source": "src/lib/Toast.svelval",
+      "type": "contains",
+      "target": "src/lib/stores/toast.ts",
+      "weight": 1,
+      "description": "imports toasts, removeToast"
+    },
+    {
+      "source": "src/lib/StatFilterShared.svelte",
+      "type": "imports",
+      "target": "svelte",
+      "weight": 1,
+      "description": "imports createEventDispatcher"
+    }
+  ],
+  "metrics": {
+    "totalNodes": 43,
+    "totalEdges": 36,
+    "batchNumber": 10,
+    "filesNotSkipped": 0,
+    "sipped": [],
+    "fileCount": 25
+  }
+}
+

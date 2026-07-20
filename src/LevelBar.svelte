@@ -2,6 +2,7 @@
   import { tick } from 'svelte'
   import { build } from './lib/store'
   import { MAX_LEVEL, calcBaseMaxHP, STORAGE_KEY_LEVEL, STORAGE_KEY_HP_FILL } from './lib/constants'
+  import Badge from './lib/ui/Badge.svelte'
 
   // ── Props ─────────────────────────────────────────────────────────────────
   export let protection: number = 0
@@ -124,11 +125,9 @@
         <span class="lb-hp-sep">/</span>
         <span class="lb-hp-max">{baseMaxHP}</span>
         {#if effectiveProt !== 0}
-          <span class="lb-prot-badge"
-            class:lb-prot-badge--pos={effectiveProt > 0}
-            class:lb-prot-badge--neg={effectiveProt < 0}>
+          <Badge color={effectiveProt > 0 ? '#38bdf8' : '#f87171'} size="xs">
             {effectiveProt > 0 ? `🛡 +${effectiveProt}` : `⚠ ${effectiveProt}`}
-          </span>
+          </Badge>
         {/if}
       </span>
     </div>
@@ -278,25 +277,6 @@
   }
   .lb-hp-sep  { color: rgba(138,141,133,0.35); }
   .lb-hp-max  { color: #8a8d85; }
-
-  .lb-prot-badge {
-    font-size: .56rem;
-    font-weight: 800;
-    padding: 1px 5px;
-    border-radius: 80px;
-    margin-left: 4px;
-    white-space: nowrap;
-  }
-  .lb-prot-badge--pos {
-    background: rgba(56,189,248,0.14);
-    border: 1px solid rgba(56,189,248,0.35);
-    color: #38bdf8;
-  }
-  .lb-prot-badge--neg {
-    background: rgba(248,113,113,0.12);
-    border: 1px solid rgba(248,113,113,0.3);
-    color: #f87171;
-  }
 
   /* ── Bar track ── */
   .lb-bar-track {

@@ -1,0 +1,5697 @@
+{
+  "nodes": [
+    {
+      "id": "file::src/data/statboost.ts",
+      "type": "file",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "statboost.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 243,
+        "nonEmptyLines": 206,
+        "functionCount": 8,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/damageTypeResolve.ts",
+      "type": "file",
+      "path": "src/lib/damageTypeResolve.ts",
+      "language": "typescript",
+      "label": "damageTypeResolve.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 55,
+        "nonEmptyLines": 52,
+        "functionCount": 3,
+        "exportCount": 3,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/dmgTypes.ts",
+      "type": "file",
+      "path": "src/lib/dmgTypes.ts",
+      "language": "typescript",
+      "label": "dmgTypes.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 67,
+        "nonEmptyLines": 63,
+        "functionCount": 0,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/data/character.ts",
+      "type": "file",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "character.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 29,
+        "nonEmptyLines": 22,
+        "functionCount": 5,
+        "exportCount": 7,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/data/equipment.ts",
+      "type": "file",
+      "path": "src/lib/engine/data/equipment.ts",
+      "language": "typescript",
+      "label": "equipment.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 48,
+        "nonEmptyLines": 40,
+        "functionCount": 4,
+        "exportCount": 9,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/data/weapons.ts",
+      "type": "file",
+      "path": "src/lib/engine/data/weapons.ts",
+      "language": "typescript",
+      "label": "weapons.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 21,
+        "nonEmptyLines": 17,
+        "functionCount": 4,
+        "exportCount": 8,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/format.ts",
+      "type": "file",
+      "path": "src/lib/engine/format.ts",
+      "language": "typescript",
+      "label": "format.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 14,
+        "nonEmptyLines": 12,
+        "functionCount": 2,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/store.ts",
+      "type": "file",
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "label": "store.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 106,
+        "nonEmptyLines": 98,
+        "functionCount": 4,
+        "exportCount": 5,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/types.ts",
+      "type": "file",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "types.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 285,
+        "nonEmptyLines": 247,
+        "functionCount": 3,
+        "exportCount": 9,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/utils.ts",
+      "type": "file",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "utils.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 113,
+        "nonEmptyLines": 92,
+        "functionCount": 8,
+        "exportCount": 4,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::r",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "r",
+      "meta": {
+        "startLine": 43,
+        "endLine": 45,
+        "params": [
+          "v"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::get",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "get",
+      "meta": {
+        "startLine": 47,
+        "endLine": 49,
+        "params": [
+          "s",
+          "key"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::add",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "add",
+      "meta": {
+        "startLine": 51,
+        "endLine": 53,
+        "params": [
+          "s",
+          "key",
+          "amount"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::sub",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "sub",
+      "meta": {
+        "startLine": 55,
+        "endLine": 57,
+        "params": [
+          "s",
+          "key",
+          "amount"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::negMagnitude",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "negMagnitude",
+      "meta": {
+        "startLine": 59,
+        "endLine": 61,
+        "params": [
+          "v"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::negSum",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "negSum",
+      "meta": {
+        "startLine": 63,
+        "endLine": 65,
+        "params": [
+          "s",
+          "keys"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::finalizeRounding",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "finalizeRounding",
+      "meta": {
+        "startLine": 214,
+        "endLine": 223,
+        "params": [
+          "s"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/statboost.ts::applyStatBoostPerks",
+      "type": "function",
+      "path": "src/data/statboost.ts",
+      "language": "typescript",
+      "label": "applyStatBoostPerks",
+      "meta": {
+        "startLine": 225,
+        "endLine": 243,
+        "params": [
+          "stats",
+          "perks"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/damageTypeResolve.ts::resolveDamageTypes",
+      "type": "function",
+      "path": "src/lib/damageTypeResolve.ts",
+      "language": "typescript",
+      "label": "resolveDamageTypes",
+      "meta": {
+        "startLine": 3,
+        "endLine": 13,
+        "params": [
+          "baseTypes",
+          "bonuses"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/damageTypeResolve.ts::applyFireAirConversion",
+      "type": "function",
+      "path": "src/lib/damageTypeResolve.ts",
+      "language": "typescript",
+      "label": "applyFireAirConversion",
+      "meta": {
+        "startLine": 16,
+        "endLine": 26,
+        "params": [
+          "types"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/damageTypeResolve.ts::applyAirToMagicConversion",
+      "type": "function",
+      "path": "src/lib/damageTypeResolve.ts",
+      "language": "typescript",
+      "label": "applyAirToMagicConversion",
+      "meta": {
+        "startLine": 29,
+        "endLine": 55,
+        "params": [
+          "types",
+          "conversionRate",
+          "darkMagicHex",
+          "echoIncinerateAmt"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/character.ts::getRace",
+      "type": "function",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "getRace",
+      "meta": {
+        "startLine": 16,
+        "endLine": 16,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/character.ts::getGuild",
+      "type": "function",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "getGuild",
+      "meta": {
+        "startLine": 17,
+        "endLine": 17,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/character.ts::getPerk",
+      "type": "function",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "getPerk",
+      "meta": {
+        "startLine": 18,
+        "endLine": 18,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/character.ts::getGuildRank",
+      "type": "function",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "getGuildRank",
+      "meta": {
+        "startLine": 20,
+        "endLine": 25,
+        "params": [
+          "guild",
+          "rank"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/character.ts::isMonkGuild",
+      "type": "function",
+      "path": "src/lib/engine/data/character.ts",
+      "language": "typescript",
+      "label": "isMonkGuild",
+      "meta": {
+        "startLine": 27,
+        "endLine": 29,
+        "params": [
+          "guildName"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/equipment.ts::getEnchant",
+      "type": "function",
+      "path": "src/lib/engine/data/equipment.ts",
+      "language": "typescript",
+      "label": "getEnchant",
+      "meta": {
+        "startLine": 37,
+        "endLine": 37,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/equipment.ts::getRing",
+      "type": "function",
+      "path": "src/lib/engine/data/equipment.ts",
+      "language": "typescript",
+      "label": "getRing",
+      "meta": {
+        "startLine": 38,
+        "endLine": 38,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/equipment.ts::getRune",
+      "type": "function",
+      "path": "src/lib/engine/data/equipment.ts",
+      "language": "typescript",
+      "label": "getRune",
+      "meta": {
+        "startLine": 39,
+        "endLine": 39,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/equipment.ts::getArmorPart",
+      "type": "function",
+      "path": "src/lib/engine/data/equipment.ts",
+      "language": "typescript",
+      "label": "getArmorPart",
+      "meta": {
+        "startLine": 41,
+        "endLine": 48,
+        "params": [
+          "name",
+          "type"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/weapons.ts::getBlade",
+      "type": "function",
+      "path": "src/lib/engine/data/weapons.ts",
+      "language": "typescript",
+      "label": "getBlade",
+      "meta": {
+        "startLine": 18,
+        "endLine": 18,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/weapons.ts::getHandle",
+      "type": "function",
+      "path": "src/lib/engine/data/weapons.ts",
+      "language": "typescript",
+      "label": "getHandle",
+      "meta": {
+        "startLine": 19,
+        "endLine": 19,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/weapons.ts::getGlove",
+      "type": "function",
+      "path": "src/lib/engine/data/weapons.ts",
+      "language": "typescript",
+      "label": "getGlove",
+      "meta": {
+        "startLine": 20,
+        "endLine": 20,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/data/weapons.ts::getEssence",
+      "type": "function",
+      "path": "src/lib/engine/data/weapons.ts",
+      "language": "typescript",
+      "label": "getEssence",
+      "meta": {
+        "startLine": 21,
+        "endLine": 21,
+        "params": [
+          "name"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/format.ts::formatStat",
+      "type": "function",
+      "path": "src/lib/engine/format.ts",
+      "language": "typescript",
+      "label": "formatStat",
+      "meta": {
+        "startLine": 4,
+        "endLine": 10,
+        "params": [
+          "key",
+          "value"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/format.ts::formatLabel",
+      "type": "function",
+      "path": "src/lib/engine/format.ts",
+      "language": "typescript",
+      "label": "formatLabel",
+      "meta": {
+        "startLine": 12,
+        "endLine": 14,
+        "params": [
+          "key"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/store.ts::loadBuild",
+      "type": "function",
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "label": "loadBuild",
+      "meta": {
+        "startLine": 51,
+        "endLine": 60,
+        "params": [],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/store.ts::setEnchantment",
+      "type": "function",
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "label": "setEnchantment",
+      "meta": {
+        "startLine": 76,
+        "endLine": 88,
+        "params": [
+          "slot",
+          "index",
+          "value"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/store.ts::clearBuild",
+      "type": "function",
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "label": "clearBuild",
+      "meta": {
+        "startLine": 90,
+        "endLine": 92,
+        "params": [],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/store.ts::setGuild",
+      "type": "function",
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "label": "setGuild",
+      "meta": {
+        "startLine": 94,
+        "endLine": 106,
+        "params": [
+          "guildName",
+          "guildRank"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/types.ts::applyUpgrade",
+      "type": "function",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "applyUpgrade",
+      "meta": {
+        "startLine": 75,
+        "endLine": 89,
+        "params": [
+          "stats",
+          "level"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/types.ts::getProcCoeffValue",
+      "type": "function",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "getProcCoeffValue",
+      "meta": {
+        "startLine": 220,
+        "endLine": 224,
+        "params": [
+          "pc"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/types.ts::canProc",
+      "type": "function",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "canProc",
+      "meta": {
+        "startLine": 226,
+        "endLine": 228,
+        "params": [
+          "pc"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::calculateMultiplierFromPct",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "calculateMultiplierFromPct",
+      "meta": {
+        "startLine": 1,
+        "endLine": 3,
+        "params": [
+          "pct"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::multiplyMultipliers",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "multiplyMultipliers",
+      "meta": {
+        "startLine": 5,
+        "endLine": 7,
+        "params": [
+          "multipliers"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::roundMultiplier",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "roundMultiplier",
+      "meta": {
+        "startLine": 9,
+        "endLine": 11,
+        "params": [
+          "multiplier"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::calcWardingDebuffMultiplier",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "calcWardingDebuffMultiplier",
+      "meta": {
+        "startLine": 13,
+        "endLine": 19,
+        "params": [
+          "warding"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::escapeHtml",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "escapeHtml",
+      "meta": {
+        "startLine": 29,
+        "endLine": 31,
+        "params": [
+          "text"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::highlightText",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "highlightText",
+      "meta": {
+        "startLine": 33,
+        "endLine": 58,
+        "params": [
+          "text",
+          "query"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::highlightTextParts",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "highlightTextParts",
+      "meta": {
+        "startLine": 60,
+        "endLine": 85,
+        "params": [
+          "text",
+          "query"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/utils.ts::calcProcChance",
+      "type": "function",
+      "path": "src/lib/utils.ts",
+      "language": "typescript",
+      "label": "calcProcChance",
+      "meta": {
+        "startLine": 98,
+        "endLine": 113,
+        "params": [
+          "baseChance",
+          "procCoeff",
+          "scaling"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatKey",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "StatKey",
+      "meta": {
+        "line": 13,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatMap",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "StatMap",
+      "meta": {
+        "line": 14,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Race",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Race",
+      "meta": {
+        "line": 22,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GuildPerk",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "GuildPerk",
+      "meta": {
+        "line": 31,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GuildRank",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "GuildRank",
+      "meta": {
+        "line": 32,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Guild",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Guild",
+      "meta": {
+        "line": 33,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ArmorStats",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "ArmorStats",
+      "meta": {
+        "line": 35,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ArmorPart",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "ArmorPart",
+      "meta": {
+        "line": 36,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Armor",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Armor",
+      "meta": {
+        "line": 44,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Ring",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Ring",
+      "meta": {
+        "line": 46,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Rune",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Rune",
+      "meta": {
+        "line": 51,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatModifier",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "StatModifier",
+      "meta": {
+        "line": 56,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EnchantmentEffect",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "EnchantmentEffect",
+      "meta": {
+        "line": 57,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Enchantment",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Enchantment",
+      "meta": {
+        "line": 58,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Perk",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "Perk",
+      "meta": {
+        "line": 68,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EnchantSlot",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "EnchantSlot",
+      "meta": {
+        "line": 70,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BladeType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "BladeType",
+      "meta": {
+        "line": 93,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::HandleType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "HandleType",
+      "meta": {
+        "line": 94,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatPrefix",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "StatPrefix",
+      "meta": {
+        "line": 95,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ScalingKey",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "ScalingKey",
+      "meta": {
+        "line": 96,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponBlade",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "WeaponBlade",
+      "meta": {
+        "line": 98,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHandle",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "WeaponHandle",
+      "meta": {
+        "line": 109,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GloveType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "GloveType",
+      "meta": {
+        "line": 122,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EssenceType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "EssenceType",
+      "meta": {
+        "line": 123,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::MonkGlove",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "MonkGlove",
+      "meta": {
+        "line": 125,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::MonkEssence",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "MonkEssence",
+      "meta": {
+        "line": 155,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BuildState",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "BuildState",
+      "meta": {
+        "line": 177,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ProcCoefficient",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "ProcCoefficient",
+      "meta": {
+        "line": 216,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ProcScalingType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "ProcScalingType",
+      "meta": {
+        "line": 230,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostAttackType",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "BoostAttackType",
+      "meta": {
+        "line": 232,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostEntry",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "BoostEntry",
+      "meta": {
+        "line": 234,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostResult",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "BoostResult",
+      "meta": {
+        "line": 245,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHitObject",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "WeaponHitObject",
+      "meta": {
+        "line": 267,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHit",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "WeaponHit",
+      "meta": {
+        "line": 272,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponBaseDmg",
+      "type": "type",
+      "path": "src/lib/types.ts",
+      "language": "typescript",
+      "label": "WeaponBaseDmg",
+      "meta": {
+        "line": 274,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::ComputedType",
+      "type": "type",
+      "path": "src/lib/dmgTypes.ts",
+      "language": "typescript",
+      "label": "ComputedType",
+      "meta": {
+        "line": 21,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::PerkOnHitDmg",
+      "type": "type",
+      "path": "src/lib/dmgTypes.ts",
+      "language": "typescript",
+      "label": "PerkOnHitDmg",
+      "meta": {
+        "line": 41,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::ComputedHit",
+      "type": "type",
+      "path": "src/lib/dmgTypes.ts",
+      "language": "typescript",
+      "label": "ComputedHit",
+      "meta": {
+        "line": 61,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/HealBoost.ts",
+      "kind": "file",
+      "label": "HealBoost.ts",
+      "filePath": "src/data/HealBoost.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 215,
+      "metadata": {
+        "functions": 2,
+        "exports": 1,
+        "classes": 0,
+        "imports": 1,
+        "description": "Healing multiplier calculation system. Defines HealBoostContext and HealBoostDef for composable healing sources (perks, runes, passives). calculateHealBoost aggregates multipliers from level, emotional state, Vampire, Frenzy, Dragon Infusion, and Anti Heal debuff. Returns per-source breakdown and final multiplier."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "function",
+      "label": "calculateHealBoost",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        132,
+        207
+      ],
+      "params": [
+        "ctx",
+        "appliesToType"
+      ],
+      "metadata": {
+        "description": "Main entry point for healing boost calculation. Iterates HEAL_SCALING_DEFS, evaluates active conditions and calcFn callbacks, aggregates multipliers multiplicatively, then applies Anti Heal reduction from self-debuffs. Returns HealBoostResult with per-source entries and finalMultiplier."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/HealBoost.ts::getHealScalingMultiplier",
+      "kind": "function",
+      "label": "getHealScalingMultiplier",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        209,
+        215
+      ],
+      "params": [
+        "ctx",
+        "appliesToType"
+      ],
+      "metadata": {
+        "description": "Convenience wrapper that returns only the finalMultiplier from calculateHealBoost."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealBoostContext",
+      "kind": "type",
+      "label": "HealBoostContext",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Context object for healing calculations: perks map, emotional state, darkness flag, level, draconic color, slider value, guild, rune infusion type, rage potency, and active buffs array."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealSource",
+      "kind": "type",
+      "label": "HealSource",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Union type for healing sources: 'perk' | 'rune' | 'weaponArt' | 'passive'."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealBoostResult",
+      "kind": "type",
+      "label": "HealBoostResult",
+      "filePath": "src/data/HealBoost.ts",
+      "metadata": {
+        "description": "Result of heal boost calculation: entries array with per-source rawMultiplier/condition/sourceType, and finalMultiplier."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "kind": "data",
+      "label": "HEAL_SCALING_DEFS",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        40,
+        118
+      ],
+      "metadata": {
+        "description": "Array of HealBoostDef objects defining all healing multiplier sources: Level Healing, Emotional, Heal Boost, Oceans Rage, Vampire (Sunlight), Frenzy (Self), Dragon Infusion."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/Runebasedmg.ts",
+      "kind": "file",
+      "label": "Runebasedmg.ts",
+      "filePath": "src/data/Runebasedmg.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 200,
+      "metadata": {
+        "functions": 1,
+        "exports": 1,
+        "classes": 0,
+        "imports": 3,
+        "description": "Rune damage definition system. Defines RUNE_DMG_DEFS array with 11 rune entries (Ancient Cleric, Beenade, Boostshroom, Thunderous Charge, Sporeling Toss, Foot Dive, Caci, Cacitrops, Hex Web, Brainblast, Fireball, Rocky Tail). Each entry has base damage, damage type distribution, stat scalings, hit counts, optional slider/shield definitions, and notes. Includes calculateRuneHealScaling helper that bridges to HealBoost for heal-only runes."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "kind": "function",
+      "label": "calculateRuneHealScaling",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [
+        44,
+        66
+      ],
+      "params": [
+        "runeDef",
+        "ctx"
+      ],
+      "metadata": {
+        "description": "Helper that constructs a HealBoostContext from a rune context and calls calculateHealBoost with 'rune' type. Returns 1.0 for non-heal-only runes."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Runebasedmg.ts::RuneDmgDef",
+      "kind": "type",
+      "label": "RuneDmgDef",
+      "filePath": "src/data/Runebasedmg.ts",
+      "metadata": {
+        "description": "Interface for rune damage definitions: runeName, condition, getBaseDamage function, dmgTypes distribution, scalings map, optional hits/getHits, maxPotency, slider, shield, isHealOnly flag, notes."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Runebasedmg.ts::RuneDmgCtx",
+      "kind": "type",
+      "label": "RuneDmgCtx",
+      "filePath": "src/data/Runebasedmg.ts",
+      "metadata": {
+        "description": "Context for rune damage calculations: potency, sliderVal, stats, perks, selfDamage."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "kind": "data",
+      "label": "RUNE_DMG_DEFS",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [
+        68,
+        200
+      ],
+      "metadata": {
+        "description": "Array of 11 rune damage definitions covering all rune types in Voxel Blade. Includes Ancient Cleric (heal), Beenade (multi-hit magic/holy), Boostshroom (hex), Thunderous Charge (air/magic), Sporeling Toss (hex/physical with summon scaling), Foot Dive (physical/dex), Caci/Cacitrops (physical), Hex Web (hex), Brainblast (fire/earth/magic), Fireball (fire), Rocky Tail (earth/physical with protection scaling)."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/SummonData.ts",
+      "kind": "file",
+      "label": "SummonData.ts",
+      "filePath": "src/data/SummonData.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 84,
+      "metadata": {
+        "functions": 2,
+        "exports": 4,
+        "classes": 0,
+        "imports": 1,
+        "description": "Summon data and utility functions. Provides calcSummonStat for scaling summon stats by boost% and level, calcMaxSummonCount for the summon cap (15 + Swarm perk), SUMMON_MAP for mage/blessedling definitions, and WA_SUMMON_MAP mapping weapon art names to summon names."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/SummonData.ts::calcSummonStat",
+      "kind": "function",
+      "label": "calcSummonStat",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [
+        3,
+        5
+      ],
+      "params": [
+        "base",
+        "summonBoostPct",
+        "level"
+      ],
+      "metadata": {
+        "description": "Calculates a summon's stat value: base * (1 + (summonBoostPct/100) * (1 + level/MAX_LEVEL)), rounded to 2 decimal places."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/SummonData.ts::calcMaxSummonCount",
+      "kind": "function",
+      "label": "calcMaxSummonCount",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [
+        9,
+        11
+      ],
+      "params": [
+        "perks"
+      ],
+      "metadata": {
+        "description": "Returns the maximum summon count: BASE_SUMMON_CAP (15) + floor(Swarm perk stacks)."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:data::src/data/SummonData.ts::SUMMON_MAP",
+      "kind": "data",
+      "label": "SUMMON_MAP",
+      "filePath": "src/data/SummonData.ts",
+      "metadata": {
+        "description": "Lookup map of summon definitions keyed by name (Mage Bomber, Blessedling)."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:data::src/data/SummonData.ts::WA_SUMMON_MAP",
+      "kind": "data",
+      "label": "WA_SUMMON_MAP",
+      "filePath": "src/data/SummonData.ts",
+      "metadata": {
+        "description": "Maps weapon art summon names to their base summon names (e.g., 'Mage Bomber Summon' -> 'Mage Bomber')."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/draconicBuffs.ts",
+      "kind": "file",
+      "label": "draconicBuffs.ts",
+      "filePath": "src/data/draconicBuffs.ts",
+      "language": "typescript",
+      "category": "code",
+      "lines": 112,
+      "metadata": {
+        "functions": 5,
+        "exports": 5,
+        "classes": 0,
+        "imports": 1,
+        "description": "Draconic guild buff/debuff calculation system. Provides potency/duration multiplier getters, color-specific infusion effects (air/fire/hex/holy/water/earth), buff generation for Dragon Infusion, and debuff generation for Dragon Claw/Bubble abilities with Hex and Fire color variants."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionPotMult",
+      "kind": "function",
+      "label": "getDraconicInfusionPotMult",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        4,
+        6
+      ],
+      "params": [
+        "perkAmt"
+      ],
+      "metadata": {
+        "description": "Returns draconic infusion potency multiplier: 1 + perkAmt * DRACONIC_INFUSION_POT_MULT."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionDurMult",
+      "kind": "function",
+      "label": "getDraconicInfusionDurMult",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        7,
+        9
+      ],
+      "params": [
+        "perkAmt"
+      ],
+      "metadata": {
+        "description": "Returns draconic infusion duration multiplier: 1 + perkAmt * DRACONIC_INFUSION_DUR_MULT."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "kind": "function",
+      "label": "getEffectiveDraconicInfusionPotency",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        19,
+        30
+      ],
+      "params": [
+        "guildName",
+        "draconicRuneInfusion",
+        "draconicColor",
+        "draconicBloodPerkAmt",
+        "perks"
+      ],
+      "metadata": {
+        "description": "Computes the effective draconic infusion potency after applying perk modifiers. Calls getDraconicInfusionBuff to get raw buffs, then applyBuffPerkModifiers to modify them, returning the final potency."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "kind": "function",
+      "label": "getDraconicInfusionBuff",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        32,
+        72
+      ],
+      "params": [
+        "guildName",
+        "draconicRuneInfusion",
+        "draconicColor",
+        "draconicBloodPerkAmt"
+      ],
+      "metadata": {
+        "description": "Generates GrantedBuff array for Dragon Infusion. Creates the base Draconic Infusion buff with potency/duration/condition based on color-specific effects. For Fire color, also appends a Burn buff."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicBuffs.ts::getDraconicAbilityDebuffs",
+      "kind": "function",
+      "label": "getDraconicAbilityDebuffs",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        74,
+        112
+      ],
+      "params": [
+        "guildName",
+        "draconicRuneInfusion",
+        "draconicColor",
+        "draconicBloodPerkAmt"
+      ],
+      "metadata": {
+        "description": "Generates debuff arrays for Dragon Claw and Dragon Bubble abilities. For Hex color: guaranteed Weakness + 3 random from BASIC_DEBUFF_POOL. For Fire color: Burn on hit. Returns empty array for other colors or non-claw/bubble abilities."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:data::src/data/draconicBuffs.ts::DRACONIC_INFUSION_COLOR_EFFECTS",
+      "kind": "data",
+      "label": "DRACONIC_INFUSION_COLOR_EFFECTS",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        11,
+        18
+      ],
+      "metadata": {
+        "description": "Record mapping draconic colors (air/fire/hex/holy/water/earth) to description generator functions that return color-specific effect text based on perk amount."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/_utils.ts",
+      "type": "file",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "_utils.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 2,
+        "nonEmptyLines": 2,
+        "functionCount": 2,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/_utils.ts::round2",
+      "type": "function",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "round2",
+      "meta": {
+        "startLine": 1,
+        "endLine": 1,
+        "params": [
+          "v"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/_utils.ts::round4",
+      "type": "function",
+      "path": "src/lib/engine/_utils.ts",
+      "language": "typescript",
+      "label": "round4",
+      "meta": {
+        "startLine": 2,
+        "endLine": 2,
+        "params": [
+          "v"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/enchant.ts",
+      "type": "file",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "enchant.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 221,
+        "nonEmptyLines": 189,
+        "functionCount": 9,
+        "exportCount": 5,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyMod",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyMod",
+      "meta": {
+        "startLine": 8,
+        "endLine": 10,
+        "params": [
+          "value",
+          "mod"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::normalizeModifiers",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "normalizeModifiers",
+      "meta": {
+        "startLine": 12,
+        "endLine": 14,
+        "params": [
+          "m"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyModsToKey",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyModsToKey",
+      "meta": {
+        "startLine": 16,
+        "endLine": 26,
+        "params": [
+          "key",
+          "mods",
+          "mult",
+          "add"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyModsWhere",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyModsWhere",
+      "meta": {
+        "startLine": 28,
+        "endLine": 40,
+        "params": [
+          "mods",
+          "baseStats",
+          "mult",
+          "add",
+          "predicate"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyEnchantmentsToSlot",
+      "meta": {
+        "startLine": 57,
+        "endLine": 148,
+        "params": [
+          "baseStats",
+          "basePerks",
+          "enchantNames",
+          "upgradeLevel"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyPerkEffectiveness",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyPerkEffectiveness",
+      "meta": {
+        "startLine": 163,
+        "endLine": 177,
+        "params": [
+          "perks",
+          "perkEffectivenessStacks",
+          "cursedStacks"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::applyInfusion",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "applyInfusion",
+      "meta": {
+        "startLine": 181,
+        "endLine": 192,
+        "params": [
+          "baseStats",
+          "basePerks"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::isExclusiveEnchant",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "isExclusiveEnchant",
+      "meta": {
+        "startLine": 196,
+        "endLine": 198,
+        "params": [
+          "e"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/enchant.ts::enforceEnchantSlot",
+      "type": "function",
+      "path": "src/lib/engine/enchant.ts",
+      "language": "typescript",
+      "label": "enforceEnchantSlot",
+      "meta": {
+        "startLine": 200,
+        "endLine": 221,
+        "params": [
+          "selections",
+          "changedIndex"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/shrine.ts",
+      "type": "file",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "shrine.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 33,
+        "nonEmptyLines": 30,
+        "functionCount": 2,
+        "exportCount": 3,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/shrine.ts::applyShrineToScalings",
+      "type": "function",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "applyShrineToScalings",
+      "meta": {
+        "startLine": 9,
+        "endLine": 20,
+        "params": [
+          "scalings",
+          "tier"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/shrine.ts::applyShrineToStats",
+      "type": "function",
+      "path": "src/lib/engine/shrine.ts",
+      "language": "typescript",
+      "label": "applyShrineToStats",
+      "meta": {
+        "startLine": 22,
+        "endLine": 33,
+        "params": [
+          "stats",
+          "tier"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/engine/weapon.ts",
+      "type": "file",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "weapon.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 443,
+        "nonEmptyLines": 388,
+        "functionCount": 15,
+        "exportCount": 3,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::checkHybrid",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "checkHybrid",
+      "meta": {
+        "startLine": 20,
+        "endLine": 43,
+        "params": [
+          "part1",
+          "part2"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::getWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "getWeaponType",
+      "meta": {
+        "startLine": 53,
+        "endLine": 55,
+        "params": [
+          "handleType",
+          "bladeType"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::resolveWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "resolveWeaponType",
+      "meta": {
+        "startLine": 81,
+        "endLine": 99,
+        "params": [
+          "handleType",
+          "bladeType",
+          "perks"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::getMonkWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "getMonkWeaponType",
+      "meta": {
+        "startLine": 108,
+        "endLine": 110,
+        "params": [
+          "essenceType",
+          "gloveType"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::resolveMonkWeaponType",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "resolveMonkWeaponType",
+      "meta": {
+        "startLine": 112,
+        "endLine": 121,
+        "params": [
+          "essenceType",
+          "gloveType",
+          "perks"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::extractDamageAndScalings",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "extractDamageAndScalings",
+      "meta": {
+        "startLine": 171,
+        "endLine": 192,
+        "params": [
+          "part"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::mergePartPerks",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergePartPerks",
+      "meta": {
+        "startLine": 194,
+        "endLine": 222,
+        "params": [
+          "part1",
+          "part2"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::applyShrineToPart",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "applyShrineToPart",
+      "meta": {
+        "startLine": 224,
+        "endLine": 226,
+        "params": [
+          "data",
+          "part",
+          "shrineActive",
+          "fn"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::mergeRecords",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergeRecords",
+      "meta": {
+        "startLine": 228,
+        "endLine": 234,
+        "params": [
+          "a",
+          "b"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "mergeScalingsAndStats",
+      "meta": {
+        "startLine": 236,
+        "endLine": 280,
+        "params": [
+          "p1Data",
+          "p2Data",
+          "part1",
+          "part2",
+          "shrineActive"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::buildWeaponResult",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "buildWeaponResult",
+      "meta": {
+        "startLine": 282,
+        "endLine": 362,
+        "params": [
+          "opts"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcWeaponGeneric",
+      "meta": {
+        "startLine": 364,
+        "endLine": 385,
+        "params": [
+          "part1",
+          "part2",
+          "part1TypeLabel",
+          "part2TypeLabel",
+          "part1TypeKey",
+          "part2TypeKey",
+          "isMonk",
+          "shrineActive"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::applyMonkStatBonus",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "applyMonkStatBonus",
+      "meta": {
+        "startLine": 393,
+        "endLine": 412,
+        "params": [
+          "baseStats",
+          "shrineMult",
+          "monkPct",
+          "result",
+          "finalKey",
+          "rawKey"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::calcWeapon",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcWeapon",
+      "meta": {
+        "startLine": 416,
+        "endLine": 418,
+        "params": [
+          "bladeName",
+          "handleName",
+          "shrineActive"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/engine/weapon.ts::calcMonkWeapon",
+      "type": "function",
+      "path": "src/lib/engine/weapon.ts",
+      "language": "typescript",
+      "label": "calcMonkWeapon",
+      "meta": {
+        "startLine": 420,
+        "endLine": 443,
+        "params": [
+          "gloveName",
+          "essenceName",
+          "shrineActive",
+          "monkRank"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::decode_full.mjs",
+      "type": "file",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "decode_full.mjs",
+      "meta": {
+        "category": "code",
+        "totalLines": 263,
+        "nonEmptyLines": 236,
+        "functionCount": 9,
+        "exportCount": 0,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::docs/ONBOARDING.md",
+      "type": "file",
+      "path": "docs/ONBOARDING.md",
+      "language": "markdown",
+      "label": "ONBOARDING.md",
+      "meta": {
+        "category": "docs",
+        "totalLines": 405,
+        "nonEmptyLines": 346,
+        "sectionCount": 41
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/app.css",
+      "type": "file",
+      "path": "src/app.css",
+      "language": "css",
+      "label": "app.css",
+      "meta": {
+        "category": "markup",
+        "totalLines": 315,
+        "nonEmptyLines": 293
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/App.svelte",
+      "type": "file",
+      "path": "src/App.svelte",
+      "language": "svelte",
+      "label": "App.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 3733,
+        "nonEmptyLines": 3479,
+        "description": "Root application component. Manages build state, equipment selection, enchantments, weapon arts, draconic system, and tab navigation. Composes DamageAnalyzer, BuffList, BuildSaves, CdrStepsCalc, LevelBar, EmotionalTracker, and modal components."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/BaseDamageCalc.svelte",
+      "type": "file",
+      "path": "src/BaseDamageCalc.svelte",
+      "language": "svelte",
+      "label": "BaseDamageCalc.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 2503,
+        "nonEmptyLines": 2366,
+        "description": "Core damage calculation display component. Renders per-hit damage rows with type-specific boosts, crit, armor pen, debuff effects, defense breakdowns, heal calculations, and DoT ticks. Accepts 50+ props from DamageAnalyzer."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/BuffList.svelte",
+      "type": "file",
+      "path": "src/BuffList.svelte",
+      "language": "svelte",
+      "label": "BuffList.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 744,
+        "nonEmptyLines": 675,
+        "description": "Active buffs/debuffs panel. Computes active buffs from items, perks, weapon arts, draconic infusion, and race effects. Displays potency, duration, and condition info."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/BuildSaves.svelte",
+      "type": "file",
+      "path": "src/BuildSaves.svelte",
+      "language": "svelte",
+      "label": "BuildSaves.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 609,
+        "nonEmptyLines": 557,
+        "description": "Build save/load panel. Manages localStorage save slots, import/export codes, and EmotionalTracker integration."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/CdrStepsCalc.svelte",
+      "type": "file",
+      "path": "src/CdrStepsCalc.svelte",
+      "language": "svelte",
+      "label": "CdrStepsCalc.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 93,
+        "nonEmptyLines": 86,
+        "description": "Cooldown reduction step-by-step display. Shows each CDR multiplier step with old CD → new CD flow, floor, and minimum cap."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/CritIcon.svelte",
+      "type": "file",
+      "path": "src/CritIcon.svelte",
+      "language": "svelte",
+      "label": "CritIcon.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 14,
+        "nonEmptyLines": 13,
+        "description": "Small SVG crit icon with gradient fill. Accepts size prop."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/DamageAnalyzer.svelte",
+      "type": "file",
+      "path": "src/DamageAnalyzer.svelte",
+      "language": "svelte",
+      "label": "DamageAnalyzer.svelte",
+      "meta": {
+        "category": "code",
+        "totalLines": 6666,
+        "nonEmptyLines": 6258,
+        "description": "Largest component — full damage analysis engine. Computes weapon calc, buff assembly, defense resolution, perk damage, DoT, heal scaling, self-damage, CDR, draconic bonuses, mount runes, weapon art checks, and passes all computed data to BaseDamageCalc."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/cdr.ts",
+      "type": "file",
+      "path": "src/data/cdr.ts",
+      "language": "typescript",
+      "label": "cdr.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 64,
+        "nonEmptyLines": 59,
+        "functionCount": 0,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/debuffCombatEffects.ts",
+      "type": "file",
+      "path": "src/data/debuffCombatEffects.ts",
+      "language": "typescript",
+      "label": "debuffCombatEffects.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 91,
+        "nonEmptyLines": 87,
+        "functionCount": 0,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/defensivePerks.ts",
+      "type": "file",
+      "path": "src/data/defensivePerks.ts",
+      "language": "typescript",
+      "label": "defensivePerks.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 207,
+        "nonEmptyLines": 196,
+        "functionCount": 2,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/DoTDamage.ts",
+      "type": "file",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "DoTDamage.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 90,
+        "nonEmptyLines": 81,
+        "functionCount": 5,
+        "exportCount": 8,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/draconicColorEffects.ts",
+      "type": "file",
+      "path": "src/data/draconicColorEffects.ts",
+      "language": "typescript",
+      "label": "draconicColorEffects.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 50,
+        "nonEmptyLines": 45,
+        "functionCount": 2,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/draconicRunes.ts",
+      "type": "file",
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "label": "draconicRunes.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 104,
+        "nonEmptyLines": 81,
+        "functionCount": 6,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::getPerk",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "getPerk",
+      "meta": {
+        "startLine": 24,
+        "endLine": 24,
+        "params": [
+          "name"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::getArmorPart",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "getArmorPart",
+      "meta": {
+        "startLine": 35,
+        "endLine": 35,
+        "params": [
+          "name",
+          "type"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::applyUpgrade",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "applyUpgrade",
+      "meta": {
+        "startLine": 40,
+        "endLine": 52,
+        "params": [
+          "stats",
+          "level"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::applyEnchantmentsToSlot",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "applyEnchantmentsToSlot",
+      "meta": {
+        "startLine": 61,
+        "endLine": 111,
+        "params": [
+          "baseStats",
+          "basePerks",
+          "enchantNames",
+          "upgradeLevel"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::applyShrine",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "applyShrine",
+      "meta": {
+        "startLine": 114,
+        "endLine": 121,
+        "params": [
+          "stats",
+          "tier"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::applyInfusion",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "applyInfusion",
+      "meta": {
+        "startLine": 123,
+        "endLine": 127,
+        "params": [
+          "baseStats",
+          "basePerks"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::decode_full.mjs::finalizePerks",
+      "type": "function",
+      "path": "decode_full.mjs",
+      "language": "javascript",
+      "label": "finalizePerks",
+      "meta": {
+        "startLine": 207,
+        "endLine": 227,
+        "params": [
+          "raw"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/defensivePerks.ts::getActiveDefensivePerkSources",
+      "type": "function",
+      "path": "src/data/defensivePerks.ts",
+      "language": "typescript",
+      "label": "getActiveDefensivePerkSources",
+      "meta": {
+        "startLine": 147,
+        "endLine": 187,
+        "params": [
+          "perks",
+          "hpFillPct",
+          "adaptivePlateTriggered",
+          "inDarkness",
+          "rageActive",
+          "isMounted",
+          "hasProtection",
+          "uniqueDebuffCount"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/defensivePerks.ts::calcDefensivePotencyMult",
+      "type": "function",
+      "path": "src/data/defensivePerks.ts",
+      "language": "typescript",
+      "label": "calcDefensivePotencyMult",
+      "meta": {
+        "startLine": 189,
+        "endLine": 207,
+        "params": [
+          "perks",
+          "draconicRuneInfusion",
+          "draconicColor"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/DoTDamage.ts::getDotBase",
+      "type": "function",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "getDotBase",
+      "meta": {
+        "startLine": 37,
+        "endLine": 39,
+        "params": [
+          "inflictionPotency"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/DoTDamage.ts::getDotPotencyMult",
+      "type": "function",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "getDotPotencyMult",
+      "meta": {
+        "startLine": 46,
+        "endLine": 48,
+        "params": [
+          "dotPotency"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/DoTDamage.ts::calcDotTick",
+      "type": "function",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "calcDotTick",
+      "meta": {
+        "startLine": 56,
+        "endLine": 63,
+        "params": [
+          "dotPotency",
+          "inflictionPotency"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/DoTDamage.ts::calcCausticSlow",
+      "type": "function",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "calcCausticSlow",
+      "meta": {
+        "startLine": 73,
+        "endLine": 82,
+        "params": [
+          "poisonPotencyBuilder",
+          "slowDuration"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/DoTDamage.ts::toGamePotency",
+      "type": "function",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "toGamePotency",
+      "meta": {
+        "startLine": 88,
+        "endLine": 90,
+        "params": [
+          "builderValue"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicColorEffects.ts::getDraconicColorDmgMultiplier",
+      "type": "function",
+      "path": "src/data/draconicColorEffects.ts",
+      "language": "typescript",
+      "label": "getDraconicColorDmgMultiplier",
+      "meta": {
+        "startLine": 44,
+        "endLine": 46,
+        "params": [
+          "color"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicRunes.ts::applyDraconicBonuses",
+      "type": "function",
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "label": "applyDraconicBonuses",
+      "meta": {
+        "startLine": 81,
+        "endLine": 90,
+        "params": [
+          "dmgTypes",
+          "runesCtx",
+          "infusionCtx"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/draconicRunes.ts::getDraconicBonuses",
+      "type": "function",
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "label": "getDraconicBonuses",
+      "meta": {
+        "startLine": 92,
+        "endLine": 104,
+        "params": [
+          "runesCtx",
+          "infusionCtx"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Perkbasedmg.ts::HpGate",
+      "type": "type",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "HpGate",
+      "meta": {
+        "line": 96,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/cdr.ts::CDR_PERK_DATA",
+      "type": "export",
+      "path": "src/data/cdr.ts",
+      "language": "typescript",
+      "label": "CDR_PERK_DATA",
+      "meta": {
+        "line": 31,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Record<string, PerkCDREntry> mapping perk names to their CDR effects (rune/wa pct, multipliers, set CD overrides)"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/debuffCombatEffects.ts::DEBUFF_COMBAT_EFFECTS",
+      "type": "export",
+      "path": "src/data/debuffCombatEffects.ts",
+      "language": "typescript",
+      "label": "DEBUFF_COMBAT_EFFECTS",
+      "meta": {
+        "line": 12,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Record<string, DebuffCombatEffect> mapping debuff names (Weakness, Shatter, Sticky, Despair, Frostbite) to their damage/defense modifiers"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/defensivePerks.ts::DefensivePerkSource",
+      "type": "type",
+      "path": "src/data/defensivePerks.ts",
+      "language": "typescript",
+      "label": "DefensivePerkSource",
+      "meta": {
+        "line": 34,
+        "kind": "interface",
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/DoTDamage.ts::DotType",
+      "type": "type",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "DotType",
+      "meta": {
+        "line": 4,
+        "kind": "type-alias",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/DoTDamage.ts::DOT_SCALINGS",
+      "type": "export",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "DOT_SCALINGS",
+      "meta": {
+        "line": 18,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Record of DoT type stat scalings: Bleed (dex+phys), Burn (fire), Poison (hex+earth)"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/DoTDamage.ts::DOT_DMG_TYPE_MAP",
+      "type": "export",
+      "path": "src/data/DoTDamage.ts",
+      "language": "typescript",
+      "label": "DOT_DMG_TYPE_MAP",
+      "meta": {
+        "line": 26,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Maps DoT types to defense mitigation damage types"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicColorEffects.ts::DraconicColorAttackStats",
+      "type": "type",
+      "path": "src/data/draconicColorEffects.ts",
+      "language": "typescript",
+      "label": "DraconicColorAttackStats",
+      "meta": {
+        "line": 16,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/draconicColorEffects.ts::DRACONIC_COLOR_ATTACK_STATS",
+      "type": "export",
+      "path": "src/data/draconicColorEffects.ts",
+      "language": "typescript",
+      "label": "DRACONIC_COLOR_ATTACK_STATS",
+      "meta": {
+        "line": 33,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of 6 draconic color definitions (fire/air/earth/water/holy/hex) with damage multipliers, speed, stun, and special effects"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicRunes.ts::DraconicRunesContext",
+      "type": "type",
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "label": "DraconicRunesContext",
+      "meta": {
+        "line": 1,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicRunes.ts::DragonInfusionContext",
+      "type": "type",
+      "path": "src/data/draconicRunes.ts",
+      "language": "typescript",
+      "label": "DragonInfusionContext",
+      "meta": {
+        "line": 6,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/enemyHpEffects.ts",
+      "type": "file",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "enemyHpEffects.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 90,
+        "nonEmptyLines": 83,
+        "functionCount": 3,
+        "exportCount": 4,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/mountRunes.ts",
+      "type": "file",
+      "path": "src/data/mountRunes.ts",
+      "language": "typescript",
+      "label": "mountRunes.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 89,
+        "nonEmptyLines": 84,
+        "functionCount": 1,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/Perkbasedmg.ts",
+      "type": "file",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "Perkbasedmg.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 708,
+        "nonEmptyLines": 697,
+        "functionCount": 3,
+        "exportCount": 7,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/procCoefficients.ts",
+      "type": "file",
+      "path": "src/data/procCoefficients.ts",
+      "language": "typescript",
+      "label": "procCoefficients.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 67,
+        "nonEmptyLines": 61,
+        "functionCount": 0,
+        "exportCount": 6,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/raceEffects.ts",
+      "type": "file",
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "label": "raceEffects.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 45,
+        "nonEmptyLines": 39,
+        "functionCount": 3,
+        "exportCount": 3,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/selfDamagePerks.ts",
+      "type": "file",
+      "path": "src/data/selfDamagePerks.ts",
+      "language": "typescript",
+      "label": "selfDamagePerks.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 83,
+        "nonEmptyLines": 76,
+        "functionCount": 1,
+        "exportCount": 4,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/stanceOverlays.ts",
+      "type": "file",
+      "path": "src/data/stanceOverlays.ts",
+      "language": "typescript",
+      "label": "stanceOverlays.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 59,
+        "nonEmptyLines": 55,
+        "functionCount": 1,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/weapon base dmg.ts",
+      "type": "file",
+      "path": "src/data/weapon base dmg.ts",
+      "language": "typescript",
+      "label": "weapon base dmg.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 42,
+        "nonEmptyLines": 39,
+        "functionCount": 0,
+        "exportCount": 1,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/Weaponartcheck.ts",
+      "type": "file",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "Weaponartcheck.ts",
+      "meta": {
+        "category": "code",
+        "totalLines": 144,
+        "nonEmptyLines": 125,
+        "functionCount": 7,
+        "exportCount": 2,
+        "classCount": 0
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/enemyHpEffects.ts::isEnemyHpGateActive",
+      "type": "function",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "isEnemyHpGateActive",
+      "meta": {
+        "startLine": 6,
+        "endLine": 8,
+        "params": [
+          "gate",
+          "enemyHpFillPct"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/enemyHpEffects.ts::getActiveEnemyHpDebuffs",
+      "type": "function",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "getActiveEnemyHpDebuffs",
+      "meta": {
+        "startLine": 53,
+        "endLine": 74,
+        "params": [
+          "perks",
+          "enemyHpFillPct",
+          "activeDebuffNames"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/enemyHpEffects.ts::getEnemyHpDotMultiplier",
+      "type": "function",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "getEnemyHpDotMultiplier",
+      "meta": {
+        "startLine": 76,
+        "endLine": 90,
+        "params": [
+          "perks",
+          "enemyHpFillPct",
+          "dotType"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/mountRunes.ts::getMountRuneDef",
+      "type": "function",
+      "path": "src/data/mountRunes.ts",
+      "language": "typescript",
+      "label": "getMountRuneDef",
+      "meta": {
+        "startLine": 87,
+        "endLine": 89,
+        "params": [
+          "runeName"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Perkbasedmg.ts::gateThreshold",
+      "type": "function",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "gateThreshold",
+      "meta": {
+        "startLine": 103,
+        "endLine": 107,
+        "params": [
+          "gate",
+          "perkAmount"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Perkbasedmg.ts::isHpGateActive",
+      "type": "function",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "isHpGateActive",
+      "meta": {
+        "startLine": 109,
+        "endLine": 114,
+        "params": [
+          "gate",
+          "hpFillPct",
+          "perkAmount"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Perkbasedmg.ts::calcSpringblastBaseDamage",
+      "type": "function",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "calcSpringblastBaseDamage",
+      "meta": {
+        "startLine": 175,
+        "endLine": 177,
+        "params": [
+          "perkAmount"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/raceEffects.ts::getActiveRaceEffect",
+      "type": "function",
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "label": "getActiveRaceEffect",
+      "meta": {
+        "startLine": 24,
+        "endLine": 26,
+        "params": [
+          "raceName",
+          "hpFillPct"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/raceEffects.ts::getOrkTenacityBuffs",
+      "type": "function",
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "label": "getOrkTenacityBuffs",
+      "meta": {
+        "startLine": 30,
+        "endLine": 38,
+        "params": [
+          "buffs",
+          "buffDefs"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/raceEffects.ts::calcOrkTenacityBonus",
+      "type": "function",
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "label": "calcOrkTenacityBonus",
+      "meta": {
+        "startLine": 40,
+        "endLine": 45,
+        "params": [
+          "buffs",
+          "buffDefs"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/selfDamagePerks.ts::calcSelfDamage",
+      "type": "function",
+      "path": "src/data/selfDamagePerks.ts",
+      "language": "typescript",
+      "label": "calcSelfDamage",
+      "meta": {
+        "startLine": 53,
+        "endLine": 83,
+        "params": [
+          "def",
+          "perkAmount",
+          "preBoostDamageDealt",
+          "enemiesHit",
+          "defenseMultipliers"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/stanceOverlays.ts::resolveStanceOverlay",
+      "type": "function",
+      "path": "src/data/stanceOverlays.ts",
+      "language": "typescript",
+      "label": "resolveStanceOverlay",
+      "meta": {
+        "startLine": 54,
+        "endLine": 59,
+        "params": [
+          "ctx"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::passesAtLeastOneScaling",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "passesAtLeastOneScaling",
+      "meta": {
+        "startLine": 32,
+        "endLine": 41,
+        "params": [
+          "req",
+          "scalings"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::meetsScalingReqs",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "meetsScalingReqs",
+      "meta": {
+        "startLine": 43,
+        "endLine": 49,
+        "params": [
+          "req",
+          "scalings"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::meetsStatReqs",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "meetsStatReqs",
+      "meta": {
+        "startLine": 51,
+        "endLine": 57,
+        "params": [
+          "req",
+          "stats"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::buildUnmetStatReqs",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "buildUnmetStatReqs",
+      "meta": {
+        "startLine": 59,
+        "endLine": 66,
+        "params": [
+          "req",
+          "stats"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::buildUnmetScalingReqs",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "buildUnmetScalingReqs",
+      "meta": {
+        "startLine": 68,
+        "endLine": 89,
+        "params": [
+          "req",
+          "scalings"
+        ],
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::checkWA",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "checkWA",
+      "meta": {
+        "startLine": 91,
+        "endLine": 114,
+        "params": [
+          "wa",
+          "scalings",
+          "stats",
+          "finalWeaponType",
+          "isMonk",
+          "bladeName",
+          "handleName"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/Weaponartcheck.ts::getUnmetReqs",
+      "type": "function",
+      "path": "src/data/Weaponartcheck.ts",
+      "language": "typescript",
+      "label": "getUnmetReqs",
+      "meta": {
+        "startLine": 116,
+        "endLine": 144,
+        "params": [
+          "wa",
+          "scalings",
+          "stats",
+          "finalWeaponType",
+          "isMonk",
+          "bladeName",
+          "handleName"
+        ],
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/enemyHpEffects.ts::EnemyHpGate",
+      "type": "type",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "EnemyHpGate",
+      "meta": {
+        "line": 1,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/enemyHpEffects.ts::EnemyHpEffectDef",
+      "type": "type",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "EnemyHpEffectDef",
+      "meta": {
+        "line": 21,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/mountRunes.ts::MountRuneDef",
+      "type": "type",
+      "path": "src/data/mountRunes.ts",
+      "language": "typescript",
+      "label": "MountRuneDef",
+      "meta": {
+        "line": 20,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::PERK_DMG_DEFS",
+      "type": "export",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "PERK_DMG_DEFS",
+      "meta": {
+        "line": 179,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of ~30+ PerkDmgDef objects defining perk-triggered damage: Springblast, Spirit attacks, Bounce Momentum, Air Pressure, Apollo Boost, Whirlwind, Volatile Shell, Echo Incineration, etc."
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::DRAGON_STATE_HP_GATE",
+      "type": "export",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "DRAGON_STATE_HP_GATE",
+      "meta": {
+        "line": 116,
+        "kind": "const",
+        "isDefault": false,
+        "description": "HpGate for Dragon State perk — requires above 80% HP, threshold decreases with perk stacks"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::BELLOWING_EMBER_HP_GATE",
+      "type": "export",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "BELLOWING_EMBER_HP_GATE",
+      "meta": {
+        "line": 122,
+        "kind": "const",
+        "isDefault": false,
+        "description": "HpGate for Bellowing Ember perk — below threshold"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Perkbasedmg.ts::PerkDmgDef",
+      "type": "type",
+      "path": "src/data/Perkbasedmg.ts",
+      "language": "typescript",
+      "label": "PerkDmgDef",
+      "meta": {
+        "line": 144,
+        "kind": "interface",
+        "isExported": false
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::WEAPON_PROC_COEFFS",
+      "type": "export",
+      "path": "src/data/procCoefficients.ts",
+      "language": "typescript",
+      "label": "WEAPON_PROC_COEFFS",
+      "meta": {
+        "line": 8,
+        "kind": "const",
+        "isDefault": false,
+        "description": "M1/M2 proc coefficients per weapon type (30 weapon types)"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::WA_PROC_COEFFS",
+      "type": "export",
+      "path": "src/data/procCoefficients.ts",
+      "language": "typescript",
+      "label": "WA_PROC_COEFFS",
+      "meta": {
+        "line": 43,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Weapon art proc coefficients (Lunge, Spin, Rapid Stab, Slam, Laser)"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::DEFAULT_PROC_COEFF",
+      "type": "export",
+      "path": "src/data/procCoefficients.ts",
+      "language": "typescript",
+      "label": "DEFAULT_PROC_COEFF",
+      "meta": {
+        "line": 64,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Default fallback proc coefficient = 1.0"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/raceEffects.ts::RaceConditionalEffect",
+      "type": "type",
+      "path": "src/data/raceEffects.ts",
+      "language": "typescript",
+      "label": "RaceConditionalEffect",
+      "meta": {
+        "line": 4,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/selfDamagePerks.ts::SelfDamagePerkDef",
+      "type": "type",
+      "path": "src/data/selfDamagePerks.ts",
+      "language": "typescript",
+      "label": "SelfDamagePerkDef",
+      "meta": {
+        "line": 4,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/selfDamagePerks.ts::SELF_DAMAGE_PERK_DEFS",
+      "type": "export",
+      "path": "src/data/selfDamagePerks.ts",
+      "language": "typescript",
+      "label": "SELF_DAMAGE_PERK_DEFS",
+      "meta": {
+        "line": 15,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of self-damage perk definitions: Undead Might, Explosive Charge, Dark Magic, Bombardier"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/stanceOverlays.ts::StanceOverlayResult",
+      "type": "type",
+      "path": "src/data/stanceOverlays.ts",
+      "language": "typescript",
+      "label": "StanceOverlayResult",
+      "meta": {
+        "line": 1,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/stanceOverlays.ts::StanceOverlayCtx",
+      "type": "type",
+      "path": "src/data/stanceOverlays.ts",
+      "language": "typescript",
+      "label": "StanceOverlayCtx",
+      "meta": {
+        "line": 7,
+        "kind": "interface",
+        "isExported": true
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/weapon base dmg.ts::WEAPON_BASE_DMG",
+      "type": "export",
+      "path": "src/data/weapon base dmg.ts",
+      "language": "typescript",
+      "label": "WEAPON_BASE_DMG",
+      "meta": {
+        "line": 3,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of 30 WeaponBaseDmg objects with M1/M2 base damage patterns per weapon type, including Rifle charge formula"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/mountRunes.ts::MOUNT_RUNE_DEFS",
+      "type": "export",
+      "path": "src/data/mountRunes.ts",
+      "language": "typescript",
+      "label": "MOUNT_RUNE_DEFS",
+      "meta": {
+        "line": 28,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of mount rune definitions (Winter Woof, Slizard, Glacial Snapper) with M1/WA damage, scalings, and special effects"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/enemyHpEffects.ts::ENEMY_HP_EFFECT_DEFS",
+      "type": "export",
+      "path": "src/data/enemyHpEffects.ts",
+      "language": "typescript",
+      "label": "ENEMY_HP_EFFECT_DEFS",
+      "meta": {
+        "line": 30,
+        "kind": "const",
+        "isDefault": false,
+        "description": "Array of enemy HP gate effects (Mycotic Bloom: Slowness below 50% HP, Poison damage boost below 50% HP)"
+      },
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/weaponArts.ts",
+      "kind": "file",
+      "label": "weaponArts.ts",
+      "path": "src/data/weaponArts.ts",
+      "language": "typescript",
+      "description": "Defines WAIndividualHit, WeaponArtRequirement, and WeaponArt interfaces plus the WEAPON_ARTS array containing all 46 weapon art definitions with their damage, scaling, cooldowns, and stat requirements.",
+      "tags": [
+        "data",
+        "constants",
+        "weapons"
+      ],
+      "lineCount": 509,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "kind": "type",
+      "label": "WAIndividualHit",
+      "path": "src/data/weaponArts.ts",
+      "language": "typescript",
+      "description": "Interface describing a single hit within a weapon art: damageType, optional scaling, isFinisher flag, isCrit flag.",
+      "tags": [
+        "interface",
+        "weapon-art",
+        "hit"
+      ],
+      "startLine": 1,
+      "endLine": 6,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "kind": "type",
+      "label": "WeaponArtRequirement",
+      "path": "src/data/weaponArts.ts",
+      "language": "typescript",
+      "description": "Interface defining stat requirements for equipping a weapon art: scaling thresholds (physical, magic, fire, water, earth, air, hex, holy, dex, summon), defense/boost requirements, weapon type restrictions, guild restrictions, and atLeastOneScaling logic.",
+      "tags": [
+        "interface",
+        "weapon-art",
+        "requirements"
+      ],
+      "startLine": 8,
+      "endLine": 31,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "kind": "type",
+      "label": "WeaponArt",
+      "path": "src/data/weaponArts.ts",
+      "language": "typescript",
+      "description": "Interface defining a complete weapon art: name, description, cooldown, baseDamage, damageType, hitDamageTypes, hitScalings, hits array, scaling, extras, requirements, isMonk flag, avgTotalHits, replaces, category.",
+      "tags": [
+        "interface",
+        "weapon-art"
+      ],
+      "startLine": 33,
+      "endLine": 49,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:const::src/data/weaponArts.ts::WEAPON_ARTS",
+      "kind": "constant",
+      "label": "WEAPON_ARTS",
+      "path": "src/data/weaponArts.ts",
+      "language": "typescript",
+      "description": "Array of 46 WeaponArt objects covering all weapon arts in the game: Lunge, Spin, Rapid Stabs, Javelin, Rend, Slam, Dagger Throw, Cross Slash, Impale, Warrior Stomp, Barrage, Shatter, Focus, Retaliate, Laser, Mines, Mage Bomb, Magical Ray, Condensed Star, summons, heals, Cursed Ground, Jinx, Dark Tentacle, Curse Flame Ray, Gale Assault, Storm Stomp, Lightning Cloak, Flame Slash, Flamethrower, Erupt, Cleanse, Splash, Waterfall, Icicle Wave, Earthquake, Grand Quake, Earth Slam, Black Hole, Starstream, and more.",
+      "tags": [
+        "data",
+        "weapon-art",
+        "game-content"
+      ],
+      "startLine": 51,
+      "endLine": 509,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/data/weaponConditionalBoosts.ts",
+      "kind": "file",
+      "label": "weaponConditionalBoosts.ts",
+      "path": "src/data/weaponConditionalBoosts.ts",
+      "language": "typescript",
+      "description": "Defines conditional weapon damage boosts (e.g., Aggressive Personality for maulers) and exports getWeaponConditionalBoost() which calculates multiplier and labels based on equipped perks and weapon type.",
+      "tags": [
+        "data",
+        "weapons",
+        "boosts"
+      ],
+      "lineCount": 46,
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "kind": "function",
+      "label": "getWeaponConditionalBoost",
+      "path": "src/data/weaponConditionalBoosts.ts",
+      "language": "typescript",
+      "description": "Calculates conditional damage multiplier and label list for a weapon based on equipped perks, weapon type, and hit scope (m1Finisher or m2). Returns { mult, labels }.",
+      "tags": [
+        "export",
+        "boost",
+        "weapon",
+        "calculation"
+      ],
+      "startLine": 30,
+      "endLine": 46,
+      "params": [
+        "perks",
+        "finalWeaponType",
+        "hitScope"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/DidYouMean.svelte",
+      "kind": "file",
+      "label": "DidYouMean.svelte",
+      "path": "src/DidYouMean.svelte",
+      "language": "svelte",
+      "description": "Search suggestion component. Shows 'Did you mean?' chips when no exact search results are found. Displays highlighted text matches and differentiates perk-type suggestions with an icon. Dispatches 'select' event when a chip is clicked.",
+      "tags": [
+        "component",
+        "ui",
+        "search"
+      ],
+      "lineCount": 111,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/DmgTotalTooltip.svelte",
+      "kind": "file",
+      "label": "DmgTotalTooltip.svelte",
+      "path": "src/DmgTotalTooltip.svelte",
+      "language": "svelte",
+      "description": "Damage breakdown tooltip with animated pie chart. Takes a ComputedHit prop, groups damage types, shows per-type totals with percentages, and displays individual entries with badges. Uses SVG donut visualization with entrance animation.",
+      "tags": [
+        "component",
+        "ui",
+        "tooltip",
+        "damage"
+      ],
+      "lineCount": 169,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/DraconicAbilityStats.svelte",
+      "kind": "file",
+      "label": "DraconicAbilityStats.svelte",
+      "path": "src/DraconicAbilityStats.svelte",
+      "language": "svelte",
+      "description": "Compact stat display for draconic abilities. Shows damage type with color, scaling value, poise damage, and optional holy/water healing values.",
+      "tags": [
+        "component",
+        "ui",
+        "draconic"
+      ],
+      "lineCount": 42,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/EmotionalTracker.svelte",
+      "kind": "file",
+      "label": "EmotionalTracker.svelte",
+      "path": "src/EmotionalTracker.svelte",
+      "language": "svelte",
+      "description": "Emotional state selector (buff/debuff/both) for the Emotional perk. Features a 3-position slider with segmented visual track, quick-select buttons, and colored dot indicators. Persists state via the build store's emotionalState field.",
+      "tags": [
+        "component",
+        "ui",
+        "perk",
+        "emotional"
+      ],
+      "lineCount": 232,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/Highlight.svelte",
+      "kind": "file",
+      "label": "Highlight.svelte",
+      "path": "src/Highlight.svelte",
+      "language": "svelte",
+      "description": "Inline text highlight component. Wraps text in <mark> tags for portions matching a search query. Uses highlightTextParts utility.",
+      "tags": [
+        "component",
+        "ui",
+        "search",
+        "text"
+      ],
+      "lineCount": 16,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/LevelBar.svelte",
+      "kind": "file",
+      "label": "LevelBar.svelte",
+      "path": "src/LevelBar.svelte",
+      "language": "svelte",
+      "description": "Interactive level and HP bar component. Features editable level input (0-80), draggable HP fill bar, shield overlay with shimmer animation, lost-HP zone, threshold indicator, and notch markers. Computes base HP from level using calcBaseMaxHP and handles protection-modified effective max HP. Persists to localStorage.",
+      "tags": [
+        "component",
+        "ui",
+        "hp",
+        "level",
+        "interactive"
+      ],
+      "lineCount": 392,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/AppHeader.svelte",
+      "kind": "file",
+      "label": "AppHeader.svelte",
+      "path": "src/lib/AppHeader.svelte",
+      "language": "svelte",
+      "description": "Application header with VoxlBuilder branding, tab navigation (Overview/Analyze) with animated sliding bubble indicator, and embedded BuildSaves component. Dispatches 'switchTab' event.",
+      "tags": [
+        "component",
+        "ui",
+        "header",
+        "navigation"
+      ],
+      "lineCount": 175,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants.ts",
+      "kind": "file",
+      "label": "constants.ts (barrel)",
+      "path": "src/lib/constants.ts",
+      "language": "typescript",
+      "description": "Barrel re-export file. Re-exports everything from ./constants/index.",
+      "tags": [
+        "barrel",
+        "re-export"
+      ],
+      "lineCount": 1,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/index.ts",
+      "kind": "file",
+      "label": "constants/index.ts",
+      "path": "src/lib/constants/index.ts",
+      "language": "typescript",
+      "description": "Master re-export hub for all game constant modules: damage-types, game, storage, thresholds, perks, boosts, heals, draconic, perk-base-damage, rune-base-damage, buffs, stat-conversions, defensive, dot-damage, draconic-colors, cdr, debuff-effects.",
+      "tags": [
+        "barrel",
+        "re-export",
+        "constants"
+      ],
+      "lineCount": 17,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/boosts.ts",
+      "kind": "file",
+      "label": "boosts.ts",
+      "path": "src/lib/constants/boosts.ts",
+      "language": "typescript",
+      "description": "44 exported multiplier constants for damage boost perks: Frenzy, Minion Absorption, Venom Eater, Holy Infusion, Bellowing Ember, Blood Thirsty, Venom Spitter, Perfection, Stealth, Golden Crits, Royal Parry, Spell Piercer, Scourge, Sharpshooter, Valor, Gorecast, Undead Might, Highlander, Emotional, Heal Boost, Ocean's Rage, Ferocity/Tenacity, Spirit Winds, Guardian Spin, Wild Bolt, Weighty Slam, Rider, Quickdraw, Spring Powered, Thief Training, Vassal's Croak, Raging Bounce, Guiding Winds, Civilian, Vampire.",
+      "tags": [
+        "constants",
+        "boosts",
+        "perks",
+        "multipliers"
+      ],
+      "lineCount": 52,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/cdr.ts",
+      "kind": "file",
+      "label": "cdr.ts",
+      "path": "src/lib/constants/cdr.ts",
+      "language": "typescript",
+      "description": "13 cooldown reduction constants: Caster Rune/WA CDR, Channeled Weapon CDR, Mage Rage Rune, Poison Acceleration, Runic Winds, Wave Rider, Whirlwind, Gladiatorial Set, Voltaic Body.",
+      "tags": [
+        "constants",
+        "cooldown-reduction"
+      ],
+      "lineCount": 25,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/damage-types.ts",
+      "kind": "file",
+      "label": "damage-types.ts",
+      "path": "src/lib/constants/damage-types.ts",
+      "language": "typescript",
+      "description": "Core damage type system: DMG_TYPE_META (11 types with labels/colors), DEF_TRACKED_TYPES (8 defensive types), DEF_INHERITANCE (physical→air/earth, magic→fire/water/hex/holy), PHYSICAL/MAGIC_INHERITED_TYPES sets, DMG_TYPE_COLORS, DMG_TYPE_PRIORITY, DMG_TYPE_PRIORITY ordering, ALL_DMG_TYPES, TRACKED_TYPES_WITH_TRUE.",
+      "tags": [
+        "constants",
+        "damage-types",
+        "defense",
+        "core"
+      ],
+      "lineCount": 41,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/debuff-effects.ts",
+      "kind": "file",
+      "label": "debuff-effects.ts",
+      "path": "src/lib/constants/debuff-effects.ts",
+      "language": "typescript",
+      "description": "7 debuff effect constants: Weakness formula, Defense conversion, Sticky damage mult, Despair display divisor/mult/dmg coeff/divisor.",
+      "tags": [
+        "constants",
+        "debuffs",
+        "effects"
+      ],
+      "lineCount": 14,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/defensive.ts",
+      "kind": "file",
+      "label": "defensive.ts",
+      "path": "src/lib/constants/defensive.ts",
+      "language": "typescript",
+      "description": "18 damage reduction constants: BarbSkin, StoneSkin (per stack + max), Adaptive Plate (base + triggered), Protector Spirit (per stack + HP thresholds), Air Pressure, Valor, Vampire, Frenzy, Stored Corruption, Mounted Defense, Carapace, Cursed Bark.",
+      "tags": [
+        "constants",
+        "defensive",
+        "damage-reduction"
+      ],
+      "lineCount": 22,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/dot-damage.ts",
+      "kind": "file",
+      "label": "dot-damage.ts",
+      "path": "src/lib/constants/dot-damage.ts",
+      "language": "typescript",
+      "description": "14 DoT (damage over time) constants: base damage, infliction divisor, element-specific scaling (bleed/dex/phys, burn/fire, poison/caustic hex/earth), potency power base/cap, round factor, builder-to-game conversion, slow mult per second.",
+      "tags": [
+        "constants",
+        "dot",
+        "damage-over-time"
+      ],
+      "lineCount": 20,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/draconic-colors.ts",
+      "kind": "file",
+      "label": "draconic-colors.ts",
+      "path": "src/lib/constants/draconic-colors.ts",
+      "language": "typescript",
+      "description": "12 draconic color/element multiplier constants: Fire speed, Air speed/knockback/cooldown, Earth damage/speed/stun, Water damage/speed/stun, Hex stun/random debuff chances.",
+      "tags": [
+        "constants",
+        "draconic",
+        "elements"
+      ],
+      "lineCount": 20,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/draconic.ts",
+      "kind": "file",
+      "label": "draconic.ts",
+      "path": "src/lib/constants/draconic.ts",
+      "language": "typescript",
+      "description": "7 draconic system constants: Infusion potency/duration multipliers, Dragon State HP base/per stack, Dragon State base/per stack multipliers, Bastion Bless multiplier.",
+      "tags": [
+        "constants",
+        "draconic"
+      ],
+      "lineCount": 10,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/game.ts",
+      "kind": "file",
+      "label": "game.ts",
+      "path": "src/lib/constants/game.ts",
+      "language": "typescript",
+      "description": "Core game constants: MAX_LEVEL (80), DEFAULT_LEVEL, HP defaults, BASE_HP (120), HP_PER_LEVEL (0.0125), calcBaseMaxHP(level) function. Timing constants: SAVE_DEBOUNCE_MS, UNDO_WINDOW_MS, SEARCH_BLUR_DELAY_MS, IMPORT_SUCCESS_DISPLAY_MS, FOCUS_DELAY_MS, DEFAULT_TOAST_DURATION_MS.",
+      "tags": [
+        "constants",
+        "game",
+        "core",
+        "timing"
+      ],
+      "lineCount": 26,
+      "complexity": "moderate"
+    },
+    {
+      "id": "function::src/lib/constants/game.ts::calcBaseMaxHP",
+      "kind": "function",
+      "label": "calcBaseMaxHP",
+      "path": "src/lib/constants/game.ts",
+      "language": "typescript",
+      "description": "Calculates base maximum HP from level: Math.round(120 * (1 + level * 0.0125)). At level 80 returns 240.",
+      "tags": [
+        "export",
+        "function",
+        "hp",
+        "calculation"
+      ],
+      "startLine": 13,
+      "endLine": 15,
+      "params": [
+        "level"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/heals.ts",
+      "kind": "file",
+      "label": "heals.ts",
+      "path": "src/lib/constants/heals.ts",
+      "language": "typescript",
+      "description": "4 healing constants: CRIT_HEALING_BASE, CRIT_HEALING_HOLY_BOOST_DIVISOR, CRIT_HEALING_PER_STACK, OCEAN_SONG_PER_STACK.",
+      "tags": [
+        "constants",
+        "healing"
+      ],
+      "lineCount": 5,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/perk-base-damage.ts",
+      "kind": "file",
+      "label": "perk-base-damage.ts",
+      "path": "src/lib/constants/perk-base-damage.ts",
+      "language": "typescript",
+      "description": "76 exported base damage constants for perk-triggered abilities: Dragon Claw, Dragon Bubble, Springblast, Basic/Buni/Mageling/Toadzerker/Dire Buni/Void Root spirits, Bounce Momentum, Protector Spirit, Air Pressure/Barrier, Roaring Heads, Barbed Flurry, Honey Arts, Sickness, Melting Slime, Whirlwind, Volatile Shell, Royal Finisher, Grounded Despair, Echo Incineration, Venom Spitter, Spore Burst, Apollo Boost. Also HP gate thresholds for Dragon State, Bellowing Ember, Protector Spirit.",
+      "tags": [
+        "constants",
+        "perks",
+        "base-damage",
+        "abilities"
+      ],
+      "lineCount": 133,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/perks.ts",
+      "kind": "file",
+      "label": "perks.ts",
+      "path": "src/lib/constants/perks.ts",
+      "language": "typescript",
+      "description": "43 perk effect constants: Luminescent, Spirit Winds, Dark Magic, Wind Walker penetration, Reaper, Extinguish, Explosive Charge, Wild Bolt reduction, Lightning Cloak fraction, Curse Rip, True Balance, Emotional, Toxin Transfer, Void Rage, Channeled Weapon, Draconic Blood, Wild Bolt elements, crit damage system (base, Dex divisor, Primal, Flowing/Spellslinger/Sharp/Seismic momentum crit boosts, Perfection/Caci King crit per stack), Thief/Venom Eater/Vital Strikes/Spark/Critical Master/Splinter crit damage, Mortal Will, Sunburn system.",
+      "tags": [
+        "constants",
+        "perks",
+        "effects",
+        "crit"
+      ],
+      "lineCount": 69,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/rune-base-damage.ts",
+      "kind": "file",
+      "label": "rune-base-damage.ts",
+      "path": "src/lib/constants/rune-base-damage.ts",
+      "language": "typescript",
+      "description": "29 rune base damage constants: Ancient Cleric (DMG, slider max, shield base/per val), Beenade, Boostshroom, Thunderous Charge, Sporeling Toss (DMG, hits, slider max), Foot Dive, Caci/Cacitrops (DMG, hits), Hex Web, Brainblast, Rocky Tail (complex: base dmg, protection scale, VS resist/base/per level/default, divisor coeff/base, hits mult, min hits).",
+      "tags": [
+        "constants",
+        "runes",
+        "base-damage"
+      ],
+      "lineCount": 54,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/constants/stat-conversions.ts",
+      "kind": "file",
+      "label": "stat-conversions.ts",
+      "path": "src/lib/constants/stat-conversions.ts",
+      "language": "typescript",
+      "description": "23 stat conversion constants: Weight Distribution (split ratio, multiplier), Quick-Witted, Whirl/Foot, Carapace, Extra Layers, Frozen Heart, Immovable, Righted Wrong (base coeff, tenacity/offense weights, speed fraction), Rocky Body, Spellshield, Strong Tides, Swift Guard, True Balance, Rawny (conversion + max cap), Roaring Headings/Lucky warding/protection/tenacity subtractions.",
+      "tags": [
+        "constants",
+        "stat-conversions",
+        "defense"
+      ],
+      "lineCount": 30,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts",
+      "type": "file",
+      "path": "src/lib/constants/storage.ts",
+      "name": "storage.ts",
+      "dir": "src/lib/constants",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 37,
+      "sha": "hash-10-storage",
+      "description": "localStorage keys, build state defaults, save map/unmap utilities, and constants for the voxlblade builder",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts",
+      "path": "src/lib/constants/thresholds.ts",
+      "type": "file",
+      "name": "thresholds.ts",
+      "dir": "src/lib/constants",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 5,
+      "sha": "hash-10-thresholds",
+      "description": "Defines game balance thresholds: armor pen branch threshold, CD minimum, and base crit dmg percentage",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/defense.ts",
+      "path": "src/lib/defense.ts",
+      "type": "file",
+      "name": "defense.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "callFunctions": null,
+      "language": "typescript",
+      "sizeLines": 82,
+      "sha": "hash-10-defense",
+      "description": "Core defense calculation engine: calcDefMultiplier, calcTrueDrPercent, resolveDefenseSources, calcBaseArmorDefPct, and DEF_GROUP mapping for each damage type",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/EnchantSelect.svelte",
+      "path": "src/lib/EnchantSelect.svelte",
+      "type": "file",
+      "name": "EnchantSelect.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 467,
+      "sha": "hash-10-EnchantSelect",
+      "description": "Custom searchable select dropdown for enchantments with color-coded options, keyboard navigation, and scroll-aware positioning",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/enchantTooltip.ts",
+      "type": "file",
+      "path": "src/lib/enchantTooltip.ts",
+      "name": "enchantTooltip.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 26,
+      "sha": "hash-10-enchantTooltip",
+      "description": "Formats enchantment tooltip text from stats, effects, and additional notes",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/engine.ts",
+      "type": "file",
+      "path": "src/lib/engine.ts",
+      "name": "engine.ts",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 5,
+      "sha": "hash-10-enginebarrel",
+      "description": "Barrel export for all engine submodules: data, shrine, enchant, weapon, build, format",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/engine/data.ts",
+      "type": "file",
+      "path": "src/lib/engine/data.ts",
+      "name": "data.ts",
+      "dir": "src/lib/engine",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 3,
+      "sha": "hash-10-enginedata",
+      "description": "Barrel export for data submodules: character, equipment, weapons",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/Modal.svelte",
+      "type": "file",
+      "path": "src/lib/Modal.svelte",
+      "name": "Modal.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 210,
+      "sha": "hash-10-modal",
+      "description": "Generic modal dialog with overlay, focus trapping, close button, and slot for children; includes global CSS for modal-list, modal-item, modal-stat-pill, etc.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "type": "file",
+      "path": "src/lib/modals/AccessorySelectModal.svelte",
+      "name": "AccessorySelectModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 200,
+      "sha": "hash-10-AccessoryModal",
+      "description": "Modal for selecting armor parts (helmet/chestplate/leggings), rings, and runes with stat display, perk tags, and brawny/effective boost computation",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/modals/GuildModal.svelte",
+      "rank": null,
+      "type": "file",
+      "path": "src/lib/modals/GuildModal.svelte",
+      "name": "GuildModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 98,
+      "sha": "hash-10-GuildModal",
+      "description": "Modal for selecting a guild and assigning a rank, with premium/rank stats and perks display",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/modals/index.ts",
+      "type": "file",
+      "path": "src/lib/modals/index.ts",
+      "name": "index.ts",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 4,
+      "sha": "hash-10-modals-index",
+      "description": "Barrel exports for all modal components: RaceModal, GuildModal, AccessorySelectModal, WeaponPartModal",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/modals/RaceModal.svelte",
+      "type": "file",
+      "path": "src/lib/modals/RaceModal.svelte",
+      "name": "RaceModal.svelte",
+      "dir": "src/lib/modals",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 60,
+      "sha": "hash-10-RaceModal",
+      "description": "Modal for selecting a race with passive description and stat modifiers display",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/modals/WeaponPartModal.svelte",
+      "type": "file",
+      "category": "code",
+      "path": "src/lib/modals/WeaponPartModal.svelte",
+      "name": "WeaponPartModal.svelte",
+      "dir": "src/lib/modals",
+      "language": "svelte",
+      "sizeLines": 137,
+      "sha": "hash-10-WeaponPart",
+      "description": "Modal for selecting weapon parts: blade, handle, glove, or essence, with tier/type filters and stat/perk/perks display",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/StatFilterShared.svelte",
+      "key": null,
+      "type": "file",
+      "path": "src/lib/StatFilterShared.svelte",
+      "name": "StatFilterShared.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 97,
+      "sha": "hash-10-StatFilter",
+      "description": "Reactive filter chip component for include/exclude state on stats, with buildStatMaps utility for creating lookup maps",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts",
+      "type": "file",
+      "path": "src/lib/stats/elementalBoosts.ts",
+      "name": "elementalBoosts.ts",
+      "dir": "src/lib/stats",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 21,
+      "sha": "hash-10-elem-boosts",
+      "abilities": null,
+      "description": "Defines StatDef interface and provides ELEMENTAL_BOOST_STATS and NEGATIVE_ELEMENTAL_BOOST_STATS arrays for the 10 elements",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts",
+      "type": "file",
+      "path": "src/lib/stores/toast.ts",
+      "filterMap": null,
+      "name": "toast.ts",
+      "dir": "src/lib/stores",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 28,
+      "sha": "hash-10-toaststore",
+      "description": "Svelte store for managing transient toast notifications (addToast, removeToast)",
+      "getState": null,
+      "setState": null,
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/Toast.svelte",
+      "type": "file",
+      "path": "src/lib/Toast.svelte",
+      "name": "Toast.svelte",
+      "dir": "src/lib",
+      "category": "code",
+      "toasts": null,
+      "removeToast": null,
+      "language": "svelte",
+      "sizeLines": 99,
+      "sha": "hash-10-toast",
+      "description": "Toast notification component rendering a stack of dismissible, type-colored (success/error/info/warning) messages in the top-right",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Badge.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Badge.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 132,
+      "sha": "Badge",
+      "name": "Badge.svelte",
+      "sizeMin": null,
+      "description": "Versatile badge/pill component with size, color, variant, solid/mono options, and customizable color",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Button.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Button.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 143,
+      "sha": "hash-10-button",
+      "name": "Button.svelte",
+      "description": "Buttons with size, variant (positive/negative/warning/info/neutral), and active state",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Card.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Card.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 103,
+      "sha": "hash-10-card",
+      "name": "Card.svelte",
+      "description": "Container card with variant (default/surface/ghost), hover, accent color, padding, and gap options",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Divider.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Divider.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 42,
+      "sha": "hash-10-divider",
+      "name": "Divider.svelte",
+      "description": "Thematic hr element with color variant and spacing toggle",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/index.ts",
+      "type": "file",
+      "path": "src/lib/ui/index.ts",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "typescript",
+      "sizeLines": 7,
+      "sha": "hash-10-ui-index",
+      "name": "index.ts",
+      "description": "Barrel exports for all UI components: Card, Badge, Button, Stat, Section, Divider, Panel",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Panel.svelte",
+      "type": "file",
+      "path": "src/lib/lib/ui/Panel.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 94,
+      "sha": "hash-10-panel",
+      "name": "Panel.svelte",
+      "description": "Panel layout container with optional header, body, color variants, and padding",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Section.svelte",
+      "type": "file",
+      "path": "src/lib/ui/Section.svelte",
+      "name": "Section.svelte",
+      "dir": "src/lib/ui",
+      "category": "code",
+      "language": "svelte",
+      "sizeLines": 129,
+      "sha": "hash-10-section",
+      "description": "Section layout component with title, color variant, gap, and optional custom header",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/BUILD_STATE_DEFAULTS",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage.ts",
+      "name": "BUILD_STATE_DEFAULTS",
+      "line": 9,
+      "description": "Default values for all build state properties",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/SAVE_KEY_MAP",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage.ts",
+      "name": "SAVE_KEY_MAP",
+      "line": 20,
+      "description": "Mapping of build keys to short save keys",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/ENCH_MAP",
+      "type": "object",
+      "path": "src/lib/constants/storage.ts",
+      "parent": "src/lib/constants/storage/ts",
+      "name": "ENCH_MAP",
+      "line": 31,
+      "description": "Mapping of equipment slots to short enchantment keys",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts/ARMOR_PEN_BRANCH_THRESHOLD",
+      "type": "constant",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "ARMOR_PEN_BRANCH_THRESHOLD",
+      "parent": "src/lib/constants/thresholds.ts",
+      "line": 1,
+      "description": "Threshold for armor penetration branch: 0.2",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts/CD_MINIMUM",
+      "type": "constant",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "CD_MINIMUM",
+      "parent": "src/lib/constants/thresholds ts",
+      "line": 3,
+      "description": "Minimum cooldown value: 1",
+      "complexity": "moderate"
+    },
+    {
+      "constants/thresholds.ts/ARMOR_PEN_BRANCH_THRESHOLD": null,
+      "id": "file:src/lib/constants/thresholds.ts/BASE_CRIT_DMG_PCT",
+      "type": "constant",
+      "parent": "src/lib/constants/thresholds.ts",
+      "path": "src/lib/constants/thresholds.ts",
+      "name": "BASE_CRIT_DMG_PCT",
+      "line": 5,
+      "description": "Base crit damage percentage: 100",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:resolveDefenseSources",
+      "type": "function",
+      "path": "src/lib/defense.ts",
+      "name": "resolveDefenseSources",
+      "line": 34,
+      "description": "Takes array of DefenseSource, returns DefenseBreakdown with resolved percent and flat defense",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/defense.ts/DEF_GROUP",
+      "type": "constant",
+      "path": "src/lib/defense.ts",
+      "name": "DEF_GROUP",
+      "line": 64,
+      "description": "Mapping of damage types to defensive stat keys",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:calcBaseArmorDefPct",
+      "type": "function",
+      "path": "src/lib/defense:ts",
+      "name": "calcBaseArmorDefPct",
+      "line": 77,
+      "description": "sums up base armor defense percentage given a dmgType and stats",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:getEnchantTooltipText",
+      "type": "function",
+      "path": "src/lib/enchantTooltip.ts",
+      "name": "getEnchantTooltipText",
+      "line": 3,
+      "description": "Generates formatted tooltip text for an enchant by name",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:RaceModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index ts",
+      "name": "RaceModal",
+      "line": 1,
+      "description": "Re-export RaceModal",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:GuildModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index.ts",
+      "name": "GuildModal",
+      "line": 2,
+      "description": "Re-export GuildModal",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:AccessorySelectModal",
+      "type": "function",
+      "parent": "src/lib/modals/index.ts",
+      "path": "src/lib/modals/index.ts",
+      "name": "AccessorySelectModal",
+      "line": 3,
+      "description": "Re-export AccessorySelectModal",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:WeaponPartModal",
+      "type": "function",
+      "path": "src/lib/modals/index.ts",
+      "name": "WeaponPartModal",
+      "line": 4,
+      "description": "Re-export WeaponPartModal",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts/ELEMENTAL_BOOST_STATS",
+      "type": "constant",
+      "path": "src/lib/stats/elementalBoosts.ts",
+      "name": "ELEMENTAL_BOOST_STATS",
+      "line": 6,
+      "description": "Array of StatDef for the 10 elemental boosts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts/NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "type": "constant",
+      "path": "src/lib/stats/elementalBoosts ts",
+      "name": "NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "line": 19,
+      "description": "Array of StatDef for the negative (neg:) version of elemental boosts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:createFilterActions",
+      "type": "function",
+      "path": "src/lib/stats/filterActions.ts",
+      "name": "createFilterActions",
+      "line": 4,
+      "description": "Factory returning {toggle, remove, clear, handleChipKeyDown} for filter management",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/toasts",
+      "type": "store",
+      "path": "src/lib/stores/toast.ts",
+      "name": "toasts",
+      "line": 13,
+      "description": "Writable Svelte store containing the array of Toast objects",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/addToast",
+      "type": "constant",
+      "path": "src/lib/stores/toas.ts",
+      "name": "addToast",
+      "line": 17,
+      "description": "Add a toast notification with auto-dismiss",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/removeToast",
+      "type": "constant",
+      "path": "src/lib/stores/toast.ts",
+      "name": "removeToast",
+      "line": 25,
+      "description": "Remove a toast by id",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Badge.svelte/Badge",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Badge.svelte",
+      "name": "Badge",
+      "parent": "src/lib/ui/Badge.svelte",
+      "default export": null,
+      "line": 1,
+      "description": "Versatile badge/pill ui component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Button.svelte/Button",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Button.svelte",
+      "name": "Button",
+      "parent": "src/lib/ui/Button.svelte",
+      "description": "ui button component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Card.svelte/Card",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Card.svelte",
+      "parent": "src/lib/ui/Card.svelte",
+      "name": "Card",
+      "description": "Card ui component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Divider.svelte/Divider",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Divider.svelte",
+      "parent": "src/lib/ui/Divider.svelte",
+      "name": "Divider",
+      "description": "Divider ui component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Panel.svelte/Panel",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Panel.svelte",
+      "parent": "src/lib/ui/Panel.svelte",
+      "name": "Panel",
+      "description": "Panel layout container ui component",
+      "complexity": "moderate"
+    },
+    {
+      "Flowers.svelte/Page": null,
+      "id": "file:src/lib/ui/Section.svelte/Section",
+      "type": "svelte-component",
+      "path": "src/lib/ui/Section.svelte",
+      "parent": "srv/lib/ui/Section.svelte",
+      "name": "Section",
+      "description": "Section ui component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/Modal.svelte/Modal",
+      "type": "svelte-component",
+      "path": "src/lib/Modal.svelte",
+      "parent": "src/lib/Modal.svelte",
+      "name": "Modal",
+      "description": "Modal overlay component",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/ui/Stat.svelte",
+      "kind": "file",
+      "label": "Stat.svelte",
+      "path": "src/lib/ui/Stat.svelte",
+      "language": "svelte",
+      "sizeLines": 90,
+      "description": "Reusable stat display component showing a label-value pair with color variants and size options. Supports Svelte 5 snippets for custom content.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::Stat",
+      "kind": "component",
+      "label": "Stat",
+      "path": "src/lib/ui/Stat.svelte",
+      "description": "Displays a stat row with optional label and value. Supports 7 color variants (green, amber, red, purple, blue, teal, default), 3 sizes (sm, md, lg), and optional hover effect. Uses Svelte 5 $props and Snippet API.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "variant",
+          "type": "'default' | 'green' | 'amber' | 'red' | 'purple' | 'blue' | 'teal'",
+          "optional": true,
+          "default": "'default'"
+        },
+        {
+          "name": "size",
+          "type": "'sm' | 'md' | 'lg'",
+          "optional": true,
+          "default": "'md'"
+        },
+        {
+          "name": "hoverable",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "value",
+          "type": "string | number",
+          "optional": true
+        },
+        {
+          "name": "children",
+          "type": "Snippet",
+          "optional": true
+        }
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/lib/uiConstants.ts",
+      "kind": "file",
+      "label": "uiConstants.ts",
+      "path": "src/lib/uiConstants.ts",
+      "language": "typescript",
+      "sizeLines": 78,
+      "description": "Shared UI constants defining color maps for damage types, tag groups, source types, enchant rarities, and label mappings for stats and tags.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:constant::UI_COLORS",
+      "kind": "constant",
+      "label": "UI_COLORS",
+      "path": "src/lib/uiConstants.ts:1",
+      "description": "Color map object with hex values for physical/magic/elemental damage types, tag groups (combat/support/status/weaponArtRune/special), source types (rune/perk/weaponArt/race/cantrip), enchant rarities (refined/strengthened/dexterous/burning/wet/earthen/magical), and negative stat colors.",
+      "type": "Readonly<Record<string, string>>",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:constant::SOURCE_LABELS",
+      "kind": "constant",
+      "label": "SOURCE_LABELS",
+      "path": "src/lib/uiConstants.ts:41",
+      "description": "Display label map for source types: rune, perk, weaponArt, race, cantrip.",
+      "type": "Readonly<Record<string, string>>",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/main.ts",
+      "kind": "file",
+      "label": "main.ts",
+      "path": "src/main.ts",
+      "language": "typescript",
+      "sizeLines": 7,
+      "description": "Application entry point. Mounts the Svelte App component and injects Vercel analytics.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/ModalSearchHeader.svelte",
+      "kind": "file",
+      "label": "ModalSearchHeader.svelte",
+      "path": "src/ModalSearchHeader.svelte",
+      "language": "svelte",
+      "sizeLines": 199,
+      "description": "Composite modal header component combining search input with autocomplete suggestions, tag filtering, stat filtering (armor or weapon), and sort mode buttons (Highest/Most Effective/Brawny).",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::ModalSearchHeader",
+      "kind": "component",
+      "label": "ModalSearchHeader",
+      "path": "src/ModalSearchHeader.svelte",
+      "description": "Full-featured modal header with search, tag filter, stat filter, and sort controls. Acts as an orchestrator composing SuggestDrop, TagFilter, StatFilter, and WeaponStatFilter.",
+      "props": [
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "modalSearch",
+          "type": "string"
+        },
+        {
+          "name": "showSuggestions",
+          "type": "boolean"
+        },
+        {
+          "name": "modalSuggestions",
+          "type": "any[]"
+        },
+        {
+          "name": "modalSelectedTags",
+          "type": "Set<string>"
+        },
+        {
+          "name": "hideTagFilter",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "hideTags",
+          "type": "string[]",
+          "optional": true,
+          "default": "['Stance Change']"
+        },
+        {
+          "name": "hideStatFilter",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "useWeaponStatFilter",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "weaponStatFilter",
+          "type": "any",
+          "optional": true,
+          "default": "null"
+        },
+        {
+          "name": "showSortButtons",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "weaponResult",
+          "type": "any",
+          "optional": true,
+          "default": "null"
+        },
+        {
+          "name": "statFilterSortMode",
+          "type": "string",
+          "optional": true,
+          "default": "'highest'"
+        },
+        {
+          "name": "effectiveLabel",
+          "type": "string",
+          "optional": true,
+          "default": "'boost'"
+        }
+      ],
+      "events": [
+        "select",
+        "toggle",
+        "clear",
+        "change",
+        "weaponStatFilterChange"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/MountIcon.svelte",
+      "kind": "file",
+      "label": "MountIcon.svelte",
+      "path": "src/MountIcon.svelte",
+      "language": "svelte",
+      "sizeLines": 14,
+      "description": "Small inline SVG icon component depicting a mount (a blade/weapon silhouette) with a blue-to-cyan gradient.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::MountIcon",
+      "kind": "component",
+      "label": "MountIcon",
+      "path": "src/MountIcon.svelte",
+      "description": "Renders an SVG mount icon with a linear gradient (blue to cyan). Uses a random UID for gradient to avoid ID collisions.",
+      "props": [
+        {
+          "name": "size",
+          "type": "number",
+          "optional": true,
+          "default": "16"
+        }
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/ScalingBreakdownRow.svelte",
+      "kind": "file",
+      "label": "ScalingBreakdownRow.svelte",
+      "path": "src/ScalingBreakdownRow.svelte",
+      "language": "svelte",
+      "sizeLines": 102,
+      "description": "Single-row display for damage scaling breakdown showing: element icon/label × scaling value × boost percentage = contribution percentage.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::ScalingBreakdownRow",
+      "kind": "component",
+      "label": "ScalingBreakdownRow",
+      "path": "src/ScalingBreakdownRow.svelte",
+      "description": "Renders one row of a scaling breakdown table: colored dot + label, scaling value, × operator, boost percentage, = operator, and contribution percentage.",
+      "props": [
+        {
+          "name": "row",
+          "type": "any"
+        },
+        {
+          "name": "useRoundMultiplier",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        },
+        {
+          "name": "showZeroBoost",
+          "type": "boolean",
+          "optional": true,
+          "default": "false"
+        }
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/StatFilter.svelte",
+      "kind": "file",
+      "label": "StatFilter.svelte",
+      "path": "src/StatFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 339,
+      "description": "Collapsible stat filter panel for armor items with positive/negative stat tabs, include/exclude three-state toggling, and Highest/Lowest/Alphabetical sort modes.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::StatFilter",
+      "kind": "component",
+      "label": "StatFilter",
+      "path": "src/StatFilter.svelte",
+      "description": "Armor stat filter with positive/negative stat tabs. Each stat chip cycles through Off→Must Have→Must Not Have. Groups stats by Boost/Defense/Utility. Dispatches change events with filter map and sort mode.",
+      "events": [
+        "change"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/SuggestDrop.svelte",
+      "kind": "file",
+      "label": "SuggestDrop.svelte",
+      "path": "src/SuggestDrop.svelte",
+      "language": "svelte",
+      "sizeLines": 67,
+      "description": "Dropdown overlay showing search suggestions with highlighted matching text. Items are categorized as 'name' or 'perk' types.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::SuggestDrop",
+      "kind": "component",
+      "label": "SuggestDrop",
+      "path": "src/SuggestDrop.svelte",
+      "description": "Autocomplete suggestion dropdown. Renders a list of suggestions with type badges (Name/Perk) and highlighted matching text segments.",
+      "props": [
+        {
+          "name": "show",
+          "type": "boolean"
+        },
+        {
+          "name": "suggestions",
+          "type": "Array<{ label: string; type: 'name' | 'perk' }>"
+        },
+        {
+          "name": "suggestQuery",
+          "type": "string"
+        }
+      ],
+      "events": [
+        "select"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/TagFilter.svelte",
+      "kind": "file",
+      "label": "TagFilter.svelte",
+      "path": "src/TagFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 334,
+      "description": "Collapsible tag filter panel with color-coded tag groups (Combat, Support, Status, Weapon Art/Rune, Special). Supports hiding specific tags and multi-select toggle.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::TagFilter",
+      "kind": "component",
+      "label": "TagFilter",
+      "path": "src/TagFilter.svelte",
+      "description": "Tag-based filter with collapsible panel. Organizes tags into 5 color-coded groups. Shows summary chips in the header bar when tags are active. Supports clearing all and hiding individual tags.",
+      "props": [
+        {
+          "name": "selectedTags",
+          "type": "Set<string>"
+        },
+        {
+          "name": "hideTags",
+          "type": "string[]",
+          "optional": true,
+          "default": "[]"
+        }
+      ],
+      "events": [
+        "toggle",
+        "change"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/WeaponStatFilter.svelte",
+      "kind": "file",
+      "label": "WeaponStatFilter.svelte",
+      "path": "src/WeaponStatFilter.svelte",
+      "language": "svelte",
+      "sizeLines": 250,
+      "description": "Collapsible weapon-specific stat filter panel with three groups: Damage Type, Scaling, and Boost/Stats. Exposes a matchesFilter method for parent components.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::WeaponStatFilter",
+      "kind": "component",
+      "label": "WeaponStatFilter",
+      "path": "src/WeaponStatFilter.svelte",
+      "description": "Weapon stat filter with three groups (DMG type, Scaling, Boost/Stats). Uses same three-state include/exclude pattern as StatFilter. Exposes matchesFilter() method for imperative filtering.",
+      "props": [
+        {
+          "name": "filterValue",
+          "type": "Map<string, 'include' | 'exclude'>",
+          "optional": true,
+          "default": "new Map()"
+        }
+      ],
+      "methods": [
+        "matchesFilter"
+      ],
+      "events": [
+        "change"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::src/WeaponStatsDisplay.svelte",
+      "kind": "file",
+      "label": "WeaponStatsDisplay.svelte",
+      "path": "src/WeaponStatsDisplay.svelte",
+      "language": "svelte",
+      "sizeLines": 118,
+      "description": "Read-only weapon stats display that splits stats into three visual groups: Damage Type, Scaling, and general Stats (boosts/defenses).",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:component::WeaponStatsDisplay",
+      "kind": "component",
+      "label": "WeaponStatsDisplay",
+      "path": "src/WeaponStatsDisplay.svelte",
+      "description": "Renders weapon stats grouped into Dmg Type (×multipliers), Scaling (numeric values), and Stats (percentage boosts/defenses) with color-coded pill styling.",
+      "props": [
+        {
+          "name": "stats",
+          "type": "Record<string, number>",
+          "optional": true,
+          "default": "{}"
+        }
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file::vite.config.ts",
+      "kind": "file",
+      "label": "vite.config.ts",
+      "path": "vite.config.ts",
+      "language": "typescript",
+      "sizeLines": 56,
+      "description": "Vite build configuration. Configures Svelte plugin, VitePWA with service worker and offline caching, and a configurable base path.",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config::vite",
+      "kind": "config",
+      "label": "ViteConfig",
+      "path": "vite.config.ts",
+      "description": "Vite build config with Svelte plugin, VitePWA (autoUpdate registerType, workbox StaleWhileRevalidate for HTML), configurable base path via VITE_BASE_PATH env var, and manualChunks disabled.",
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge::src/data/HealBoost.ts->src/data/draconicBuffs.ts::import",
+      "source": "file::src/data/HealBoost.ts",
+      "target": "file::src/data/draconicBuffs.ts",
+      "kind": "import",
+      "label": "imports getEffectiveDraconicInfusionPotency",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::src/data/Runebasedmg.ts->src/data/HealBoost.ts::import",
+      "source": "file::src/data/Runebasedmg.ts",
+      "target": "file::src/data/HealBoost.ts",
+      "kind": "import",
+      "label": "imports calculateHealBoost, HealBoostContext",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::src/data/Runebasedmg.ts->src/data/SummonData.ts::import",
+      "source": "file::src/data/Runebasedmg.ts",
+      "target": "file::src/data/SummonData.ts",
+      "kind": "import",
+      "label": "imports calcMaxSummonCount",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::function::getHealScalingMultiplier->calculateHealBoost::calls",
+      "source": "function::src/data/HealBoost.ts::getHealScalingMultiplier",
+      "target": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "calls",
+      "label": "calls calculateHealBoost",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::function::calculateRuneHealScaling->calculateHealBoost::calls",
+      "source": "function::src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "target": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "kind": "calls",
+      "label": "calls calculateHealBoost (cross-file)",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::function::calculateHealBoost->getEffectiveDraconicInfusionPotency::calls",
+      "source": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "target": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "kind": "calls",
+      "label": "calls getEffectiveDraconicInfusionPotency (via Dragon Infusion calcFn)",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::function::getEffectiveDraconicInfusionPotency->getDraconicInfusionBuff::calls",
+      "source": "function::src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "target": "function::src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "kind": "calls",
+      "label": "calls getDraconicInfusionBuff",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::function::calculateHealBoost->data::HEAL_SCALING_DEFS::reads",
+      "source": "function::src/data/HealBoost.ts::calculateHealBoost",
+      "target": "file:data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "kind": "reads",
+      "label": "iterates HEAL_SCALING_DEFS",
+      "direction": "forward"
+    },
+    {
+      "id": "edge::data::RUNE_DMG_DEFS->data::SUMMON_MAP::references",
+      "source": "file:data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "target": "file:data::src/data/SummonData.ts::SUMMON_MAP",
+      "kind": "references",
+      "label": "Sporeling Toss slider references calcMaxSummonCount",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "kind": "defines",
+      "label": "defines interface",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "kind": "defines",
+      "label": "defines interface",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "kind": "defines",
+      "label": "defines interface",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/data/weaponArts.ts",
+      "target": "file:const::src/data/weaponArts.ts::WEAPON_ARTS",
+      "kind": "defines",
+      "label": "defines array",
+      "direction": "forward"
+    },
+    {
+      "source": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "target": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "kind": "uses",
+      "label": "hits array type",
+      "direction": "forward"
+    },
+    {
+      "source": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "kind": "uses",
+      "label": "requirements type",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/data/weaponConditionalBoosts.ts",
+      "target": "function::src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "kind": "defines",
+      "label": "defines function",
+      "direction": "forward"
+    },
+    {
+      "source": "function::src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "target": "file::src/lib/utils.ts",
+      "kind": "imports",
+      "label": "imports roundMultiplier",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/DidYouMean.svelte",
+      "target": "file::src/lib/utils.ts",
+      "kind": "imports",
+      "label": "imports highlightTextParts",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/DmgTotalTooltip.svelte",
+      "target": "file::src/lib/dmgTypes.ts",
+      "kind": "imports",
+      "label": "imports BADGE_CONFIG, ComputedHit",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/EmotionalTracker.svelte",
+      "target": "file::src/lib/store.ts",
+      "kind": "imports",
+      "label": "imports build store",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/Highlight.svelte",
+      "target": "file::src/lib/utils.ts",
+      "kind": "imports",
+      "label": "imports highlightTextParts",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/LevelBar.svelte",
+      "target": "file::src/lib/store.ts",
+      "kind": "imports",
+      "label": "imports build store",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/LevelBar.svelte",
+      "target": "file::src/lib/constants.ts",
+      "kind": "imports",
+      "label": "imports MAX_LEVEL, calcBaseMaxHP, STORAGE_KEY_*",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/LevelBar.svelte",
+      "target": "file::src/lib/constants/game.ts",
+      "kind": "imports",
+      "label": "imports via constants barrel",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/LevelBar.svelte",
+      "target": "function::src/lib/constants/game.ts::calcBaseMaxHP",
+      "kind": "uses",
+      "label": "calls calcBaseMaxHP",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/AppHeader.svelte",
+      "target": "file::src/BuildSaves.svelte",
+      "kind": "imports",
+      "label": "imports BuildSaves",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants.ts",
+      "target": "file::src/lib/constants/index.ts",
+      "kind": "re-exports",
+      "label": "re-exports from index",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/damage-types.ts",
+      "kind": "re-exports",
+      "label": "re-exports damage-types",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/game.ts",
+      "kind": "re-exports",
+      "label": "re-exports game",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/perks.ts",
+      "kind": "re-exports",
+      "label": "re-exports perks",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/boosts.ts",
+      "kind": "re-exports",
+      "label": "re-exports boosts",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/heals.ts",
+      "kind": "re-exports",
+      "label": "re-exports heals",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/draconic.ts",
+      "kind": "re-exports",
+      "label": "re-exports draconic",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/perk-base-damage.ts",
+      "kind": "re-exports",
+      "label": "re-exports perk-base-damage",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/rune-base-damage.ts",
+      "kind": "re-exports",
+      "label": "re-exports rune-base-damage",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/stat-conversions.ts",
+      "kind": "re-exports",
+      "label": "re-exports stat-conversions",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/defensive.ts",
+      "kind": "re-exports",
+      "label": "re-exports defensive",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/dot-damage.ts",
+      "kind": "re-exports",
+      "label": "re-exports dot-damage",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/draconic-colors.ts",
+      "kind": "re-exports",
+      "label": "re-exports draconic-colors",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/cdr.ts",
+      "kind": "re-exports",
+      "label": "re-exports cdr",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/index.ts",
+      "target": "file::src/lib/constants/debuff-effects.ts",
+      "kind": "re-exports",
+      "label": "re-exports debuff-effects",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/damage-types.ts",
+      "target": "file::src/lib/constants/game.ts",
+      "kind": "references",
+      "label": "uses DEFAULT_DMG_TYPE aligned",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/EmotionalTracker.svelte",
+      "target": "file::src/lib/constants/boosts.ts",
+      "kind": "references",
+      "label": "EMOTIONAL_MULT_PER_STACK drives this component",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/boosts.ts",
+      "target": "file::src/lib/constants/perk-base-damage.ts",
+      "kind": "related",
+      "label": "complementary perk data",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/draconic.ts",
+      "target": "file::src/lib/constants/draconic-colors.ts",
+      "kind": "related",
+      "label": "complementary draconic data",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/defensive.ts",
+      "target": "file::src/lib/constants/damage-types.ts",
+      "kind": "references",
+      "label": "DR values per damage type",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/lib/constants/stat-conversions.ts",
+      "target": "file::src/lib/constants/defensive.ts",
+      "kind": "related",
+      "label": "stat→defense conversions",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/enchantTooltip.ts",
+      "target": "file:src/lib/engine.ts",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports getEnchant",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/Toast.svelte",
+      "target": "file:src/lib/stores/toast.ts",
+      "type": "imports",
+      "weight": 1,
+      "description": "imports toasts, removeToast",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/RaceModal.svelte",
+      "type": "imports",
+      "target": "file:src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/GuildModal.svelte",
+      "type": "imports",
+      "target": "file:src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "type": "imports",
+      "target": "file:src/lib/Modal.svelte",
+      "weight": 1,
+      "description": "imports Modal",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "type": "contains",
+      "target": "file:src/lib/ui/Badge.svelte",
+      "weight": 1,
+      "description": "uses Badge component",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/WeaponPartModal.svelte",
+      "type": "imports",
+      "target": "file:src/lib/ui/Badge.svelte",
+      "weight": 1,
+      "desoription": "imports Badge",
+      "direction": "forward"
+    },
+    {
+      "source": "file:src/lib/modals/WeaponPartModal.svelte",
+      "target": "file:src/lib/Modal.svelte",
+      "type": "contains",
+      "weight": 1,
+      "description": "wraps in Modal",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/main.ts",
+      "target": "file::src/lib/ui/Stat.svelte",
+      "kind": "indirect",
+      "label": "serves app that uses",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "file:component::SuggestDrop",
+      "kind": "imports",
+      "label": "imports SuggestDrop",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "file:component::TagFilter",
+      "kind": "imports",
+      "label": "imports TagFilter",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "file:component::StatFilter",
+      "kind": "imports",
+      "label": "imports StatFilter",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/ModalSearchHeader.svelte",
+      "target": "file:component::WeaponStatFilter",
+      "kind": "imports",
+      "label": "imports WeaponStatFilter",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::SuggestDrop",
+      "kind": "renders",
+      "label": "renders",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::TagFilter",
+      "kind": "renders",
+      "label": "renders (conditional)",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::StatFilter",
+      "kind": "renders",
+      "label": "renders (conditional)",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::WeaponStatFilter",
+      "kind": "renders",
+      "label": "renders (conditional)",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/ScalingBreakdownRow.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "indirect",
+      "label": "uses UI_COLORS via row.color",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/StatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/TagFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/WeaponStatFilter.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports UI_COLORS",
+      "direction": "forward"
+    },
+    {
+      "source": "file::src/SuggestDrop.svelte",
+      "target": "file::src/lib/uiConstants.ts",
+      "kind": "imports",
+      "label": "imports highlightTextParts",
+      "direction": "forward"
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::StatFilter",
+      "kind": "uses",
+      "label": "provides color palette",
+      "direction": "forward"
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::TagFilter",
+      "kind": "uses",
+      "label": "provides group colors",
+      "direction": "forward"
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::WeaponStatFilter",
+      "kind": "uses",
+      "label": "provides group colors",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::StatFilter",
+      "target": "file:component::SuggestDrop",
+      "kind": "indirect",
+      "label": "sibling in ModalSearchHeader",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::TagFilter",
+      "target": "file:component::StatFilter",
+      "kind": "indirect",
+      "label": "sibling in ModalSearchHeader",
+      "direction": "forward"
+    },
+    {
+      "source": "config::vite",
+      "target": "file::src/main.ts",
+      "kind": "configures",
+      "label": "builds and serves app",
+      "direction": "forward"
+    },
+    {
+      "source": "file:component::WeaponStatFilter",
+      "target": "file:component::WeaponStatsDisplay",
+      "kind": "indirect",
+      "label": "complementary filter/display pair",
+      "direction": "forward"
+    }
+  ]
+}

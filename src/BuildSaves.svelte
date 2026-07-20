@@ -3,6 +3,7 @@
   import EmotionalTracker from './EmotionalTracker.svelte';
   import { build } from './lib/store'
   import { addToast } from './lib/stores/toast'
+  import Button from './lib/ui/Button.svelte'
   import type { BuildState } from './lib/types'
   import {
     BUILD_STATE_DEFAULTS as DEFAULTS,
@@ -406,22 +407,20 @@
             </div>
           </div>
           <div class="slot-actions">
-            <button class="btn btn-save" on:click={() => saveBuild(i)}>
+            <Button variant="positive" size="sm" onclick={() => saveBuild(i)}>
               {slot ? '↑ Save' : '+ Save'}
-            </button>
+            </Button>
             {#if slot}
-              <button class="btn" class:btn-load={confirmLoad !== i} class:btn-confirm={confirmLoad === i}
-                on:click={() => loadBuild(i)}>
+              <Button variant={confirmLoad === i ? 'warning' : 'info'} size="sm" onclick={() => loadBuild(i)}>
                 {confirmLoad === i ? '✓ Sure?' : '↓ Load'}
-              </button>
+              </Button>
               <button class="btn btn-share" class:btn-share--active={exportingSlot === i}
                 on:click={() => exportSlot(i)} title="Export this build as code" aria-label="Export Slot {i+1}">
                 <span>⬆</span>
               </button>
-              <button class="btn" class:btn-delete={confirmDelete !== i} class:btn-confirm={confirmDelete === i}
-                on:click={() => deleteSlot(i)} aria-label="Delete Slot {i+1}">
-                <span>{confirmDelete === i ? '?' : '✕'}</span>
-              </button>
+              <Button variant={confirmDelete === i ? 'warning' : 'negative'} size="sm" onclick={() => deleteSlot(i)} disabled={false}>
+                {confirmDelete === i ? '✗ Sure?' : '✕'}
+              </Button>
             {/if}
           </div>
         </div>
@@ -454,7 +453,7 @@
         <label for="import-build-code" class="sr-only">Paste Build Code</label>
         <input id="import-build-code" class="share-code" bind:value={importCode} placeholder="Paste build code here…" />
         <button class="btn btn-paste" on:click={async () => { try { importCode = await navigator.clipboard.readText() } catch {} }} title="Paste from clipboard">📋 Paste</button>
-        <button class="btn btn-import" on:click={importBuild}>⬇ Import</button>
+        <Button variant="info" size="sm" onclick={importBuild}>⬇ Import</Button>
       </div>
   {#if importError}<span class="import-err">{importError}</span>{/if}
   {#if importSuccess}<span class="import-ok">✓ Loaded!</span>{/if}
@@ -529,20 +528,7 @@
     padding:4px 9px;border-radius:6px;cursor:pointer;
     transition:all .15s;white-space:nowrap;border:1px solid transparent;
   }
-  .btn-save{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:var(--accent);}
-  .btn-save:hover{background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.5);}
-  .btn-load{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2);color:var(--infusion);}
-  .btn-load:hover{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.45);}
-  .btn-delete{
-    background:rgba(248,113,113,.07);border-color:rgba(248,113,113,.18);
-    color:var(--neg);min-width:28px;display:flex;align-items:center;justify-content:center;padding:4px 6px;
-  }
-  .btn-delete:hover{background:rgba(248,113,113,.2);border-color:rgba(248,113,113,.45);}
-  .btn-confirm{
-    background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);
-    color:var(--accent2);animation:pulse .4s ease infinite alternate;
-  }
-  @keyframes pulse{from{opacity:.8}to{opacity:1}}
+
 
   .share-section{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--border);}
   .share-row,.import-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
@@ -556,8 +542,6 @@
   .btn-share:hover{background:rgba(167,139,250,.2);border-color:rgba(167,139,250,.5);}
   .btn-copy{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:var(--accent);flex-shrink:0;}
   .btn-copy:hover{background:rgba(74,222,128,.2);}
-  .btn-import{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2);color:var(--infusion);flex-shrink:0;}
-  .btn-import:hover{background:rgba(56,189,248,.18);}
   .import-err{font-size:.7rem;color:var(--neg);}
   .import-ok{font-size:.7rem;color:var(--accent);}
   .export-label{font-size:.62rem;color:var(--ink-muted);white-space:nowrap;flex-shrink:0;}

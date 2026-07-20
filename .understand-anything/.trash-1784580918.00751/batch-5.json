@@ -1,0 +1,93 @@
+{
+  "batch": 5,
+  "files": [
+    ".github/workflows/static.yml"
+  ],
+  "graphNodes": [
+    {
+      "id": "file:::.github/workflows/static.yml",
+      "type": "file",
+      "label": "static.yml",
+      "properties": {
+        "path": ".github/workflows/static.yml",
+        "language": "yaml",
+        "category": "infra",
+        "totalLines": 53,
+        "nonEmptyLines": 34,
+        "description": "GitHub Actions workflow for deploying static content to GitHub Pages"
+      }
+    },
+    {
+      "id": "workflow:::static.yml::deploy-static-content",
+      "type": "section",
+      "label": "Deploy static content to Pages",
+      "properties": {
+        "kind": "workflow",
+        "filePath": ".github/workflows/static.yml",
+        "trigger": "push to main branch or manual dispatch",
+        "permissions": ["contents:read", "pages:write", "id-token:write"],
+        "concurrency": "pages (no cancel-in-progress)"
+      }
+    },
+    {
+      "id": "job:::static.yml::build",
+      "type": "section",
+      "label": "build",
+      "properties": {
+        "kind": "job",
+        "filePath": ".github/workflows/static.yml",
+        "runner": "ubuntu-latest",
+        "steps": [
+          "actions/checkout@v6",
+          "actions/setup-node@v6 (node 24)",
+          "npm install",
+          "npm run build",
+          "actions/upload-pages-artifact@v5 (./dist)"
+        ]
+      }
+    },
+    {
+      "id": "job:::static.yml::deploy",
+      "type": "section",
+      "label": "deploy",
+      "properties": {
+        "kind": "job",
+        "filePath": ".github/workflows/static.yml",
+        "runner": "ubuntu-latest",
+        "dependsOn": "build",
+        "environment": "github-pages",
+        "steps": [
+          "actions/deploy-pages@v5"
+        ]
+      }
+    }
+  ],
+  "graphEdges": [
+    {
+      "source": "file:::.github/workflows/static.yml",
+      "target": "workflow:::static.yml::deploy-static-content",
+      "relation": "contains"
+    },
+    {
+      "source": "workflow:::static.yml::deploy-static-content",
+      "target": "job:::static.yml::build",
+      "relation": "defines"
+    },
+    {
+      "source": "workflow:::static.yml::deploy-static-content",
+      "target": "job:::static.yml::deploy",
+      "relation": "defines"
+    },
+    {
+      "source": "job:::static.yml::deploy",
+      "target": "job:::static.yml::build",
+      "relation": "depends-on"
+    },
+    {
+      "source": "job:::static.yml::build",
+      "target": "node:::project-root::package.json",
+      "relation": "uses-config",
+      "label": "npm install & npm run build"
+    }
+  ]
+}

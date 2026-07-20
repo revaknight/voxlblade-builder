@@ -1,0 +1,4570 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "voxlblade-builder",
+    "languages": [
+      "typescript",
+      "svelte",
+      "json",
+      "css",
+      "yaml",
+      "html",
+      "markdown",
+      "javascript"
+    ],
+    "frameworks": [
+      "Svelte",
+      "Vite",
+      "Tailwind CSS"
+    ],
+    "description": "Svelte 5 + Vite + TypeScript damage calculator for Voxel Blade RPG with weapon calculations, enchantments, perks, and draconic rune system",
+    "analyzedAt": "2026-07-20T13:51:42.376Z",
+    "gitCommitHash": "d15bbd87a859f14a77ffe8a9995d78587d698603"
+  },
+  "nodes": [
+    {
+      "id": "file:src/data/statboost.ts",
+      "type": "file",
+      "name": "statboost.ts",
+      "summary": "Source file with 8 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/statboost.ts"
+    },
+    {
+      "id": "file:src/lib/damageTypeResolve.ts",
+      "type": "file",
+      "name": "damageTypeResolve.ts",
+      "summary": "Source file with 3 functions, 3 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/damageTypeResolve.ts"
+    },
+    {
+      "id": "file:src/lib/dmgTypes.ts",
+      "type": "file",
+      "name": "dmgTypes.ts",
+      "summary": "Source file with 0 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/dmgTypes.ts"
+    },
+    {
+      "id": "file:src/lib/engine/data/character.ts",
+      "type": "file",
+      "name": "character.ts",
+      "summary": "Source file with 5 functions, 7 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/data/character.ts"
+    },
+    {
+      "id": "file:src/lib/engine/data/equipment.ts",
+      "type": "file",
+      "name": "equipment.ts",
+      "summary": "Source file with 4 functions, 9 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/data/equipment.ts"
+    },
+    {
+      "id": "file:src/lib/engine/data/weapons.ts",
+      "type": "file",
+      "name": "weapons.ts",
+      "summary": "Source file with 4 functions, 8 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/data/weapons.ts"
+    },
+    {
+      "id": "file:src/lib/engine/format.ts",
+      "type": "file",
+      "name": "format.ts",
+      "summary": "Source file with 2 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/format.ts"
+    },
+    {
+      "id": "file:src/lib/store.ts",
+      "type": "file",
+      "name": "store.ts",
+      "summary": "Source file with 4 functions, 5 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/store.ts"
+    },
+    {
+      "id": "file:src/lib/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "summary": "Source file with 3 functions, 9 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/types.ts"
+    },
+    {
+      "id": "file:src/lib/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "summary": "Source file with 8 functions, 4 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/utils.ts"
+    },
+    {
+      "id": "function:src/data/statboost.ts::r",
+      "type": "function",
+      "name": "r",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::get",
+      "type": "function",
+      "name": "get",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::add",
+      "type": "function",
+      "name": "add",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::sub",
+      "type": "function",
+      "name": "sub",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::negMagnitude",
+      "type": "function",
+      "name": "negMagnitude",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::negSum",
+      "type": "function",
+      "name": "negSum",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::finalizeRounding",
+      "type": "function",
+      "name": "finalizeRounding",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/statboost.ts::applyStatBoostPerks",
+      "type": "function",
+      "name": "applyStatBoostPerks",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/damageTypeResolve.ts::resolveDamageTypes",
+      "type": "function",
+      "name": "resolveDamageTypes",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/damageTypeResolve.ts::applyFireAirConversion",
+      "type": "function",
+      "name": "applyFireAirConversion",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/damageTypeResolve.ts::applyAirToMagicConversion",
+      "type": "function",
+      "name": "applyAirToMagicConversion",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/character.ts::getRace",
+      "type": "function",
+      "name": "getRace",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/character.ts::getGuild",
+      "type": "function",
+      "name": "getGuild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/character.ts::getPerk",
+      "type": "function",
+      "name": "getPerk",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/character.ts::getGuildRank",
+      "type": "function",
+      "name": "getGuildRank",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/character.ts::isMonkGuild",
+      "type": "function",
+      "name": "isMonkGuild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/equipment.ts::getEnchant",
+      "type": "function",
+      "name": "getEnchant",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/equipment.ts::getRing",
+      "type": "function",
+      "name": "getRing",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/equipment.ts::getRune",
+      "type": "function",
+      "name": "getRune",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/equipment.ts::getArmorPart",
+      "type": "function",
+      "name": "getArmorPart",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/weapons.ts::getBlade",
+      "type": "function",
+      "name": "getBlade",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/weapons.ts::getHandle",
+      "type": "function",
+      "name": "getHandle",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/weapons.ts::getGlove",
+      "type": "function",
+      "name": "getGlove",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/data/weapons.ts::getEssence",
+      "type": "function",
+      "name": "getEssence",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/format.ts::formatStat",
+      "type": "function",
+      "name": "formatStat",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/format.ts::formatLabel",
+      "type": "function",
+      "name": "formatLabel",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/store.ts::loadBuild",
+      "type": "function",
+      "name": "loadBuild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/store.ts::setEnchantment",
+      "type": "function",
+      "name": "setEnchantment",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/store.ts::clearBuild",
+      "type": "function",
+      "name": "clearBuild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/store.ts::setGuild",
+      "type": "function",
+      "name": "setGuild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/types.ts::applyUpgrade",
+      "type": "function",
+      "name": "applyUpgrade",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/types.ts::getProcCoeffValue",
+      "type": "function",
+      "name": "getProcCoeffValue",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/types.ts::canProc",
+      "type": "function",
+      "name": "canProc",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::calculateMultiplierFromPct",
+      "type": "function",
+      "name": "calculateMultiplierFromPct",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::multiplyMultipliers",
+      "type": "function",
+      "name": "multiplyMultipliers",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::roundMultiplier",
+      "type": "function",
+      "name": "roundMultiplier",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::calcWardingDebuffMultiplier",
+      "type": "function",
+      "name": "calcWardingDebuffMultiplier",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::escapeHtml",
+      "type": "function",
+      "name": "escapeHtml",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::highlightText",
+      "type": "function",
+      "name": "highlightText",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::highlightTextParts",
+      "type": "function",
+      "name": "highlightTextParts",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/utils.ts::calcProcChance",
+      "type": "function",
+      "name": "calcProcChance",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatKey",
+      "type": "class",
+      "name": "StatKey",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatMap",
+      "type": "class",
+      "name": "StatMap",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Race",
+      "type": "class",
+      "name": "Race",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GuildPerk",
+      "type": "class",
+      "name": "GuildPerk",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GuildRank",
+      "type": "class",
+      "name": "GuildRank",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Guild",
+      "type": "class",
+      "name": "Guild",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ArmorStats",
+      "type": "class",
+      "name": "ArmorStats",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ArmorPart",
+      "type": "class",
+      "name": "ArmorPart",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Armor",
+      "type": "class",
+      "name": "Armor",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Ring",
+      "type": "class",
+      "name": "Ring",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Rune",
+      "type": "class",
+      "name": "Rune",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatModifier",
+      "type": "class",
+      "name": "StatModifier",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EnchantmentEffect",
+      "type": "class",
+      "name": "EnchantmentEffect",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Enchantment",
+      "type": "class",
+      "name": "Enchantment",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::Perk",
+      "type": "class",
+      "name": "Perk",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EnchantSlot",
+      "type": "class",
+      "name": "EnchantSlot",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BladeType",
+      "type": "class",
+      "name": "BladeType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::HandleType",
+      "type": "class",
+      "name": "HandleType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::StatPrefix",
+      "type": "class",
+      "name": "StatPrefix",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ScalingKey",
+      "type": "class",
+      "name": "ScalingKey",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponBlade",
+      "type": "class",
+      "name": "WeaponBlade",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHandle",
+      "type": "class",
+      "name": "WeaponHandle",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::GloveType",
+      "type": "class",
+      "name": "GloveType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::EssenceType",
+      "type": "class",
+      "name": "EssenceType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::MonkGlove",
+      "type": "class",
+      "name": "MonkGlove",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::MonkEssence",
+      "type": "class",
+      "name": "MonkEssence",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BuildState",
+      "type": "class",
+      "name": "BuildState",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ProcCoefficient",
+      "type": "class",
+      "name": "ProcCoefficient",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::ProcScalingType",
+      "type": "class",
+      "name": "ProcScalingType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostAttackType",
+      "type": "class",
+      "name": "BoostAttackType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostEntry",
+      "type": "class",
+      "name": "BoostEntry",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::BoostResult",
+      "type": "class",
+      "name": "BoostResult",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHitObject",
+      "type": "class",
+      "name": "WeaponHitObject",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponHit",
+      "type": "class",
+      "name": "WeaponHit",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/types.ts::WeaponBaseDmg",
+      "type": "class",
+      "name": "WeaponBaseDmg",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::ComputedType",
+      "type": "class",
+      "name": "ComputedType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::PerkOnHitDmg",
+      "type": "class",
+      "name": "PerkOnHitDmg",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/lib/dmgTypes.ts::ComputedHit",
+      "type": "class",
+      "name": "ComputedHit",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/data/HealBoost.ts",
+      "type": "file",
+      "name": "HealBoost.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts"
+    },
+    {
+      "id": "function:src/data/HealBoost.ts::calculateHealBoost",
+      "type": "file",
+      "name": "calculateHealBoost",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        132,
+        207
+      ]
+    },
+    {
+      "id": "function:src/data/HealBoost.ts::getHealScalingMultiplier",
+      "type": "file",
+      "name": "getHealScalingMultiplier",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        209,
+        215
+      ]
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealBoostContext",
+      "type": "file",
+      "name": "HealBoostContext",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts"
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealSource",
+      "type": "file",
+      "name": "HealSource",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts"
+    },
+    {
+      "id": "file:type::src/data/HealBoost.ts::HealBoostResult",
+      "type": "file",
+      "name": "HealBoostResult",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts"
+    },
+    {
+      "id": "file:data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "type": "file",
+      "name": "HEAL_SCALING_DEFS",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/HealBoost.ts",
+      "lineRange": [
+        40,
+        118
+      ]
+    },
+    {
+      "id": "file:src/data/Runebasedmg.ts",
+      "type": "file",
+      "name": "Runebasedmg.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Runebasedmg.ts"
+    },
+    {
+      "id": "function:src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "type": "file",
+      "name": "calculateRuneHealScaling",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [
+        44,
+        66
+      ]
+    },
+    {
+      "id": "file:type::src/data/Runebasedmg.ts::RuneDmgDef",
+      "type": "file",
+      "name": "RuneDmgDef",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Runebasedmg.ts"
+    },
+    {
+      "id": "file:type::src/data/Runebasedmg.ts::RuneDmgCtx",
+      "type": "file",
+      "name": "RuneDmgCtx",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Runebasedmg.ts"
+    },
+    {
+      "id": "file:data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "type": "file",
+      "name": "RUNE_DMG_DEFS",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Runebasedmg.ts",
+      "lineRange": [
+        68,
+        200
+      ]
+    },
+    {
+      "id": "file:src/data/SummonData.ts",
+      "type": "file",
+      "name": "SummonData.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/SummonData.ts"
+    },
+    {
+      "id": "function:src/data/SummonData.ts::calcSummonStat",
+      "type": "file",
+      "name": "calcSummonStat",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "function:src/data/SummonData.ts::calcMaxSummonCount",
+      "type": "file",
+      "name": "calcMaxSummonCount",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/SummonData.ts",
+      "lineRange": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": "file:data::src/data/SummonData.ts::SUMMON_MAP",
+      "type": "file",
+      "name": "SUMMON_MAP",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/SummonData.ts"
+    },
+    {
+      "id": "file:data::src/data/SummonData.ts::WA_SUMMON_MAP",
+      "type": "file",
+      "name": "WA_SUMMON_MAP",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/SummonData.ts"
+    },
+    {
+      "id": "file:src/data/draconicBuffs.ts",
+      "type": "file",
+      "name": "draconicBuffs.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts"
+    },
+    {
+      "id": "function:src/data/draconicBuffs.ts::getDraconicInfusionPotMult",
+      "type": "file",
+      "name": "getDraconicInfusionPotMult",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        4,
+        6
+      ]
+    },
+    {
+      "id": "function:src/data/draconicBuffs.ts::getDraconicInfusionDurMult",
+      "type": "file",
+      "name": "getDraconicInfusionDurMult",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        7,
+        9
+      ]
+    },
+    {
+      "id": "function:src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "type": "file",
+      "name": "getEffectiveDraconicInfusionPotency",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        19,
+        30
+      ]
+    },
+    {
+      "id": "function:src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "type": "file",
+      "name": "getDraconicInfusionBuff",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        32,
+        72
+      ]
+    },
+    {
+      "id": "function:src/data/draconicBuffs.ts::getDraconicAbilityDebuffs",
+      "type": "file",
+      "name": "getDraconicAbilityDebuffs",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        74,
+        112
+      ]
+    },
+    {
+      "id": "file:data::src/data/draconicBuffs.ts::DRACONIC_INFUSION_COLOR_EFFECTS",
+      "type": "file",
+      "name": "DRACONIC_INFUSION_COLOR_EFFECTS",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicBuffs.ts",
+      "lineRange": [
+        11,
+        18
+      ]
+    },
+    {
+      "id": "file:src/lib/engine/_utils.ts",
+      "type": "file",
+      "name": "_utils.ts",
+      "summary": "Source file with 2 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/_utils.ts"
+    },
+    {
+      "id": "function:src/lib/engine/_utils.ts::round2",
+      "type": "function",
+      "name": "round2",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/_utils.ts::round4",
+      "type": "function",
+      "name": "round4",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/engine/enchant.ts",
+      "type": "file",
+      "name": "enchant.ts",
+      "summary": "Source file with 9 functions, 5 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/enchant.ts"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyMod",
+      "type": "function",
+      "name": "applyMod",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::normalizeModifiers",
+      "type": "function",
+      "name": "normalizeModifiers",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyModsToKey",
+      "type": "function",
+      "name": "applyModsToKey",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyModsWhere",
+      "type": "function",
+      "name": "applyModsWhere",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyEnchantmentsToSlot",
+      "type": "function",
+      "name": "applyEnchantmentsToSlot",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyPerkEffectiveness",
+      "type": "function",
+      "name": "applyPerkEffectiveness",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::applyInfusion",
+      "type": "function",
+      "name": "applyInfusion",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::isExclusiveEnchant",
+      "type": "function",
+      "name": "isExclusiveEnchant",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/enchant.ts::enforceEnchantSlot",
+      "type": "function",
+      "name": "enforceEnchantSlot",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/engine/shrine.ts",
+      "type": "file",
+      "name": "shrine.ts",
+      "summary": "Source file with 2 functions, 3 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/shrine.ts"
+    },
+    {
+      "id": "function:src/lib/engine/shrine.ts::applyShrineToScalings",
+      "type": "function",
+      "name": "applyShrineToScalings",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/shrine.ts::applyShrineToStats",
+      "type": "function",
+      "name": "applyShrineToStats",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/engine/weapon.ts",
+      "type": "file",
+      "name": "weapon.ts",
+      "summary": "Source file with 15 functions, 3 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/weapon.ts"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::checkHybrid",
+      "type": "function",
+      "name": "checkHybrid",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::getWeaponType",
+      "type": "function",
+      "name": "getWeaponType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::resolveWeaponType",
+      "type": "function",
+      "name": "resolveWeaponType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::getMonkWeaponType",
+      "type": "function",
+      "name": "getMonkWeaponType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::resolveMonkWeaponType",
+      "type": "function",
+      "name": "resolveMonkWeaponType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::extractDamageAndScalings",
+      "type": "function",
+      "name": "extractDamageAndScalings",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::mergePartPerks",
+      "type": "function",
+      "name": "mergePartPerks",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::applyShrineToPart",
+      "type": "function",
+      "name": "applyShrineToPart",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::mergeRecords",
+      "type": "function",
+      "name": "mergeRecords",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::mergeScalingsAndStats",
+      "type": "function",
+      "name": "mergeScalingsAndStats",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::buildWeaponResult",
+      "type": "function",
+      "name": "buildWeaponResult",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::calcWeaponGeneric",
+      "type": "function",
+      "name": "calcWeaponGeneric",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::applyMonkStatBonus",
+      "type": "function",
+      "name": "applyMonkStatBonus",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::calcWeapon",
+      "type": "function",
+      "name": "calcWeapon",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/engine/weapon.ts::calcMonkWeapon",
+      "type": "function",
+      "name": "calcMonkWeapon",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:decode_full.mjs",
+      "type": "file",
+      "name": "decode_full.mjs",
+      "summary": "Source file with 9 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "decode_full.mjs"
+    },
+    {
+      "id": "file:docs/ONBOARDING.md",
+      "type": "file",
+      "name": "ONBOARDING.md",
+      "summary": "Documentation file.",
+      "tags": [
+        "documentation"
+      ],
+      "complexity": "moderate",
+      "filePath": "docs/ONBOARDING.md"
+    },
+    {
+      "id": "file:src/app.css",
+      "type": "file",
+      "name": "app.css",
+      "summary": "markup file.",
+      "tags": [
+        "markup"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/app.css"
+    },
+    {
+      "id": "file:src/App.svelte",
+      "type": "file",
+      "name": "App.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/App.svelte"
+    },
+    {
+      "id": "file:src/BaseDamageCalc.svelte",
+      "type": "file",
+      "name": "BaseDamageCalc.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/BaseDamageCalc.svelte"
+    },
+    {
+      "id": "file:src/BuffList.svelte",
+      "type": "file",
+      "name": "BuffList.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/BuffList.svelte"
+    },
+    {
+      "id": "file:src/BuildSaves.svelte",
+      "type": "file",
+      "name": "BuildSaves.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/BuildSaves.svelte"
+    },
+    {
+      "id": "file:src/CdrStepsCalc.svelte",
+      "type": "file",
+      "name": "CdrStepsCalc.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/CdrStepsCalc.svelte"
+    },
+    {
+      "id": "file:src/CritIcon.svelte",
+      "type": "file",
+      "name": "CritIcon.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/CritIcon.svelte"
+    },
+    {
+      "id": "file:src/DamageAnalyzer.svelte",
+      "type": "file",
+      "name": "DamageAnalyzer.svelte",
+      "summary": "Source file with 0 functions, 0 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/DamageAnalyzer.svelte"
+    },
+    {
+      "id": "file:src/data/cdr.ts",
+      "type": "file",
+      "name": "cdr.ts",
+      "summary": "Source file with 0 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/cdr.ts"
+    },
+    {
+      "id": "file:src/data/debuffCombatEffects.ts",
+      "type": "file",
+      "name": "debuffCombatEffects.ts",
+      "summary": "Source file with 0 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/debuffCombatEffects.ts"
+    },
+    {
+      "id": "file:src/data/defensivePerks.ts",
+      "type": "file",
+      "name": "defensivePerks.ts",
+      "summary": "Source file with 2 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/defensivePerks.ts"
+    },
+    {
+      "id": "file:src/data/DoTDamage.ts",
+      "type": "file",
+      "name": "DoTDamage.ts",
+      "summary": "Source file with 5 functions, 8 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/DoTDamage.ts"
+    },
+    {
+      "id": "file:src/data/draconicColorEffects.ts",
+      "type": "file",
+      "name": "draconicColorEffects.ts",
+      "summary": "Source file with 2 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicColorEffects.ts"
+    },
+    {
+      "id": "file:src/data/draconicRunes.ts",
+      "type": "file",
+      "name": "draconicRunes.ts",
+      "summary": "Source file with 6 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/draconicRunes.ts"
+    },
+    {
+      "id": "function:decode_full.mjs::getPerk",
+      "type": "function",
+      "name": "getPerk",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::getArmorPart",
+      "type": "function",
+      "name": "getArmorPart",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::applyUpgrade",
+      "type": "function",
+      "name": "applyUpgrade",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::applyEnchantmentsToSlot",
+      "type": "function",
+      "name": "applyEnchantmentsToSlot",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::applyShrine",
+      "type": "function",
+      "name": "applyShrine",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::applyInfusion",
+      "type": "function",
+      "name": "applyInfusion",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:decode_full.mjs::finalizePerks",
+      "type": "function",
+      "name": "finalizePerks",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/defensivePerks.ts::getActiveDefensivePerkSources",
+      "type": "function",
+      "name": "getActiveDefensivePerkSources",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/defensivePerks.ts::calcDefensivePotencyMult",
+      "type": "function",
+      "name": "calcDefensivePotencyMult",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/DoTDamage.ts::getDotBase",
+      "type": "function",
+      "name": "getDotBase",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/DoTDamage.ts::getDotPotencyMult",
+      "type": "function",
+      "name": "getDotPotencyMult",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/DoTDamage.ts::calcDotTick",
+      "type": "function",
+      "name": "calcDotTick",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/DoTDamage.ts::calcCausticSlow",
+      "type": "function",
+      "name": "calcCausticSlow",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/DoTDamage.ts::toGamePotency",
+      "type": "function",
+      "name": "toGamePotency",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/draconicColorEffects.ts::getDraconicColorDmgMultiplier",
+      "type": "function",
+      "name": "getDraconicColorDmgMultiplier",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/draconicRunes.ts::applyDraconicBonuses",
+      "type": "function",
+      "name": "applyDraconicBonuses",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/draconicRunes.ts::getDraconicBonuses",
+      "type": "function",
+      "name": "getDraconicBonuses",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Perkbasedmg.ts::HpGate",
+      "type": "class",
+      "name": "HpGate",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/cdr.ts::CDR_PERK_DATA",
+      "type": "function",
+      "name": "CDR_PERK_DATA",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/debuffCombatEffects.ts::DEBUFF_COMBAT_EFFECTS",
+      "type": "function",
+      "name": "DEBUFF_COMBAT_EFFECTS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/defensivePerks.ts::DefensivePerkSource",
+      "type": "class",
+      "name": "DefensivePerkSource",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/DoTDamage.ts::DotType",
+      "type": "class",
+      "name": "DotType",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/DoTDamage.ts::DOT_SCALINGS",
+      "type": "function",
+      "name": "DOT_SCALINGS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/DoTDamage.ts::DOT_DMG_TYPE_MAP",
+      "type": "function",
+      "name": "DOT_DMG_TYPE_MAP",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicColorEffects.ts::DraconicColorAttackStats",
+      "type": "class",
+      "name": "DraconicColorAttackStats",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/draconicColorEffects.ts::DRACONIC_COLOR_ATTACK_STATS",
+      "type": "function",
+      "name": "DRACONIC_COLOR_ATTACK_STATS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicRunes.ts::DraconicRunesContext",
+      "type": "class",
+      "name": "DraconicRunesContext",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/draconicRunes.ts::DragonInfusionContext",
+      "type": "class",
+      "name": "DragonInfusionContext",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/data/enemyHpEffects.ts",
+      "type": "file",
+      "name": "enemyHpEffects.ts",
+      "summary": "Source file with 3 functions, 4 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/enemyHpEffects.ts"
+    },
+    {
+      "id": "file:src/data/mountRunes.ts",
+      "type": "file",
+      "name": "mountRunes.ts",
+      "summary": "Source file with 1 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/mountRunes.ts"
+    },
+    {
+      "id": "file:src/data/Perkbasedmg.ts",
+      "type": "file",
+      "name": "Perkbasedmg.ts",
+      "summary": "Source file with 3 functions, 7 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Perkbasedmg.ts"
+    },
+    {
+      "id": "file:src/data/procCoefficients.ts",
+      "type": "file",
+      "name": "procCoefficients.ts",
+      "summary": "Source file with 0 functions, 6 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/procCoefficients.ts"
+    },
+    {
+      "id": "file:src/data/raceEffects.ts",
+      "type": "file",
+      "name": "raceEffects.ts",
+      "summary": "Source file with 3 functions, 3 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/raceEffects.ts"
+    },
+    {
+      "id": "file:src/data/selfDamagePerks.ts",
+      "type": "file",
+      "name": "selfDamagePerks.ts",
+      "summary": "Source file with 1 functions, 4 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/selfDamagePerks.ts"
+    },
+    {
+      "id": "file:src/data/stanceOverlays.ts",
+      "type": "file",
+      "name": "stanceOverlays.ts",
+      "summary": "Source file with 1 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/stanceOverlays.ts"
+    },
+    {
+      "id": "file:src/data/weapon base dmg.ts",
+      "type": "file",
+      "name": "weapon base dmg.ts",
+      "summary": "Source file with 0 functions, 1 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weapon base dmg.ts"
+    },
+    {
+      "id": "file:src/data/Weaponartcheck.ts",
+      "type": "file",
+      "name": "Weaponartcheck.ts",
+      "summary": "Source file with 7 functions, 2 exports.",
+      "tags": [
+        "source-code"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/Weaponartcheck.ts"
+    },
+    {
+      "id": "function:src/data/enemyHpEffects.ts::isEnemyHpGateActive",
+      "type": "function",
+      "name": "isEnemyHpGateActive",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/enemyHpEffects.ts::getActiveEnemyHpDebuffs",
+      "type": "function",
+      "name": "getActiveEnemyHpDebuffs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/enemyHpEffects.ts::getEnemyHpDotMultiplier",
+      "type": "function",
+      "name": "getEnemyHpDotMultiplier",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/mountRunes.ts::getMountRuneDef",
+      "type": "function",
+      "name": "getMountRuneDef",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Perkbasedmg.ts::gateThreshold",
+      "type": "function",
+      "name": "gateThreshold",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Perkbasedmg.ts::isHpGateActive",
+      "type": "function",
+      "name": "isHpGateActive",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Perkbasedmg.ts::calcSpringblastBaseDamage",
+      "type": "function",
+      "name": "calcSpringblastBaseDamage",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/raceEffects.ts::getActiveRaceEffect",
+      "type": "function",
+      "name": "getActiveRaceEffect",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/raceEffects.ts::getOrkTenacityBuffs",
+      "type": "function",
+      "name": "getOrkTenacityBuffs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/raceEffects.ts::calcOrkTenacityBonus",
+      "type": "function",
+      "name": "calcOrkTenacityBonus",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/selfDamagePerks.ts::calcSelfDamage",
+      "type": "function",
+      "name": "calcSelfDamage",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/stanceOverlays.ts::resolveStanceOverlay",
+      "type": "function",
+      "name": "resolveStanceOverlay",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::passesAtLeastOneScaling",
+      "type": "function",
+      "name": "passesAtLeastOneScaling",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::meetsScalingReqs",
+      "type": "function",
+      "name": "meetsScalingReqs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::meetsStatReqs",
+      "type": "function",
+      "name": "meetsStatReqs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::buildUnmetStatReqs",
+      "type": "function",
+      "name": "buildUnmetStatReqs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::buildUnmetScalingReqs",
+      "type": "function",
+      "name": "buildUnmetScalingReqs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::checkWA",
+      "type": "function",
+      "name": "checkWA",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/data/Weaponartcheck.ts::getUnmetReqs",
+      "type": "function",
+      "name": "getUnmetReqs",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/enemyHpEffects.ts::EnemyHpGate",
+      "type": "class",
+      "name": "EnemyHpGate",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/enemyHpEffects.ts::EnemyHpEffectDef",
+      "type": "class",
+      "name": "EnemyHpEffectDef",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/mountRunes.ts::MountRuneDef",
+      "type": "class",
+      "name": "MountRuneDef",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::PERK_DMG_DEFS",
+      "type": "function",
+      "name": "PERK_DMG_DEFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::DRAGON_STATE_HP_GATE",
+      "type": "function",
+      "name": "DRAGON_STATE_HP_GATE",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/Perkbasedmg.ts::BELLOWING_EMBER_HP_GATE",
+      "type": "function",
+      "name": "BELLOWING_EMBER_HP_GATE",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/Perkbasedmg.ts::PerkDmgDef",
+      "type": "class",
+      "name": "PerkDmgDef",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::WEAPON_PROC_COEFFS",
+      "type": "function",
+      "name": "WEAPON_PROC_COEFFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::WA_PROC_COEFFS",
+      "type": "function",
+      "name": "WA_PROC_COEFFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/procCoefficients.ts::DEFAULT_PROC_COEFF",
+      "type": "function",
+      "name": "DEFAULT_PROC_COEFF",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/raceEffects.ts::RaceConditionalEffect",
+      "type": "class",
+      "name": "RaceConditionalEffect",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/selfDamagePerks.ts::SelfDamagePerkDef",
+      "type": "class",
+      "name": "SelfDamagePerkDef",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/selfDamagePerks.ts::SELF_DAMAGE_PERK_DEFS",
+      "type": "function",
+      "name": "SELF_DAMAGE_PERK_DEFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/stanceOverlays.ts::StanceOverlayResult",
+      "type": "class",
+      "name": "StanceOverlayResult",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:type::src/data/stanceOverlays.ts::StanceOverlayCtx",
+      "type": "class",
+      "name": "StanceOverlayCtx",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/weapon base dmg.ts::WEAPON_BASE_DMG",
+      "type": "function",
+      "name": "WEAPON_BASE_DMG",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/mountRunes.ts::MOUNT_RUNE_DEFS",
+      "type": "function",
+      "name": "MOUNT_RUNE_DEFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:export::src/data/enemyHpEffects.ts::ENEMY_HP_EFFECT_DEFS",
+      "type": "function",
+      "name": "ENEMY_HP_EFFECT_DEFS",
+      "summary": "code file.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/data/weaponArts.ts",
+      "type": "file",
+      "name": "weaponArts.ts",
+      "summary": "file node.",
+      "tags": [
+        "data",
+        "constants",
+        "weapons"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponArts.ts"
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "type": "file",
+      "name": "WAIndividualHit",
+      "summary": "file node.",
+      "tags": [
+        "interface",
+        "weapon-art",
+        "hit"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponArts.ts",
+      "lineRange": [
+        1,
+        6
+      ]
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "type": "file",
+      "name": "WeaponArtRequirement",
+      "summary": "file node.",
+      "tags": [
+        "interface",
+        "weapon-art",
+        "requirements"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponArts.ts",
+      "lineRange": [
+        8,
+        31
+      ]
+    },
+    {
+      "id": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "type": "file",
+      "name": "WeaponArt",
+      "summary": "file node.",
+      "tags": [
+        "interface",
+        "weapon-art"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponArts.ts",
+      "lineRange": [
+        33,
+        49
+      ]
+    },
+    {
+      "id": "file:const::src/data/weaponArts.ts::WEAPON_ARTS",
+      "type": "file",
+      "name": "WEAPON_ARTS",
+      "summary": "file node.",
+      "tags": [
+        "data",
+        "weapon-art",
+        "game-content"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponArts.ts",
+      "lineRange": [
+        51,
+        509
+      ]
+    },
+    {
+      "id": "file:src/data/weaponConditionalBoosts.ts",
+      "type": "file",
+      "name": "weaponConditionalBoosts.ts",
+      "summary": "file node.",
+      "tags": [
+        "data",
+        "weapons",
+        "boosts"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponConditionalBoosts.ts"
+    },
+    {
+      "id": "function:src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "type": "file",
+      "name": "getWeaponConditionalBoost",
+      "summary": "file node.",
+      "tags": [
+        "export",
+        "boost",
+        "weapon",
+        "calculation"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/data/weaponConditionalBoosts.ts",
+      "lineRange": [
+        30,
+        46
+      ]
+    },
+    {
+      "id": "file:src/DidYouMean.svelte",
+      "type": "file",
+      "name": "DidYouMean.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "search"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/DidYouMean.svelte"
+    },
+    {
+      "id": "file:src/DmgTotalTooltip.svelte",
+      "type": "file",
+      "name": "DmgTotalTooltip.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "tooltip",
+        "damage"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/DmgTotalTooltip.svelte"
+    },
+    {
+      "id": "file:src/DraconicAbilityStats.svelte",
+      "type": "file",
+      "name": "DraconicAbilityStats.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "draconic"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/DraconicAbilityStats.svelte"
+    },
+    {
+      "id": "file:src/EmotionalTracker.svelte",
+      "type": "file",
+      "name": "EmotionalTracker.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "perk",
+        "emotional"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/EmotionalTracker.svelte"
+    },
+    {
+      "id": "file:src/Highlight.svelte",
+      "type": "file",
+      "name": "Highlight.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "search",
+        "text"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/Highlight.svelte"
+    },
+    {
+      "id": "file:src/LevelBar.svelte",
+      "type": "file",
+      "name": "LevelBar.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "hp",
+        "level",
+        "interactive"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/LevelBar.svelte"
+    },
+    {
+      "id": "file:src/lib/AppHeader.svelte",
+      "type": "file",
+      "name": "AppHeader.svelte",
+      "summary": "file node.",
+      "tags": [
+        "component",
+        "ui",
+        "header",
+        "navigation"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/AppHeader.svelte"
+    },
+    {
+      "id": "file:src/lib/constants.ts",
+      "type": "file",
+      "name": "constants.ts (barrel)",
+      "summary": "file node.",
+      "tags": [
+        "barrel",
+        "re-export"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants.ts"
+    },
+    {
+      "id": "file:src/lib/constants/index.ts",
+      "type": "file",
+      "name": "constants/index.ts",
+      "summary": "file node.",
+      "tags": [
+        "barrel",
+        "re-export",
+        "constants"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/index.ts"
+    },
+    {
+      "id": "file:src/lib/constants/boosts.ts",
+      "type": "file",
+      "name": "boosts.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "boosts",
+        "perks",
+        "multipliers"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/boosts.ts"
+    },
+    {
+      "id": "file:src/lib/constants/cdr.ts",
+      "type": "file",
+      "name": "cdr.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "cooldown-reduction"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/cdr.ts"
+    },
+    {
+      "id": "file:src/lib/constants/damage-types.ts",
+      "type": "file",
+      "name": "damage-types.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "damage-types",
+        "defense",
+        "core"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/damage-types.ts"
+    },
+    {
+      "id": "file:src/lib/constants/debuff-effects.ts",
+      "type": "file",
+      "name": "debuff-effects.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "debuffs",
+        "effects"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/debuff-effects.ts"
+    },
+    {
+      "id": "file:src/lib/constants/defensive.ts",
+      "type": "file",
+      "name": "defensive.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "defensive",
+        "damage-reduction"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/defensive.ts"
+    },
+    {
+      "id": "file:src/lib/constants/dot-damage.ts",
+      "type": "file",
+      "name": "dot-damage.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "dot",
+        "damage-over-time"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/dot-damage.ts"
+    },
+    {
+      "id": "file:src/lib/constants/draconic-colors.ts",
+      "type": "file",
+      "name": "draconic-colors.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "draconic",
+        "elements"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/draconic-colors.ts"
+    },
+    {
+      "id": "file:src/lib/constants/draconic.ts",
+      "type": "file",
+      "name": "draconic.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "draconic"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/draconic.ts"
+    },
+    {
+      "id": "file:src/lib/constants/game.ts",
+      "type": "file",
+      "name": "game.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "game",
+        "core",
+        "timing"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/game.ts"
+    },
+    {
+      "id": "function:src/lib/constants/game.ts::calcBaseMaxHP",
+      "type": "file",
+      "name": "calcBaseMaxHP",
+      "summary": "file node.",
+      "tags": [
+        "export",
+        "function",
+        "hp",
+        "calculation"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/game.ts",
+      "lineRange": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": "file:src/lib/constants/heals.ts",
+      "type": "file",
+      "name": "heals.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "healing"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/heals.ts"
+    },
+    {
+      "id": "file:src/lib/constants/perk-base-damage.ts",
+      "type": "file",
+      "name": "perk-base-damage.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "perks",
+        "base-damage",
+        "abilities"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/perk-base-damage.ts"
+    },
+    {
+      "id": "file:src/lib/constants/perks.ts",
+      "type": "file",
+      "name": "perks.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "perks",
+        "effects",
+        "crit"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/perks.ts"
+    },
+    {
+      "id": "file:src/lib/constants/rune-base-damage.ts",
+      "type": "file",
+      "name": "rune-base-damage.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "runes",
+        "base-damage"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/rune-base-damage.ts"
+    },
+    {
+      "id": "file:src/lib/constants/stat-conversions.ts",
+      "type": "file",
+      "name": "stat-conversions.ts",
+      "summary": "file node.",
+      "tags": [
+        "constants",
+        "stat-conversions",
+        "defense"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/stat-conversions.ts"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts",
+      "type": "file",
+      "name": "storage.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/storage.ts"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts",
+      "type": "file",
+      "name": "thresholds.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/constants/thresholds.ts"
+    },
+    {
+      "id": "file:src/lib/defense.ts",
+      "type": "file",
+      "name": "defense.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/defense.ts"
+    },
+    {
+      "id": "file:src/lib/EnchantSelect.svelte",
+      "type": "file",
+      "name": "EnchantSelect.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/EnchantSelect.svelte"
+    },
+    {
+      "id": "file:src/lib/enchantTooltip.ts",
+      "type": "file",
+      "name": "enchantTooltip.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/enchantTooltip.ts"
+    },
+    {
+      "id": "file:src/lib/engine.ts",
+      "type": "file",
+      "name": "engine.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine.ts"
+    },
+    {
+      "id": "file:src/lib/engine/data.ts",
+      "type": "file",
+      "name": "data.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/engine/data.ts"
+    },
+    {
+      "id": "file:src/lib/Modal.svelte",
+      "type": "file",
+      "name": "Modal.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/Modal.svelte"
+    },
+    {
+      "id": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "type": "file",
+      "name": "AccessorySelectModal.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/modals/AccessorySelectModal.svelte"
+    },
+    {
+      "id": "file:src/lib/modals/GuildModal.svelte",
+      "type": "file",
+      "name": "GuildModal.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/modals/GuildModal.svelte"
+    },
+    {
+      "id": "file:src/lib/modals/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/modals/index.ts"
+    },
+    {
+      "id": "file:src/lib/modals/RaceModal.svelte",
+      "type": "file",
+      "name": "RaceModal.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/modals/RaceModal.svelte"
+    },
+    {
+      "id": "file:src/lib/modals/WeaponPartModal.svelte",
+      "type": "file",
+      "name": "WeaponPartModal.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/modals/WeaponPartModal.svelte"
+    },
+    {
+      "id": "file:src/lib/StatFilterShared.svelte",
+      "type": "file",
+      "name": "StatFilterShared.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/StatFilterShared.svelte"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts",
+      "type": "file",
+      "name": "elementalBoosts.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/stats/elementalBoosts.ts"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts",
+      "type": "file",
+      "name": "toast.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/stores/toast.ts"
+    },
+    {
+      "id": "file:src/lib/Toast.svelte",
+      "type": "file",
+      "name": "Toast.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/Toast.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Badge.svelte",
+      "type": "file",
+      "name": "Badge.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Badge.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Button.svelte",
+      "type": "file",
+      "name": "Button.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Button.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Card.svelte",
+      "type": "file",
+      "name": "Card.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Card.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Divider.svelte",
+      "type": "file",
+      "name": "Divider.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Divider.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/index.ts"
+    },
+    {
+      "id": "file:src/lib/ui/Panel.svelte",
+      "type": "file",
+      "name": "Panel.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/lib/ui/Panel.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Section.svelte",
+      "type": "file",
+      "name": "Section.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Section.svelte"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/BUILD_STATE_DEFAULTS",
+      "type": "class",
+      "name": "BUILD_STATE_DEFAULTS",
+      "summary": "object node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/SAVE_KEY_MAP",
+      "type": "class",
+      "name": "SAVE_KEY_MAP",
+      "summary": "object node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/storage.ts/ENCH_MAP",
+      "type": "class",
+      "name": "ENCH_MAP",
+      "summary": "object node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts/ARMOR_PEN_BRANCH_THRESHOLD",
+      "type": "function",
+      "name": "ARMOR_PEN_BRANCH_THRESHOLD",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts/CD_MINIMUM",
+      "type": "function",
+      "name": "CD_MINIMUM",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/constants/thresholds.ts/BASE_CRIT_DMG_PCT",
+      "type": "function",
+      "name": "BASE_CRIT_DMG_PCT",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:resolveDefenseSources",
+      "type": "function",
+      "name": "resolveDefenseSources",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/defense.ts/DEF_GROUP",
+      "type": "function",
+      "name": "DEF_GROUP",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:calcBaseArmorDefPct",
+      "type": "function",
+      "name": "calcBaseArmorDefPct",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:getEnchantTooltipText",
+      "type": "function",
+      "name": "getEnchantTooltipText",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:RaceModal",
+      "type": "function",
+      "name": "RaceModal",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:GuildModal",
+      "type": "function",
+      "name": "GuildModal",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:AccessorySelectModal",
+      "type": "function",
+      "name": "AccessorySelectModal",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:WeaponPartModal",
+      "type": "function",
+      "name": "WeaponPartModal",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts/ELEMENTAL_BOOST_STATS",
+      "type": "function",
+      "name": "ELEMENTAL_BOOST_STATS",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stats/elementalBoosts.ts/NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "type": "function",
+      "name": "NEGATIVE_ELEMENTAL_BOOST_STATS",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:__nofilepath__:createFilterActions",
+      "type": "function",
+      "name": "createFilterActions",
+      "summary": "function node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/toasts",
+      "type": "class",
+      "name": "toasts",
+      "summary": "store node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/addToast",
+      "type": "function",
+      "name": "addToast",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/stores/toast.ts/removeToast",
+      "type": "function",
+      "name": "removeToast",
+      "summary": "constant node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/ui/Badge.svelte/Badge",
+      "type": "file",
+      "name": "Badge",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Badge.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Button.svelte/Button",
+      "type": "file",
+      "name": "Button",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Button.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Card.svelte/Card",
+      "type": "file",
+      "name": "Card",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Card.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Divider.svelte/Divider",
+      "type": "file",
+      "name": "Divider",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Divider.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Panel.svelte/Panel",
+      "type": "file",
+      "name": "Panel",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Panel.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Section.svelte/Section",
+      "type": "file",
+      "name": "Section",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Section.svelte"
+    },
+    {
+      "id": "file:src/lib/Modal.svelte/Modal",
+      "type": "file",
+      "name": "Modal",
+      "summary": "svelte-component node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/Modal.svelte"
+    },
+    {
+      "id": "file:src/lib/ui/Stat.svelte",
+      "type": "file",
+      "name": "Stat.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Stat.svelte"
+    },
+    {
+      "id": "file:component::Stat",
+      "type": "file",
+      "name": "Stat",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/ui/Stat.svelte"
+    },
+    {
+      "id": "file:src/lib/uiConstants.ts",
+      "type": "file",
+      "name": "uiConstants.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/lib/uiConstants.ts"
+    },
+    {
+      "id": "file:src/main.ts",
+      "type": "file",
+      "name": "main.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/main.ts"
+    },
+    {
+      "id": "file:src/ModalSearchHeader.svelte",
+      "type": "file",
+      "name": "ModalSearchHeader.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/ModalSearchHeader.svelte"
+    },
+    {
+      "id": "file:component::ModalSearchHeader",
+      "type": "file",
+      "name": "ModalSearchHeader",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/ModalSearchHeader.svelte"
+    },
+    {
+      "id": "file:src/MountIcon.svelte",
+      "type": "file",
+      "name": "MountIcon.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/MountIcon.svelte"
+    },
+    {
+      "id": "file:component::MountIcon",
+      "type": "file",
+      "name": "MountIcon",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/MountIcon.svelte"
+    },
+    {
+      "id": "file:src/ScalingBreakdownRow.svelte",
+      "type": "file",
+      "name": "ScalingBreakdownRow.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/ScalingBreakdownRow.svelte"
+    },
+    {
+      "id": "file:component::ScalingBreakdownRow",
+      "type": "file",
+      "name": "ScalingBreakdownRow",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/ScalingBreakdownRow.svelte"
+    },
+    {
+      "id": "file:src/StatFilter.svelte",
+      "type": "file",
+      "name": "StatFilter.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/StatFilter.svelte"
+    },
+    {
+      "id": "file:component::StatFilter",
+      "type": "file",
+      "name": "StatFilter",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/StatFilter.svelte"
+    },
+    {
+      "id": "file:src/SuggestDrop.svelte",
+      "type": "file",
+      "name": "SuggestDrop.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/SuggestDrop.svelte"
+    },
+    {
+      "id": "file:component::SuggestDrop",
+      "type": "file",
+      "name": "SuggestDrop",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/SuggestDrop.svelte"
+    },
+    {
+      "id": "file:src/TagFilter.svelte",
+      "type": "file",
+      "name": "TagFilter.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/TagFilter.svelte"
+    },
+    {
+      "id": "file:component::TagFilter",
+      "type": "file",
+      "name": "TagFilter",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/TagFilter.svelte"
+    },
+    {
+      "id": "file:src/WeaponStatFilter.svelte",
+      "type": "file",
+      "name": "WeaponStatFilter.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/WeaponStatFilter.svelte"
+    },
+    {
+      "id": "file:component::WeaponStatFilter",
+      "type": "file",
+      "name": "WeaponStatFilter",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/WeaponStatFilter.svelte"
+    },
+    {
+      "id": "file:src/WeaponStatsDisplay.svelte",
+      "type": "file",
+      "name": "WeaponStatsDisplay.svelte",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/WeaponStatsDisplay.svelte"
+    },
+    {
+      "id": "file:component::WeaponStatsDisplay",
+      "type": "file",
+      "name": "WeaponStatsDisplay",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "src/WeaponStatsDisplay.svelte"
+    },
+    {
+      "id": "file:vite.config.ts",
+      "type": "file",
+      "name": "vite.config.ts",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "vite.config.ts"
+    },
+    {
+      "id": "config::vite",
+      "type": "file",
+      "name": "ViteConfig",
+      "summary": "file node.",
+      "tags": [
+        "file"
+      ],
+      "complexity": "moderate",
+      "filePath": "vite.config.ts"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/data/HealBoost.ts",
+      "target": "file:src/data/draconicBuffs.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/Runebasedmg.ts",
+      "target": "file:src/data/HealBoost.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/Runebasedmg.ts",
+      "target": "file:src/data/SummonData.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/HealBoost.ts::getHealScalingMultiplier",
+      "target": "function:src/data/HealBoost.ts::calculateHealBoost",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/Runebasedmg.ts::calculateRuneHealScaling",
+      "target": "function:src/data/HealBoost.ts::calculateHealBoost",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/HealBoost.ts::calculateHealBoost",
+      "target": "function:src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/draconicBuffs.ts::getEffectiveDraconicInfusionPotency",
+      "target": "function:src/data/draconicBuffs.ts::getDraconicInfusionBuff",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/HealBoost.ts::calculateHealBoost",
+      "target": "file:data::src/data/HealBoost.ts::HEAL_SCALING_DEFS",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:data::src/data/Runebasedmg.ts::RUNE_DMG_DEFS",
+      "target": "file:data::src/data/SummonData.ts::SUMMON_MAP",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/weaponArts.ts",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/weaponArts.ts",
+      "target": "file:const::src/data/weaponArts.ts::WEAPON_ARTS",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "target": "file:type::src/data/weaponArts.ts::WAIndividualHit",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:type::src/data/weaponArts.ts::WeaponArt",
+      "target": "file:type::src/data/weaponArts.ts::WeaponArtRequirement",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/data/weaponConditionalBoosts.ts",
+      "target": "function:src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:src/data/weaponConditionalBoosts.ts::getWeaponConditionalBoost",
+      "target": "file:src/lib/utils.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/DidYouMean.svelte",
+      "target": "file:src/lib/utils.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/DmgTotalTooltip.svelte",
+      "target": "file:src/lib/dmgTypes.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/EmotionalTracker.svelte",
+      "target": "file:src/lib/store.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/Highlight.svelte",
+      "target": "file:src/lib/utils.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/LevelBar.svelte",
+      "target": "file:src/lib/store.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/LevelBar.svelte",
+      "target": "file:src/lib/constants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/LevelBar.svelte",
+      "target": "file:src/lib/constants/game.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/LevelBar.svelte",
+      "target": "function:src/lib/constants/game.ts::calcBaseMaxHP",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/AppHeader.svelte",
+      "target": "file:src/BuildSaves.svelte",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants.ts",
+      "target": "file:src/lib/constants/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/damage-types.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/game.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/perks.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/boosts.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/heals.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/draconic.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/perk-base-damage.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/rune-base-damage.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/stat-conversions.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/defensive.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/dot-damage.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/draconic-colors.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/cdr.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/index.ts",
+      "target": "file:src/lib/constants/debuff-effects.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/damage-types.ts",
+      "target": "file:src/lib/constants/game.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/EmotionalTracker.svelte",
+      "target": "file:src/lib/constants/boosts.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/boosts.ts",
+      "target": "file:src/lib/constants/perk-base-damage.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/draconic.ts",
+      "target": "file:src/lib/constants/draconic-colors.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/defensive.ts",
+      "target": "file:src/lib/constants/damage-types.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/constants/stat-conversions.ts",
+      "target": "file:src/lib/constants/defensive.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/enchantTooltip.ts",
+      "target": "file:src/lib/engine.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/Toast.svelte",
+      "target": "file:src/lib/stores/toast.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/RaceModal.svelte",
+      "target": "file:src/lib/Modal.svelte",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/GuildModal.svelte",
+      "target": "file:src/lib/Modal.svelte",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "target": "file:src/lib/Modal.svelte",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/AccessorySelectModal.svelte",
+      "target": "file:src/lib/ui/Badge.svelte",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/WeaponPartModal.svelte",
+      "target": "file:src/lib/ui/Badge.svelte",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/modals/WeaponPartModal.svelte",
+      "target": "file:src/lib/Modal.svelte",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/main.ts",
+      "target": "file:src/lib/ui/Stat.svelte",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/ModalSearchHeader.svelte",
+      "target": "file:component::SuggestDrop",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/ModalSearchHeader.svelte",
+      "target": "file:component::TagFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/ModalSearchHeader.svelte",
+      "target": "file:component::StatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/ModalSearchHeader.svelte",
+      "target": "file:component::WeaponStatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::SuggestDrop",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::TagFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::StatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::ModalSearchHeader",
+      "target": "file:component::WeaponStatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/ScalingBreakdownRow.svelte",
+      "target": "file:src/lib/uiConstants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/StatFilter.svelte",
+      "target": "file:src/lib/uiConstants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/TagFilter.svelte",
+      "target": "file:src/lib/uiConstants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/WeaponStatFilter.svelte",
+      "target": "file:src/lib/uiConstants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/SuggestDrop.svelte",
+      "target": "file:src/lib/uiConstants.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::StatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::TagFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:constant::UI_COLORS",
+      "target": "file:component::WeaponStatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::StatFilter",
+      "target": "file:component::SuggestDrop",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::TagFilter",
+      "target": "file:component::StatFilter",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config::vite",
+      "target": "file:src/main.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:component::WeaponStatFilter",
+      "target": "file:component::WeaponStatsDisplay",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:entry-shell",
+      "name": "Entry & Shell",
+      "description": "Application entry point, root layout, global styles, and build configuration",
+      "nodeIds": [
+        "file:src/main.ts",
+        "file:src/App.svelte",
+        "file:src/app.css",
+        "file:src/App.svelte",
+        "file:src/main.ts",
+        "file:src/app.css"
+      ]
+    },
+    {
+      "id": "layer:ui-components",
+      "name": "UI Components",
+      "description": "Reusable Svelte UI components — buttons, cards, badges, modals, stat displays, toasts, search/autocomplete, filter panels, headers, icons, and tooltips",
+      "nodeIds": [
+        "file:src/lib/AppHeader.svelte",
+        "file:src/lib/Modal.svelte",
+        "file:src/lib/Toast.svelte",
+        "file:src/lib/EnchantSelect.svelte",
+        "file:src/lib/StatFilterShared.svelte",
+        "file:src/lib/ui/Badge.svelte",
+        "file:src/lib/ui/Button.svelte",
+        "file:src/lib/ui/Card.svelte",
+        "file:src/lib/ui/Divider.svelte",
+        "file:src/lib/ui/Panel.svelte",
+        "file:src/lib/ui/Section.svelte",
+        "file:src/lib/ui/Stat.svelte",
+        "file:src/lib/ui/index.ts",
+        "file:src/lib/modals/RaceModal.svelte",
+        "file:src/lib/modals/GuildModal.svelte",
+        "file:src/lib/modals/AccessorySelectModal.svelte",
+        "file:src/lib/modals/WeaponPartModal.svelte",
+        "file:src/lib/modals/index.ts",
+        "file:src/lib/AppHeader.svelte",
+        "file:src/lib/Modal.svelte",
+        "file:src/lib/Toast.svelte",
+        "file:src/lib/EnchantSelect.svelte",
+        "file:src/lib/StatFilterShared.svelte",
+        "file:src/lib/ui/Badge.svelte",
+        "file:src/lib/ui/Button.svelte",
+        "file:src/lib/ui/Card.svelte",
+        "file:src/lib/ui/Divider.svelte",
+        "file:src/lib/ui/Panel.svelte",
+        "file:src/lib/ui/Section.svelte",
+        "file:src/lib/ui/Stat.svelte",
+        "file:src/lib/ui/index.ts",
+        "file:src/lib/modals/RaceModal.svelte",
+        "file:src/lib/modals/GuildModal.svelte",
+        "file:src/lib/modals/AccessorySelectModal.svelte",
+        "file:src/lib/modals/WeaponPartModal.svelte",
+        "file:src/lib/modals/index.ts",
+        "file:src/BuildSaves.svelte",
+        "file:src/BuffList.svelte",
+        "file:src/CritIcon.svelte",
+        "file:src/DidYouMean.svelte",
+        "file:src/DmgTotalTooltip.svelte",
+        "file:src/DraconicAbilityStats.svelte",
+        "file:src/EmotionalTracker.svelte",
+        "file:src/Highlight.svelte",
+        "file:src/LevelBar.svelte",
+        "file:src/ModalSearchHeader.svelte",
+        "file:src/MountIcon.svelte",
+        "file:src/ScalingBreakdownRow.svelte",
+        "file:src/StatFilter.svelte",
+        "file:src/SuggestDrop.svelte",
+        "file:src/TagFilter.svelte",
+        "file:src/WeaponStatFilter.svelte",
+        "file:src/WeaponStatsDisplay.svelte",
+        "file:src/BaseDamageCalc.svelte",
+        "file:src/CdrStepsCalc.svelte",
+        "file:src/BuildSaves.svelte",
+        "file:src/BuffList.svelte",
+        "file:src/CritIcon.svelte",
+        "file:src/DidYouMean.svelte",
+        "file:src/DmgTotalTooltip.svelte",
+        "file:src/DraconicAbilityStats.svelte",
+        "file:src/EmotionalTracker.svelte",
+        "file:src/Highlight.svelte",
+        "file:src/LevelBar.svelte",
+        "file:src/ModalSearchHeader.svelte",
+        "file:src/MountIcon.svelte",
+        "file:src/ScalingBreakdownRow.svelte",
+        "file:src/StatFilter.svelte",
+        "file:src/SuggestDrop.svelte",
+        "file:src/TagFilter.svelte",
+        "file:src/WeaponStatFilter.svelte",
+        "file:src/WeaponStatsDisplay.svelte",
+        "file:src/BaseDamageCalc.svelte",
+        "file:src/CdrStepsCalc.svelte"
+      ]
+    },
+    {
+      "id": "layer:damage-analyzer",
+      "name": "Damage Analyzer",
+      "description": "Primary damage analysis orchestrator component that wires together all game systems, defense resolution, and UI presentation",
+      "nodeIds": [
+        "file:src/DamageAnalyzer.svelte",
+        "file:src/DamageAnalyzer.svelte"
+      ]
+    },
+    {
+      "id": "layer:game-engine",
+      "name": "Game Engine",
+      "description": "Core game calculation logic: weapon computation, enchantments, shrine boosts, defense resolution, damage type resolution, crit system, and utility math",
+      "nodeIds": [
+        "file:src/lib/engine.ts",
+        "file:src/lib/engine/data.ts",
+        "file:src/lib/engine/_utils.ts",
+        "file:src/lib/engine/data/character.ts",
+        "file:src/lib/engine/data/equipment.ts",
+        "file:src/lib/engine/data/weapons.ts",
+        "file:src/lib/engine/enchant.ts",
+        "file:src/lib/engine/shrine.ts",
+        "file:src/lib/engine/weapon.ts",
+        "file:src/lib/engine/format.ts",
+        "file:src/lib/defense.ts",
+        "file:src/lib/damageTypeResolve.ts",
+        "file:src/lib/dmgTypes.ts",
+        "file:src/lib/types.ts",
+        "file:src/lib/utils.ts",
+        "file:src/lib/enchantTooltip.ts",
+        "file:src/lib/engine.ts",
+        "file:src/lib/engine/data.ts",
+        "file:src/lib/engine/_utils.ts",
+        "file:src/lib/engine/data/character.ts",
+        "file:src/lib/engine/data/equipment.ts",
+        "file:src/lib/engine/data/weapons.ts",
+        "file:src/lib/engine/enchant.ts",
+        "file:src/lib/engine/shrine.ts",
+        "file:src/lib/engine/weapon.ts",
+        "file:src/lib/engine/format.ts",
+        "file:src/lib/defense.ts",
+        "file:src/lib/damageTypeResolve.ts",
+        "file:src/lib/dmgTypes.ts",
+        "file:src/lib/types.ts",
+        "file:src/lib/utils.ts",
+        "file:src/lib/enchantTooltip.ts",
+        "file:src/lib/stats/elementalBoosts.ts",
+        "file:src/lib/stores/toast.ts",
+        "file:src/lib/store.ts",
+        "file:src/lib/uiConstants.ts"
+      ]
+    },
+    {
+      "id": "layer:data-layer",
+      "name": "Data Layer",
+      "description": "Game data definitions and computation functions for perks, runes, DoT, weapon arts, mounts, buffs/debuffs, race effects, self-damage, stat boosts, draconic system, CDR, enemy HP effects, and stance overlays",
+      "nodeIds": [
+        "file:src/data/statboost.ts",
+        "file:src/data/HealBoost.ts",
+        "file:src/data/Runebasedmg.ts",
+        "file:src/data/SummonData.ts",
+        "file:src/data/draconicBuffs.ts",
+        "file:src/data/cdr.ts",
+        "file:src/data/debuffCombatEffects.ts",
+        "file:src/data/defensivePerks.ts",
+        "file:src/data/DoTDamage.ts",
+        "file:src/data/draconicColorEffects.ts",
+        "file:src/data/draconicRunes.ts",
+        "file:src/data/enemyHpEffects.ts",
+        "file:src/data/mountRunes.ts",
+        "file:src/data/Perkbasedmg.ts",
+        "file:src/data/procCoefficients.ts",
+        "file:src/data/raceEffects.ts",
+        "file:src/data/selfDamagePerks.ts",
+        "file:src/data/stanceOverlays.ts",
+        "file:src/data/weaponArts.ts",
+        "file:src/data/weaponConditionalBoosts.ts",
+        "file:src/data/weapon base dmg.ts",
+        "file:src/data/Weaponartcheck.ts",
+        "file:src/data/HealBoost.ts",
+        "file:src/data/Runebasedmg.ts",
+        "file:src/data/SummonData.ts",
+        "file:src/data/draconicBuffs.ts",
+        "file:src/data/statboost.ts",
+        "file:src/data/cdr.ts",
+        "file:src/data/debuffCombatEffects.ts",
+        "file:src/data/defensivePerks.ts",
+        "file:src/data/DoTDamage.ts",
+        "file:src/data/draconicColorEffects.ts",
+        "file:src/data/draconicRunes.ts",
+        "file:src/data/enemyHpEffects.ts",
+        "file:src/data/mountRunes.ts",
+        "file:src/data/Perkbasedmg.ts",
+        "file:src/data/procCoefficients.ts",
+        "file:src/data/raceEffects.ts",
+        "file:src/data/selfDamagePerks.ts",
+        "file:src/data/stanceOverlays.ts",
+        "file:src/data/weaponArts.ts",
+        "file:src/data/weaponConditionalBoosts.ts",
+        "file:src/data/weapon base dmg.ts",
+        "file:src/data/Weaponartcheck.ts"
+      ]
+    },
+    {
+      "id": "layer:constants-config",
+      "name": "Constants & Config",
+      "description": "Numeric tuning constants for game balance (boosts, defense, damage types, draconic, CDR, DoT, thresholds, stat conversions, storage keys) and project configuration files",
+      "nodeIds": [
+        "file:src/lib/constants.ts",
+        "file:src/lib/constants/index.ts",
+        "file:src/lib/constants/boosts.ts",
+        "file:src/lib/constants/cdr.ts",
+        "file:src/lib/constants/damage-types.ts",
+        "file:src/lib/constants/debuff-effects.ts",
+        "file:src/lib/constants/defensive.ts",
+        "file:src/lib/constants/dot-damage.ts",
+        "file:src/lib/constants/draconic-colors.ts",
+        "file:src/lib/constants/draconic.ts",
+        "file:src/lib/constants/game.ts",
+        "file:src/lib/constants/heals.ts",
+        "file:src/lib/constants/perk-base-damage.ts",
+        "file:src/lib/constants/perks.ts",
+        "file:src/lib/constants/rune-base-damage.ts",
+        "file:src/lib/constants/stat-conversions.ts",
+        "file:src/lib/constants/storage.ts",
+        "file:src/lib/constants/thresholds.ts",
+        "file:src/lib/constants.ts",
+        "file:src/lib/constants/index.ts",
+        "file:src/lib/constants/boosts.ts",
+        "file:src/lib/constants/cdr.ts",
+        "file:src/lib/constants/damage-types.ts",
+        "file:src/lib/constants/debuff-effects.ts",
+        "file:src/lib/constants/defensive.ts",
+        "file:src/lib/constants/dot-damage.ts",
+        "file:src/lib/constants/draconic-colors.ts",
+        "file:src/lib/constants/draconic.ts",
+        "file:src/lib/constants/game.ts",
+        "file:src/lib/constants/heals.ts",
+        "file:src/lib/constants/perk-base-damage.ts",
+        "file:src/lib/constants/perks.ts",
+        "file:src/lib/constants/rune-base-damage.ts",
+        "file:src/lib/constants/stat-conversions.ts",
+        "file:src/lib/constants/storage.ts",
+        "file:src/lib/constants/thresholds.ts",
+        "file:vite.config.ts"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README and package.json to understand that this is a Svelte 5 + Vite + TypeScript damage calculator for the Voxel Blade RPG. Note the key dependencies and scripts.",
+      "nodeIds": []
+    },
+    {
+      "order": 2,
+      "title": "Entry Point & App Shell",
+      "description": "See how the app boots: main.ts mounts App.svelte, which sets up global styles (app.css) and renders the DamageAnalyzer as the main view.",
+      "nodeIds": [
+        "file:src/main.ts",
+        "file:src/App.svelte",
+        "file:src/app.css"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "Type System & Data Models",
+      "description": "Understand the foundational TypeScript types — StatKey, Race, Guild, Armor, WeaponBlade, Enchantment, BuildState, and damage result types that flow through the entire engine.",
+      "nodeIds": [
+        "file:src/lib/types.ts",
+        "file:src/lib/dmgTypes.ts"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "Game Engine Core",
+      "description": "The engine layer wires together weapon computation, enchantment application, shrine boosts, defense resolution, crit calculation, and damage type resolution. Start with engine.ts and explore the sub-modules.",
+      "nodeIds": [
+        "file:src/lib/engine.ts",
+        "file:src/lib/engine/weapon.ts",
+        "file:src/lib/engine/enchant.ts",
+        "file:src/lib/engine/shrine.ts"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Game Data Definitions",
+      "description": "All game content lives in src/data: perk damage tables, rune definitions, heal boosts, DoT damage, draconic buffs, stat boosts, weapon arts, race effects, summon data, and more.",
+      "nodeIds": [
+        "file:src/data/Perkbasedmg.ts",
+        "file:src/data/Runebasedmg.ts",
+        "file:src/data/HealBoost.ts",
+        "file:src/data/DoTDamage.ts",
+        "file:src/data/draconicBuffs.ts",
+        "file:src/data/statboost.ts",
+        "file:src/data/weaponArts.ts",
+        "file:src/data/raceEffects.ts"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Damage Analyzer — The Main Orchestrator",
+      "description": "DamageAnalyzer.svelte is the heart of the UI. It pulls together all engine calculations, defense resolution, and renders the full damage breakdown. This is where data meets presentation.",
+      "nodeIds": [
+        "file:src/DamageAnalyzer.svelte"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "UI Components & Modals",
+      "description": "Reusable UI primitives (Badge, Button, Card, Panel, Stat, Section) in src/lib/ui, plus specialized components like EnchantSelect, WeaponStatsDisplay, BuffList, and modal dialogs for Race, Guild, and Weapon selection.",
+      "nodeIds": [
+        "file:src/lib/ui/index.ts",
+        "file:src/lib/AppHeader.svelte",
+        "file:src/lib/EnchantSelect.svelte",
+        "file:src/lib/modals/RaceModal.svelte",
+        "file:src/lib/modals/WeaponPartModal.svelte"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "Constants, Config & Build",
+      "description": "Game balance tuning lives in src/lib/constants (boosts, defense, damage types, draconic, CDR, DoT, stat conversions). The project builds with Vite and deploys to Vercel.",
+      "nodeIds": [
+        "file:src/lib/constants/index.ts",
+        "file:src/lib/constants/game.ts",
+        "file:src/lib/constants/damage-types.ts",
+        "file:vite.config.ts"
+      ]
+    }
+  ]
+}

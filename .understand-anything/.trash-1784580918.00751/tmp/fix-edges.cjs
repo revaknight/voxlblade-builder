@@ -1,0 +1,10 @@
+const fs = require('fs');
+const graphPath = process.argv[2];
+const outputPath = process.argv[3];
+const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
+const nodeIds = new Set(graph.nodes.map(n => n.id));
+const before = graph.edges.length;
+graph.edges = graph.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+const removed = before - graph.edges.length;
+fs.writeFileSync(outputPath, JSON.stringify(graph, null, 2));
+console.log('Removed ' + removed + ' dangling edges. Final: ' + graph.nodes.length + ' nodes, ' + graph.edges.length + ' edges');

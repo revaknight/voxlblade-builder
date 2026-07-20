@@ -1,0 +1,21 @@
+{
+  "projectRoot": "C:\\Users\\Administrator\\Downloads\\voxlblade-builder",
+  "batchFiles": [
+    {"path": "src/data/Boost.ts", "language": "typescript", "sizeLines": 356, "fileCategory": "code"},
+    {"path": "src/data/BuffData.ts", "language": "typescript", "sizeLines": 1847, "fileCategory": "code"},
+    {"path": "src/data/TypedDmgBoost.ts", "language": "typescript", "sizeLines": 137, "fileCategory": "code"},
+    {"path": "src/data/perkAutoDebuffs.ts", "language": "typescript", "sizeLines": 186, "fileCategory": "code"},
+    {"path": "src/lib/constants/buffs.ts", "language": "typescript", "sizeLines": 147, "fileCategory": "code"},
+    {"path": "src/lib/crit.ts", "language": "typescript", "sizeLines": 340, "fileCategory": "code"},
+    {"path": "src/lib/engine/build.ts", "language": "typescript", "sizeLines": 529, "fileCategory": "code"}
+  ],
+  "batchImportData": {
+    "src/data/Boost.ts": ["src/lib/types.ts"],
+    "src/data/BuffData.ts": ["src/lib/constants/buffs.ts"],
+    "src/data/TypedDmgBoost.ts": ["src/data/BuffData.ts"],
+    "src/data/perkAutoDebuffs.ts": ["src/data/Boost.ts", "src/data/BuffData.ts"],
+    "src/lib/constants/buffs.ts": [],
+    "src/lib/crit.ts": ["src/lib/types.ts"],
+    "src/lib/engine/build.ts": ["src/lib/types.ts", "src/lib/crit.ts", "src/data/BuffData.ts"]
+  }
+}

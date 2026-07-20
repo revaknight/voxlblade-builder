@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, tick } from 'svelte'
   import { UI_COLORS } from './lib/uiConstants'
+  import Badge from './lib/ui/Badge.svelte'
 
   export let selectedTags: Set<string>
   export let hideTags: string[] = []
@@ -90,7 +91,7 @@
         <span class="tf-bar-title">Filter by Tags</span>
         
         {#if selectedTags.size > 0}
-          <span class="tf-count-badge">{selectedTags.size}</span>
+          <Badge color="var(--accent2)" size="xs" square solid>{selectedTags.size}</Badge>
         {:else}
           <span class="sf-hint">click to filter</span>
         {/if}
@@ -209,16 +210,6 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .15em;
-  }
-
-  .tf-count-badge {
-    font-size: .55rem;
-    font-weight: 800;
-    background: var(--accent2);
-    color: #000;
-    padding: 1px 6px;
-    border-radius: var(--radius-xs);
-    line-height: 1.3;
   }
 
   .tf-summary-chips {

@@ -50,6 +50,8 @@
   import { RaceModal, GuildModal, AccessorySelectModal, WeaponPartModal } from './lib/modals'
   import AppHeader from './lib/AppHeader.svelte'
   import Toast from './lib/Toast.svelte'
+  import Badge from './lib/ui/Badge.svelte'
+  import Button from './lib/ui/Button.svelte'
   import { addToast } from './lib/stores/toast'
 
   function toggleCdrPerk(perkName: string) {
@@ -876,8 +878,8 @@ $: highestDamageType = (() => {
   return entries.reduce((a, b) => {
     if (b[1] > a[1]) return b
     if (b[1] === a[1]) {
-      const ia = DMG_TYPE_PRIORITY.indexOf(a[0])
-      const ib = DMG_TYPE_PRIORITY.indexOf(b[0])
+      const ia = DMG_TYPE_PRIORITY.indexOf(a[0] as typeof DMG_TYPE_PRIORITY[number])
+      const ib = DMG_TYPE_PRIORITY.indexOf(b[0] as typeof DMG_TYPE_PRIORITY[number])
       const pa = ia === -1 ? 999 : ia
       const pb = ib === -1 ? 999 : ib
       return pb < pa ? b : a
@@ -1325,13 +1327,13 @@ $: _appWaAvgTotal = (() => {
           <LevelBar protection={$result.stats.protection ?? 0} hpThreshold={_dragonStateThreshold} />
         </div>
         <div class="summary-actions">
-          <button class="clear-all-btn" on:click={handleClearBuild} title="Clear all selections">
+          <Button variant="negative" size="md" onclick={handleClearBuild} disabled={false}>
             ✕ Clear All
-          </button>
+          </Button>
           {#if _undoVisible}
-            <button class="undo-btn" on:click={handleUndo} title="Undo clear">
+            <Button variant="positive" size="md" onclick={handleUndo} disabled={false}>
               ↩ Undo
-            </button>
+            </Button>
           {/if}
         </div>
         <div class="summary-layout">
@@ -1349,7 +1351,7 @@ $: _appWaAvgTotal = (() => {
                       <span class="sg-value">{summaryWeaponLabel}</span>
                       {#if summaryWeaponSub}<span class="sg-sub">{summaryWeaponSub}</span>{/if}
                       {#if weaponResult?.attackSpeed != null && weaponResult.part1Name && weaponResult.part2Name}
-                        <span class="sg-badge">{weaponResult.attackSpeed}x spd</span>
+                        <Badge color="#fbbf24" size="sm">{weaponResult.attackSpeed}x spd</Badge>
                       {/if}
                     </div>
                     <div class="shrine-inline">
@@ -1617,13 +1619,12 @@ $: _appWaAvgTotal = (() => {
                       Ascended
                     </button>
                     {#if iepHasEnchants}
-                      <button class="iep-clear-btn" on:click={() => clearEnchants(iepSlot)}>
+                      <Button variant="negative" size="sm" onclick={() => clearEnchants(iepSlot)} disabled={false}>
                         Clear
-                      </button>
-                      <button class="iep-apply-all-btn" on:click={() => applyEnchantToAll(iepSlot)}
-                        title="Apply this enchantment setup to all slots">
+                      </Button>
+                      <Button variant="info" size="sm" onclick={() => applyEnchantToAll(iepSlot)} disabled={false}>
                         Apply to all
-                      </button>
+                      </Button>
                     {/if}
                     <button class="iep-close-btn" on:click={() => inlineEnchantSlot = null}>✕</button>
                   </div>
@@ -1695,16 +1696,16 @@ $: _appWaAvgTotal = (() => {
                   <div class="wa-selected-top">
                     <span class="wa-name">{selectedWA.name}</span>
                     {#if hasWACDR}
-                      <span class="wa-cd-badge wa-cd-badge--reduced">
+                      <Badge color="#34d399" size="sm">
                         <span class="wa-cd-old">{selectedWA.cooldown}s</span>
                         <span class="wa-cd-arrow">→</span>
                         {Math.max(1, Math.floor(selectedWA.cooldown * cdr.waCDR))}s
-                      </span>
+                      </Badge>
                     {:else}
-                      <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
+                      <Badge color="#34d399" size="sm">CD: {selectedWA.cooldown}s</Badge>
                     {/if}
                     {#if !waAvailable}
-                      <span class="wa-req-badge">⚠ Req. not met</span>
+                      <Badge color="#f87171" size="sm">⚠ Req. not met</Badge>
                     {/if}
                   </div>
                 </div>
@@ -1826,9 +1827,9 @@ $: _appWaAvgTotal = (() => {
             <span class="draconic-panel-title">
               Draconic Rune
               {#if dracoColor && isDragonBlooded}
-                <span class="draco-color-badge" style="background:{dracoColor.color}20;border-color:{dracoColor.color}60;color:{dracoColor.color}">
+                <Badge color={dracoColor.color} size="sm">
                   {dracoColor.label} · {dracoColor.stat.charAt(0).toUpperCase() + dracoColor.stat.slice(1)} Type
-                </span>
+                </Badge>
               {/if}
 
               {#if !selectedDraconicAbility}
@@ -1845,7 +1846,7 @@ $: _appWaAvgTotal = (() => {
               on:click={() => selectDraconicAbility('claw')}>
               <div class="dab-header">
                 <span class="dab-name">Dragon Claw</span>
-                {#if $build.draconicRuneInfusion === 'claw'}<span class="dab-selected-badge">✦ Selected</span>{/if}
+                {#if $build.draconicRuneInfusion === 'claw'}<Badge variant="draco" size="xs">✦ Selected</Badge>{/if}
                 <div class="dab-cds">
                   {#if draconicClawBubbleHasCDR}
                     <span class="dab-cd-old">{draconicBaseCDs.claw}s</span>
@@ -1880,7 +1881,7 @@ $: _appWaAvgTotal = (() => {
               on:click={() => selectDraconicAbility('infusion')}>
               <div class="dab-header">
                 <span class="dab-name">Dragon Infusion</span>
-                {#if $build.draconicRuneInfusion === 'infusion'}<span class="dab-selected-badge">✦ Selected</span>{/if}
+                {#if $build.draconicRuneInfusion === 'infusion'}<Badge variant="draco" size="xs">✦ Selected</Badge>{/if}
                 <div class="dab-cds">
                   {#if draconicHasCDR}
                     <span class="dab-cd-old">{draconicBaseCDs.infusion}s</span>
@@ -1925,7 +1926,7 @@ $: _appWaAvgTotal = (() => {
               on:click={() => selectDraconicAbility('bubble')}>
               <div class="dab-header">
                 <span class="dab-name">Dragon Bubble</span>
-                {#if $build.draconicRuneInfusion === 'bubble'}<span class="dab-selected-badge">✦ Selected</span>{/if}
+                {#if $build.draconicRuneInfusion === 'bubble'}<Badge variant="draco" size="xs">✦ Selected</Badge>{/if}
                 <div class="dab-cds">
                   {#if draconicClawBubbleHasCDR}
                     <span class="dab-cd-old">{draconicBaseCDs.bubble}s</span>
@@ -1968,7 +1969,7 @@ $: _appWaAvgTotal = (() => {
               on:click={() => activeDetailsTab = 'weapon'}>
               {isMonk ? 'Monk Weapon' : 'Weapon'}
               {#if weaponResult.finalWeaponType}
-                <span class="tab-weapon-badge" class:tab-weapon-badge--monk={isMonk}>{weaponResult.finalWeaponType}</span>
+                <Badge color={isMonk ? '#e879f9' : '#fb923c'} size="sm">{weaponResult.finalWeaponType}</Badge>
               {/if}
             </button>
           {/if}
@@ -2131,15 +2132,15 @@ $: _appWaAvgTotal = (() => {
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span class="detail-name">{selectedWA.name}</span>
         {#if hasWACDR}
-          <span class="wa-cd-badge wa-cd-badge--reduced">
+          <Badge color="#34d399" size="sm">
             <span class="wa-cd-old">{selectedWA.cooldown}s</span>
             <span class="wa-cd-arrow">→</span>
             {Math.max(1, Math.floor(selectedWA.cooldown * cdr.waCDR))}s
-          </span>
+          </Badge>
         {:else}
-          <span class="wa-cd-badge">CD: {selectedWA.cooldown}s</span>
+          <Badge color="#34d399" size="sm">CD: {selectedWA.cooldown}s</Badge>
         {/if}
-        {#if !waAvailable}<span class="wa-req-badge">⚠ Req. not met</span>{/if}
+        {#if !waAvailable}<Badge color="#f87171" size="sm">⚠ Req. not met</Badge>{/if}
       </div>
     </div>
     <p class="wa-desc">{selectedWA.description}</p>
@@ -2357,7 +2358,7 @@ $: _appWaAvgTotal = (() => {
                       {weaponResult.part1TypeLabel} · {weaponResult.part1Type}
                     </span>
                     <span class="detail-name">{weaponResult.part1Name}</span>
-                    <div class="weapon-tier-badge" class:monk-tier-badge={isMonk}>T{part1Data?.tier}</div>
+                    <Badge color={isMonk ? '#e879f9' : '#fb923c'} size="xs" square>T{part1Data?.tier}</Badge>
                   </div>
                   {#if part1Data?.attackSpeed != null}
                     <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part1Data.attackSpeed}x</span></div>
@@ -2437,7 +2438,7 @@ $: _appWaAvgTotal = (() => {
                       {weaponResult.part2TypeLabel} · {weaponResult.part2Type}
                     </span>
                     <span class="detail-name">{weaponResult.part2Name}</span>
-                    <div class="weapon-tier-badge" class:weapon-tier-badge--handle={!isMonk} class:monk-tier-badge--essence={isMonk}>T{part2Data?.tier}</div>
+                    <Badge color={isMonk ? '#e879f9' : '#34d399'} size="xs" square>T{part2Data?.tier}</Badge>
                   </div>
                   {#if part2Data?.attackSpeed != null}
                     <div class="weapon-meta-row"><span class="weapon-meta-label">Attack Speed</span><span class="weapon-meta-val">{part2Data.attackSpeed}x</span></div>
@@ -2506,12 +2507,12 @@ $: _appWaAvgTotal = (() => {
                     <div class="weapon-combined-left">
                       <span class="weapon-combined-title" class:monk-combined-title={isMonk}>{isMonk ? 'Combined Fists' : 'Combined Weapon'}</span>
                       {#if weaponResult.finalWeaponType}
-                        <span class="weapon-type-badge" class:monk-type-badge={isMonk}>{weaponResult.finalWeaponType}</span>
+                        <Badge color={isMonk ? '#e879f9' : '#fb923c'} size="sm">{weaponResult.finalWeaponType}</Badge>
                       {:else}
-                        <span class="weapon-type-badge weapon-type-badge--none">None</span>
+                        <Badge variant="muted" size="sm">None</Badge>
                       {/if}
-                      {#if weaponResult.weaponModifier}<span class="weapon-modifier-badge">{isMonk ? '' : 'via '}{weaponResult.weaponModifier}</span>{/if}
-                      {#if weaponResult.hybridActive}<span class="weapon-modifier-badge weapon-modifier-badge--hybrid">Hybrid</span>{/if}
+                      {#if weaponResult.weaponModifier}<Badge variant="purple" size="sm">{isMonk ? '' : 'via '}{weaponResult.weaponModifier}</Badge>{/if}
+                      {#if weaponResult.hybridActive}<Badge color="#10b981" size="sm">Hybrid</Badge>{/if}
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                       <span class="weapon-combined-speed">{weaponResult.attackSpeed}x Attack Speed</span>
@@ -2806,7 +2807,6 @@ $: _appWaAvgTotal = (() => {
   .sg-value { font-size:.84rem; font-weight:700; color:var(--ink); line-height:1.2; }
   .sg-sub   { font-size:.67rem; color:var(--ink-muted); line-height:1.3; margin-top:1px; }
   .sg-ench  { font-size:.62rem; color:var(--accent3); opacity:.75; margin-top:1px; }
-  .sg-badge { display:inline-block; font-size:.62rem; font-weight:700; padding:2px 7px; border-radius:999px; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.22); color:var(--weapon-combined); margin-top:3px; width:fit-content; }
   .sg-cd-row { display:flex; align-items:center; gap:4px; margin-top:3px; }
   .sg-cd-base { font-size:.65rem; color:var(--ink-muted); text-decoration:line-through; opacity:.45; }
   .sg-cd-arrow { font-size:.6rem; color:var(--ink-muted); opacity:.35; }
@@ -2921,8 +2921,6 @@ $: _appWaAvgTotal = (() => {
   .iep-cat-btn:hover { border-color:rgba(167,139,250,.35); color:var(--accent3); }
   .iep-cat-btn--active { background:rgba(167,139,250,.15); border-color:rgba(167,139,250,.4); color:var(--accent3); }
   .iep-cat-btn--asc.iep-cat-btn--active { background:rgba(251,191,36,.1); border-color:rgba(251,191,36,.35); color:var(--weapon-combined); }
-  .iep-clear-btn { padding:4px 10px; border-radius:6px; border:1px solid rgba(248,113,113,.25); background:rgba(248,113,113,.08); color:var(--neg); font-size:.7rem; cursor:pointer; transition:all .15s; }
-  .iep-clear-btn:hover { background:rgba(248,113,113,.18); }
   .iep-close-btn { width:24px; height:24px; border-radius:5px; border:1px solid var(--border); background:var(--surface3); color:var(--ink-muted); font-size:.7rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
   .iep-close-btn:hover { background:rgba(248,113,113,.15); color:var(--neg); border-color:rgba(248,113,113,.3); }
 
@@ -3020,9 +3018,6 @@ $: _appWaAvgTotal = (() => {
   }
   .details-collapse-btn:hover { opacity:1; }
 
-  .tab-weapon-badge { font-size:.62rem; font-weight:700; padding:2px 6px; border-radius:999px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.25); color:var(--weapon-blade); }
-  .tab-weapon-badge--monk { background:rgba(232,121,249,.12); border-color:rgba(232,121,249,.25); color:var(--monk-glove); }
-
   .details-panel > div:not(.details-tabs-header) { padding:16px 18px; }
   .detail-layout { display:flex; gap:10px; align-items:flex-start; }
   .identity-col { flex:0 0 200px; display:flex; flex-direction:column; gap:10px; }
@@ -3088,11 +3083,6 @@ $: _appWaAvgTotal = (() => {
   .monk-combined-title { color:var(--monk-combined) !important; }
   .weapon-combined-speed { font-size:.8rem; font-weight:700; color:var(--weapon-combined); background:rgba(251,191,36,.1); padding:3px 8px; border-radius:999px; border:1px solid rgba(251,191,36,.2); }
   .weapon-speed-race-bonus { font-size:.68rem; font-weight:600; padding:2px 8px; border-radius:999px; background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.22); color:var(--accent); }
-  .weapon-type-badge { font-size:.72rem; font-weight:700; padding:2px 9px; border-radius:999px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.28); color:var(--weapon-blade); }
-  .weapon-type-badge--none { background:rgba(138,141,133,.1); border-color:rgba(138,141,133,.2); color:var(--ink-muted); }
-  .monk-type-badge { background:rgba(232,121,249,.12) !important; border-color:rgba(232,121,249,.3) !important; color:var(--monk-glove) !important; }
-  .weapon-modifier-badge { font-size:.65rem; font-weight:600; padding:2px 8px; border-radius:999px; background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.25); color:var(--accent3); }
-  .weapon-modifier-badge--hybrid { background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.25); color:#10b981; }
   .weapon-combine { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:20px; gap:6px; }
   .weapon-combine-line { width:1px; flex:1; min-height:20px; background:rgba(251,146,60,.25); }
   .weapon-combine-icon { font-size:1rem; color:var(--weapon-blade); opacity:.6; }
@@ -3107,10 +3097,6 @@ $: _appWaAvgTotal = (() => {
   .weapon-type-label--handle { color:var(--weapon-handle) !important; }
   .monk-type-label { color:var(--monk-glove) !important; }
   .monk-type-label--essence { color:var(--monk-essence) !important; }
-  .weapon-tier-badge { display:inline-block; font-size:.62rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(251,146,60,.12); border:1px solid rgba(251,146,60,.25); color:var(--weapon-blade); margin-top:2px; width:fit-content; }
-  .weapon-tier-badge--handle { background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.25); color:var(--weapon-handle); }
-  .monk-tier-badge { background:rgba(232,121,249,.12); border-color:rgba(232,121,249,.25); color:var(--monk-glove); }
-  .monk-tier-badge--essence { background:rgba(129,140,248,.12); border-color:rgba(129,140,248,.25); color:var(--monk-essence); }
   .weapon-meta-row { display:flex; justify-content:space-between; align-items:center; padding:5px 8px; border-radius:5px; background:var(--surface3); font-size:.78rem; }
   .weapon-meta-label { color:var(--ink-muted); }
   .weapon-meta-val { font-weight:700; color:var(--accent2); }
@@ -3280,28 +3266,6 @@ $: _appWaAvgTotal = (() => {
   min-width: 0;
 }
 
-.wa-cd-badge {
-  font-size: .65rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(52,211,153,.12);
-  border: 1px solid rgba(52,211,153,.25);
-  color: var(--weapon-handle);
-  flex-shrink: 0;
-}
-
-.wa-req-badge {
-  font-size: .65rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(248,113,113,.12);
-  border: 1px solid rgba(248,113,113,.3);
-  color: var(--neg);
-  flex-shrink: 0;
-}
-
 .wa-desc {
   font-size: .78rem;
   color: var(--ink-muted);
@@ -3408,9 +3372,6 @@ $: _appWaAvgTotal = (() => {
   border-color: rgba(167,139,250,.45);
   color: var(--accent3);
   font-weight: 700;
-}.wa-cd-badge--reduced { 
-  background: rgba(52,211,153,.2); 
-  border-color: rgba(52,211,153,.4); 
 }
 .wa-cd-old {
   text-decoration: line-through;
@@ -3423,17 +3384,6 @@ $: _appWaAvgTotal = (() => {
   margin: 0 2px;
   font-size: .6rem;
 }
-.iep-apply-all-btn {
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(74,222,128,.25);
-  background: rgba(74,222,128,.08);
-  color: var(--accent);
-  font-size: .7rem;
-  cursor: pointer;
-  transition: all .15s;
-}
-.iep-apply-all-btn:hover { background: rgba(74,222,128,.18); }
 .damage-type-pill--boosted {
   border-color: rgba(251,191,36,.3);
   background: rgba(251,191,36,.08);
@@ -3586,13 +3536,6 @@ $: _appWaAvgTotal = (() => {
   flex-wrap: wrap;
 }
 
-.draco-color-badge {
-  font-size: .65rem;
-  font-weight: 700;
-  padding: 2px 9px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-}
 
 .draconic-abilities {
   display: grid;
@@ -3657,18 +3600,6 @@ $: _appWaAvgTotal = (() => {
   opacity: .85;
 }
 
-.dab-selected-badge {
-  font-size: .6rem;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(var(--draco-primary-rgb), .18);
-  border: 1px solid rgba(var(--draco-primary-rgb), .40);
-  color: var(--draco-text);
-}
-
 .dab-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
 .dab-name { font-size:.88rem; font-weight:700; color: var(--draco-text-strong); }
 .dab-cds { display:flex; align-items:center; gap:5px; }
@@ -3699,26 +3630,6 @@ $: _appWaAvgTotal = (() => {
   margin-bottom: 12px;
 }
 
-.undo-btn {
-  padding: 4px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(74,222,128,.3);
-  background: rgba(74,222,128,.08);
-  color: var(--accent);
-  font-size: .7rem;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  letter-spacing: .04em;
-  transition: all .15s;
-  flex-shrink: 0;
-  animation: fadeIn .2s ease;
-}
-.undo-btn:hover {
-  background: rgba(74,222,128,.2);
-  border-color: rgba(74,222,128,.55);
-}
-
 
 .heal-val{
   color:#7CFF8D;
@@ -3738,25 +3649,6 @@ $: _appWaAvgTotal = (() => {
   white-space:normal;
   overflow-wrap:anywhere;
   line-height:1.15;
-}
-
-.clear-all-btn {
-  padding: 4px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(248,113,113,.3);
-  background: rgba(248,113,113,.08);
-  color: var(--neg);
-  font-size: .7rem;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  letter-spacing: .04em;
-  transition: all .15s;
-  flex-shrink: 0;
-}
-.clear-all-btn:hover {
-  background: rgba(248,113,113,.2);
-  border-color: rgba(248,113,113,.55);
 }
 
 .cdr-toggle-row { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }

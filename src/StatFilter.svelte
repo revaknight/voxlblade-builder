@@ -4,6 +4,8 @@
   import { createFilterActions } from './lib/stats/filterActions'
   import { UI_COLORS } from './lib/uiConstants'
   import StatChip, { buildStatMaps } from './lib/StatFilterShared.svelte'
+  import Badge from './lib/ui/Badge.svelte'
+  import Button from './lib/ui/Button.svelte'
 
   const dispatch = createEventDispatcher<{
     change: {
@@ -112,7 +114,7 @@
       <span class="sf-icon">{expanded ? '▾' : '▸'}</span>
       <span class="sf-title">Filter by Stat</span>
       {#if activeCount > 0}
-        <span class="sf-badge">{activeCount} active</span>
+        <Badge color="#fb923c" size="xs">{activeCount} active</Badge>
       {:else}
         <span class="sf-hint">click to filter</span>
       {/if}
@@ -133,7 +135,7 @@
             {STAT_LABEL_MAP.get(key) ?? key}
           </StatChip>
         {/each}
-        <button class="sf-clear" on:click={clear}>Clear all</button>
+        <Button variant="negative" size="sm" onclick={clear}>Clear all</Button>
       </div>
     {/if}
   </div>
@@ -244,18 +246,8 @@
   .sf-toggle:hover { color:var(--ink,#e8e4da); }
   .sf-icon { font-size:.65rem;opacity:.6;width:10px; }
   .sf-title { font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em; }
-  .sf-badge {
-    font-size:.58rem;font-weight:800;padding:1px 6px;border-radius:999px;
-    background:rgba(251,146,60,.18);border:1px solid rgba(251,146,60 Rim, .35);color:#fb923c;
-  }
   .sf-hint { font-size:.58rem;opacity:.35;font-style:italic; }
   .sf-active-row { display:flex;flex-wrap:wrap;gap:3px;align-items:center;flex:1; }
-  .sf-clear {
-    font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:999px;
-    border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);
-    color:#f87171;cursor:pointer;font-family:inherit;transition:all .12s;flex-shrink:0;
-  }
-  .sf-clear:hover { background:rgba(248,113,113,.2); }
   .sf-panel {
     display:flex;flex-direction:column;gap:4px;padding:6px 10px 10px;
     border-top:1px solid rgba(255,255,255,.06);animation:sfOpen .12s ease;
