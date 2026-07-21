@@ -313,3 +313,15 @@ body {
   font-weight: 700;
   font-size: .65rem;
 }
+
+.sg-drop-target {
+  outline: 2px dashed var(--accent3);
+  outline-offset: 2px;
+  background: rgba(167,139,250,.08) !important;
+}
+.sg-cell[draggable="true"] {
+  cursor: grab;
+}
+.sg-cell[draggable="true"]:active {
+  cursor: grabbing;
+}

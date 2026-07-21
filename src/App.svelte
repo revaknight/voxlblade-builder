@@ -10,7 +10,7 @@
     calcWeapon, calcMonkWeapon, isMonkGuild, MONK_RANK_MULTIPLIER,
     type CDRResult
   } from './lib/engine'
-  import { setEnchantment, setGuild } from './lib/store'
+  import { setEnchantment, setGuild, moveArmorSlot, canArmorMoveToSlot, swapRingWithInfusion } from './lib/store'
   import type { EnchantSlot, StatMap, StatPrefix, ScalingKey } from './lib/types'
   import { DMG_TYPE_PRIORITY, SCALING_TO_BOOST } from './lib/types'
   import { OFFENSIVE_BOOSTS } from './data/statboost'
@@ -54,6 +54,98 @@
   import Badge from './lib/ui/Badge.svelte'
   import Button from './lib/ui/Button.svelte'
   import { addToast } from './lib/stores/toast'
+
+  type ArmorSlotKey = 'helmet' | 'chestplate' | 'leggings'
+  type InfusionArmorSlotKey = 'infusionHelmet' | 'infusionChestplate' | 'infusionLeggings'
+  type AnyArmorSlotKey = ArmorSlotKey | InfusionArmorSlotKey
+  let draggingArmorSlot: AnyArmorSlotKey | null = null
+  let dragOverArmorSlot: AnyArmorSlotKey | null = null
+  let selectedArmorSlot: AnyArmorSlotKey | null = null
+
+  const ALL_ARMOR_SLOTS: AnyArmorSlotKey[] = [
+    'helmet','chestplate','leggings','infusionHelmet','infusionChestplate','infusionLeggings'
+  ]
+
+  $: activeSourceSlot = draggingArmorSlot ?? selectedArmorSlot
+  $: armorValidTargets = (() => {
+    if (!activeSourceSlot) return null
+    const srcName = $build[activeSourceSlot]
+    if (!srcName) return null
+    const srcTypeMap: Record<AnyArmorSlotKey, 'Helmet' | 'Chestplate' | 'Leggings'> = {
+      helmet: 'Helmet', chestplate: 'Chestplate', leggings: 'Leggings',
+      infusionHelmet: 'Helmet', infusionChestplate: 'Chestplate', infusionLeggings: 'Leggings',
+    }
+    const valid = new Set<AnyArmorSlotKey>()
+    for (const slot of ALL_ARMOR_SLOTS) {
+      if (slot === activeSourceSlot) continue
+      if (!canArmorMoveToSlot(srcName, slot)) continue
+      const destName = $build[slot]
+      if (destName && !canArmorMoveToSlot(destName, activeSourceSlot)) continue
+      valid.add(slot)
+    }
+    return valid
+  })()
+
+  function onArmorDragStart(slot: AnyArmorSlotKey, e: DragEvent) {
+    draggingArmorSlot = slot
+    e.dataTransfer?.setData('text/plain', slot)
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+  }
+  function onArmorDragOver(slot: AnyArmorSlotKey, e: DragEvent) {
+    if (!draggingArmorSlot || draggingArmorSlot === slot) return
+    if (!canArmorMoveToSlot($build[draggingArmorSlot], slot)) return
+    const destName = $build[slot]
+    if (destName && !canArmorMoveToSlot(destName, draggingArmorSlot)) return
+    e.preventDefault()
+    dragOverArmorSlot = slot
+  }
+  function onArmorDrop(slot: AnyArmorSlotKey, e: DragEvent) {
+    e.preventDefault()
+    if (draggingArmorSlot) moveArmorSlot(draggingArmorSlot, slot)
+    draggingArmorSlot = null
+    dragOverArmorSlot = null
+  }
+  function onArmorDragEnd() { draggingArmorSlot = null; dragOverArmorSlot = null }
+
+  function onArmorTap(slot: AnyArmorSlotKey) {
+    if (!$build[slot]) return
+    if (!selectedArmorSlot) {
+      selectedArmorSlot = slot
+      return
+    }
+    if (selectedArmorSlot === slot) { selectedArmorSlot = null; return }
+    moveArmorSlot(selectedArmorSlot, slot)
+    selectedArmorSlot = null
+  }
+
+  let draggingRing: 'ring' | 'infusionRing' | null = null
+  let dragOverRing: 'ring' | 'infusionRing' | null = null
+  let selectedRing: 'ring' | 'infusionRing' | null = null
+
+  function onRingDragStart(target: 'ring' | 'infusionRing', e: DragEvent) {
+    draggingRing = target
+    e.dataTransfer?.setData('text/plain', target)
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+  }
+  function onRingDragOver(target: 'ring' | 'infusionRing', e: DragEvent) {
+    if (!draggingRing || draggingRing === target) return
+    e.preventDefault()
+    dragOverRing = target
+  }
+  function onRingDrop(target: 'ring' | 'infusionRing', e: DragEvent) {
+    e.preventDefault()
+    if (draggingRing && draggingRing !== target) swapRingWithInfusion()
+    draggingRing = null
+    dragOverRing = null
+  }
+  function onRingDragEnd() { draggingRing = null; dragOverRing = null }
+
+  function onRingTap(target: 'ring' | 'infusionRing') {
+    if (!selectedRing) { selectedRing = target; return }
+    if (selectedRing === target) { selectedRing = null; return }
+    swapRingWithInfusion()
+    selectedRing = null
+  }
 
   function toggleCdrPerk(perkName: string) {
     build.update(s => {
@@ -198,6 +290,10 @@ function weaponMatchesFilter(item: any): boolean {
     await tick()
     waHydrated = true
   })
+
+  // ── Armor drag/tap helpers ────────────────────────────────────────────────
+  $: isDraggingArmor = !!draggingArmorSlot || !!selectedArmorSlot
+  $: isDraggingRing = !!draggingRing || !!selectedRing
 
 // ── Modal state ────────────────────────────────────────────────────────────
   type ModalType = 'race' | 'guild' | 'armor-helmet' | 'armor-chestplate' | 'armor-leggings' | 'infusion-helmet' | 'infusion-chestplate' | 'infusion-leggings' | 'ring' | 'infusion-ring' | 'rune' | 'blade' | 'handle' | 'glove' | 'essence' | null
@@ -1170,6 +1266,8 @@ $: highestDamageType = (() => {
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       if (activeModal) closeModal()
+      else if (selectedArmorSlot) selectedArmorSlot = null
+      else if (selectedRing) selectedRing = null
       else if (inlineEnchantSlot) inlineEnchantSlot = null
     }
   }
@@ -1354,7 +1452,7 @@ $: _appWaAvgTotal = (() => {
         <div class="summary-layout">
           <div class="left-column">
             <div class="summary-grid-wrap">
-              <div class="summary-grid">
+              <div class="summary-grid" class:sg-armor-dragging={isDraggingArmor} class:sg-ring-dragging={isDraggingRing}>
                 <!-- Weapon type row -->
                 <div class="sg-cell sg-weapon sg-span10 sg-clickable"
                   on:click={() => build.update(s => ({...s, shrineActive: !s.shrineActive}))}
@@ -1384,9 +1482,18 @@ $: _appWaAvgTotal = (() => {
 
                 <!-- Row 1: Inf Helmet | Helmet | Blade/Glove | Handle/Essence -->
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionHelmet}
+                  class:sg-drop-target={dragOverArmorSlot === 'infusionHelmet'}
+                  class:sg-selected={selectedArmorSlot === 'infusionHelmet'}
+                  class:sg-valid-target={armorValidTargets?.has('infusionHelmet')}
+                  draggable={!!$build.infusionHelmet}
                   role="button" tabindex="0"
-                  on:click={() => openModal('infusion-helmet')}
-                  on:keydown={e => e.key === 'Enter' && openModal('infusion-helmet')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('infusionHelmet') : openModal('infusion-helmet')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('infusionHelmet') : openModal('infusion-helmet'))}
+                  on:dragstart={e => onArmorDragStart('infusionHelmet', e)}
+                  on:dragover={e => onArmorDragOver('infusionHelmet', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'infusionHelmet') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('infusionHelmet', e)}
+                  on:dragend={onArmorDragEnd}>
                   <span class="sg-label">Inf. Helmet</span>
                   <span class="sg-value">{$build.infusionHelmet || 'No infused helmet'}</span>
                   {#if $build.infusionHelmet}
@@ -1394,9 +1501,18 @@ $: _appWaAvgTotal = (() => {
                   {/if}
                 </div>
                 <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.helmet}
+                  class:sg-drop-target={dragOverArmorSlot === 'helmet'}
+                  class:sg-selected={selectedArmorSlot === 'helmet'}
+                  class:sg-valid-target={armorValidTargets?.has('helmet')}
+                  draggable={!!$build.helmet}
                   role="button" tabindex="0"
-                  on:click={() => openModal('armor-helmet')}
-                  on:keydown={e => e.key === 'Enter' && openModal('armor-helmet')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('helmet') : openModal('armor-helmet')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('helmet') : openModal('armor-helmet'))}
+                  on:dragstart={e => onArmorDragStart('helmet', e)}
+                  on:dragover={e => onArmorDragOver('helmet', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'helmet') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('helmet', e)}
+                  on:dragend={onArmorDragEnd}>
                     <span class="sg-label">Helmet</span>
                     <span class="sg-value">{$build.helmet || 'No helmet'}</span>
                     {#if $build.helmet && hasEnchants('helmet')}
@@ -1435,9 +1551,18 @@ $: _appWaAvgTotal = (() => {
 
                 <!-- Row 2: Inf Chest | Chest | Inf Ring | Ring | Race -->
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionChestplate}
+                  class:sg-drop-target={dragOverArmorSlot === 'infusionChestplate'}
+                  class:sg-selected={selectedArmorSlot === 'infusionChestplate'}
+                  class:sg-valid-target={armorValidTargets?.has('infusionChestplate')}
+                  draggable={!!$build.infusionChestplate}
                   role="button" tabindex="0"
-                  on:click={() => openModal('infusion-chestplate')}
-                  on:keydown={e => e.key === 'Enter' && openModal('infusion-chestplate')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('infusionChestplate') : openModal('infusion-chestplate')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('infusionChestplate') : openModal('infusion-chestplate'))}
+                  on:dragstart={e => onArmorDragStart('infusionChestplate', e)}
+                  on:dragover={e => onArmorDragOver('infusionChestplate', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'infusionChestplate') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('infusionChestplate', e)}
+                  on:dragend={onArmorDragEnd}>
                   <span class="sg-label">Inf. Chestplate</span>
                   <span class="sg-value">{$build.infusionChestplate || 'No infused chestplate'}</span>
                   {#if $build.infusionChestplate}
@@ -1445,9 +1570,18 @@ $: _appWaAvgTotal = (() => {
                   {/if}
                 </div>
                 <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.chestplate}
+                  class:sg-drop-target={dragOverArmorSlot === 'chestplate'}
+                  class:sg-selected={selectedArmorSlot === 'chestplate'}
+                  class:sg-valid-target={armorValidTargets?.has('chestplate')}
+                  draggable={!!$build.chestplate}
                   role="button" tabindex="0"
-                  on:click={() => openModal('armor-chestplate')}
-                  on:keydown={e => e.key === 'Enter' && openModal('armor-chestplate')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('chestplate') : openModal('armor-chestplate')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('chestplate') : openModal('armor-chestplate'))}
+                  on:dragstart={e => onArmorDragStart('chestplate', e)}
+                  on:dragover={e => onArmorDragOver('chestplate', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'chestplate') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('chestplate', e)}
+                  on:dragend={onArmorDragEnd}>
                   <span class="sg-label">Chestplate</span>
                   <span class="sg-value">{$build.chestplate || 'No chestplate'}</span>
                   {#if $build.chestplate && hasEnchants('chestplate')}
@@ -1466,9 +1600,19 @@ $: _appWaAvgTotal = (() => {
                   {/if}
                 </div>
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
+                  class:sg-drop-target={dragOverRing === 'infusionRing'}
+                  class:sg-selected={selectedRing === 'infusionRing'}
+                  class:sg-valid-target={(draggingRing === 'ring' || selectedRing === 'ring') && !!$build.infusionRing}
+                  style={(draggingRing === 'ring' || selectedRing === 'ring') && !!$build.infusionRing ? 'background:rgba(74,222,128,.15)!important;box-shadow:inset 0 0 0 2px rgba(74,222,128,.45)' : ''}
+                  draggable={!!$build.infusionRing}
+                  on:dragstart={e => onRingDragStart('infusionRing', e)}
+                  on:dragover={e => onRingDragOver('infusionRing', e)}
+                  on:dragleave={() => { if (dragOverRing === 'infusionRing') dragOverRing = null }}
+                  on:drop={e => onRingDrop('infusionRing', e)}
+                  on:dragend={onRingDragEnd}
                   role="button" tabindex="0"
-                  on:click={() => openModal('infusion-ring')}
-                  on:keydown={e => e.key === 'Enter' && openModal('infusion-ring')}>
+                  on:click={() => selectedRing ? onRingTap('infusionRing') : openModal('infusion-ring')}
+                  on:keydown={e => e.key === 'Enter' && (selectedRing ? onRingTap('infusionRing') : openModal('infusion-ring'))}>
                   <span class="sg-label">Inf. Ring</span>
                   <span class="sg-value">{$build.infusionRing || 'No infused ring'}</span>
                   {#if $build.infusionRing}
@@ -1476,9 +1620,19 @@ $: _appWaAvgTotal = (() => {
                   {/if}
                 </div>
                 <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
+                  class:sg-drop-target={dragOverRing === 'ring'}
+                  class:sg-selected={selectedRing === 'ring'}
+                  class:sg-valid-target={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') && !!$build.ring}
+                  style={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') && !!$build.ring ? 'background:rgba(74,222,128,.15)!important;box-shadow:inset 0 0 0 2px rgba(74,222,128,.45)' : ''}
+                  draggable={!!$build.ring}
+                  on:dragstart={e => onRingDragStart('ring', e)}
+                  on:dragover={e => onRingDragOver('ring', e)}
+                  on:dragleave={() => { if (dragOverRing === 'ring') dragOverRing = null }}
+                  on:drop={e => onRingDrop('ring', e)}
+                  on:dragend={onRingDragEnd}
                   role="button" tabindex="0"
-                  on:click={() => openModal('ring')}
-                  on:keydown={e => e.key === 'Enter' && openModal('ring')}>
+                  on:click={() => selectedRing ? onRingTap('ring') : openModal('ring')}
+                  on:keydown={e => e.key === 'Enter' && (selectedRing ? onRingTap('ring') : openModal('ring'))}>
                   <span class="sg-label">Ring</span>  
                   <span class="sg-value">{$build.ring || 'No ring'}</span>
                   {#if $build.ring && hasEnchants('ring')}
@@ -1509,9 +1663,18 @@ $: _appWaAvgTotal = (() => {
 
                 <!-- Row 3: Inf Legs | Legs | — | Rune | Guild -->
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionLeggings}
+                  class:sg-drop-target={dragOverArmorSlot === 'infusionLeggings'}
+                  class:sg-selected={selectedArmorSlot === 'infusionLeggings'}
+                  class:sg-valid-target={armorValidTargets?.has('infusionLeggings')}
+                  draggable={!!$build.infusionLeggings}
                   role="button" tabindex="0"
-                  on:click={() => openModal('infusion-leggings')}
-                  on:keydown={e => e.key === 'Enter' && openModal('infusion-leggings')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('infusionLeggings') : openModal('infusion-leggings')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('infusionLeggings') : openModal('infusion-leggings'))}
+                  on:dragstart={e => onArmorDragStart('infusionLeggings', e)}
+                  on:dragover={e => onArmorDragOver('infusionLeggings', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'infusionLeggings') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('infusionLeggings', e)}
+                  on:dragend={onArmorDragEnd}>
                   <span class="sg-label">Inf. Leggings</span>
                   <span class="sg-value">{$build.infusionLeggings || 'No infused leggings'}</span>
                   {#if $build.infusionLeggings}
@@ -1519,9 +1682,18 @@ $: _appWaAvgTotal = (() => {
                   {/if}
                 </div>
                 <div class="sg-cell sg-armor sg-span2 sg-clickable" class:sg-empty={!$build.leggings}
+                  class:sg-drop-target={dragOverArmorSlot === 'leggings'}
+                  class:sg-selected={selectedArmorSlot === 'leggings'}
+                  class:sg-valid-target={armorValidTargets?.has('leggings')}
+                  draggable={!!$build.leggings}
                   role="button" tabindex="0"
-                  on:click={() => openModal('armor-leggings')}
-                  on:keydown={e => e.key === 'Enter' && openModal('armor-leggings')}>
+                  on:click={() => selectedArmorSlot ? onArmorTap('leggings') : openModal('armor-leggings')}
+                  on:keydown={e => e.key === 'Enter' && (selectedArmorSlot ? onArmorTap('leggings') : openModal('armor-leggings'))}
+                  on:dragstart={e => onArmorDragStart('leggings', e)}
+                  on:dragover={e => onArmorDragOver('leggings', e)}
+                  on:dragleave={() => { if (dragOverArmorSlot === 'leggings') dragOverArmorSlot = null }}
+                  on:drop={e => onArmorDrop('leggings', e)}
+                  on:dragend={onArmorDragEnd}>
                   <span class="sg-label">Leggings</span>
                   <span class="sg-value">{$build.leggings || 'No leggings'}</span>
                   {#if $build.leggings && hasEnchants('leggings')}
@@ -2764,7 +2936,7 @@ $: _appWaAvgTotal = (() => {
       flex-shrink: 0;
     }
   }
-  .summary-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .summary-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; padding: 4px; }
   .summary-grid { display:grid; grid-template-columns:repeat(10,minmax(45px,1fr)); gap:6px; min-width:unset; }
 
   .sg-span10 { grid-column:span 10; }
@@ -2818,6 +2990,25 @@ $: _appWaAvgTotal = (() => {
   .sg-guild  { background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06)); border-color:rgba(245,158,11,.22); }
   .sg-monk-glove   { background:linear-gradient(135deg,rgba(232,121,249,.12),rgba(232,121,249,.06)); border-color:rgba(232,121,249,.22); }
   .sg-monk-essence { background:linear-gradient(135deg,rgba(129,140,248,.12),rgba(129,140,248,.06)); border-color:rgba(129,140,248,.22); }
+
+  .sg-selected {
+    outline: 2px solid var(--accent3);
+    outline-offset: 2px;
+    background: rgba(167,139,250,.18) !important;
+    box-shadow: 0 0 8px rgba(167,139,250,.25);
+  }
+  .sg-valid-target {
+    background: rgba(74,222,128,.15) !important;
+    box-shadow: inset 0 0 0 2px rgba(74,222,128,.45);
+  }
+  .summary-grid.sg-armor-dragging .sg-cell.sg-armor:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target) {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+  .summary-grid.sg-ring-dragging .sg-cell.sg-item:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target) {
+    opacity: .45;
+    cursor: not-allowed;
+  }
 
   .sg-label { font-size:.59rem; text-transform:uppercase; letter-spacing:.16em; font-weight:700; opacity:.6; }
   .sg-weapon .sg-label { color:var(--weapon-blade); }
@@ -3702,7 +3893,7 @@ $: _appWaAvgTotal = (() => {
   .sg-cell { min-height: 60px; padding: 6px 8px; }
   .sg-value { font-size: .76rem; }
   .sg-label { font-size: .52rem; }
-  .summary-grid-wrap { margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; overflow-x: auto; }
+  .summary-grid-wrap { margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw; overflow-x: auto; padding: 4px; }
   .summary-grid { min-width: 500px; }
 }
 </style>

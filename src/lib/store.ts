@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store'
 import type { BuildState, EnchantSlot } from './types'
-import { calcBuild, races, enforceEnchantSlot } from './engine'
+import { calcBuild, races, enforceEnchantSlot, armorSupportsSlot } from './engine'
 import { STORAGE_KEY_BUILD, DEFAULT_LEVEL, DEFAULT_HP_FILL, DEFAULT_ENEMY_HP_FILL, SAVE_DEBOUNCE_MS } from './constants'
 
 const DEFAULT_BUILD: BuildState = {
@@ -103,4 +103,36 @@ export function setGuild(guildName: string, guildRank: number) {
       draconicRuneInfusion: isDraconic ? s.draconicRuneInfusion : '',
     }
   })
+}
+
+export type ArmorSlotKey = 'helmet' | 'chestplate' | 'leggings'
+export type InfusionArmorSlotKey = 'infusionHelmet' | 'infusionChestplate' | 'infusionLeggings'
+export type AnyArmorSlotKey = ArmorSlotKey | InfusionArmorSlotKey
+
+const ARMOR_SLOT_TYPE_MAP: Record<AnyArmorSlotKey, 'Helmet' | 'Chestplate' | 'Leggings'> = {
+  helmet: 'Helmet', chestplate: 'Chestplate', leggings: 'Leggings',
+  infusionHelmet: 'Helmet', infusionChestplate: 'Chestplate', infusionLeggings: 'Leggings',
+}
+
+export function moveArmorSlot(from: AnyArmorSlotKey, to: AnyArmorSlotKey): boolean {
+  if (from === to) return false
+  let moved = false
+  build.update(s => {
+    const fromName = s[from]
+    const toName = s[to]
+    if (!fromName) return s
+    if (!armorSupportsSlot(fromName, ARMOR_SLOT_TYPE_MAP[to])) return s
+    if (toName && !armorSupportsSlot(toName, ARMOR_SLOT_TYPE_MAP[from])) return s
+    moved = true
+    return { ...s, [from]: toName, [to]: fromName }
+  })
+  return moved
+}
+
+export function canArmorMoveToSlot(armorName: string, to: AnyArmorSlotKey): boolean {
+  return !!armorName && armorSupportsSlot(armorName, ARMOR_SLOT_TYPE_MAP[to])
+}
+
+export function swapRingWithInfusion() {
+  build.update(s => ({ ...s, ring: s.infusionRing, infusionRing: s.ring }))
 }
