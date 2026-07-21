@@ -2936,7 +2936,7 @@ $: _appWaAvgTotal = (() => {
       flex-shrink: 0;
     }
   }
-  .summary-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; padding: 4px; }
+  .summary-grid-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; padding: 4px; user-select:none; }
   .summary-grid { display:grid; grid-template-columns:repeat(10,minmax(45px,1fr)); gap:6px; min-width:unset; }
 
   .sg-span10 { grid-column:span 10; }
