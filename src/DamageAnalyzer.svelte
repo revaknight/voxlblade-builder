@@ -829,6 +829,8 @@ import {
     return 1 + REAPER_PCT_PER_DEBUFF_PER_STACK * _reaperActiveDebuffCount * _reaperPerkAmount
   })()
 
+  $: _generalActiveDebuffCount = _dummyDebuffs.filter(d => !disabledDebuffs.has(d.name)).length
+
   $: _disabledKeysArr = [...disabledBuffKeys]
   function _isBuffDisabled(buff: { buffName: string; sourceName: string }): boolean {
     return disabledBuffKeys.has(`${buff.buffName}:${buff.sourceName}`)
@@ -1704,11 +1706,19 @@ import {
   }
 
   $: _waAllHits = parseWAHitsAll(selectedWA.baseDamage)
-  $: _waHitsSeq = _waAllHits.dmg.length > 0 ? _waAllHits.dmg.map(h => 
-    _wildBoltAmt > 0 && selectedWA.name === 'Laser' 
-      ? { ...h, n: parseWAHitsAll(selectedWA.baseDamage).dmg[0]?.n - WILD_BOLT_DMG_REDUCTION } 
-      : h
-  ) : null
+  $: _waHitsSeq = (() => {
+    if (selectedWA.name === 'Jinx') {
+      const basePerDebuff = 10
+      const count = _generalActiveDebuffCount
+      if (count <= 0) return null
+      return [{ n: basePerDebuff * count, count: 1 }]
+    }
+    return _waAllHits.dmg.length > 0 ? _waAllHits.dmg.map(h => 
+      _wildBoltAmt > 0 && selectedWA.name === 'Laser' 
+        ? { ...h, n: parseWAHitsAll(selectedWA.baseDamage).dmg[0]?.n - WILD_BOLT_DMG_REDUCTION } 
+        : h
+    ) : null
+  })()
   $: _waHealSeq = _waAllHits.heal.length > 0 ? _waAllHits.heal : null
 
   let _wildBoltElemIdx = 0
