@@ -91,6 +91,22 @@ export function setEnchantment(slot: EnchantSlot, index: 0 | 1 | 2, value: strin
   })
 }
 
+export function swapEnchantments(slotA: EnchantSlot, slotB: EnchantSlot) {
+  if (slotA === slotB) return
+  build.update(s => {
+    const a = [...s.enchantments[slotA]] as [string, string, string]
+    const b = [...s.enchantments[slotB]] as [string, string, string]
+    return {
+      ...s,
+      enchantments: {
+        ...s.enchantments,
+        [slotA]: b,
+        [slotB]: a,
+      }
+    }
+  })
+}
+
 export function clearBuild() {
   build.set({ ...DEFAULT_BUILD })
 }

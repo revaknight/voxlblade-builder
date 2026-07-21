@@ -10,7 +10,7 @@
     calcWeapon, calcMonkWeapon, isMonkGuild, MONK_RANK_MULTIPLIER,
     type CDRResult
   } from './lib/engine'
-  import { setEnchantment, setGuild, moveArmorSlot, canArmorMoveToSlot, swapRingWithInfusion } from './lib/store'
+  import { setEnchantment, setGuild, moveArmorSlot, canArmorMoveToSlot, swapRingWithInfusion, swapEnchantments } from './lib/store'
   import type { EnchantSlot, StatMap, StatPrefix, ScalingKey } from './lib/types'
   import { DMG_TYPE_PRIORITY, SCALING_TO_BOOST } from './lib/types'
   import { OFFENSIVE_BOOSTS } from './data/statboost'
@@ -331,6 +331,20 @@ function weaponMatchesFilter(item: any): boolean {
   function toggleInlineEnchant(slot: EnchantSlot) {
     inlineEnchantSlot = inlineEnchantSlot === slot ? null : slot
   }
+
+  // ── Enchantment swap mode ──────────────────────────────────────────────────
+  let selectedEnchantSlot: EnchantSlot | null = null
+  function onEnchantTap(slot: EnchantSlot) {
+    if (!selectedEnchantSlot) {
+      selectedEnchantSlot = slot
+      addToast('Tap another ✦ to swap enchantments, or tap same ✦ to edit', 'info', 2500)
+      return
+    }
+    if (selectedEnchantSlot === slot) { selectedEnchantSlot = null; toggleInlineEnchant(slot); return }
+    swapEnchantments(selectedEnchantSlot, slot)
+    addToast('Enchantments swapped', 'success', 1500)
+    selectedEnchantSlot = null
+  }
   // ── Derived ────────────────────────────────────────────────────────────────
   $: guildData = getGuild($build.guild)
   $: isMonk = isMonkGuild($build.guild)
@@ -521,7 +535,7 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     build.update(s => ({ ...s, enchantments: { ...s.enchantments, [slot]: ['','',''] as [string,string,string] } }))
   }
 
-  function swapEnchantments(slot: EnchantSlot, i: 0|1|2, j: 0|1|2) {
+  function swapEnchantIndices(slot: EnchantSlot, i: 0|1|2, j: 0|1|2) {
     build.update(s => {
       const next = [...s.enchantments[slot]] as [string,string,string]
       ;[next[i], next[j]] = [next[j], next[i]]
@@ -1268,7 +1282,13 @@ $: highestDamageType = (() => {
       if (activeModal) closeModal()
       else if (selectedArmorSlot) selectedArmorSlot = null
       else if (selectedRing) selectedRing = null
+      else if (selectedEnchantSlot) selectedEnchantSlot = null
       else if (inlineEnchantSlot) inlineEnchantSlot = null
+    }
+  }
+  function onWindowClick(e: MouseEvent) {
+    if (selectedEnchantSlot && !(e.target as HTMLElement)?.closest('.sg-ench-btn')) {
+      selectedEnchantSlot = null
     }
   }
 
@@ -1373,7 +1393,7 @@ $: _appWaAvgTotal = (() => {
 })()
 </script>
 
-<svelte:window on:keydown={onKeydown} />
+<svelte:window on:keydown={onKeydown} on:click={onWindowClick} />
 
 <!-- Tooltip -->
 {#if tooltip.visible}
@@ -1527,7 +1547,9 @@ $: _appWaAvgTotal = (() => {
                       </button>
                       <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
                       <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
-                        on:click|stopPropagation={() => toggleInlineEnchant('helmet')} title="Enchant">✦</button>
+                        class:sg-ench-selected={selectedEnchantSlot === 'helmet'}
+                        class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'helmet'}
+                        on:click|stopPropagation={() => onEnchantTap('helmet')} title="Swap enchantments">✦</button>
                     {/if}
                 </div>
                 <div class="sg-cell sg-span3 sg-clickable"
@@ -1596,7 +1618,9 @@ $: _appWaAvgTotal = (() => {
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
                     <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
-                      on:click|stopPropagation={() => toggleInlineEnchant('chestplate')} title="Enchant">✦</button>
+                      class:sg-ench-selected={selectedEnchantSlot === 'chestplate'}
+                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'chestplate'}
+                      on:click|stopPropagation={() => onEnchantTap('chestplate')} title="Swap enchantments">✦</button>
                   {/if}
                 </div>
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
@@ -1647,7 +1671,9 @@ $: _appWaAvgTotal = (() => {
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
                     <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
-                      on:click|stopPropagation={() => toggleInlineEnchant('ring')} title="Enchant">✦</button>
+                      class:sg-ench-selected={selectedEnchantSlot === 'ring'}
+                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'ring'}
+                      on:click|stopPropagation={() => onEnchantTap('ring')} title="Swap enchantments">✦</button>
                   {/if}
                 </div>
                 <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
@@ -1708,7 +1734,9 @@ $: _appWaAvgTotal = (() => {
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
                     <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
-                      on:click|stopPropagation={() => toggleInlineEnchant('leggings')} title="Enchant">✦</button>
+                      class:sg-ench-selected={selectedEnchantSlot === 'leggings'}
+                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'leggings'}
+                      on:click|stopPropagation={() => onEnchantTap('leggings')} title="Swap enchantments">✦</button>
                   {/if}
                 </div>
                 {#if isDraconic}
@@ -1770,7 +1798,9 @@ $: _appWaAvgTotal = (() => {
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
                     <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
-                      on:click|stopPropagation={() => toggleInlineEnchant('rune')} title="Enchant">✦</button>
+                      class:sg-ench-selected={selectedEnchantSlot === 'rune'}
+                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'rune'}
+                      on:click|stopPropagation={() => onEnchantTap('rune')} title="Swap enchantments">✦</button>
                   {/if}
                 </div>
                 <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
@@ -1844,7 +1874,7 @@ $: _appWaAvgTotal = (() => {
                   {#if iepS0 && !iepExcl}
                     {#if iepS1}
                       <button class="iep-swap-btn" title="Swap slot 1 ↔ slot 2"
-                        on:click={() => swapEnchantments(iepSlot, 0, 1)}>⇅</button>
+                        on:click={() => swapEnchantIndices(iepSlot, 0, 1)}>⇅</button>
                     {/if}
                     <div class="iep-slot">
                       <span class="iep-slot-num">2</span>
@@ -1862,7 +1892,7 @@ $: _appWaAvgTotal = (() => {
                   {#if iepS1 && !iepExcl}
                     {#if iepS2}
                       <button class="iep-swap-btn" title="Swap slot 2 ↔ slot 3"
-                        on:click={() => swapEnchantments(iepSlot, 1, 2)}>⇅</button>
+                        on:click={() => swapEnchantIndices(iepSlot, 1, 2)}>⇅</button>
                     {/if}
                     <div class="iep-slot">
                       <span class="iep-slot-num">3</span>
@@ -2979,6 +3009,8 @@ $: _appWaAvgTotal = (() => {
   }
   .sg-ench-btn:hover { background:rgba(167,139,250,.3); border-color:var(--accent3); }
   .sg-ench-btn--active { background:rgba(167,139,250,.3); border-color:var(--accent3); box-shadow:0 0 6px rgba(167,139,250,.4); }
+  .sg-ench-selected { background:rgba(167,139,250,.4)!important; border-color:var(--accent3)!important; box-shadow:0 0 8px rgba(167,139,250,.5); }
+  .sg-ench-target { background:rgba(74,222,128,.4)!important; border-color:rgba(74,222,128,.6)!important; box-shadow:0 0 6px rgba(74,222,128,.3); }
 
   .sg-weapon { background:linear-gradient(135deg,rgba(251,146,60,.16),rgba(251,191,36,.1)); border-color:rgba(251,146,60,.26); }
   .sg-armor  { background:linear-gradient(135deg,rgba(74,222,128,.1),rgba(74,222,128,.05)); border-color:rgba(74,222,128,.18); }
