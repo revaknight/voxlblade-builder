@@ -34,6 +34,10 @@ const DEFAULT_BUILD: BuildState = {
   upgradeLeggings: 5,
   upgradeRing: 5,
   upgradeRune: 5,
+  upgradeInfusionHelmet: 0,
+  upgradeInfusionChestplate: 0,
+  upgradeInfusionLeggings: 0,
+  upgradeInfusionRing: 0,
   selectedWeaponArt: "Lunge",
   draconicColor: "",
   draconicRuneInfusion: "",
@@ -114,6 +118,11 @@ const ARMOR_SLOT_TYPE_MAP: Record<AnyArmorSlotKey, 'Helmet' | 'Chestplate' | 'Le
   infusionHelmet: 'Helmet', infusionChestplate: 'Chestplate', infusionLeggings: 'Leggings',
 }
 
+const UPGRADE_KEY_MAP: Record<AnyArmorSlotKey, 'upgradeHelmet' | 'upgradeChestplate' | 'upgradeLeggings' | 'upgradeInfusionHelmet' | 'upgradeInfusionChestplate' | 'upgradeInfusionLeggings'> = {
+  helmet: 'upgradeHelmet', chestplate: 'upgradeChestplate', leggings: 'upgradeLeggings',
+  infusionHelmet: 'upgradeInfusionHelmet', infusionChestplate: 'upgradeInfusionChestplate', infusionLeggings: 'upgradeInfusionLeggings',
+}
+
 export function moveArmorSlot(from: AnyArmorSlotKey, to: AnyArmorSlotKey): boolean {
   if (from === to) return false
   let moved = false
@@ -124,7 +133,12 @@ export function moveArmorSlot(from: AnyArmorSlotKey, to: AnyArmorSlotKey): boole
     if (!armorSupportsSlot(fromName, ARMOR_SLOT_TYPE_MAP[to])) return s
     if (toName && !armorSupportsSlot(toName, ARMOR_SLOT_TYPE_MAP[from])) return s
     moved = true
-    return { ...s, [from]: toName, [to]: fromName }
+    const fromUp = UPGRADE_KEY_MAP[from]
+    const toUp = UPGRADE_KEY_MAP[to]
+    const next = { ...s, [from]: toName, [to]: fromName }
+    next[fromUp] = s[toUp]
+    next[toUp] = s[fromUp]
+    return next
   })
   return moved
 }
@@ -134,5 +148,5 @@ export function canArmorMoveToSlot(armorName: string, to: AnyArmorSlotKey): bool
 }
 
 export function swapRingWithInfusion() {
-  build.update(s => ({ ...s, ring: s.infusionRing, infusionRing: s.ring }))
+  build.update(s => ({ ...s, ring: s.infusionRing, infusionRing: s.ring, upgradeRing: s.upgradeInfusionRing ?? 0, upgradeInfusionRing: s.upgradeRing }))
 }

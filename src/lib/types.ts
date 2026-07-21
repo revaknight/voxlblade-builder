@@ -199,6 +199,10 @@ export interface BuildState {
   upgradeLeggings: number
   upgradeRing: number
   upgradeRune: number
+  upgradeInfusionHelmet: number
+  upgradeInfusionChestplate: number
+  upgradeInfusionLeggings: number
+  upgradeInfusionRing: number
   selectedWeaponArt: string
   draconicColor: string
   draconicRuneInfusion: string

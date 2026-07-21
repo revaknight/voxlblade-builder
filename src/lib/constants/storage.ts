@@ -11,7 +11,8 @@ export const BUILD_STATE_DEFAULTS: Record<string, any> = {
   ring: '', rune: '', infusionHelmet: '', infusionChestplate: '', infusionLeggings: '',
   infusionRing: '', weaponBlade: '', weaponHandle: '', monkGlove: '', monkEssence: '',
   shrineActive: false, upgradeHelmet: 0, upgradeChestplate: 0, upgradeLeggings: 0,
-  upgradeRing: 0, upgradeRune: 0, selectedWeaponArt: 'Lunge', draconicColor: '',
+  upgradeRing: 0, upgradeRune: 0, upgradeInfusionHelmet: 0, upgradeInfusionChestplate: 0,
+  upgradeInfusionLeggings: 0, upgradeInfusionRing: 0, selectedWeaponArt: 'Lunge', draconicColor: '',
   draconicRuneInfusion: '', emotionalState: 'buffs',
   level: DEFAULT_LEVEL, hpFill: DEFAULT_HP_FILL, summonCount: 0, buffsConsumed: 0, sporelingsSummoned: 0,
   inDarkness: true, cdrToggles: {},
@@ -23,7 +24,8 @@ export const SAVE_KEY_MAP: Record<string, string> = {
   infusionHelmet:'ih', infusionChestplate:'ic', infusionLeggings:'il', infusionRing:'ir',
   weaponBlade:'wb', weaponHandle:'wh', monkGlove:'mg', monkEssence:'me',
   shrineActive:'sh', upgradeHelmet:'uh', upgradeChestplate:'uc',
-  upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', selectedWeaponArt:'wa', draconicColor:'dc',
+  upgradeLeggings:'ul', upgradeRing:'ur', upgradeRune:'uu', upgradeInfusionHelmet:'uih', upgradeInfusionChestplate:'uic',
+  upgradeInfusionLeggings:'uil', upgradeInfusionRing:'uir', selectedWeaponArt:'wa', draconicColor:'dc',
   draconicRuneInfusion:'dri', emotionalState: 'es',
 }
 export const SAVE_KEY_UNMAP = Object.fromEntries(Object.entries(SAVE_KEY_MAP).map(([k,v])=>[v,k]))
