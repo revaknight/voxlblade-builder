@@ -347,6 +347,18 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
   $: draconicClawFinalCD   = Math.max(1, Math.floor(draconicBaseCDs.claw   * cdr.runeCDR * _draconicAirMult))
   $: draconicBubbleFinalCD = Math.max(1, Math.floor(draconicBaseCDs.bubble * cdr.runeCDR * _draconicAirMult))
   $: draconicClawBubbleHasCDR = draconicHasCDR || (isDragonBlooded && $build.draconicColor === 'air')
+  $: selectedDracoBaseCD = $build.draconicRuneInfusion === 'claw' ? draconicBaseCDs.claw
+    : $build.draconicRuneInfusion === 'infusion' ? draconicBaseCDs.infusion
+    : $build.draconicRuneInfusion === 'bubble' ? draconicBaseCDs.bubble
+    : NaN
+  $: selectedDracoFinalCD = $build.draconicRuneInfusion === 'claw' ? draconicClawFinalCD
+    : $build.draconicRuneInfusion === 'infusion' ? draconicFinalCDs.infusion
+    : $build.draconicRuneInfusion === 'bubble' ? draconicBubbleFinalCD
+    : NaN
+  $: selectedDracoHasCDR = $build.draconicRuneInfusion === 'claw' || $build.draconicRuneInfusion === 'bubble'
+    ? draconicClawBubbleHasCDR
+    : $build.draconicRuneInfusion === 'infusion' ? draconicHasCDR
+    : false
   $: hasRuneCDR = cdr.runeCDR !== 1.0 || cdr.runeSetCD != null
   $: hasWACDR = cdr.waCDR !== 1.0
 
@@ -1535,7 +1547,19 @@ $: _appWaAvgTotal = (() => {
                     title="Click to cycle the Draconic Ability — or select it directly in the panel below.">
                     <span class="sg-label">Draconic Rune</span>
                     <span class="sg-value">{selectedDraconicAbility?.label ?? 'Select ability'}</span>
-                    <span class="sg-sub">{selectedDraconicAbility ? 'Rune Infusion locked' : 'Click to choose'}</span>
+                    {#if selectedDraconicAbility}
+                      {#if selectedDracoHasCDR}
+                        <span class="sg-cd-row">
+                          <span class="sg-cd-base">{selectedDracoBaseCD}s</span>
+                          <span class="sg-cd-arrow">→</span>
+                          <span class="sg-cd-final">{selectedDracoFinalCD}s</span>
+                        </span>
+                      {:else}
+                        <span class="sg-sub">CD: {selectedDracoFinalCD}s</span>
+                      {/if}
+                    {:else}
+                      <span class="sg-sub">Click to choose</span>
+                    {/if}
                   </div>
                 {:else}
                   <div class="sg-cell sg-infusion sg-span2" style="opacity:0.3">
