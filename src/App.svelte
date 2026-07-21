@@ -277,8 +277,9 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     stat: c.stat
   }))
 
-  $: dracoColor = DRACO_COLORS.find(c => c.id === $build.draconicColor) ?? null
   $: isDragonBlooded = $build.race === 'DRAGON BLOODED'
+  $: dracoColor = isDragonBlooded ? (DRACO_COLORS.find(c => c.id === $build.draconicColor) ?? null) : null
+  $: effectiveDraconicColor = isDragonBlooded ? ($build.draconicColor || 'physical') : 'physical'
 
   const DRACONIC_ABILITIES: Array<{ id: string; label: string }> = [
     { id: 'claw',     label: 'Dragon Claw' },
@@ -305,10 +306,11 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     const p = $result.perks['Draconic Blood'] ?? 0
     return Math.round(p * 100) / 100
   })()
-  $: dragonInfusionPreviewPotency = getEffectiveDraconicInfusionPotency($build.guild, 'infusion', $build.draconicColor || DEFAULT_DMG_TYPE, draconicPerkAmt, $result.perks)
+  $: dragonInfusionPreviewPotency = getEffectiveDraconicInfusionPotency($build.guild, 'infusion', effectiveDraconicColor, draconicPerkAmt, $result.perks)
 
   $: draconicBaseCDs = { claw: 5, infusion: 35, bubble: 7 }
   $: draconicColorEffectRows = (() => {
+    if (!isDragonBlooded) return []
     const amt = draconicPerkAmt
     const c = $build.draconicColor
     if (!c) return []
@@ -340,10 +342,10 @@ $: statRows = Object.entries($result.stats).filter(([k, v]) => {
     bubble:   Math.max(1, Math.floor(draconicBaseCDs.bubble * cdr.runeCDR)),
   }
   $: draconicHasCDR = cdr.runeCDR < 1.0 || cdr.runeSetCD != null
-  $: _draconicAirMult = $build.draconicColor === 'air' ? 0.75 : 1
+  $: _draconicAirMult = isDragonBlooded && $build.draconicColor === 'air' ? 0.75 : 1
   $: draconicClawFinalCD   = Math.max(1, Math.floor(draconicBaseCDs.claw   * cdr.runeCDR * _draconicAirMult))
   $: draconicBubbleFinalCD = Math.max(1, Math.floor(draconicBaseCDs.bubble * cdr.runeCDR * _draconicAirMult))
-  $: draconicClawBubbleHasCDR = draconicHasCDR || $build.draconicColor === 'air'
+  $: draconicClawBubbleHasCDR = draconicHasCDR || (isDragonBlooded && $build.draconicColor === 'air')
   $: hasRuneCDR = cdr.runeCDR !== 1.0 || cdr.runeSetCD != null
   $: hasWACDR = cdr.waCDR !== 1.0
 
@@ -1867,8 +1869,8 @@ $: _appWaAvgTotal = (() => {
                   poiseDmg={60}
                   healHoly={linearHeal(DRAGON_CLAW_HOLY_HEAL_BASE, DRAGON_CLAW_HOLY_HEAL_PER_STACK, draconicPerkAmt)}
                   healWater={linearHeal(DRAGON_CLAW_WATER_HEAL_BASE, DRAGON_CLAW_WATER_HEAL_PER_STACK, draconicPerkAmt)}
-                  showHoly={$build.draconicColor === 'holy'}
-                  showWater={$build.draconicColor === 'water'}
+                  showHoly={isDragonBlooded && $build.draconicColor === 'holy'}
+                  showWater={isDragonBlooded && $build.draconicColor === 'water'}
                 />
                 <div class="dab-notes">Guardbreaks</div>
               </div>
@@ -1947,8 +1949,8 @@ $: _appWaAvgTotal = (() => {
                   poiseDmg={45}
                   healHoly={linearHeal(DRAGON_BUBBLE_HOLY_HEAL_BASE, DRAGON_BUBBLE_HOLY_HEAL_PER_STACK, draconicPerkAmt)}
                   healWater={linearHeal(DRAGON_BUBBLE_WATER_HEAL_BASE, DRAGON_BUBBLE_WATER_HEAL_PER_STACK, draconicPerkAmt)}
-                  showHoly={$build.draconicColor === 'holy'}
-                  showWater={$build.draconicColor === 'water'}
+                  showHoly={isDragonBlooded && $build.draconicColor === 'holy'}
+                  showWater={isDragonBlooded && $build.draconicColor === 'water'}
                 />
               </div>
               <div class="dab-notes">Goes through walls · Detonates on contact</div>

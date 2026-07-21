@@ -101,7 +101,7 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
   })()
   
   $: rawDraconicInfusionBuff = getDraconicInfusionBuff(
-    $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+    $build.guild, $build.draconicRuneInfusion, _isDragonBlooded ? $build.draconicColor : 'physical', $result.perks['Draconic Blood'] ?? 0
   )
   
   $: draconicInfusionBuff = (() => {
@@ -113,7 +113,7 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
 
   $: draconicAbilityDebuffs = applyBuffPerkModifiers(
     getDraconicAbilityDebuffs(
-      $build.guild, $build.draconicRuneInfusion, $build.draconicColor, $result.perks['Draconic Blood'] ?? 0
+      $build.guild, $build.draconicRuneInfusion, _isDragonBlooded ? $build.draconicColor : 'physical', $result.perks['Draconic Blood'] ?? 0
     ),
     $result.perks,
     $build.rune || undefined
@@ -129,9 +129,10 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
   // Dragon Infusion color modifiers applied to display values
   $: _infPerkAmt = $result.perks['Draconic Blood'] ?? 0
   $: _infActive  = $build.draconicRuneInfusion === 'infusion'
+  $: _isDragonBlooded = $build.race === 'DRAGON BLOODED'
   $: displayBuffs = (() => {
     if (!_infActive) return activeBuffs
-    const color = $build.draconicColor
+    const color = _isDragonBlooded ? $build.draconicColor : 'physical'
     if (color !== 'hex' && color !== 'holy') return activeBuffs
 
     return activeBuffs.map(buff => {
@@ -179,11 +180,11 @@ import { WA_PROC_COEFFS, DEFAULT_PROC_COEFF } from './data/procCoefficients'
       if (buff.isSelfDebuff) return buff
       const currentPot = buff.basePotency ?? buff.potency ?? 0
       let potPerk = $result.perks[`${buff.buffName} Potency`] ?? 0
-      if (buff.buffName === 'Burn' && _infActive && $build.draconicColor === 'fire') {
+      if (buff.buffName === 'Burn' && _infActive && _isDragonBlooded && $build.draconicColor === 'fire') {
         potPerk = roundMultiplier(potPerk * getDraconicInfusionDurMult(_infPerkAmt))
       }
       let perkBase = roundMultiplier(potPerk * 0.1)
-      if (_infActive && $build.draconicColor === 'hex') {
+      if (_infActive && _isDragonBlooded && $build.draconicColor === 'hex') {
         perkBase = roundMultiplier(perkBase * getDraconicInfusionPotMult(_infPerkAmt))
       }
       const totalPot = roundMultiplier(currentPot + perkBase)
