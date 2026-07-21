@@ -1602,8 +1602,8 @@ $: _appWaAvgTotal = (() => {
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
                   class:sg-drop-target={dragOverRing === 'infusionRing'}
                   class:sg-selected={selectedRing === 'infusionRing'}
-                  class:sg-valid-target={(draggingRing === 'ring' || selectedRing === 'ring') && !!$build.infusionRing}
-                  style={(draggingRing === 'ring' || selectedRing === 'ring') && !!$build.infusionRing ? 'background:rgba(74,222,128,.15)!important;box-shadow:inset 0 0 0 2px rgba(74,222,128,.45)' : ''}
+                  class:sg-valid-target={draggingRing === 'ring' || selectedRing === 'ring'}
+                  style={(draggingRing === 'ring' || selectedRing === 'ring') ? 'background:rgba(74,222,128,.45)!important' : ''}
                   draggable={!!$build.infusionRing}
                   on:dragstart={e => onRingDragStart('infusionRing', e)}
                   on:dragover={e => onRingDragOver('infusionRing', e)}
@@ -1622,8 +1622,8 @@ $: _appWaAvgTotal = (() => {
                 <div class="sg-cell sg-item sg-span2 sg-clickable" class:sg-empty={!$build.ring}
                   class:sg-drop-target={dragOverRing === 'ring'}
                   class:sg-selected={selectedRing === 'ring'}
-                  class:sg-valid-target={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') && !!$build.ring}
-                  style={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') && !!$build.ring ? 'background:rgba(74,222,128,.15)!important;box-shadow:inset 0 0 0 2px rgba(74,222,128,.45)' : ''}
+                  class:sg-valid-target={draggingRing === 'infusionRing' || selectedRing === 'infusionRing'}
+                  style={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') ? 'background:rgba(74,222,128,.45)!important' : ''}
                   draggable={!!$build.ring}
                   on:dragstart={e => onRingDragStart('ring', e)}
                   on:dragover={e => onRingDragOver('ring', e)}
@@ -2998,15 +2998,14 @@ $: _appWaAvgTotal = (() => {
     box-shadow: 0 0 8px rgba(167,139,250,.25);
   }
   .sg-valid-target {
-    background: rgba(74,222,128,.15) !important;
-    box-shadow: inset 0 0 0 2px rgba(74,222,128,.45);
+    background: rgba(74,222,128,.45) !important;
   }
-  .summary-grid.sg-armor-dragging .sg-cell.sg-armor:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target) {
-    opacity: .45;
+  .summary-grid.sg-armor-dragging .sg-cell:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target):not(.sg-weapon):not(.sg-race):not(.sg-guild) {
+    opacity: .35;
     cursor: not-allowed;
   }
-  .summary-grid.sg-ring-dragging .sg-cell.sg-item:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target) {
-    opacity: .45;
+  .summary-grid.sg-ring-dragging .sg-cell:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target):not(.sg-weapon):not(.sg-race):not(.sg-guild) {
+    opacity: .35;
     cursor: not-allowed;
   }
 
