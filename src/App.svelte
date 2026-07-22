@@ -332,18 +332,41 @@ function weaponMatchesFilter(item: any): boolean {
     inlineEnchantSlot = inlineEnchantSlot === slot ? null : slot
   }
 
-  // ── Enchantment swap mode ──────────────────────────────────────────────────
-  let selectedEnchantSlot: EnchantSlot | null = null
-  function onEnchantTap(slot: EnchantSlot) {
-    if (!selectedEnchantSlot) {
-      selectedEnchantSlot = slot
-      addToast('Tap another ✦ to swap enchantments, or tap same ✦ to edit', 'info', 2500)
-      return
+  // ── Equipment enchantment swap mode ──────────────────────────────────────
+  let swapMode: EnchantSlot | null = null
+  const ENCHANT_SLOTS: EnchantSlot[] = ['helmet', 'chestplate', 'leggings', 'ring', 'rune']
+
+  function enterSwapMode() {
+    if (inlineEnchantSlot) {
+      swapMode = inlineEnchantSlot
+      inlineEnchantSlot = null
     }
-    if (selectedEnchantSlot === slot) { selectedEnchantSlot = null; toggleInlineEnchant(slot); return }
-    swapEnchantments(selectedEnchantSlot, slot)
-    addToast('Enchantments swapped', 'success', 1500)
-    selectedEnchantSlot = null
+  }
+
+  function exitSwapMode() {
+    swapMode = null
+  }
+
+  function handleSwapClick(targetSlot: EnchantSlot) {
+    if (!swapMode || swapMode === targetSlot) return
+    const sourceSlot: EnchantSlot = swapMode
+    build.update(s => {
+      const nextEnchantments = { ...s.enchantments }
+      const sourceEnchants = [...nextEnchantments[sourceSlot]] as [string, string, string]
+      const targetEnchants = [...nextEnchantments[targetSlot]] as [string, string, string]
+      nextEnchantments[sourceSlot] = targetEnchants
+      nextEnchantments[targetSlot] = sourceEnchants
+      return { ...s, enchantments: nextEnchantments }
+    })
+    exitSwapMode()
+  }
+
+  function handleEnchantButtonClick(slot: EnchantSlot) {
+    if (swapMode) {
+      handleSwapClick(slot)
+    } else {
+      toggleInlineEnchant(slot)
+    }
   }
   // ── Derived ────────────────────────────────────────────────────────────────
   $: guildData = getGuild($build.guild)
@@ -1282,15 +1305,11 @@ $: highestDamageType = (() => {
       if (activeModal) closeModal()
       else if (selectedArmorSlot) selectedArmorSlot = null
       else if (selectedRing) selectedRing = null
-      else if (selectedEnchantSlot) selectedEnchantSlot = null
+      else if (swapMode) exitSwapMode()
       else if (inlineEnchantSlot) inlineEnchantSlot = null
     }
   }
-  function onWindowClick(e: MouseEvent) {
-    if (selectedEnchantSlot && !(e.target as HTMLElement)?.closest('.sg-ench-btn')) {
-      selectedEnchantSlot = null
-    }
-  }
+
 
   function getSlotHasItem(slot: EnchantSlot): boolean {
     const s = $build
@@ -1393,7 +1412,7 @@ $: _appWaAvgTotal = (() => {
 })()
 </script>
 
-<svelte:window on:keydown={onKeydown} on:click={onWindowClick} />
+  <svelte:window on:keydown={onKeydown} />
 
 <!-- Tooltip -->
 {#if tooltip.visible}
@@ -1546,10 +1565,10 @@ $: _appWaAvgTotal = (() => {
                         +{$build.upgradeHelmet}
                       </button>
                       <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, helmet: ''}))} title="Clear">✕</button>
-                      <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet'}
-                        class:sg-ench-selected={selectedEnchantSlot === 'helmet'}
-                        class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'helmet'}
-                        on:click|stopPropagation={() => onEnchantTap('helmet')} title="Swap enchantments">✦</button>
+                      <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'helmet' || swapMode === 'helmet'}
+                        class:sg-ench-btn--swap-source={swapMode === 'helmet'}
+                        class:sg-ench-btn--swap-target={swapMode && swapMode !== 'helmet'}
+                        on:click|stopPropagation={() => handleEnchantButtonClick('helmet')} title="Enchant">✦</button>
                     {/if}
                 </div>
                 <div class="sg-cell sg-span3 sg-clickable"
@@ -1617,17 +1636,16 @@ $: _appWaAvgTotal = (() => {
                       +{$build.upgradeChestplate}
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, chestplate: ''}))} title="Clear">✕</button>
-                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate'}
-                      class:sg-ench-selected={selectedEnchantSlot === 'chestplate'}
-                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'chestplate'}
-                      on:click|stopPropagation={() => onEnchantTap('chestplate')} title="Swap enchantments">✦</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'chestplate' || swapMode === 'chestplate'}
+                      class:sg-ench-btn--swap-source={swapMode === 'chestplate'}
+                      class:sg-ench-btn--swap-target={swapMode && swapMode !== 'chestplate'}
+                      on:click|stopPropagation={() => handleEnchantButtonClick('chestplate')} title="Enchant">✦</button>
                   {/if}
                 </div>
                 <div class="sg-cell sg-infusion sg-span2 sg-clickable" class:sg-empty={!$build.infusionRing}
                   class:sg-drop-target={dragOverRing === 'infusionRing'}
                   class:sg-selected={selectedRing === 'infusionRing'}
                   class:sg-valid-target={draggingRing === 'ring' || selectedRing === 'ring'}
-                  style={(draggingRing === 'ring' || selectedRing === 'ring') ? 'background:rgba(74,222,128,.45)!important' : ''}
                   draggable={!!$build.infusionRing}
                   on:dragstart={e => onRingDragStart('infusionRing', e)}
                   on:dragover={e => onRingDragOver('infusionRing', e)}
@@ -1647,7 +1665,6 @@ $: _appWaAvgTotal = (() => {
                   class:sg-drop-target={dragOverRing === 'ring'}
                   class:sg-selected={selectedRing === 'ring'}
                   class:sg-valid-target={draggingRing === 'infusionRing' || selectedRing === 'infusionRing'}
-                  style={(draggingRing === 'infusionRing' || selectedRing === 'infusionRing') ? 'background:rgba(74,222,128,.45)!important' : ''}
                   draggable={!!$build.ring}
                   on:dragstart={e => onRingDragStart('ring', e)}
                   on:dragover={e => onRingDragOver('ring', e)}
@@ -1670,10 +1687,10 @@ $: _appWaAvgTotal = (() => {
                       +{$build.upgradeRing}
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, ring: ''}))} title="Clear">✕</button>
-                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring'}
-                      class:sg-ench-selected={selectedEnchantSlot === 'ring'}
-                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'ring'}
-                      on:click|stopPropagation={() => onEnchantTap('ring')} title="Swap enchantments">✦</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'ring' || swapMode === 'ring'}
+                      class:sg-ench-btn--swap-source={swapMode === 'ring'}
+                      class:sg-ench-btn--swap-target={swapMode && swapMode !== 'ring'}
+                      on:click|stopPropagation={() => handleEnchantButtonClick('ring')} title="Enchant">✦</button>
                   {/if}
                 </div>
                 <button class="sg-cell sg-race sg-span2 sg-clickable" on:click={() => openModal('race')}>
@@ -1733,10 +1750,10 @@ $: _appWaAvgTotal = (() => {
                       +{$build.upgradeLeggings}
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, leggings: ''}))} title="Clear">✕</button>
-                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings'}
-                      class:sg-ench-selected={selectedEnchantSlot === 'leggings'}
-                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'leggings'}
-                      on:click|stopPropagation={() => onEnchantTap('leggings')} title="Swap enchantments">✦</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'leggings' || swapMode === 'leggings'}
+                      class:sg-ench-btn--swap-source={swapMode === 'leggings'}
+                      class:sg-ench-btn--swap-target={swapMode && swapMode !== 'leggings'}
+                      on:click|stopPropagation={() => handleEnchantButtonClick('leggings')} title="Enchant">✦</button>
                   {/if}
                 </div>
                 {#if isDraconic}
@@ -1797,10 +1814,10 @@ $: _appWaAvgTotal = (() => {
                       +{$build.upgradeRune}
                     </button>
                     <button class="sg-clear" on:click|stopPropagation={() => build.update(s => ({...s, rune: ''}))} title="Clear">✕</button>
-                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune'}
-                      class:sg-ench-selected={selectedEnchantSlot === 'rune'}
-                      class:sg-ench-target={selectedEnchantSlot && selectedEnchantSlot !== 'rune'}
-                      on:click|stopPropagation={() => onEnchantTap('rune')} title="Swap enchantments">✦</button>
+                    <button class="sg-ench-btn" class:sg-ench-btn--active={inlineEnchantSlot === 'rune' || swapMode === 'rune'}
+                      class:sg-ench-btn--swap-source={swapMode === 'rune'}
+                      class:sg-ench-btn--swap-target={swapMode && swapMode !== 'rune'}
+                      on:click|stopPropagation={() => handleEnchantButtonClick('rune')} title="Enchant">✦</button>
                   {/if}
                 </div>
                 <div class="sg-cell sg-guild sg-span2 sg-clickable" class:sg-empty={!$build.guild}
@@ -1834,6 +1851,13 @@ $: _appWaAvgTotal = (() => {
                 </div>
               {/if}
             </div>
+            {#if swapMode}
+              <div class="swap-mode-banner">
+                <span class="swap-mode-icon">⇄</span>
+                <span class="swap-mode-text">Swap Enchantments: <strong>{swapMode.charAt(0).toUpperCase() + swapMode.slice(1)}</strong> → click another ✦ to swap</span>
+                <button class="swap-mode-cancel" on:click={exitSwapMode}>Cancel</button>
+              </div>
+            {/if}
             {#if iepSlot}
               <div class="inline-enchant-panel">
                 <div class="iep-header">
@@ -1853,6 +1877,11 @@ $: _appWaAvgTotal = (() => {
                       </Button>
                       <Button variant="info" size="sm" onclick={() => applyEnchantToAll(iepSlot)} disabled={false}>
                         Apply to all
+                      </Button>
+                    {/if}
+                    {#if iepHasEnchants}
+                      <Button variant="warning" size="sm" onclick={() => enterSwapMode()} disabled={false}>
+                        Swap Equipment
                       </Button>
                     {/if}
                     <button class="iep-close-btn" on:click={() => inlineEnchantSlot = null}>✕</button>
@@ -3009,8 +3038,9 @@ $: _appWaAvgTotal = (() => {
   }
   .sg-ench-btn:hover { background:rgba(167,139,250,.3); border-color:var(--accent3); }
   .sg-ench-btn--active { background:rgba(167,139,250,.3); border-color:var(--accent3); box-shadow:0 0 6px rgba(167,139,250,.4); }
-  .sg-ench-selected { background:rgba(167,139,250,.4)!important; border-color:var(--accent3)!important; box-shadow:0 0 8px rgba(167,139,250,.5); }
-  .sg-ench-target { background:rgba(74,222,128,.4)!important; border-color:rgba(74,222,128,.6)!important; box-shadow:0 0 6px rgba(74,222,128,.3); }
+  .sg-ench-btn--swap-source { background:rgba(251,191,36,.3); border-color:rgba(251,191,36,.6); box-shadow:0 0 8px rgba(251,191,36,.5); animation:swap-pulse 1.2s ease-in-out infinite; }
+  .sg-ench-btn--swap-target { background:rgba(74,222,128,.3); border-color:rgba(74,222,128,.6); box-shadow:0 0 8px rgba(74,222,128,.5); }
+  @keyframes swap-pulse { 0%,100%{box-shadow:0 0 8px rgba(251,191,36,.5)} 50%{box-shadow:0 0 14px rgba(251,191,36,.8)} }
 
   .sg-weapon { background:linear-gradient(135deg,rgba(251,146,60,.16),rgba(251,191,36,.1)); border-color:rgba(251,146,60,.26); }
   .sg-armor  { background:linear-gradient(135deg,rgba(74,222,128,.1),rgba(74,222,128,.05)); border-color:rgba(74,222,128,.18); }
@@ -3024,13 +3054,15 @@ $: _appWaAvgTotal = (() => {
   .sg-monk-essence { background:linear-gradient(135deg,rgba(129,140,248,.12),rgba(129,140,248,.06)); border-color:rgba(129,140,248,.22); }
 
   .sg-selected {
-    outline: 2px solid var(--accent3);
-    outline-offset: 2px;
-    background: rgba(167,139,250,.18) !important;
-    box-shadow: 0 0 8px rgba(167,139,250,.25);
+    background: rgba(251,191,36,.3) !important;
+    border-color: rgba(251,191,36,.6) !important;
+    box-shadow: 0 0 8px rgba(251,191,36,.5);
+    animation: swap-pulse 1.2s ease-in-out infinite;
   }
   .sg-valid-target {
-    background: rgba(74,222,128,.45) !important;
+    background: rgba(74,222,128,.3) !important;
+    border-color: rgba(74,222,128,.6) !important;
+    box-shadow: 0 0 8px rgba(74,222,128,.5);
   }
   .summary-grid.sg-armor-dragging .sg-cell:not(.sg-selected):not(.sg-valid-target):not(.sg-drop-target):not(.sg-weapon):not(.sg-race):not(.sg-guild) {
     opacity: .35;
@@ -3145,6 +3177,22 @@ $: _appWaAvgTotal = (() => {
   .ss-key { color:var(--ink-muted); }
   .ss-val { font-weight:700; color:var(--accent); white-space:nowrap; }
   .ss-val.neg { color:var(--neg); }
+  .swap-mode-banner {
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:10px;
+    background:linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,146,60,0.08));
+    border:1px solid rgba(251,191,36,0.35); border-radius:10px;
+    animation:swap-banner-slide .25s ease-out;
+  }
+  .swap-mode-icon { font-size:1.1rem; color:rgba(251,191,36,0.9); }
+  .swap-mode-text { font-size:.72rem; color:var(--text); flex:1; }
+  .swap-mode-text strong { color:rgba(251,191,36,1); }
+  .swap-mode-cancel {
+    font-size:.65rem; padding:4px 10px; border-radius:6px; border:1px solid rgba(239,68,68,0.3);
+    background:rgba(239,68,68,0.1); color:rgba(239,68,68,0.9); cursor:pointer;
+    transition:all .15s;
+  }
+  .swap-mode-cancel:hover { background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.5); }
+  @keyframes swap-banner-slide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
   .inline-enchant-panel {
     margin-top:10px;
     background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(167,139,250,0.02));
