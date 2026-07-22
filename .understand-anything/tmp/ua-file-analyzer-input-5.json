@@ -1,0 +1,17 @@
+{
+  "projectRoot": "C:\\Users\\Administrator\\Downloads\\voxlblade-builder",
+  "batchFiles": [
+    { "path": "src/data/BuffData.ts", "language": "typescript", "sizeLines": 1838, "fileCategory": "code" },
+    { "path": "src/data/TypedDmgBoost.ts", "language": "typescript", "sizeLines": 138, "fileCategory": "code" },
+    { "path": "src/lib/constants/buffs.ts", "language": "typescript", "sizeLines": 147, "fileCategory": "code" },
+    { "path": "src/lib/constants/damage-types.ts", "language": "typescript", "sizeLines": 41, "fileCategory": "code" },
+    { "path": "src/lib/damageTypeResolve.ts", "language": "typescript", "sizeLines": 99, "fileCategory": "code" }
+  ],
+  "batchImportData": {
+    "src/data/BuffData.ts": ["src/lib/types.ts", "src/lib/constants/buffs.ts"],
+    "src/data/TypedDmgBoost.ts": ["src/lib/types.ts"],
+    "src/lib/constants/buffs.ts": [],
+    "src/lib/constants/damage-types.ts": [],
+    "src/lib/damageTypeResolve.ts": ["src/lib/types.ts"]
+  }
+}

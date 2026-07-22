@@ -144,6 +144,11 @@ export const SECONDARY_TONE_COLORS: Record<SecondaryEffectTone, string> = {
   utility: '#8a8d85',
 }
 
+export interface TriggerChainEntry {
+  perk: string
+  trigger: 'always' | 'chance'
+}
+
 export interface PerkDmgDef {
   perkName: string
   label?: string
@@ -171,6 +176,7 @@ export interface PerkDmgDef {
   note?: string
   hpGate?: HpGate
   secondaryEffects?: SecondaryEffect[]
+  triggerChain?: TriggerChainEntry[]
   activeIf?: (ctx: { draconicRuneInfusion: string; draconicColor: string; selectedWeaponArt?: string }) => boolean
   requiredBuff?: string
 }
@@ -555,6 +561,10 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     scalings: { magic: 0.75, dexterity: 0.75, holy: 0.75 },
     isProcHit: true,
     hpGate: DRAGON_STATE_HP_GATE,
+    triggerChain: [
+      { perk: 'Dark Magic', trigger: 'always' },
+      { perk: 'Bombardier', trigger: 'chance' },
+    ],
   },
   // ── Volatile Shell ──────────────────────────────────────────────────────────
   {

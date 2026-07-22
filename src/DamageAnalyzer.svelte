@@ -12,7 +12,7 @@
   import { getDraconicInfusionBuff, getDraconicAbilityDebuffs, getEffectiveDraconicInfusionPotency, getDraconicInfusionPotMult, getDraconicInfusionDurMult } from './data/draconicBuffs'  
   import { WA_SUMMON_MAP, SUMMON_MAP, calcSummonStat, calcMaxSummonCount } from './data/SummonData'
   import CritIcon from './CritIcon.svelte'
-  import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive, DRAGON_STATE_HP_GATE, calcSpringblastBaseDamage } from './data/Perkbasedmg'
+  import { PERK_DMG_DEFS, SECONDARY_TONE_COLORS, isHpGateActive, DRAGON_STATE_HP_GATE, calcSpringblastBaseDamage, type TriggerChainEntry } from './data/Perkbasedmg'
   import { resolveDefenseSources, calcBaseArmorDefPct, DEF_GROUP, type DefenseSource } from './lib/defense'
   import { getActiveRaceEffect, getOrkTenacityBuffs, calcOrkTenacityBonus } from './data/raceEffects'
   import { getActiveDefensivePerkSources, calcDefensivePotencyMult } from './data/defensivePerks'
@@ -715,7 +715,7 @@ import {
 
   $: _bombardierAmt = perks['Bombardier'] ?? 0
   $: _bombardierDef = _bombardierAmt > 0 ? PERK_DMG_DEFS.find(d => d.perkName === 'Bombardier') : undefined
-  $: _bombardierBaseDmg = (_bombardierAmt > 0 && _bombardierDef)
+  $: _bombardierBaseDmg = (_bombardierAmt > 0 && !disabledEffects.has('bombardier') && _bombardierDef)
     ? _bombardierDef.getBaseDamage({ perkAmount: _bombardierAmt })
     : 0
   $: _bombardierScalings = _bombardierDef?.scalings ?? {}
@@ -762,6 +762,15 @@ import {
         val: disabledEffects.has('echoIncineration') ? '—'
           : `+${(_echoIncinerationDef?.getBaseDamage({ perkAmount: _echoIncinerationAmt }) ?? 0).toFixed(2)}`,
         cond: `${(10 + 2.5 * _echoIncinerationAmt)}% chance`,
+      })
+    }
+    if (_bombardierAmt > 0) {
+      chips.push({
+        key: 'bombardier', name: 'Bombardier',
+        title: 'Bombardier: 40% proc chance · magic+holy · normal scaling',
+        val: disabledEffects.has('bombardier') ? '—'
+          : `+${(_bombardierDef?.getBaseDamage({ perkAmount: _bombardierAmt }) ?? 0).toFixed(2)}`,
+        cond: '40% chance',
       })
     }
     if ((perks['Blub Blub'] ?? 0) > 0) {
@@ -1999,6 +2008,7 @@ import {
     halfActivations?: boolean
     oncePerFinisher?: boolean
     secondaryEffects: Array<{ label: string; display: string; condition?: string; color: string; isActive: boolean }>
+    triggerChain?: TriggerChainEntry[]
   }
 
   $: _activePerkDmgEntries = (void activeEntries, (() => {
@@ -2130,6 +2140,7 @@ import {
         halfActivations,
         oncePerFinisher,
         secondaryEffects,
+        triggerChain: def.triggerChain,
       })
     }
     return out
@@ -2625,6 +2636,7 @@ import {
   const SELF_DAMAGE_APPLIES_TO_GROUP: Record<string, 'WA' | 'Rune' | 'M1' | 'M2' | 'Perk'> = { wa: 'WA', rune: 'Rune', m1: 'M1', m2: 'M2', perk: 'Perk' }
 
   let enemiesHit = 1
+  let _selfDmgTab: Record<string, string> = {}
   $: if (!Number.isFinite(enemiesHit) || enemiesHit < 1) enemiesHit = 1
 
   function _sumPreBoostHitDamage(hits: BDCHit[], group: 'WA' | 'Rune' | 'M1' | 'M2' | 'Perk', label?: string): number {
@@ -2691,8 +2703,15 @@ import {
     amount: number
     group: string
     label: string
+    preBoostDmg: number
     result: { total: number; byType: Record<string, number> }
   }
+
+  $: _bombardierSelfDmgBase = (() => {
+    if (_bombardierAmt <= 0 || disabledEffects.has('bombardier') || !_bombardierDef) return 0
+    const typeMultSum = Object.values(_bombardierDef.dmgTypes).reduce((s, m) => s + m, 0)
+    return _bombardierDef.getBaseDamage({ perkAmount: _bombardierAmt }) * typeMultSum * _bombardierScalingMult * _levelMult
+  })()
 
   $: _selfDamageSources = (() => {
     const sources: SelfDamageSourceEntry[] = []
@@ -2713,10 +2732,11 @@ import {
             )
           ]
           for (const label of waLabels) {
-            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'WA', label)
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : _sumPreBoostHitDamage(_bdcWeaponHits, 'WA', label)
             if (preBoostDmg <= 0) continue
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label, result })
+            sources.push({ def, amount, group, label, preBoostDmg, result })
           }
         } else if (group === 'Rune') {
           const mountM1Dmg = (_activeMountRuneDef && mountActive)
@@ -2729,39 +2749,45 @@ import {
                 }, 0)
             : 0
           if (mountM1Dmg > 0) {
-            const result = calcSelfDamage(def, amount, mountM1Dmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label: `${_activeMountRuneDef!.mountLabel} M1 (Mounted)`, result })
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : mountM1Dmg
+            const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
+            sources.push({ def, amount, group, label: `${_activeMountRuneDef!.mountLabel} M1 (Mounted)`, preBoostDmg, result })
           }
           const runeLabels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'Rune' && !h.isHeal).map(h => h.label))]
           for (const label of runeLabels) {
-            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'Rune', label)
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : _sumPreBoostHitDamage(_bdcWeaponHits, 'Rune', label)
             if (preBoostDmg <= 0) continue
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label: label ?? 'Rune', result })
+            sources.push({ def, amount, group, label: label ?? 'Rune', preBoostDmg, result })
           }
         } else if (group === 'M1') {
           const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'M1' && !h.isHeal).map(h => h.label ?? 'M1'))]
           for (const label of labels) {
-            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'M1', label === 'M1' ? undefined : label)
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : _sumPreBoostHitDamage(_bdcWeaponHits, 'M1', label === 'M1' ? undefined : label)
             if (preBoostDmg <= 0) continue
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label, result })
+            sources.push({ def, amount, group, label, preBoostDmg, result })
           }
         } else if (group === 'M2') {
           const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'M2' && !h.isHeal).map(h => h.label ?? 'M2'))]
           for (const label of labels) {
-            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'M2', label === 'M2' ? undefined : label)
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : _sumPreBoostHitDamage(_bdcWeaponHits, 'M2', label === 'M2' ? undefined : label)
             if (preBoostDmg <= 0) continue
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label, result })
+            sources.push({ def, amount, group, label, preBoostDmg, result })
           }
         } else if (group === 'Perk') {
           const labels = [...new Set(_bdcWeaponHits.filter(h => h.group === 'Perk' && !h.isHeal).map(h => h.label ?? 'Perk'))]
           for (const label of labels) {
-            const preBoostDmg = _sumPreBoostHitDamage(_bdcWeaponHits, 'Perk', label === 'Perk' ? undefined : label)
+            const preBoostDmg = def.perkName === 'Bombardier' ? _bombardierSelfDmgBase
+              : _sumPreBoostHitDamage(_bdcWeaponHits, 'Perk', label === 'Perk' ? undefined : label)
             if (preBoostDmg <= 0) continue
             const result = calcSelfDamage(def, amount, preBoostDmg, enemiesHit, _defenseMultipliersNoBark)
-            sources.push({ def, amount, group, label, result })
+            sources.push({ def, amount, group, label, preBoostDmg, result })
           }
         }
       }
@@ -2780,6 +2806,16 @@ $: _groupedSelfDamageSources = (() => {
   const groups = new Map<string, SelfDamageSourceEntry[]>()
   for (const src of _selfDamageSources) {
     const key = src.def.perkName
+    if (key === 'Bombardier') {
+      if (!groups.has(key)) {
+        groups.set(key, [{
+          ...src,
+          group: 'Per Proc',
+          label: 'Per Proc',
+        }])
+      }
+      continue
+    }
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push(src)
   }
@@ -4146,6 +4182,16 @@ $: _groupedSelfDamageSources = (() => {
             {/each}
           </div>
         {/if}
+        {#if entry.triggerChain && entry.triggerChain.length > 0}
+          <div class="da-pbd-trigger-chain">
+            {#each entry.triggerChain as tc}
+              <div class="da-pbd-trigger-entry">
+                <span class="da-pbd-trigger-icon">{tc.trigger === 'always' ? '✓' : '🎲'}</span>
+                <span class="da-pbd-trigger-name">{tc.perk}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
         <!-- Note -->
         {#if entry.note}
           <div class="da-pbd-note">{entry.note}</div>
@@ -4176,25 +4222,46 @@ $: _groupedSelfDamageSources = (() => {
   </div>
 
   <div class="da-pbd-list da-pbd-list--selfdmg">
-    {#each _selfDamageSources as src (src.def.perkName + ':' + src.group + ':' + src.label)}
+    {#each _groupedSelfDamageSources as group}
+      {@const perkName = group.sources[0].def.perkName}
+      {@const isMulti = group.sources.length > 1}
+      {@const selectedGroup = _selfDmgTab[perkName] ?? group.sources[0].group}
+      {@const activeSrc = isMulti ? group.sources.find(s => s.group === selectedGroup) ?? group.sources[0] : group.sources[0]}
       <div class="da-pbd-card">
         <div class="da-pbd-head">
-          <span class="da-pbd-name">{src.def.perkName}</span>
-          <span class="da-pbd-amt">+{fmtNum(src.amount)}</span>
+          <span class="da-pbd-name">{perkName}</span>
+          <span class="da-pbd-amt">+{fmtNum(group.amount)}</span>
         </div>
-        <div class="da-pbd-badges">
-          <Badge square size="xs" color={src.group === 'WA' ? '#a78bfa' : src.group === 'Rune' ? '#38bdf8' : undefined}>{src.group}</Badge>
-        </div>
+        {#if isMulti}
+          <div class="da-pbd-badges">
+            {#each group.sources as src}
+              <button
+                class="da-selfdmg-tab"
+                class:da-selfdmg-tab--active={src.group === selectedGroup}
+                style={src.group === selectedGroup && src.group === 'WA' ? 'color:#a78bfa;border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.1)' : src.group === selectedGroup && src.group === 'Rune' ? 'color:#38bdf8;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.1)' : ''}
+                on:click={() => { _selfDmgTab[perkName] = src.group }}
+              >{src.group}</button>
+            {/each}
+          </div>
+        {:else if activeSrc.group === 'Per Proc'}
+          <div class="da-pbd-badges">
+            <Badge square size="xs" color="#facc15">Per Proc</Badge>
+          </div>
+        {/if}
         <div class="da-pbd-condition">
-          From {src.label}{enemiesHit > 1 && !src.def.noMultiTargetFalloff ? ` · split across ${enemiesHit} enemies` : ''}
+          {#if activeSrc.group === 'Per Proc'}
+            Whenever {perkName} procs
+          {:else}
+            From {activeSrc.label}{enemiesHit > 1 && !activeSrc.def.noMultiTargetFalloff ? ` · split across ${enemiesHit} enemies` : ''}
+          {/if}
         </div>
         <div class="da-hits-row" style="margin-top:4px">
-          {#each Object.entries(src.result.byType) as [type, val], i}
+          {#each Object.entries(activeSrc.result.byType) as [type, val], i}
             <div class="da-hit-chunk" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">
               <span class="da-hit-num" style="--tc:{DMG_TYPE_COLORS[type] ?? '#e8e4da'}">{fmtNum(val)}</span>
               <span class="da-hit-type">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
             </div>
-            {#if i < Object.entries(src.result.byType).length - 1}<span class="da-hit-plus">+</span>{/if}
+            {#if i < Object.entries(activeSrc.result.byType).length - 1}<span class="da-hit-plus">+</span>{/if}
           {/each}
         </div>
         <div class="da-pbd-dmg-row">
@@ -4202,11 +4269,14 @@ $: _groupedSelfDamageSources = (() => {
           <div class="da-hits-row">
             <div class="da-hit-card">
               <div class="da-hit-chunk" style="--tc:var(--neg, #f87171)">
-                <span class="da-hit-num" style="--tc:var(--neg, #f87171)">{fmtNum(src.result.total)}</span>
+                <span class="da-hit-num" style="--tc:var(--neg, #f87171)">{fmtNum(activeSrc.result.total)}</span>
               </div>
             </div>
           </div>
         </div>
+        {#if perkName === 'Dark Magic'}
+          <div class="da-pbd-note">Self damage = 0.5% × {fmtNum(activeSrc.preBoostDmg)} pre-boost damage</div>
+        {/if}
       </div>
     {/each}
   </div>
@@ -6457,6 +6527,39 @@ $: _groupedSelfDamageSources = (() => {
 .da-pbd-secondary-inactive {
   font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
   color: var(--ink-muted, #8a8d85); opacity: .8;
+}
+.da-pbd-trigger-chain {
+  display:flex; flex-direction:column; gap:3px;
+  margin-top:6px;
+  padding:5px 8px; border-radius:6px;
+  background: rgba(250,204,21,.06);
+  border: 1px solid rgba(250,204,21,.15);
+}
+.da-pbd-trigger-entry {
+  display:flex; align-items:center; gap:6px;
+  font-size:.72rem; color: var(--ink, #e8e4da);
+}
+.da-pbd-trigger-icon { font-size:.75rem; }
+.da-pbd-trigger-name { font-weight:600; }
+.da-selfdmg-tab {
+  display:inline-flex; align-items:center;
+  padding:1px var(--space-1-5, 4px);
+  border-radius: var(--radius-xs, 3px);
+  font-size: var(--text-3xs, 0.6rem);
+  font-weight: var(--weight-semibold, 600);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-muted, #8a8d85);
+  cursor: pointer;
+  transition: all .15s ease;
+  opacity: 0.5;
+}
+.da-selfdmg-tab:hover { opacity: 0.8; }
+.da-selfdmg-tab--active {
+  opacity: 1;
+  border-color: rgba(255,255,255,.15);
+  background: rgba(255,255,255,.06);
+  color: var(--ink, #e8e4da);
 }
 
 .da-section--defense {

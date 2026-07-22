@@ -8,6 +8,7 @@
     square = false,
     solid = false,
     mono = false,
+    tag = false,
     title,
     class: className,
     children,
@@ -18,6 +19,7 @@
     square?: boolean
     solid?: boolean
     mono?: boolean
+    tag?: boolean
     title?: string
     class?: string
     children?: Snippet
@@ -39,6 +41,7 @@
   class:ui-badge--square={square}
   class:ui-badge--solid={solid}
   class:ui-badge--mono={mono}
+  class:ui-badge--tag={tag}
   style:background={color ? (solid ? color : `${color}1e`) : undefined}
   style:border-color={color ? (solid ? 'transparent' : `${color}40`) : undefined}
   style:color={color ? (solid ? '#000' : color) : undefined}
@@ -90,6 +93,15 @@
   /* Monospace font */
   .ui-badge--mono {
     font-family: var(--font-mono);
+  }
+
+  /* Tag variant — minimal, no border */
+  .ui-badge--tag {
+    border: none;
+    padding: 0 var(--space-1);
+    font-size: var(--text-3xs, 0.6rem);
+    font-weight: var(--weight-semibold, 600);
+    opacity: 0.7;
   }
 
   /* Color variants */

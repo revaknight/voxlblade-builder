@@ -19,7 +19,7 @@
     ],
     "description": "Svelte 5 + Vite + TypeScript damage calculator for Voxel Blade RPG with weapon calculations, enchantments, perks, and draconic rune system",
     "analyzedAt": "2026-07-22T00:00:00.000Z",
-    "gitCommitHash": "6c0f78446fec38550e1c0dea3643b153d64a6157"
+    "gitCommitHash": "0d7438401d5689d6bb1c7461bce51f7e85e16f7c"
   },
   "nodes": [
     {

@@ -32,7 +32,7 @@ export const SELF_DAMAGE_PERK_DEFS: SelfDamagePerkDef[] = [
   },
   {
     perkName: 'Dark Magic',
-    appliesTo: ['wa', 'rune'],
+    appliesTo: ['m1', 'm2', 'wa', 'rune', 'perk'],
     selfDmgPct: 0.005,
     dmgTypes: { hex: 1.0 },
     drPctPerStack: 0,

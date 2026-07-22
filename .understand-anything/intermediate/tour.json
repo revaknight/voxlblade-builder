@@ -1,0 +1,62 @@
+[
+  {
+    "order": 1,
+    "title": "Project Overview",
+    "description": "Start here to understand what voxlblade-builder is: a Svelte 5 + Vite + TypeScript damage calculator for the Roblox game Voxel Blade. Examine the README and package.json to learn the tech stack (Svelte 5 runes, Tailwind CSS v4, Vitest, pnpm) and the project's purpose.",
+    "nodeIds": ["file:README.md", "file:package.json"]
+  },
+  {
+    "order": 2,
+    "title": "Entry Point & Application Shell",
+    "description": "See how the app boots: main.ts mounts the Svelte 5 app and initializes Vercel Analytics, while App.svelte is the monolithic root component (~3,978 lines) that manages all top-level state, modals, and child orchestration. This is the top of the dependency tree.",
+    "nodeIds": ["file:src/main.ts", "file:src/App.svelte"]
+  },
+  {
+    "order": 3,
+    "title": "Foundation Types",
+    "description": "Explore the shared type vocabulary that every other layer depends on. types.ts defines 20+ interfaces (StatMap, BuildState, Race, Guild, Armor, WeaponBlade, ProcCoefficient) and utility functions (applyUpgrade, canProc). dmgTypes.ts adds the damage computation result model (ComputedType, ComputedHit, BADGE_CONFIG).",
+    "nodeIds": ["file:src/lib/types.ts", "file:src/lib/dmgTypes.ts"]
+  },
+  {
+    "order": 4,
+    "title": "Game Data Layer",
+    "description": "Dive into the game's static data: JSON files for 11 entity datasets (armors, blades, handles, rings, runes, enchantments, races, guilds, perks) and TypeScript modules for mechanics definitions (weaponArts, Boost, BuffData, procCoefficients, weapon base damage). The engine/data/ sub-modules provide accessor functions that build lookup maps from JSON.",
+    "nodeIds": ["file:src/data/weaponArts.ts", "file:src/data/Boost.ts", "file:src/data/BuffData.ts", "file:src/data/procCoefficients.ts", "file:src/lib/engine/data.ts"]
+  },
+  {
+    "order": 5,
+    "title": "Game Constants & Tuning Parameters",
+    "description": "Examine the pure-constant modules that parameterize every game mechanic: crit formulas, buff potency values, cooldown reduction, damage types, HP formulas, and storage keys. These are a centralized spreadsheet of game balance values with zero logic.",
+    "nodeIds": ["file:src/lib/constants/index.ts", "file:src/lib/constants/game.ts", "file:src/lib/constants/perks.ts", "file:src/lib/constants/buffs.ts", "file:src/lib/constants/storage.ts"]
+  },
+  {
+    "order": 6,
+    "title": "Calculation Engine",
+    "description": "The core brain: build.ts orchestrates a pipeline (accumulateEquipment -> finalizePerks -> deriveResults) that transforms a BuildState into a complete BuildResult. Sub-modules handle weapon resolution, enchantment application, shrine bonuses, elemental damage bonuses, crit computation, and defense reduction.",
+    "nodeIds": ["file:src/lib/engine/build.ts", "file:src/lib/engine/weapon.ts", "file:src/lib/engine/enchant.ts", "file:src/lib/engine/shrine.ts", "file:src/lib/engine/dmgTypeBonuses.ts", "file:src/lib/crit.ts", "file:src/lib/defense.ts"]
+  },
+  {
+    "order": 7,
+    "title": "State Management & Persistence",
+    "description": "Learn how the Svelte store bridges the engine and UI. store.ts creates a writable store with debounced localStorage persistence and a derived store that runs calcBuild on every state change. Exports convenience functions (setEnchantment, swapEnchantments, clearBuild, moveArmorSlot) that encapsulate state mutation logic.",
+    "nodeIds": ["file:src/lib/store.ts", "file:src/lib/stores/toast.ts"]
+  },
+  {
+    "order": 8,
+    "title": "UI Design System (Primitives)",
+    "description": "Explore the reusable UI building blocks: Badge, Button, Card, Divider, Panel, Section, and Stat components using Svelte 5 $props() runes. app.css defines the complete design token system (colors, spacing, radii, shadows, animations, Draconic theme variables). These have zero knowledge of game mechanics.",
+    "nodeIds": ["file:src/lib/ui/index.ts", "file:src/lib/ui/Badge.svelte", "file:src/lib/ui/Button.svelte", "file:src/lib/ui/Card.svelte", "file:src/lib/ui/Panel.svelte", "file:src/app.css"]
+  },
+  {
+    "order": 9,
+    "title": "Feature UI Components",
+    "description": "Domain-specific components that compose UI primitives with application logic: modal dialogs (RaceModal, GuildModal, WeaponPartModal, AccessorySelectModal), search/filter systems (StatFilter, WeaponStatFilter, TagFilter), and display components (WeaponStatsDisplay, CritIcon, DmgTotalTooltip). These bridge the design system and the application layer.",
+    "nodeIds": ["file:src/lib/Modal.svelte", "file:src/lib/modals/index.ts", "file:src/lib/modals/GuildModal.svelte", "file:src/StatFilter.svelte", "file:src/WeaponStatsDisplay.svelte", "file:src/DmgTotalTooltip.svelte"]
+  },
+  {
+    "order": 10,
+    "title": "Damage Analysis Views",
+    "description": "The largest components in the codebase: DamageAnalyzer.svelte (~6,700 lines) is the main analysis view with complex reactive computation chains, BaseDamageCalc.svelte (~2,566 lines) handles per-hit damage breakdowns, and CdrStepsCalc.svelte shows cooldown reduction details. These are the primary refactoring targets.",
+    "nodeIds": ["file:src/DamageAnalyzer.svelte", "file:src/BaseDamageCalc.svelte", "file:src/CdrStepsCalc.svelte", "file:src/BuffList.svelte"]
+  }
+]

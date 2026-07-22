@@ -1,0 +1,28 @@
+{
+  "projectRoot": "C:\\Users\\Administrator\\Downloads\\voxlblade-builder",
+  "batchFiles": [
+    {
+      "path": "src/lib/enchantTooltip.ts",
+      "language": "typescript",
+      "sizeLines": 27,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/engine.ts",
+      "language": "typescript",
+      "sizeLines": 6,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/lib/store.ts",
+      "language": "typescript",
+      "sizeLines": 168,
+      "fileCategory": "code"
+    }
+  ],
+  "batchImportData": {
+    "src/lib/enchantTooltip.ts": ["src/lib/types.ts"],
+    "src/lib/engine.ts": ["src/lib/engine/build.ts"],
+    "src/lib/store.ts": ["src/lib/types.ts"]
+  }
+}

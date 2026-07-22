@@ -1,0 +1,149 @@
+{
+  "reviewedAt": "2026-07-22",
+  "graphFile": "assembled-graph.json",
+  "stats": {
+    "totalNodes": 283,
+    "totalEdges": 336,
+    "nodeTypes": {
+      "file": 132,
+      "function": 112,
+      "constant": 21,
+      "interface": 13,
+      "type": 3,
+      "section": 2
+    }
+  },
+  "fixedSectionReview": {
+    "status": "pass",
+    "summary": "All 362 fixes are correct and necessary. Prefix normalization (bare→file:, func:→function:), complexity mapping (low→simple, medium→moderate, high→complex), and edge rewriting after ID normalization are all sound.",
+    "issues": []
+  },
+  "couldNotFixReview": {
+    "unknownNodeTypes": {
+      "status": "accept-as-is",
+      "summary": "39 non-standard node types (21 constant, 13 interface, 3 type, 2 section) are semantically meaningful and have well-formed IDs. They extend the schema rather than violating it. No action needed.",
+      "recommendation": "Document these as valid schema extensions in the graph spec."
+    },
+    "complexityDefaults": {
+      "status": "warning",
+      "summary": "194 nodes (68.6%) had complexity=None and defaulted to 'moderate'. Only 89 of 283 nodes have explicitly assessed complexity (61 simple, 10 complex, 18 moderate). The complexity field is unreliable for the majority of nodes.",
+      "affectedBatches": ["batch-10", "batch-22", "batch-23", "batch-24", "batch-5"],
+      "recommendation": "Re-run complexity assessment on these nodes in a follow-up pass. Complexity is a key signal for downstream consumers."
+    },
+    "complexityVeryHigh": {
+      "status": "minor",
+      "summary": "2 nodes had complexity 'very-high' which was defaulted to 'moderate'. Should map to 'complex' instead.",
+      "recommendation": "Add 'very-high' → 'complex' mapping in the merge script."
+    },
+    "missingIds": {
+      "status": "resolved",
+      "summary": "The 9 nodes (indices 39-47) originally reported as missing IDs have all been given IDs by the merge script. No dangling nodes remain."
+    }
+  },
+  "crossBatchEdgeReview": {
+    "danglingReferences": {
+      "status": "pass",
+      "count": 0,
+      "summary": "All 336 edges reference valid node IDs. Zero dangling source or target references."
+    },
+    "duplicateEdges": {
+      "status": "pass",
+      "count": 0,
+      "summary": "No duplicate edge signatures found."
+    },
+    "importMapRecovery": {
+      "status": "pass",
+      "count": 28,
+      "summary": "All 28 import-map recovered edges are properly integrated with recoveredFromImportMap flag. 18 source files and 23 target paths were correctly skipped (no corresponding file: node in graph)."
+    },
+    "remainingImportGaps": {
+      "status": "expected",
+      "summary": "41 import-map entries were skipped because source or target nodes don't exist in the graph. These are files not covered by any batch. Expected behavior."
+    }
+  },
+  "schemaConsistencyIssues": {
+    "kindVsTypeOnNodes": {
+      "status": "warning",
+      "count": 25,
+      "summary": "25 nodes use 'kind: file' instead of 'type: file'. These come from batch-10 (root config files) and batch-24. Should be normalized to 'type' for consistency.",
+      "affectedNodePatterns": ["file:::*.json", "file:::*.md", "file:::*.html", "file:::vite.config.ts", "file:src/data/*.json"]
+    },
+    "kindVsTypeOnEdges": {
+      "status": "warning",
+      "count": 20,
+      "summary": "20 edges use 'kind' instead of 'type'. These come from batch-10 and batch-23. Should be normalized to 'type'.",
+      "edgeKindValues": ["config-inherits", "deployment-config", "tool-config", "tool-output", "doc-companion", "composes-with", "parallel-to", "build-configures", "references"]
+    },
+    "idPrefixInconsistency": {
+      "status": "warning",
+      "summary": "Three different file node ID conventions exist: 'file:path' (single colon, most source files), 'file::path' (double colon, BuffData/TypedDmgBoost/DoT nodes), and 'file:::path' (triple colon, root config files). This complicates prefix-based queries.",
+      "counts": {
+        "singleColon_file:path": 132,
+        "doubleColon_file::path": 16,
+        "tripleColon_file:::path": 12
+      },
+      "recommendation": "Normalize all to 'file:path' format, or document the convention clearly."
+    },
+    "missingFilePath": {
+      "status": "warning",
+      "count": 69,
+      "summary": "69 nodes lack a 'filePath' property. Most are from batch-22 (UI components, DoT/Perkbasedmg nodes) and the file::: prefixed root config nodes. Some file::constant:: and file:interface:: nodes also lack it.",
+      "recommendation": "Add filePath to all nodes that represent code entities. Config/doc nodes without filePath are less critical."
+    },
+    "missingEdgeWeight": {
+      "status": "info",
+      "count": 201,
+      "summary": "201 of 336 edges (59.8%) lack a 'weight' field. Weights are only present on edges from batches 1, 8, and 22/23."
+    }
+  },
+  "edgeTypeDistribution": {
+    "imports": 104,
+    "contains": 41,
+    "calls": 50,
+    "references": 27,
+    "reads": 13,
+    "re-exported-by": 10,
+    "used-by": 16,
+    "exports": 9,
+    "related": 9,
+    "depends_on": 11,
+    "import": 15,
+    "data-flow": 5,
+    "related_to": 3,
+    "implements": 2,
+    "returns": 2,
+    "extends": 2,
+    "uses": 2,
+    "parallel-to": 2,
+    "deployment-config": 2,
+    "tool-output": 2,
+    "depends-on": 1,
+    "config-inherits": 1,
+    "tool-config": 1,
+    "doc-companion": 1,
+    "composes-with": 1,
+    "mirrors": 1,
+    "relates-to": 1,
+    "re_exports": 1,
+    "build-configures": 1,
+    "re-exported-by": 10
+  },
+  "overallAssessment": {
+    "status": "pass-with-warnings",
+    "summary": "Graph is structurally sound with zero dangling references and zero duplicate edges. The merge script successfully resolved all ID normalization and edge rewriting. The 28 import-map edges are properly recovered.",
+    "criticalIssues": 0,
+    "warnings": [
+      "Complexity field is unreliable (68.6% defaulted to 'moderate'). Needs a follow-up assessment pass.",
+      "Schema inconsistency: 25 nodes use 'kind' instead of 'type', 20 edges use 'kind' instead of 'type'.",
+      "ID prefix inconsistency: three conventions (file:, file::, file:::) for file nodes.",
+      "69 nodes missing filePath property."
+    ],
+    "recommendations": [
+      "Add a schema normalization step to the merge script: 'kind' → 'type' for both nodes and edges.",
+      "Standardize file node ID prefixes to 'file:path' format.",
+      "Re-run complexity assessment on the 194 defaulted nodes.",
+      "Add filePath to all nodes that represent source code entities.",
+      "Document the 'constant', 'interface', 'type', and 'section' node types as valid schema extensions."
+    ]
+  }
+}

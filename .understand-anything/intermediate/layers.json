@@ -1,0 +1,438 @@
+{
+  "layers": [
+    {
+      "id": "layer:infrastructure",
+      "title": "Configuration & Infrastructure",
+      "description": "Root-level build configuration, CI/CD pipelines, deployment config, and tooling metadata. These files define how the project is built, tested, and deployed but contain no application logic.",
+      "depth": 0,
+      "files": [
+        "vite.config.ts",
+        "tsconfig.json",
+        "tsconfig.app.json",
+        "tsconfig.node.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "vercel.json",
+        ".fallowrc.json",
+        "fallow-output.json",
+        "fallow-security.json",
+        "index.html",
+        ".github/workflows/static.yml",
+        ".gitignore",
+        ".understand-anything/.understandignore"
+      ],
+      "tags": ["infrastructure", "configuration", "build-tooling", "deployment", "ci-cd"],
+      "languageNotes": "Mixed formats: TypeScript (vite.config.ts), JSON (tsconfig, package.json), YAML (GitHub Actions), HTML (SPA entry point). All are static configuration with no runtime behavior in the application context.",
+      "languageLesson": "The infrastructure layer forms the outermost shell of the project. It has zero inbound dependencies from application code and depends only on external tooling (Node.js, Vite, TypeScript compiler, Vercel, GitHub Actions)."
+    },
+    {
+      "id": "layer:documentation",
+      "title": "Documentation & Analysis Artifacts",
+      "description": "Markdown documentation files, analysis reports, and developer tooling output. Provides project context, onboarding guidance, and code quality reports.",
+      "depth": 0,
+      "files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/ONBOARDING.md",
+        ".slim/deepwork/ui-upgrade.md",
+        "ts-errors.txt",
+        ".understand-anything/intermediate/scan-result.json"
+      ],
+      "tags": ["documentation", "onboarding", "analysis-artifacts", "planning"],
+      "languageNotes": "All Markdown and JSON. The ONBOARDING.md is the most architecturally significant document, describing 9 project layers and a guided tour. The UI upgrade plan proposes 8 refactoring phases for the monolithic Svelte components.",
+      "languageLesson": "Documentation is consumed by developers and AI agents but has no runtime presence. These files are leaf nodes in the dependency graph with no inbound edges from code."
+    },
+    {
+      "id": "layer:foundation-types",
+      "title": "Foundation Types",
+      "description": "Shared TypeScript type definitions that form the project's vocabulary. Defines every entity, stat, equipment piece, damage type, and build state that the rest of the codebase references. This is the most imported layer.",
+      "depth": 1,
+      "files": [
+        "src/lib/types.ts",
+        "src/lib/dmgTypes.ts"
+      ],
+      "tags": ["types", "foundational", "shared-vocabulary", "core-definitions"],
+      "languageNotes": "Pure TypeScript with no runtime imports from application code. types.ts exports 20+ interfaces/types (StatMap, BuildState, Race, Guild, Armor, WeaponBlade, WeaponHit, ProcCoefficient, etc.) and 3 utility functions (applyUpgrade, getProcCoeffValue, canProc). dmgTypes.ts adds ComputedType, ComputedHit, and BADGE_CONFIG for the damage computation result model.",
+      "languageLesson": "Foundation types sit at the bottom of the import DAG. Every layer above depends on these definitions. The few utility functions in types.ts (applyUpgrade, canProc) are tightly coupled to the type system and don't warrant their own module."
+    },
+    {
+      "id": "layer:constants",
+      "title": "Game Constants",
+      "description": "Pure numeric and string constants that parameterize every game mechanic. Organized into a barrel-re-exported constants directory. Zero logic—just named values that the engine and data layers consume as tuning parameters.",
+      "depth": 2,
+      "files": [
+        "src/lib/constants/index.ts",
+        "src/lib/constants/game.ts",
+        "src/lib/constants/damage-types.ts",
+        "src/lib/constants/storage.ts",
+        "src/lib/constants/thresholds.ts",
+        "src/lib/constants/perks.ts",
+        "src/lib/constants/perk-base-damage.ts",
+        "src/lib/constants/rune-base-damage.ts",
+        "src/lib/constants/boosts.ts",
+        "src/lib/constants/buffs.ts",
+        "src/lib/constants/heals.ts",
+        "src/lib/constants/defensive.ts",
+        "src/lib/constants/dot-damage.ts",
+        "src/lib/constants/draconic.ts",
+        "src/lib/constants/draconic-colors.ts",
+        "src/lib/constants/cdr.ts",
+        "src/lib/constants/debuff-effects.ts",
+        "src/lib/constants/stat-conversions.ts",
+        "src/lib/constants.ts",
+        "src/lib/uiConstants.ts"
+      ],
+      "tags": ["constants", "configuration-data", "tuning-parameters", "pure-data"],
+      "languageNotes": "All files are pure TypeScript exporting const values. No functions (except calcBaseMaxHP in game.ts). The constants/index.ts barrel re-exports 16 sub-modules. uiConstants.ts adds UI-specific color and label mappings. These files function as a centralized spreadsheet of game balance values.",
+      "languageLesson": "Constants form a flat layer that only depends on itself (game.ts exports used by storage.ts). They have no inbound dependencies from types.ts and are consumed by the engine and data layers above."
+    },
+    {
+      "id": "layer:game-data",
+      "title": "Game Data Definitions",
+      "description": "Static game entity data (JSON) and TypeScript modules that define game mechanics as structured data. Contains weapon stats, armor sets, enchantments, perks, buff/debuff definitions, weapon arts, and all other game content. This layer has two sub-layers: raw JSON data and logic-bearing TypeScript data modules.",
+      "depth": 3,
+      "files": [
+        "src/data/armors.json",
+        "src/data/blades.json",
+        "src/data/handles.json",
+        "src/data/gloves.json",
+        "src/data/essences.json",
+        "src/data/rings.json",
+        "src/data/runes.json",
+        "src/data/enchantments.json",
+        "src/data/races.json",
+        "src/data/guilds.json",
+        "src/data/perks.json",
+        "src/data/Boost.ts",
+        "src/data/BuffData.ts",
+        "src/data/Perkbasedmg.ts",
+        "src/data/Runebasedmg.ts",
+        "src/data/SummonData.ts",
+        "src/data/weaponArts.ts",
+        "src/data/weapon base dmg.ts",
+        "src/data/procCoefficients.ts",
+        "src/data/statboost.ts",
+        "src/data/mountRunes.ts",
+        "src/data/Weaponartcheck.ts",
+        "src/data/TypedDmgBoost.ts",
+        "src/data/DoTDamage.ts",
+        "src/data/HealBoost.ts",
+        "src/data/debuffCombatEffects.ts",
+        "src/data/enemyHpEffects.ts",
+        "src/data/perkAutoDebuffs.ts",
+        "src/data/draconicRunes.ts",
+        "src/data/draconicColorEffects.ts",
+        "src/data/draconicBuffs.ts",
+        "src/data/raceEffects.ts",
+        "src/data/selfDamagePerks.ts",
+        "src/data/stanceOverlays.ts",
+        "src/data/weaponConditionalBoosts.ts",
+        "src/data/defensivePerks.ts",
+        "src/data/cdr.ts",
+        "src/lib/engine/data/character.ts",
+        "src/lib/engine/data/equipment.ts",
+        "src/lib/engine/data/weapons.ts",
+        "src/lib/engine/data.ts"
+      ],
+      "tags": ["game-data", "static-data", "mechanics-definitions", "json-imports", "data-access"],
+      "languageNotes": "JSON files contain 11 entity datasets (armors, blades, handles, gloves, essences, rings, runes, enchantments, races, guilds, perks). TypeScript modules in src/data/ add logic-bearing data definitions (BUFF_DEFS, PERK_DMG_DEFS, WEAPON_ARTS, BOOST_DEFS, etc.) with factory functions and computed properties. The engine/data/ sub-directory provides accessor functions that load JSON and build lookup maps.",
+      "languageLesson": "The game data layer is the largest by file count. It serves as the bridge between raw game constants (below) and the calculation engine (above). JSON files are pure declarative data; TypeScript data modules add formulas, conditional logic, and factory functions. The engine/data/ sub-modules provide the data access layer that the engine orchestrator consumes."
+    },
+    {
+      "id": "layer:calculation-engine",
+      "title": "Calculation Engine",
+      "description": "Core damage calculation pipeline that transforms a BuildState into a complete BuildResult. Handles weapon stat resolution, enchantment application, perk post-processing, CDR calculation, crit computation, defense reduction, buff assembly, and damage type resolution. The central brain of the calculator.",
+      "depth": 4,
+      "files": [
+        "src/lib/engine/build.ts",
+        "src/lib/engine/weapon.ts",
+        "src/lib/engine/enchant.ts",
+        "src/lib/engine/shrine.ts",
+        "src/lib/engine/dmgTypeBonuses.ts",
+        "src/lib/engine/format.ts",
+        "src/lib/engine/_utils.ts",
+        "src/lib/engine/engine.ts",
+        "src/lib/crit.ts",
+        "src/lib/defense.ts",
+        "src/lib/damageTypeResolve.ts",
+        "src/lib/utils.ts",
+        "src/lib/enchantTooltip.ts"
+      ],
+      "tags": ["engine", "calculation", "core-logic", "pipeline", "orchestration"],
+      "languageNotes": "The build.ts orchestrator follows a pipeline pattern: accumulateEquipment → finalizePerks → deriveResults (which calls calcCDR, calcBoosts, calcCrit, stat boosts, buff assembly). The engine/ directory is barrel-re-exported via engine.ts. Each sub-module handles one concern (weapon resolution, enchantment processing, shrine bonuses, etc.). crit.ts and defense.ts are standalone modules at the same depth.",
+      "languageLesson": "The calculation engine is the most interconnected layer. It imports from types, constants, and game data, and is consumed by the state management and UI layers above. build.ts is the single entry point (calcBuild) that the store calls to produce the derived result."
+    },
+    {
+      "id": "layer:state-management",
+      "title": "State Management & Persistence",
+      "description": "Svelte writable and derived stores that manage the application's build configuration state. Handles localStorage persistence, debounced saving, and exposes convenience functions for modifying build state (setting enchantments, swapping slots, clearing).",
+      "depth": 5,
+      "files": [
+        "src/lib/store.ts",
+        "src/lib/stores/toast.ts"
+      ],
+      "tags": ["state-management", "svelte-store", "persistence", "application-core"],
+      "languageNotes": "store.ts is the central state hub. It creates a writable store with debounced localStorage persistence and a derived store (result) that runs calcBuild on every state change. Exports convenience functions (setEnchantment, swapEnchantments, clearBuild, setGuild, moveArmorSlot) that encapsulate state mutation logic. toast.ts provides a simple notification store.",
+      "languageLesson": "State management sits between the calculation engine (below) and the UI layer (above). The store depends on the engine (imports calcBuild) and the constants (imports BUILD_STATE_DEFAULTS, STORAGE_KEY_*). UI components import the store to read build state and results."
+    },
+    {
+      "id": "layer:ui-primitives",
+      "title": "UI Primitives (Design System)",
+      "description": "Reusable, framework-agnostic UI building blocks that define the visual design system. Includes Badge, Button, Card, Divider, Panel, Section, and Stat components, plus the global CSS design tokens.",
+      "depth": 6,
+      "files": [
+        "src/lib/ui/Badge.svelte",
+        "src/lib/ui/Button.svelte",
+        "src/lib/ui/Card.svelte",
+        "src/lib/ui/Divider.svelte",
+        "src/lib/ui/Panel.svelte",
+        "src/lib/ui/Section.svelte",
+        "src/lib/ui/Stat.svelte",
+        "src/lib/ui/index.ts",
+        "src/app.css"
+      ],
+      "tags": ["design-system", "ui-primitives", "svelte-components", "css-tokens", "reusable"],
+      "languageNotes": "All components use Svelte 5 $props() runes and Snippet children. They expose variant-based styling through CSS class toggling and CSS custom properties. app.css defines the complete design token system: colors, spacing, radii, shadows, animations, z-index layers, and Draconic theme variables. These components have zero dependencies on application logic.",
+      "languageLesson": "UI primitives form the lowest UI layer. They depend only on CSS design tokens (app.css) and have no knowledge of game mechanics, state management, or business logic. All feature components above compose these primitives."
+    },
+    {
+      "id": "layer:feature-components",
+      "title": "Feature UI Components",
+      "description": "Domain-specific Svelte components that compose UI primitives with application logic. Includes search/filter systems, modal dialogs, stat displays, buff rendering, tooltip generation, and interactive controls.",
+      "depth": 7,
+      "files": [
+        "src/lib/Modal.svelte",
+        "src/lib/AppHeader.svelte",
+        "src/lib/Toast.svelte",
+        "src/lib/EnchantSelect.svelte",
+        "src/lib/StatFilterShared.svelte",
+        "src/lib/modals/RaceModal.svelte",
+        "src/lib/modals/GuildModal.svelte",
+        "src/lib/modals/AccessorySelectModal.svelte",
+        "src/lib/modals/WeaponPartModal.svelte",
+        "src/lib/modals/index.ts",
+        "src/lib/stats/elementalBoosts.ts",
+        "src/lib/stats/filterActions.ts",
+        "src/TagFilter.svelte",
+        "src/StatFilter.svelte",
+        "src/WeaponStatFilter.svelte",
+        "src/ModalSearchHeader.svelte",
+        "src/SuggestDrop.svelte",
+        "src/DidYouMean.svelte",
+        "src/Highlight.svelte",
+        "src/CritIcon.svelte",
+        "src/MountIcon.svelte",
+        "src/DmgTotalTooltip.svelte",
+        "src/WeaponStatsDisplay.svelte",
+        "src/ScalingBreakdownRow.svelte",
+        "src/DraconicAbilityStats.svelte",
+        "src/LevelBar.svelte",
+        "src/EmotionalTracker.svelte"
+      ],
+      "tags": ["feature-components", "svelte-components", "modals", "filters", "display", "interactive"],
+      "languageNotes": "A mix of Svelte 4 ($: reactivity, export let, createEventDispatcher) and Svelte 5 ($props, $derived) components. Modal components use the shared Modal.svelte container. Filter components (StatFilter, WeaponStatFilter, TagFilter) share a tri-state chip pattern via StatFilterShared and filterActions factory. Display components (CritIcon, MountIcon, DmgTotalTooltip) are largely presentational.",
+      "languageLesson": "Feature components bridge the UI primitive layer (below) and the application orchestration layer (above). They import from the store (state), engine (formatting, data access), and constants (colors, labels) while composing UI primitives (Badge, Button, Card, etc.). Each component encapsulates one focused piece of domain-specific UI."
+    },
+    {
+      "id": "layer:application",
+      "title": "Application Orchestration",
+      "description": "Top-level components that wire together the entire application. The root App.svelte manages all top-level state, modal systems, and child component orchestration. DamageAnalyzer.svelte and BaseDamageCalc.svelte contain the main analysis views with complex reactive computation chains.",
+      "depth": 8,
+      "files": [
+        "src/main.ts",
+        "src/App.svelte",
+        "src/DamageAnalyzer.svelte",
+        "src/BaseDamageCalc.svelte",
+        "src/BuffList.svelte",
+        "src/BuildSaves.svelte",
+        "src/CdrStepsCalc.svelte"
+      ],
+      "tags": ["application", "orchestrator", "root-component", "entry-point", "top-level"],
+      "languageNotes": "App.svelte (~3,978 lines) is the monolithic root component managing all state, modals, and child orchestration. DamageAnalyzer.svelte (~6,700 lines) is the largest file, containing the main analysis view with complex reactive computation chains. BaseDamageCalc.svelte (~2,566 lines) handles per-hit damage breakdowns. main.ts uses Svelte 5 mount() API and initializes Vercel analytics.",
+      "languageLesson": "The application layer is the top of the dependency tree. These components import from every layer below (store, engine, data, constants, UI primitives, feature components). They are the leaves of the dependency graph with no inbound edges from other code (only from index.html's script tag). This layer represents the primary refactoring target per the UI upgrade plan."
+    },
+    {
+      "id": "layer:standalone-tools",
+      "title": "Standalone Debug Tools",
+      "description": "Offline utilities that duplicate engine logic for debugging and validation. Independent of the Svelte frontend.",
+      "depth": 2,
+      "files": [
+        "decode_full.mjs"
+      ],
+      "tags": ["debug", "standalone", "offline-tool", "validation"],
+      "languageNotes": "ESM JavaScript using readFileSync for JSON loading. Mirrors the calculation logic from src/lib/engine/ for offline debugging. Uses Node.js-only APIs (fs module).",
+      "languageLesson": "Standalone tools are isolated from the main application. They re-implement engine logic using direct file I/O rather than the module graph, serving as a reference implementation for validation."
+    }
+  ],
+  "edges": [
+    {
+      "source": "layer:infrastructure",
+      "target": "layer:application",
+      "type": "builds",
+      "label": "Vite builds index.html entry point that loads src/main.ts"
+    },
+    {
+      "source": "layer:constants",
+      "target": "layer:constants",
+      "type": "internal-dependency",
+      "label": "storage.ts imports from game.ts (DEFAULT_LEVEL, DEFAULT_HP_FILL)"
+    },
+    {
+      "source": "layer:constants",
+      "target": "layer:game-data",
+      "type": "depends_on",
+      "label": "Game data modules import constants for formulas and balance values"
+    },
+    {
+      "source": "layer:game-data",
+      "target": "layer:constants",
+      "type": "depends_on",
+      "label": "Game data modules import constants for formula parameters"
+    },
+    {
+      "source": "layer:game-data",
+      "target": "layer:foundation-types",
+      "type": "depends_on",
+      "label": "All data modules import shared types (StatMap, Race, Guild, etc.)"
+    },
+    {
+      "source": "layer:game-data",
+      "target": "layer:game-data",
+      "type": "internal-dependency",
+      "label": "Engine data access modules import JSON data files and lib/types"
+    },
+    {
+      "source": "layer:calculation-engine",
+      "target": "layer:foundation-types",
+      "type": "depends_on",
+      "label": "Engine modules import core type definitions"
+    },
+    {
+      "source": "layer:calculation-engine",
+      "target": "layer:constants",
+      "type": "depends_on",
+      "label": "Engine modules import numeric constants for formulas"
+    },
+    {
+      "source": "layer:calculation-engine",
+      "target": "layer:game-data",
+      "type": "depends_on",
+      "label": "Engine modules import game data for stat resolution and buff definitions"
+    },
+    {
+      "source": "layer:calculation-engine",
+      "target": "layer:calculation-engine",
+      "type": "internal-dependency",
+      "label": "build.ts orchestrates weapon.ts, enchant.ts, shrine.ts; crit.ts and defense.ts are standalone"
+    },
+    {
+      "source": "layer:state-management",
+      "target": "layer:foundation-types",
+      "type": "depends_on",
+      "label": "Store imports BuildState, ArmorSlotKey, and related types"
+    },
+    {
+      "source": "layer:state-management",
+      "target": "layer:constants",
+      "type": "depends_on",
+      "label": "Store imports BUILD_STATE_DEFAULTS and STORAGE_KEY_* constants"
+    },
+    {
+      "source": "layer:state-management",
+      "target": "layer:game-data",
+      "type": "depends_on",
+      "label": "Store imports equipment data access (enforceEnchantSlot, armorSupportsSlot)"
+    },
+    {
+      "source": "layer:state-management",
+      "target": "layer:calculation-engine",
+      "type": "depends_on",
+      "label": "Store imports calcBuild to produce the derived result"
+    },
+    {
+      "source": "layer:feature-components",
+      "target": "layer:foundation-types",
+      "type": "depends_on",
+      "label": "Feature components import types for props and computation"
+    },
+    {
+      "source": "layer:feature-components",
+      "target": "layer:constants",
+      "type": "depends_on",
+      "label": "Feature components import UI constants (colors, labels)"
+    },
+    {
+      "source": "layer:feature-components",
+      "target": "layer:game-data",
+      "type": "depends_on",
+      "label": "Modal components import data access functions and game definitions"
+    },
+    {
+      "source": "layer:feature-components",
+      "target": "layer:calculation-engine",
+      "type": "depends_on",
+      "label": "Feature components import format utilities and data access functions"
+    },
+    {
+      "source": "layer:feature-components",
+      "target": "layer:ui-primitives",
+      "type": "depends_on",
+      "label": "Feature components compose UI primitives (Badge, Button, Card, etc.)"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:foundation-types",
+      "type": "depends_on",
+      "label": "Application components import core types throughout"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:constants",
+      "type": "depends_on",
+      "label": "Application imports game constants for UI thresholds and defaults"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:game-data",
+      "type": "depends_on",
+      "label": "Application imports game data for weapon arts, buffs, debuffs, and mechanics"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:calculation-engine",
+      "type": "depends_on",
+      "label": "Application imports engine utilities for formatting, crit, and damage resolution"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:state-management",
+      "type": "depends_on",
+      "label": "Application reads/writes build state via Svelte stores"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:ui-primitives",
+      "type": "depends_on",
+      "label": "Application composes UI primitives for layout and styling"
+    },
+    {
+      "source": "layer:application",
+      "target": "layer:feature-components",
+      "type": "depends_on",
+      "label": "Application orchestrates feature components (modals, filters, displays)"
+    }
+  ],
+  "metadata": {
+    "totalFiles": 99,
+    "totalLayers": 11,
+    "project": "voxlblade",
+    "description": "Svelte 5 + Vite + TypeScript damage calculator for Voxel Blade RPG",
+    "dependencyDirection": "layers depend downward; data flows upward",
+    "architecturalPattern": "Layered architecture with a central pipeline engine. The calculation engine (layer 5) is the core brain; the state store (layer 6) is the reactive bridge; the UI (layers 7-8) is the presentation shell. Game data (layer 4) is split between declarative JSON and logic-bearing TypeScript modules.",
+    "knownDebt": [
+      "App.svelte (~3,978 lines) and DamageAnalyzer.svelte (~6,700 lines) are monolithic components that mix state management, business logic, and presentation. The UI upgrade plan proposes 8 phases to decompose them.",
+      "Some game data modules in src/data/ contain significant calculation logic (BuffData.ts at 1,838 lines, Perkbasedmg.ts at 759 lines) that arguably belongs in the engine layer.",
+      "The codebase uses a mix of Svelte 4 ($:, export let, createEventDispatcher) and Svelte 5 ($props, $derived, $state) patterns, indicating an ongoing migration."
+    ]
+  }
+}
