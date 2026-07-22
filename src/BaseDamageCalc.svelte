@@ -502,7 +502,7 @@ export let cauterizeScalingMult: number = 1
     const addProcEffect = (baseAmount: number, pct: number, dmgTypes: Record<string, number>, tag: string, scalingMult = 1, combatMult = 1) => {
       const amount = baseAmount * pct
       if (amount <= 0) return
-      let resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonuses))
+      let resolvedTypes = withDarkMagicHex(resolveDamageTypes(dmgTypes, perkDmgTypeBonusesDoT))
       if (echoIncinerationBaseDmg > 0) resolvedTypes = applyFireAirConversion(resolvedTypes)
       for (const [k, mult] of Object.entries(resolvedTypes)) {
         const info = DMG_TYPE_MAP.get(k) ?? { label: k, color: '#e8e4da' }
@@ -513,11 +513,11 @@ export let cauterizeScalingMult: number = 1
         const crushPen = crushingPenForType(k)
         const defMult  = calcArmorMult(defPct, basePenDecimal + crushPen / 100).mult
         const typeBase = amount * mult
-        const raw = typeBase * scalingMult * typedMultUsed * combatMult * defMult * debuffMult
+        const raw = typeBase * scalingMult * typedMultUsed * sunburnUniversalDmgMult * combatMult * defMult * debuffMult
         types.push({
           key: k, label: info.label, color: info.color,
           typeBase, scalingMult, combatMult,
-          applicableBoosts, weaponBoostMult: 1, typeDebuffMult: debuffMult,
+          applicableBoosts, weaponBoostMult: sunburnUniversalDmgMult, typeDebuffMult: debuffMult,
           defMult, enemyDefPct: defPct,
           raw, critVal: Math.round(raw * critDmgMult / 100 * 10000) / 10000,
           isHeal: false, tag, forceCrit: false, procCoefficient: { type: 'noProc' },

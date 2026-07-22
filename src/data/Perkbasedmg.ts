@@ -692,7 +692,7 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
       const burnPotency = (statuses?.burnPotency ?? 0) * 0.1
       const mult = getDotPotencyMult(burnPotency)
       const base = (2 + 0.2 * perkAmount) * mult
-      return Math.round(base * 1000) / 1000
+      return Math.round(base * 10000) / 10000
     },
     dmgTypeMode: 'fixed',
     dmgTypes: { fire: 1.0 },

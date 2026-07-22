@@ -724,8 +724,16 @@ import {
   $: _cauterizeAmt = (perks['Cauterize'] ?? 0)
   $: _cauterizeDef = PERK_DMG_DEFS.find(d => d.perkName === 'Cauterize')
   $: _burnApplicationCount = getBurnApplicationCount([..._allActiveBuffs, ..._cauterizedAbilityDebuffs]) + (_hasSingedBurn && _echoIncinerationAmt > 0 ? 1 : 0)
+  $: _cauterizeBurnPotency = (() => {
+    let pot = perks['Burn Potency'] ?? 0
+    if (__daBuildVal.draconicRuneInfusion === 'infusion' && __daBuildVal.draconicColor === 'fire') {
+      const draconicBloodAmt = perks['Draconic Blood'] ?? 0
+      if (draconicBloodAmt > 0) pot *= getDraconicInfusionDurMult(draconicBloodAmt)
+    }
+    return pot
+  })()
   $: _cauterizeBaseDmg = (_cauterizeAmt > 0 && !disabledEffects.has('cauterize') && _cauterizeDef && (perks['Cursed Flames'] ?? 0) <= 0)
-    ? _cauterizeDef.getBaseDamage({ perkAmount: _cauterizeAmt, statuses: { burnPotency: perks['Burn Potency'] ?? 0 } })
+    ? _cauterizeDef.getBaseDamage({ perkAmount: _cauterizeAmt, statuses: { burnPotency: _cauterizeBurnPotency } })
     : 0
   $: _cauterizeScalings = _cauterizeDef?.scalings ?? {}
   $: _cauterizeScalingMult = _cauterizeAmt > 0 ? _computePerkScalingMult(_cauterizeScalings) : 1
@@ -2047,7 +2055,7 @@ import {
             }),
             _perkDmgTypeBonuses
           )
-        : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonuses)
+        : _applyDmgBonuses(baseDmgTypes, _perkDmgTypeBonusesDoT)
       const resolvedDmgTypes = applyAirToMagicConversion(baseResolvedDmgTypes, _spiritWindsConversionRate, _darkMagicHexBonus, _echoIncinerationAmt)
       const resolvedDmgTypesWithMw = (def.isFinisher || def.isM2) && _mortalWillHolyTypeBonus > 0
         ? { ...resolvedDmgTypes, holy: Math.round(((resolvedDmgTypes.holy ?? 0) + _mortalWillHolyTypeBonus) * 10000) / 10000 }
@@ -2078,9 +2086,17 @@ import {
 
       const _fhM2  = _m2FinisherHits
       const _fhM1f = _m1FinisherHits
+      const _perkCtxBurnPotency = (() => {
+        let pot = perks['Burn Potency'] ?? 0
+        if (__daBuildVal.draconicRuneInfusion === 'infusion' && __daBuildVal.draconicColor === 'fire') {
+          const dbAmt = perks['Draconic Blood'] ?? 0
+          if (dbAmt > 0) pot *= getDraconicInfusionDurMult(dbAmt)
+        }
+        return pot
+      })()
       const _perkCtxStatuses: Record<string, number> = {
         poisonPotency: perks['Poison Potency'] ?? 0,
-        burnPotency: perks['Burn Potency'] ?? 0,
+        burnPotency: _perkCtxBurnPotency,
         missingHpPct: Math.min(50, Math.max(0, 100 - (_hpFillPct ?? 100))),
       }
       const baseDmg_m2  = def.getBaseDamage({ perkAmount, finisherHits: _fhM2,  draconicColor: _effDraconicColor, statuses: _perkCtxStatuses })
