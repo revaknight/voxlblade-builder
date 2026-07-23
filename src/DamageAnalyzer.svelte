@@ -67,6 +67,8 @@ import {
   SUNBURN_HOLY_EXTRA_DMG_PER_STACK,
   SUNBURN_BURN_BASE_CHANCE,
   SUNBURN_BURN_CHANCE_PER_STACK,
+  PHANTOM_PAIN_BASE_PCT,
+  PHANTOM_PAIN_PERK_MULT,
 } from './lib/constants'
 
 
@@ -665,6 +667,8 @@ import {
   $: stats = $result.stats
   $: perks = $result.perks
   $: _luminescentPct = (perks['Luminescent Fervor'] ?? 0) > 0 && _allActiveBuffs.some(b => b.buffName === 'Luminescent') ? LUMINESCENT_PCT_PER_STACK * (perks['Luminescent Fervor'] ?? 0) : 0
+  $: _phantomPainAmt = perks['Phantom Pain'] ?? 0
+  $: _phantomPainPct = _phantomPainAmt > 0 ? PHANTOM_PAIN_BASE_PCT * _phantomPainAmt * (1 + PHANTOM_PAIN_PERK_MULT * _phantomPainAmt) : 0
   $: _dragonStateAmt = perks['Dragon State'] ?? 0
   $: _dragonStateHpGateActive = _dragonStateAmt > 0 && isHpGateActive(
     DRAGON_STATE_HP_GATE,
@@ -2931,6 +2935,7 @@ $: _groupedSelfDamageSources = (() => {
     siphoningRotAmt={perks['Siphoning Rot'] ?? 0}
     lifestealStacks={perks['Lifesteal'] ?? 0}
     sunburnUniversalDmgMult={_sunburnEnemyBurning ? _sunburnUniversalDmgMult : 1}
+    phantomPainPct={_phantomPainPct}
     dotTicks={_dotTicks}
     enemyHpFill={_enemyHpFillPct}
     {mountActive}

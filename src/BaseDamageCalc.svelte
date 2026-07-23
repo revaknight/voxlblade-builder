@@ -144,6 +144,7 @@ export let cauterizeScalingMult: number = 1
   export let siphoningRotAmt: number = 0
   export let lifestealStacks: number = 0
   export let sunburnUniversalDmgMult: number = 1
+  export let phantomPainPct: number = 0
   export let enemyHpFill: number = 100
   export let dotTicks: Array<{
     type: string; tickDamage: number; dotPotency?: number; inflictionPotency?: number
@@ -570,6 +571,29 @@ export let cauterizeScalingMult: number = 1
       }
     })
 
+    if (!isHeal && phantomPainPct > 0 && canProc(hit.procCoefficient)) {
+      const _ppPreMitBase = _hitPreMitBase * _activeDebuffDamageMult * selfDebuffDamageMult / (hit.combatMult || 1)
+      if (_ppPreMitBase > 0) {
+        const ppAmount = _ppPreMitBase * phantomPainPct
+        const ppResolvedTypes = resolveDamageTypes({ hex: 1.0 }, perkDmgTypeBonuses)
+        for (const [k, mult] of Object.entries(ppResolvedTypes)) {
+          const ppCrushPen = crushingPenForType(k)
+          const { info, applicableBoosts, typedMultUsed, typeDebuffMult: ppTypeDebuffMult, defPct: ppDefPct, defMult: ppDefMult } = resolveTypeInfo(k, basePenDecimal + ppCrushPen / 100)
+          const ppTypeBase = ppAmount * mult
+          const ppRaw = ppTypeBase * typedMultUsed * ppDefMult * ppTypeDebuffMult
+          types.push({
+            key: k, label: info.label, color: info.color,
+            typeBase: ppTypeBase / phantomPainPct, scalingMult: 1, combatMult: 1,
+            applicableBoosts, weaponBoostMult: 1, typeDebuffMult: ppTypeDebuffMult,
+            defMult: ppDefMult, enemyDefPct: ppDefPct,
+            raw: ppRaw, critVal: Math.round(ppRaw * critDmgMult / 100 * 10000) / 10000,
+            isHeal: false, tag: 'Phantom Pain', forceCrit: false, procCoefficient: { type: 'noProc' }, ungroup: true,
+            phantomPainPct,
+          })
+        }
+      }
+    }
+
     if (!isHeal && cauterizeBaseDmg > 0 && hit.canApplyBurn && canProc(hit.procCoefficient)) {
       addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, hit.combatMult)
     }
@@ -781,6 +805,25 @@ export let cauterizeScalingMult: number = 1
                 })
               }
             }
+            if (phantomPainPct > 0 && preMitBase > 0) {
+              const ppBaseNoCombat = preMitBase / (ph.combatMult || 1)
+              const ppAmount = ppBaseNoCombat * phantomPainPct
+              const ppResolvedTypes = resolveDamageTypes({ hex: 1.0 }, perkDmgTypeBonuses)
+              for (const [k, mult] of Object.entries(ppResolvedTypes)) {
+                const ppCrushPen = crushingPenForType(k)
+                const { info, applicableBoosts, typedMultUsed, typeDebuffMult: ppTypeDebuffMult, defPct: ppDefPct, defMult: ppDefMult } = resolveTypeInfo(k, basePenDecimal + ppCrushPen / 100)
+                const ppTypeBase = ppAmount * mult
+                const ppRaw = ppTypeBase * typedMultUsed * ppDefMult * ppTypeDebuffMult
+                types.push({
+                  key: k, label: info.label, color: info.color,
+                  typeBase: ppTypeBase / phantomPainPct, scalingMult: 1, combatMult: 1,
+                  applicableBoosts, weaponBoostMult: 1, typeDebuffMult: ppTypeDebuffMult,
+                  defMult: ppDefMult, enemyDefPct: ppDefPct,
+                  raw: ppRaw, critVal: Math.round(ppRaw * critDmgMult / 100 * 10000) / 10000,
+                  isHeal: false, tag: 'Phantom Pain', forceCrit: false, procCoefficient: { type: 'noProc' }, ungroup: true,
+                })
+              }
+            }
           }
           if (cauterizeBaseDmg > 0 && ph.canApplyBurn && canProc(ph.procCoefficient)) {
             addProcEffect(cauterizeBaseDmg, 1, { fire: 1.0 }, 'Cauterize', cauterizeScalingMult, ph.combatMult)
@@ -878,9 +921,10 @@ export let cauterizeScalingMult: number = 1
     return [...map.entries()].map(([label, list]) => {
       if (list.length <= 1) return { label, list }
       const base = list.find(h => !h.isHeal) ?? list[0]
-      const healTypes = list.filter(h => h.isHeal).flatMap(h => h.types)
-      const dmgTypes = list.filter(h => !h.isHeal).flatMap(h => h.types)
-      return { label, list: [{ ...base, types: [...dmgTypes, ...healTypes], isHeal: false }] }
+      const ungroupedTypes = list.flatMap(h => h.types.filter(t => t.ungroup))
+      const healTypes = list.filter(h => h.isHeal).flatMap(h => h.types.filter(t => !t.ungroup))
+      const dmgTypes = list.filter(h => !h.isHeal).flatMap(h => h.types.filter(t => !t.ungroup))
+      return { label, list: [{ ...base, types: [...dmgTypes, ...healTypes, ...ungroupedTypes], isHeal: false }] }
     })
   })()
   $: hitGroups = [
@@ -1205,11 +1249,17 @@ export let cauterizeScalingMult: number = 1
                                 {/if}
                               </div>
                             </div>
-                            <div class="bdc-hit-type-formula">
+                              <div class="bdc-hit-type-formula">
                               <div class="bdc-fr">
                                 <span class="bdc-fr-label">{t.isHeal ? 'Base Heal' : 'Base Damage'}</span>
                                 <span class="bdc-fr-val">{fmt(t.typeBase)}</span>
                               </div>
+                              {#if t.phantomPainPct != null && t.phantomPainPct > 0}
+                                <div class="bdc-fr">
+                                  <span class="bdc-fr-label">Repeat ({Math.round(t.phantomPainPct * 10000) / 100}%)</span>
+                                  <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.phantomPainPct)}</span>
+                                </div>
+                              {/if}
                               {#if t.scalingMult !== 1}
                                 <div class="bdc-fr">
                                   <span class="bdc-fr-label">Scaling</span>
@@ -1659,6 +1709,12 @@ export let cauterizeScalingMult: number = 1
       <span class="bdc-fr-label">{t.isHeal ? 'Base Heal' : 'Base Damage'}</span>
       <span class="bdc-fr-val">{fmt(t.typeBase)}</span>
     </div>
+    {#if t.phantomPainPct != null && t.phantomPainPct > 0}
+      <div class="bdc-fr">
+        <span class="bdc-fr-label">Repeat ({Math.round(t.phantomPainPct * 10000) / 100}%)</span>
+        <span class="bdc-fr-val bdc-fr-val--scaling">× {fmtMult(t.phantomPainPct)}</span>
+      </div>
+    {/if}
     {#if t.scalingMult !== 1}
       <div class="bdc-fr">
         <span class="bdc-fr-label">Scaling</span>

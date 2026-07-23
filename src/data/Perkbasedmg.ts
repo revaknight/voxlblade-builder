@@ -95,6 +95,8 @@ import {
   DARK_HARVEST_HP_GATE_THRESHOLD,
   DARK_HARVEST_HEAL_PER_STACK,
   DARK_HARVEST_COOLDOWN,
+  PHANTOM_PAIN_BASE_PCT,
+  PHANTOM_PAIN_PERK_MULT,
 } from '../lib/constants'
 
 export interface PerkDmgCtx {

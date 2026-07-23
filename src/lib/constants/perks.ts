@@ -82,3 +82,7 @@ export const HYPNOTIST_POTENCY_PER_PERK = 0.1
 export const HYPNOTIST_DURATION_BASE = 10
 export const HYPNOTIST_DURATION_PER_PERK = 5
 export const HYPNOTIST_MAGIC_ARMOR_PER_POTENCY = 50
+
+// ── Phantom Pain ──────────────────────────────────
+export const PHANTOM_PAIN_BASE_PCT = 0.25
+export const PHANTOM_PAIN_PERK_MULT = 0.1
