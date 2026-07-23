@@ -10,6 +10,7 @@ import { calcCrit } from '../crit'
 import type { CritResult } from '../crit'
 import { roundMultiplier, calcWardingDebuffMultiplier } from '../utils'
 import { MAX_LEVEL, calcBaseMaxHP } from '../constants'
+import { QUEENS_POWER_POTENCY_PER_AMOUNT, QUEENS_POWER_ATK_SPD_BASE, QUEENS_POWER_ATK_SPD_PER_TENTH_POTENCY } from '../constants/buffs'
 import {
   getRace, getGuild, getGuildRank, getArmorPart, getRing, getRune,
   getBlade, getHandle, getGlove, getEssence, isMonkGuild, getPerk,
@@ -502,6 +503,14 @@ function deriveResults(
     const def = BUFF_DEFS[b.buffName]
     return (b.isSelfDebuff || def?.isSelfDebuff) && def?.isDebuff
   }).map((b: any) => b.buffName)).size
+
+  const queensPowerPotency = allBuffs
+    .filter((b: any) => b.buffName === 'Queens Power')
+    .reduce((max: number, b: any) => Math.max(max, b.potency), 0)
+  if (queensPowerPotency > 0) {
+    const atkSpdBonus = QUEENS_POWER_ATK_SPD_BASE + queensPowerPotency * QUEENS_POWER_ATK_SPD_PER_TENTH_POTENCY * 10
+    boostedStats.attackSpeed = (boostedStats.attackSpeed ?? 0) + atkSpdBonus
+  }
 
   const _rawFill = state.hpFill ?? 100
   const _protection = boostedStats.protection ?? 0

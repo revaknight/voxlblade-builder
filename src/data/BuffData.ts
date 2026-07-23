@@ -47,6 +47,8 @@ import {
   TAILWIND_BUFF_POTENCY, TAILWIND_BUFF_DURATION,
   TOXIN_TRANSFER_DURATION_EXTRA,
   GROUNDED_DESPAIR_POTENCY_PER_AMOUNT, GROUNDED_DESPAIR_DURATION_PER_AMOUNT,
+  QUEENS_POWER_ATK_SPD_BASE, QUEENS_POWER_ATK_SPD_PER_TENTH_POTENCY,
+  QUEENS_POWER_SUMMON_SCALING_PER_TENTH_POTENCY, QUEENS_POWER_POTENCY_PER_AMOUNT, QUEENS_POWER_DURATION,
   BOUNCE_DURATION_BASE, BOUNCE_DURATION_PER_STACK,
   MOD_GLADIATORIAL_POTENCY, MOD_MAGE_RAGE_POTENCY, MOD_OCEANS_RAGE_POTENCY,
   MOD_SLAYER_RAGE_POTENCY, MOD_SLAYER_WEAKNESS_POTENCY,
@@ -253,6 +255,19 @@ export const BUFF_DEFS: Record<string, BuffDefinition> = {
     effectPerTenthPotency: GLYPH_CONDUIT_EFFECT_PER_TENTH,
     effectUnit: 'flat',
     statKey: 'magicBoost',
+  },
+  'Queens Power': {
+    name: 'Queens Power',
+    color: '#ff9f03',
+    description: 'Gain x% attack speed and gain y summon scaling on your weapon.',
+    dynamicDescription: (_perks, potency) => {
+      const atkSpd = +(QUEENS_POWER_ATK_SPD_BASE + potency * QUEENS_POWER_ATK_SPD_PER_TENTH_POTENCY * 10).toFixed(4)
+      const sumSc = +(potency * QUEENS_POWER_SUMMON_SCALING_PER_TENTH_POTENCY * 10).toFixed(4)
+      return `Gain ${atkSpd}% attack speed and ${sumSc} Summon Scaling. M1/M2 only.`
+    },
+    effectPerTenthPotency: BUFF_EFFECT_PER_TENTH,
+    effectUnit: 'flat',
+    statKey: 'attackSpeed',
   },
 
   //Debuffs
@@ -1219,6 +1234,17 @@ const PERK_BUFFS: Record<string, PerkBuffFactory> = {
       duration: 5,
       condition: 'on Spirit Hit',
       sourceName: 'Queen Bumblz Spirit',
+      sourceType: 'perk',
+    },
+  ],
+
+  'Queens Power': (amount) => [
+    {
+      buffName: 'Queens Power',
+      potency: QUEENS_POWER_POTENCY_PER_AMOUNT * amount,
+      duration: QUEENS_POWER_DURATION,
+      condition: 'Upon summoning a minion',
+      sourceName: 'Queens Power',
       sourceType: 'perk',
     },
   ],

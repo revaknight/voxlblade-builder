@@ -8,6 +8,7 @@ import {
   SCOURGE_MULT_PER_STACK, SHARPSHOOTER_MULT_PER_STACK,
   VALOR_MULT_PER_STACK, GORECAST_MULT_PER_STACK,
   UNDEAD_MIGHT_MULT_PER_STACK, HIGHLANDER_MULT_PER_STACK,
+  QUEENS_POWER_POTENCY_PER_AMOUNT, QUEENS_POWER_SUMMON_SCALING_PER_TENTH_POTENCY,
   
   VENOM_EATER_DMG_MULT_PER_STACK, FEROCITY_TENACITY_MULT,
   SPIRIT_WINDS_TAILWIND_MULT, SPIRIT_WINDS_PER_STACK,
@@ -348,6 +349,25 @@ export const BOOST_DEFS: BoostDef[] = [
         condition: `${sb}% Summon Boost × ${stacks} stack · potency ${potency}`,
       }
     },
+  },
+
+  {
+    sourceName: 'Queens Power',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const amt = ctx.perks['Queens Power'] ?? 0
+      if (amt <= 0) return null
+      const potency = QUEENS_POWER_POTENCY_PER_AMOUNT * amt
+      const bonusSummonScaling = potency * QUEENS_POWER_SUMMON_SCALING_PER_TENTH_POTENCY * 10
+      const sb = ctx.summonBoostPct ?? 0
+      if (sb <= 0) return null
+      const dmgPct = bonusSummonScaling * sb
+      return {
+        multiplier: roundMultiplier(1 + dmgPct / 100),
+        condition: `+${bonusSummonScaling.toFixed(2)} Summon Scaling × ${sb}% Summon Boost`,
+      }
+    },
+    appliesTo: ['m1', 'm2'],
   },
 
   {
