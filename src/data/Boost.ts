@@ -20,6 +20,7 @@ import {
   RAGING_BOUNCE_MULT, GUIDING_WINDS_MULT_PER_STACK,
   GUIDING_WINDS_WA_MULT_PER_STACK, CIVILIAN_MULT_PER_STACK,
   VAMPIRE_DIVISOR, TOXIN_CASTER_MULT_PER_STACK,
+  CUT_DOWN_MULT_PER_AMOUNT, EXECUTIONER_MULT_PER_AMOUNT,
 } from '../lib/constants'
 import type { BoostAttackType, ProcScalingType } from '../lib/types'
 
@@ -62,6 +63,7 @@ export interface BoostContext {
   selfDebuffCount: number
   hasMagicDmg?: boolean
   hasMagicOrPhysicalDmg?: boolean
+  enemyHpFillPct?: number
 }
 
 export interface BoostDef {
@@ -384,6 +386,35 @@ export const BOOST_DEFS: BoostDef[] = [
       return {
         multiplier: totalBoost,
         condition: `${hpFill}% HP → +${pct}% dmg`,
+      }
+    },
+  },
+  {
+    sourceName: 'Cut Down',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const amount = ctx.perks['Cut Down'] ?? 0
+      if (amount <= 0) return null
+      const enemyHp = ctx.enemyHpFillPct ?? 100
+      const pct = CUT_DOWN_MULT_PER_AMOUNT * amount * (enemyHp / 100) * 100
+      return {
+        multiplier: 1 + CUT_DOWN_MULT_PER_AMOUNT * amount * (enemyHp / 100),
+        condition: `${enemyHp}% enemy HP → +${pct.toFixed(2)}% dmg`,
+      }
+    },
+  },
+  {
+    sourceName: 'Executioner',
+    type: 'dmg',
+    calcFn: (ctx) => {
+      const amount = ctx.perks['Executioner'] ?? 0
+      if (amount <= 0) return null
+      const enemyHp = ctx.enemyHpFillPct ?? 100
+      const lostPct = 1 - enemyHp / 100
+      const pct = EXECUTIONER_MULT_PER_AMOUNT * amount * lostPct * 100
+      return {
+        multiplier: 1 + EXECUTIONER_MULT_PER_AMOUNT * amount * lostPct,
+        condition: `${enemyHp}% enemy HP → +${pct.toFixed(2)}% dmg`,
       }
     },
   },
