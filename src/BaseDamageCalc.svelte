@@ -695,7 +695,7 @@ export let cauterizeScalingMult: number = 1
             if (ph.getFinisherHitBaseDmg) {
               baseForType = ph.getFinisherHitBaseDmg({ baseDmg: ph.baseDmg, hitIndex: hit.index })
             } else if (ph.rawFinisherNumerator != null) {
-              const fh = hit.count
+              const fh = hit.finisherGroupHitCount ?? hit.count
               baseForType = Math.round(ph.rawFinisherNumerator / (0.5 + fh / 2) * 1000) / 1000
             } else {
               baseForType = ph.baseDmg
@@ -836,7 +836,7 @@ export let cauterizeScalingMult: number = 1
       }
     }
 
-    return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types, procCount: hit.procCount }
+    return { group: hit.group, index: hit.index, count: hit.count, isFinisher: hit.isFinisher, label: hit.label, isHeal, types, procCount: hit.procCount, finisherGroupHitCount: hit.finisherGroupHitCount }
   })
 
   $: m1Hits   = computedHits.filter(h => h.group === 'M1')

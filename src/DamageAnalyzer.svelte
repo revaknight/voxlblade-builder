@@ -2233,6 +2233,7 @@ import {
     procCoefficient?: ProcCoefficient
     canApplyBurn?: boolean
     procCount?: number
+    finisherGroupHitCount?: number
   }
 
   $: _bdcWeaponHits = (() => {
@@ -2267,6 +2268,7 @@ import {
             baseDmgTypes: _weaponDmgTypesBase,
             ...(combinedWbMult !== 1 ? { weaponBoostMult: combinedWbMult, weaponBoostLabel: wbLabel } : {}),
             canApplyBurn: _hasSingedBurn,
+            finisherGroupHitCount: finisherHit ? _m1FinisherHits : undefined,
           })
         })
       }
@@ -2293,6 +2295,7 @@ import {
             baseDmgTypes: _weaponDmgTypesBase,
             ...(combinedWbMult !== 1 ? { weaponBoostMult: combinedWbMult, weaponBoostLabel: wbLabel } : {}),
             canApplyBurn: _hasSingedBurn,
+            finisherGroupHitCount: _m2FinisherHits,
           })
         })
       }
@@ -2392,6 +2395,7 @@ import {
           ...(selectedWA.hits?.[i]?.isCrit ? { forceCrit: true } : {}),
           ...(combinedWbMult !== 1 ? { weaponBoostMult: combinedWbMult, weaponBoostLabel: wbLabel } : {}),
           canApplyBurn: _hasSingedBurn,
+          ...(waIsFinisher ? { finisherGroupHitCount: h.count } : {}),
         })
       })
     }

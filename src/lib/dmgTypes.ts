@@ -64,4 +64,5 @@ export interface ComputedHit {
     types: ComputedType[]
     procCoefficient?: ProcCoefficient
     procCount?: number
+    finisherGroupHitCount?: number
 }
