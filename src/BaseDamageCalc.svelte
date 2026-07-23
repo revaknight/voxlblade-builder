@@ -572,9 +572,9 @@ export let cauterizeScalingMult: number = 1
     })
 
     if (!isHeal && phantomPainPct > 0 && canProc(hit.procCoefficient)) {
-      const _ppPreMitBase = _hitPreMitBase * _activeDebuffDamageMult * selfDebuffDamageMult / (hit.combatMult || 1)
-      if (_ppPreMitBase > 0) {
-        const ppAmount = _ppPreMitBase * phantomPainPct
+      const ppHitBase = types.filter(t => !t.isHeal).reduce((s, t) => s + t.raw / (t.defMult || 1), 0)
+      if (ppHitBase > 0) {
+        const ppAmount = ppHitBase * phantomPainPct
         const ppResolvedTypes = resolveDamageTypes({ hex: 1.0 }, perkDmgTypeBonuses)
         for (const [k, mult] of Object.entries(ppResolvedTypes)) {
           const ppCrushPen = crushingPenForType(k)
@@ -710,6 +710,7 @@ export let cauterizeScalingMult: number = 1
       if (!isHeal && ph.totalDmg > 0 && (ph.alwaysOnHit || hit.isFinisher) && ph.tag !== 'Dragon State') {
         const debuffMult = _activeDebuffDamageMult * selfDebuffDamageMult
         if (debuffMult > 0) {
+          const _typesStartIdx = types.length
           let resolvedTypes = withDarkMagicHex(resolveDamageTypes(ph.dmgTypes, perkDmgTypeBonuses))
           if (echoIncinerationBaseDmg > 0) resolvedTypes = applyFireAirConversion(resolvedTypes)
           for (const [k, mult] of Object.entries(resolvedTypes)) {
@@ -805,9 +806,10 @@ export let cauterizeScalingMult: number = 1
                 })
               }
             }
-            if (phantomPainPct > 0 && preMitBase > 0) {
-              const ppBaseNoCombat = preMitBase / (ph.combatMult || 1)
-              const ppAmount = ppBaseNoCombat * phantomPainPct
+            if (phantomPainPct > 0) {
+              const ppPhBase = types.slice(_typesStartIdx).filter(t => !t.isHeal).reduce((s, t) => s + t.raw / (t.defMult || 1), 0)
+              if (ppPhBase > 0) {
+                const ppAmount = ppPhBase * phantomPainPct
               const ppResolvedTypes = resolveDamageTypes({ hex: 1.0 }, perkDmgTypeBonuses)
               for (const [k, mult] of Object.entries(ppResolvedTypes)) {
                 const ppCrushPen = crushingPenForType(k)
@@ -821,7 +823,9 @@ export let cauterizeScalingMult: number = 1
                   defMult: ppDefMult, enemyDefPct: ppDefPct,
                   raw: ppRaw, critVal: Math.round(ppRaw * critDmgMult / 100 * 10000) / 10000,
                   isHeal: false, tag: 'Phantom Pain', forceCrit: false, procCoefficient: { type: 'noProc' }, ungroup: true,
+                  phantomPainPct,
                 })
+              }
               }
             }
           }
