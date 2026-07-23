@@ -1,22 +1,11 @@
 {
   "schemaVersion": 1,
   "algorithm": "louvain",
-  "totalFiles": 262,
-  "totalBatches": 24,
+  "totalFiles": 200,
+  "totalBatches": 12,
   "exportsByPath": {
-    ".understand-anything/.trash-1784380458.94689": [],
-    ".understand-anything/.trash-1784408361.27866/tmp/analyze-batches.mjs": [],
-    ".understand-anything/.trash-1784580918.00751/tmp/assemble-final.cjs": [],
-    ".understand-anything/.trash-1784580918.00751/tmp/cleanup-graph.cjs": [],
-    ".understand-anything/.trash-1784580918.00751/tmp/fix-edges.cjs": [],
-    ".understand-anything/.trash-1784580918.00751/tmp/ua-inline-validate.cjs": [],
-    ".understand-anything/.trash-1784637152.43808/tmp/ua-inline-validate.cjs": [],
-    ".understand-anything/.trash-20260722080503/tmp/assemble-final.py": [
-      "normalize_node_id"
-    ],
-    ".understand-anything/.trash-20260722080503/tmp/create-existing-batch.py": [],
-    ".understand-anything/.trash-20260722080503/tmp/ua-inline-validate.cjs": [],
     ".understand-anything/.understandignore": [],
+    ".understand-anything/tmp/ua-inline-validate.cjs": [],
     "decode_full.mjs": [],
     "src/App.svelte": [],
     "src/BaseDamageCalc.svelte": [],
@@ -111,6 +100,7 @@
       "BELLOWING_EMBER_HP_GATE",
       "SECONDARY_TONE_COLORS",
       "calcSpringblastBaseDamage",
+      "calcBomberChargeBaseDamage",
       "PERK_DMG_DEFS"
     ],
     "src/data/procCoefficients.ts": [
@@ -536,7 +526,11 @@
       "BELLOWING_EMBER_HP_GATE_THRESHOLD",
       "BELLOWING_EMBER_HP_GATE_PER_STACK",
       "PROTECTOR_SPIRIT_HP_GATE",
-      "PROTECTOR_SPIRIT_ALWAYS_ACTIVE_AT"
+      "PROTECTOR_SPIRIT_ALWAYS_ACTIVE_AT",
+      "BOMBER_CHARGE_BASE",
+      "BOMBER_CHARGE_PCT_PER_STACK",
+      "BOMBER_CHARGE_MISSING_HP_MULT",
+      "BOMBER_CHARGE_MISSING_HP_CAP"
     ],
     "src/lib/constants/perks.ts": [
       "LUMINESCENT_PCT_PER_STACK",
@@ -582,6 +576,8 @@
       "SUNBURN_HOLY_EXTRA_DMG_PER_STACK",
       "SUNBURN_BURN_BASE_CHANCE",
       "SUNBURN_BURN_CHANCE_PER_STACK",
+      "FROSTBITE_SLOW_POTENCY_PER_STACK",
+      "FROSTBITE_CHANCE_PER_STACK",
       "FIERY_PURSUIT_BASE_DMG",
       "FIERY_PURSUIT_DMG_PER_STACK",
       "FIERY_PURSUIT_BURN_DURATION",
@@ -843,1451 +839,6 @@
       "batchIndex": 1,
       "files": [
         {
-          "path": "src/data/mountRunes.ts",
-          "language": "typescript",
-          "sizeLines": 88,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/procCoefficients.ts",
-          "language": "typescript",
-          "sizeLines": 67,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/statboost.ts",
-          "language": "typescript",
-          "sizeLines": 242,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/weapon base dmg.ts",
-          "language": "typescript",
-          "sizeLines": 41,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/stat-conversions.ts",
-          "language": "typescript",
-          "sizeLines": 30,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/dmgTypes.ts",
-          "language": "typescript",
-          "sizeLines": 67,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/data/character.ts",
-          "language": "typescript",
-          "sizeLines": 28,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/data/equipment.ts",
-          "language": "typescript",
-          "sizeLines": 57,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/data/weapons.ts",
-          "language": "typescript",
-          "sizeLines": 20,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/types.ts",
-          "language": "typescript",
-          "sizeLines": 288,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/mountRunes.ts": [
-          "src/lib/types.ts"
-        ],
-        "src/data/procCoefficients.ts": [
-          "src/lib/types.ts"
-        ],
-        "src/data/statboost.ts": [
-          "src/lib/constants/stat-conversions.ts",
-          "src/lib/types.ts"
-        ],
-        "src/data/weapon base dmg.ts": [
-          "src/lib/types.ts"
-        ],
-        "src/lib/constants/stat-conversions.ts": [],
-        "src/lib/dmgTypes.ts": [
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/data/character.ts": [
-          "src/data/guilds.json",
-          "src/data/perks.json",
-          "src/data/races.json",
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/data/equipment.ts": [
-          "src/data/armors.json",
-          "src/data/enchantments.json",
-          "src/data/rings.json",
-          "src/data/runes.json",
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/data/weapons.ts": [
-          "src/data/blades.json",
-          "src/data/essences.json",
-          "src/data/gloves.json",
-          "src/data/handles.json",
-          "src/lib/types.ts"
-        ],
-        "src/lib/types.ts": []
-      },
-      "neighborMap": {
-        "src/data/statboost.ts": [
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ],
-        "src/lib/engine/data/character.ts": [
-          {
-            "path": "src/data/guilds.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/perks.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/races.json",
-            "batchIndex": 20,
-            "symbols": []
-          }
-        ],
-        "src/lib/engine/data/equipment.ts": [
-          {
-            "path": "src/data/armors.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/enchantments.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/rings.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/runes.json",
-            "batchIndex": 20,
-            "symbols": []
-          }
-        ],
-        "src/lib/engine/data/weapons.ts": [
-          {
-            "path": "src/data/blades.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/essences.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/gloves.json",
-            "batchIndex": 20,
-            "symbols": []
-          },
-          {
-            "path": "src/data/handles.json",
-            "batchIndex": 20,
-            "symbols": []
-          }
-        ],
-        "src/lib/types.ts": [
-          {
-            "path": "src/data/Boost.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcMinionAbsorptionPotency",
-              "calcFrenzyPct",
-              "PENANCE_HP_THRESHOLD",
-              "PENANCE_MAX_BOOST",
-              "PENANCE_BLEED_POTENCY",
-              "PENANCE_BLEED_DURATION",
-              "BOOST_DEFS",
-              "BOOST_DEF_MAP"
-            ]
-          },
-          {
-            "path": "src/data/perkAutoDebuffs.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcActualHpFillPct",
-              "getAutoDebuffs"
-            ]
-          },
-          {
-            "path": "src/data/Perkbasedmg.ts",
-            "batchIndex": 6,
-            "symbols": [
-              "gateThreshold",
-              "isHpGateActive",
-              "DRAGON_STATE_HP_GATE",
-              "BELLOWING_EMBER_HP_GATE",
-              "SECONDARY_TONE_COLORS",
-              "calcSpringblastBaseDamage",
-              "PERK_DMG_DEFS"
-            ]
-          },
-          {
-            "path": "src/data/Runebasedmg.ts",
-            "batchIndex": 3,
-            "symbols": [
-              "RUNE_DMG_DEFS"
-            ]
-          },
-          {
-            "path": "src/lib/crit.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "calcCrit"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          },
-          {
-            "path": "src/lib/engine/enchant.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "applyEnchantmentsToSlot",
-              "applyPerkEffectiveness",
-              "applyInfusion",
-              "isExclusiveEnchant",
-              "enforceEnchantSlot"
-            ]
-          },
-          {
-            "path": "src/lib/engine/format.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "formatStat",
-              "formatLabel"
-            ]
-          },
-          {
-            "path": "src/lib/engine/shrine.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "SHRINE_MULTIPLIERS",
-              "applyShrineToScalings",
-              "applyShrineToStats"
-            ]
-          },
-          {
-            "path": "src/lib/engine/weapon.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "MONK_RANK_MULTIPLIER",
-              "calcWeapon",
-              "calcMonkWeapon"
-            ]
-          },
-          {
-            "path": "src/lib/store.ts",
-            "batchIndex": 8,
-            "symbols": [
-              "build",
-              "result",
-              "setEnchantment",
-              "swapEnchantments",
-              "clearBuild",
-              "setGuild",
-              "moveArmorSlot",
-              "canArmorMoveToSlot",
-              "swapRingWithInfusion"
-            ]
-          },
-          {
-            "path": "src/lib/utils.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "roundMultiplier",
-              "calcWardingDebuffMultiplier",
-              "highlightTextParts",
-              "calcProcChance"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 2,
-      "files": [
-        {
-          "path": "src/data/Boost.ts",
-          "language": "typescript",
-          "sizeLines": 374,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/debuffCombatEffects.ts",
-          "language": "typescript",
-          "sizeLines": 98,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/enemyHpEffects.ts",
-          "language": "typescript",
-          "sizeLines": 90,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/perkAutoDebuffs.ts",
-          "language": "typescript",
-          "sizeLines": 237,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/debuff-effects.ts",
-          "language": "typescript",
-          "sizeLines": 14,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/game.ts",
-          "language": "typescript",
-          "sizeLines": 26,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/perks.ts",
-          "language": "typescript",
-          "sizeLines": 80,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/storage.ts",
-          "language": "typescript",
-          "sizeLines": 39,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/dmgTypeBonuses.ts",
-          "language": "typescript",
-          "sizeLines": 56,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/Boost.ts": [
-          "src/lib/constants.ts",
-          "src/lib/types.ts",
-          "src/lib/utils.ts"
-        ],
-        "src/data/debuffCombatEffects.ts": [
-          "src/lib/constants/debuff-effects.ts",
-          "src/lib/constants/perks.ts"
-        ],
-        "src/data/enemyHpEffects.ts": [],
-        "src/data/perkAutoDebuffs.ts": [
-          "src/data/Boost.ts",
-          "src/data/BuffData.ts",
-          "src/data/enemyHpEffects.ts",
-          "src/lib/constants/game.ts",
-          "src/lib/constants/perks.ts",
-          "src/lib/types.ts"
-        ],
-        "src/lib/constants/debuff-effects.ts": [],
-        "src/lib/constants/game.ts": [],
-        "src/lib/constants/perks.ts": [],
-        "src/lib/constants/storage.ts": [
-          "src/lib/constants/game.ts"
-        ],
-        "src/lib/engine/dmgTypeBonuses.ts": [
-          "src/data/draconicBuffs.ts",
-          "src/lib/constants/perks.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/data/Boost.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          },
-          {
-            "path": "src/lib/utils.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "roundMultiplier",
-              "calcWardingDebuffMultiplier",
-              "highlightTextParts",
-              "calcProcChance"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ],
-        "src/data/perkAutoDebuffs.ts": [
-          {
-            "path": "src/data/BuffData.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "BUFF_DEFS",
-              "BASIC_DEBUFF_POOL",
-              "getWeaponArtBuffs",
-              "getTrueBalanceBuffs",
-              "applyBuffPerkModifiers",
-              "applyToxinTransferDuration",
-              "convertTailwindToWhirlwind",
-              "getBuffDescription",
-              "getPerkBuffs",
-              "getActiveBuildBuffs",
-              "applyCauterizeConversion",
-              "getBurnApplicationCount",
-              "assembleActiveBuffs",
-              "calcBuffEffect",
-              "formatPerkDescription"
-            ]
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/lib/engine/dmgTypeBonuses.ts": [
-          {
-            "path": "src/data/draconicBuffs.ts",
-            "batchIndex": 3,
-            "symbols": [
-              "getDraconicInfusionPotMult",
-              "getDraconicInfusionDurMult",
-              "getEffectiveDraconicInfusionPotency",
-              "getDraconicInfusionBuff",
-              "getDraconicAbilityDebuffs"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 3,
-      "files": [
-        {
-          "path": "src/data/HealBoost.ts",
-          "language": "typescript",
-          "sizeLines": 215,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/Runebasedmg.ts",
-          "language": "typescript",
-          "sizeLines": 200,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/SummonData.ts",
-          "language": "typescript",
-          "sizeLines": 83,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/cdr.ts",
-          "language": "typescript",
-          "sizeLines": 63,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/defensivePerks.ts",
-          "language": "typescript",
-          "sizeLines": 206,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/draconicBuffs.ts",
-          "language": "typescript",
-          "sizeLines": 111,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants.ts",
-          "language": "typescript",
-          "sizeLines": 1,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/rune-base-damage.ts",
-          "language": "typescript",
-          "sizeLines": 54,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/stores/toast.ts",
-          "language": "typescript",
-          "sizeLines": 28,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/HealBoost.ts": [
-          "src/data/draconicBuffs.ts",
-          "src/lib/constants.ts",
-          "src/lib/utils.ts"
-        ],
-        "src/data/Runebasedmg.ts": [
-          "src/data/HealBoost.ts",
-          "src/data/SummonData.ts",
-          "src/lib/constants/rune-base-damage.ts",
-          "src/lib/types.ts"
-        ],
-        "src/data/SummonData.ts": [
-          "src/lib/constants.ts"
-        ],
-        "src/data/cdr.ts": [
-          "src/lib/constants.ts"
-        ],
-        "src/data/defensivePerks.ts": [
-          "src/data/draconicBuffs.ts",
-          "src/lib/constants.ts"
-        ],
-        "src/data/draconicBuffs.ts": [
-          "src/data/BuffData.ts",
-          "src/lib/constants.ts"
-        ],
-        "src/lib/constants.ts": [],
-        "src/lib/constants/rune-base-damage.ts": [],
-        "src/lib/stores/toast.ts": [
-          "src/lib/constants.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/data/HealBoost.ts": [
-          {
-            "path": "src/lib/utils.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "roundMultiplier",
-              "calcWardingDebuffMultiplier",
-              "highlightTextParts",
-              "calcProcChance"
-            ]
-          }
-        ],
-        "src/data/Runebasedmg.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/data/cdr.ts": [
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ],
-        "src/data/draconicBuffs.ts": [
-          {
-            "path": "src/data/BuffData.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "BUFF_DEFS",
-              "BASIC_DEBUFF_POOL",
-              "getWeaponArtBuffs",
-              "getTrueBalanceBuffs",
-              "applyBuffPerkModifiers",
-              "applyToxinTransferDuration",
-              "convertTailwindToWhirlwind",
-              "getBuffDescription",
-              "getPerkBuffs",
-              "getActiveBuildBuffs",
-              "applyCauterizeConversion",
-              "getBurnApplicationCount",
-              "assembleActiveBuffs",
-              "calcBuffEffect",
-              "formatPerkDescription"
-            ]
-          },
-          {
-            "path": "src/lib/engine/dmgTypeBonuses.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "PERK_DMG_TYPE_BONUS_DEFS",
-              "buildDmgTypeBonuses"
-            ]
-          }
-        ],
-        "src/lib/constants.ts": [
-          {
-            "path": "src/data/Boost.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcMinionAbsorptionPotency",
-              "calcFrenzyPct",
-              "PENANCE_HP_THRESHOLD",
-              "PENANCE_MAX_BOOST",
-              "PENANCE_BLEED_POTENCY",
-              "PENANCE_BLEED_DURATION",
-              "BOOST_DEFS",
-              "BOOST_DEF_MAP"
-            ]
-          },
-          {
-            "path": "src/data/BuffData.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "BUFF_DEFS",
-              "BASIC_DEBUFF_POOL",
-              "getWeaponArtBuffs",
-              "getTrueBalanceBuffs",
-              "applyBuffPerkModifiers",
-              "applyToxinTransferDuration",
-              "convertTailwindToWhirlwind",
-              "getBuffDescription",
-              "getPerkBuffs",
-              "getActiveBuildBuffs",
-              "applyCauterizeConversion",
-              "getBurnApplicationCount",
-              "assembleActiveBuffs",
-              "calcBuffEffect",
-              "formatPerkDescription"
-            ]
-          },
-          {
-            "path": "src/data/draconicColorEffects.ts",
-            "batchIndex": 6,
-            "symbols": [
-              "DRACONIC_COLOR_ATTACK_STATS",
-              "getDraconicColorDmgMultiplier"
-            ]
-          },
-          {
-            "path": "src/data/Perkbasedmg.ts",
-            "batchIndex": 6,
-            "symbols": [
-              "gateThreshold",
-              "isHpGateActive",
-              "DRAGON_STATE_HP_GATE",
-              "BELLOWING_EMBER_HP_GATE",
-              "SECONDARY_TONE_COLORS",
-              "calcSpringblastBaseDamage",
-              "PERK_DMG_DEFS"
-            ]
-          },
-          {
-            "path": "src/lib/crit.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "calcCrit"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          },
-          {
-            "path": "src/lib/store.ts",
-            "batchIndex": 8,
-            "symbols": [
-              "build",
-              "result",
-              "setEnchantment",
-              "swapEnchantments",
-              "clearBuild",
-              "setGuild",
-              "moveArmorSlot",
-              "canArmorMoveToSlot",
-              "swapRingWithInfusion"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 4,
-      "files": [
-        {
-          "path": "src/data/Weaponartcheck.ts",
-          "language": "typescript",
-          "sizeLines": 143,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/weaponArts.ts",
-          "language": "typescript",
-          "sizeLines": 510,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/_utils.ts",
-          "language": "typescript",
-          "sizeLines": 2,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/build.ts",
-          "language": "typescript",
-          "sizeLines": 551,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/data.ts",
-          "language": "typescript",
-          "sizeLines": 2,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/enchant.ts",
-          "language": "typescript",
-          "sizeLines": 221,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/format.ts",
-          "language": "typescript",
-          "sizeLines": 14,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/shrine.ts",
-          "language": "typescript",
-          "sizeLines": 33,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine/weapon.ts",
-          "language": "typescript",
-          "sizeLines": 443,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/Weaponartcheck.ts": [
-          "src/data/weaponArts.ts"
-        ],
-        "src/data/weaponArts.ts": [],
-        "src/lib/engine/_utils.ts": [],
-        "src/lib/engine/build.ts": [
-          "src/data/Boost.ts",
-          "src/data/BuffData.ts",
-          "src/data/cdr.ts",
-          "src/data/raceEffects.ts",
-          "src/data/statboost.ts",
-          "src/data/weaponArts.ts",
-          "src/lib/constants.ts",
-          "src/lib/crit.ts",
-          "src/lib/damageTypeResolve.ts",
-          "src/lib/engine/data.ts",
-          "src/lib/engine/dmgTypeBonuses.ts",
-          "src/lib/engine/enchant.ts",
-          "src/lib/engine/shrine.ts",
-          "src/lib/engine/weapon.ts",
-          "src/lib/types.ts",
-          "src/lib/utils.ts"
-        ],
-        "src/lib/engine/data.ts": [],
-        "src/lib/engine/enchant.ts": [
-          "src/lib/engine/_utils.ts",
-          "src/lib/engine/data.ts",
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/format.ts": [
-          "src/lib/engine/_utils.ts",
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/shrine.ts": [
-          "src/lib/engine/_utils.ts",
-          "src/lib/types.ts"
-        ],
-        "src/lib/engine/weapon.ts": [
-          "src/lib/engine/_utils.ts",
-          "src/lib/engine/data.ts",
-          "src/lib/engine/shrine.ts",
-          "src/lib/types.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/lib/engine/_utils.ts": [
-          {
-            "path": "src/lib/damageTypeResolve.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "resolveDamageTypes",
-              "applyFireAirConversion",
-              "resolveWaDamageTypeKeys",
-              "getFinalWaDmgTypes",
-              "applyAirToMagicConversion"
-            ]
-          }
-        ],
-        "src/lib/engine/build.ts": [
-          {
-            "path": "src/data/Boost.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcMinionAbsorptionPotency",
-              "calcFrenzyPct",
-              "PENANCE_HP_THRESHOLD",
-              "PENANCE_MAX_BOOST",
-              "PENANCE_BLEED_POTENCY",
-              "PENANCE_BLEED_DURATION",
-              "BOOST_DEFS",
-              "BOOST_DEF_MAP"
-            ]
-          },
-          {
-            "path": "src/data/BuffData.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "BUFF_DEFS",
-              "BASIC_DEBUFF_POOL",
-              "getWeaponArtBuffs",
-              "getTrueBalanceBuffs",
-              "applyBuffPerkModifiers",
-              "applyToxinTransferDuration",
-              "convertTailwindToWhirlwind",
-              "getBuffDescription",
-              "getPerkBuffs",
-              "getActiveBuildBuffs",
-              "applyCauterizeConversion",
-              "getBurnApplicationCount",
-              "assembleActiveBuffs",
-              "calcBuffEffect",
-              "formatPerkDescription"
-            ]
-          },
-          {
-            "path": "src/data/cdr.ts",
-            "batchIndex": 3,
-            "symbols": [
-              "CDR_PERK_DATA"
-            ]
-          },
-          {
-            "path": "src/data/raceEffects.ts",
-            "batchIndex": 6,
-            "symbols": [
-              "getActiveRaceEffect",
-              "getOrkTenacityBuffs",
-              "calcOrkTenacityBonus"
-            ]
-          },
-          {
-            "path": "src/data/statboost.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "OFFENSIVE_BOOSTS",
-              "applyStatBoostPerks"
-            ]
-          },
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/crit.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "calcCrit"
-            ]
-          },
-          {
-            "path": "src/lib/damageTypeResolve.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "resolveDamageTypes",
-              "applyFireAirConversion",
-              "resolveWaDamageTypeKeys",
-              "getFinalWaDmgTypes",
-              "applyAirToMagicConversion"
-            ]
-          },
-          {
-            "path": "src/lib/engine/dmgTypeBonuses.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "PERK_DMG_TYPE_BONUS_DEFS",
-              "buildDmgTypeBonuses"
-            ]
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          },
-          {
-            "path": "src/lib/utils.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "roundMultiplier",
-              "calcWardingDebuffMultiplier",
-              "highlightTextParts",
-              "calcProcChance"
-            ]
-          }
-        ],
-        "src/lib/engine/enchant.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/lib/engine/format.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/lib/engine/shrine.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/lib/engine/weapon.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 5,
-      "files": [
-        {
-          "path": "src/data/BuffData.ts",
-          "language": "typescript",
-          "sizeLines": 1837,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/TypedDmgBoost.ts",
-          "language": "typescript",
-          "sizeLines": 137,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/buffs.ts",
-          "language": "typescript",
-          "sizeLines": 147,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/damage-types.ts",
-          "language": "typescript",
-          "sizeLines": 41,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/damageTypeResolve.ts",
-          "language": "typescript",
-          "sizeLines": 98,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/BuffData.ts": [
-          "src/lib/constants.ts",
-          "src/lib/constants/buffs.ts",
-          "src/lib/utils.ts"
-        ],
-        "src/data/TypedDmgBoost.ts": [
-          "src/data/BuffData.ts",
-          "src/lib/constants/damage-types.ts"
-        ],
-        "src/lib/constants/buffs.ts": [],
-        "src/lib/constants/damage-types.ts": [],
-        "src/lib/damageTypeResolve.ts": [
-          "src/lib/constants/damage-types.ts",
-          "src/lib/engine/_utils.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/data/BuffData.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/utils.ts",
-            "batchIndex": 7,
-            "symbols": [
-              "roundMultiplier",
-              "calcWardingDebuffMultiplier",
-              "highlightTextParts",
-              "calcProcChance"
-            ]
-          },
-          {
-            "path": "src/data/draconicBuffs.ts",
-            "batchIndex": 3,
-            "symbols": [
-              "getDraconicInfusionPotMult",
-              "getDraconicInfusionDurMult",
-              "getEffectiveDraconicInfusionPotency",
-              "getDraconicInfusionBuff",
-              "getDraconicAbilityDebuffs"
-            ]
-          },
-          {
-            "path": "src/data/perkAutoDebuffs.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcActualHpFillPct",
-              "getAutoDebuffs"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ],
-        "src/lib/damageTypeResolve.ts": [
-          {
-            "path": "src/lib/engine/_utils.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "round2",
-              "round4"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 6,
-      "files": [
-        {
-          "path": "src/data/DoTDamage.ts",
-          "language": "typescript",
-          "sizeLines": 103,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/Perkbasedmg.ts",
-          "language": "typescript",
-          "sizeLines": 759,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/draconicColorEffects.ts",
-          "language": "typescript",
-          "sizeLines": 49,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/data/raceEffects.ts",
-          "language": "typescript",
-          "sizeLines": 44,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/constants/dot-damage.ts",
-          "language": "typescript",
-          "sizeLines": 20,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/DoTDamage.ts": [
-          "src/lib/constants/dot-damage.ts"
-        ],
-        "src/data/Perkbasedmg.ts": [
-          "src/data/DoTDamage.ts",
-          "src/data/draconicColorEffects.ts",
-          "src/lib/constants.ts",
-          "src/lib/types.ts"
-        ],
-        "src/data/draconicColorEffects.ts": [
-          "src/lib/constants.ts"
-        ],
-        "src/data/raceEffects.ts": [
-          "src/data/Perkbasedmg.ts"
-        ],
-        "src/lib/constants/dot-damage.ts": []
-      },
-      "neighborMap": {
-        "src/data/Perkbasedmg.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ],
-        "src/data/draconicColorEffects.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          }
-        ],
-        "src/data/raceEffects.ts": [
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 7,
-      "files": [
-        {
-          "path": "src/data/weaponConditionalBoosts.ts",
-          "language": "typescript",
-          "sizeLines": 45,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/crit.ts",
-          "language": "typescript",
-          "sizeLines": 340,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/defense.ts",
-          "language": "typescript",
-          "sizeLines": 81,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/utils.ts",
-          "language": "typescript",
-          "sizeLines": 112,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/data/weaponConditionalBoosts.ts": [
-          "src/lib/utils.ts"
-        ],
-        "src/lib/crit.ts": [
-          "src/lib/constants.ts",
-          "src/lib/types.ts",
-          "src/lib/utils.ts"
-        ],
-        "src/lib/defense.ts": [
-          "src/lib/utils.ts"
-        ],
-        "src/lib/utils.ts": [
-          "src/lib/types.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/lib/crit.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ],
-        "src/lib/utils.ts": [
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          },
-          {
-            "path": "src/data/Boost.ts",
-            "batchIndex": 2,
-            "symbols": [
-              "calcMinionAbsorptionPotency",
-              "calcFrenzyPct",
-              "PENANCE_HP_THRESHOLD",
-              "PENANCE_MAX_BOOST",
-              "PENANCE_BLEED_POTENCY",
-              "PENANCE_BLEED_DURATION",
-              "BOOST_DEFS",
-              "BOOST_DEF_MAP"
-            ]
-          },
-          {
-            "path": "src/data/BuffData.ts",
-            "batchIndex": 5,
-            "symbols": [
-              "BUFF_DEFS",
-              "BASIC_DEBUFF_POOL",
-              "getWeaponArtBuffs",
-              "getTrueBalanceBuffs",
-              "applyBuffPerkModifiers",
-              "applyToxinTransferDuration",
-              "convertTailwindToWhirlwind",
-              "getBuffDescription",
-              "getPerkBuffs",
-              "getActiveBuildBuffs",
-              "applyCauterizeConversion",
-              "getBurnApplicationCount",
-              "assembleActiveBuffs",
-              "calcBuffEffect",
-              "formatPerkDescription"
-            ]
-          },
-          {
-            "path": "src/data/HealBoost.ts",
-            "batchIndex": 3,
-            "symbols": [
-              "calculateHealBoost"
-            ]
-          },
-          {
-            "path": "src/lib/engine/build.ts",
-            "batchIndex": 4,
-            "symbols": [
-              "calcBuild"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 8,
-      "files": [
-        {
-          "path": "src/lib/enchantTooltip.ts",
-          "language": "typescript",
-          "sizeLines": 26,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/engine.ts",
-          "language": "typescript",
-          "sizeLines": 5,
-          "fileCategory": "code"
-        },
-        {
-          "path": "src/lib/store.ts",
-          "language": "typescript",
-          "sizeLines": 167,
-          "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/lib/enchantTooltip.ts": [
-          "src/lib/engine.ts"
-        ],
-        "src/lib/engine.ts": [],
-        "src/lib/store.ts": [
-          "src/lib/constants.ts",
-          "src/lib/engine.ts",
-          "src/lib/types.ts"
-        ]
-      },
-      "neighborMap": {
-        "src/lib/store.ts": [
-          {
-            "path": "src/lib/constants.ts",
-            "batchIndex": 3,
-            "symbols": []
-          },
-          {
-            "path": "src/lib/types.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "PERCENT_STATS",
-              "STAT_KEYS",
-              "UPGRADE_MAX",
-              "applyUpgrade",
-              "getProcCoeffValue",
-              "canProc",
-              "DMG_TYPE_COLORS",
-              "DMG_TYPE_PRIORITY",
-              "SCALING_TO_BOOST"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 9,
-      "files": [
-        {
           "path": ".github/workflows/static.yml",
           "language": "yaml",
           "sizeLines": 53,
@@ -2300,7 +851,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 10,
+      "batchIndex": 2,
       "files": [
         {
           "path": ".fallowrc.json",
@@ -2392,792 +943,7 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 11,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/assembled-graph.json",
-          "language": "json",
-          "sizeLines": 4775,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-1.json",
-          "language": "json",
-          "sizeLines": 16,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-2.json",
-          "language": "json",
-          "sizeLines": 148,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-3.json",
-          "language": "json",
-          "sizeLines": 52,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-4.json",
-          "language": "json",
-          "sizeLines": 136,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-5.json",
-          "language": "json",
-          "sizeLines": 1331,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-6.json",
-          "language": "json",
-          "sizeLines": 827,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-7.json",
-          "language": "json",
-          "sizeLines": 935,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-8.json",
-          "language": "json",
-          "sizeLines": 1277,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batch-9.json",
-          "language": "json",
-          "sizeLines": 88,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/batches.json",
-          "language": "json",
-          "sizeLines": 1797,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/layers.json",
-          "language": "json",
-          "sizeLines": 191,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tour.json",
-          "language": "json",
-          "sizeLines": 96,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784408361.27866/assembled-graph.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-1.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-2.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-3.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-4.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-5.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-6.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-7.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-8.json": [],
-        ".understand-anything/.trash-1784408361.27866/batch-9.json": [],
-        ".understand-anything/.trash-1784408361.27866/batches.json": [],
-        ".understand-anything/.trash-1784408361.27866/layers.json": [],
-        ".understand-anything/.trash-1784408361.27866/tour.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 12,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-1-input.json",
-          "language": "json",
-          "sizeLines": 13,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-1-structure.json",
-          "language": "json",
-          "sizeLines": 47,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-2-input.json",
-          "language": "json",
-          "sizeLines": 90,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-2-structure.json",
-          "language": "json",
-          "sizeLines": 313,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-3-input.json",
-          "language": "json",
-          "sizeLines": 34,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-3-structure.json",
-          "language": "json",
-          "sizeLines": 145,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-4-input.json",
-          "language": "json",
-          "sizeLines": 83,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-4-structure.json",
-          "language": "json",
-          "sizeLines": 160,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-5-input.json",
-          "language": "json",
-          "sizeLines": 181,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-5-structure.json",
-          "language": "json",
-          "sizeLines": 2040,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-6-input.json",
-          "language": "json",
-          "sizeLines": 181,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-6-structure.json",
-          "language": "json",
-          "sizeLines": 2118,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-7-input.json",
-          "language": "json",
-          "sizeLines": 181,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-7-structure.json",
-          "language": "json",
-          "sizeLines": 3126,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-8-input.json",
-          "language": "json",
-          "sizeLines": 181,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-8-structure.json",
-          "language": "json",
-          "sizeLines": 1816,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-9-input.json",
-          "language": "json",
-          "sizeLines": 55,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/batch-9-structure.json",
-          "language": "json",
-          "sizeLines": 67,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-1-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-1-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-2-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-2-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-3-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-3-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-4-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-4-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-5-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-5-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-6-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-6-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-7-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-7-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-8-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-8-structure.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-9-input.json": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/batch-9-structure.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 13,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/assembled-graph.json",
-          "language": "json",
-          "sizeLines": 5696,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-1.json",
-          "language": "json",
-          "sizeLines": 1835,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-10.json",
-          "language": "json",
-          "sizeLines": 881,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-11.json",
-          "language": "json",
-          "sizeLines": 447,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-2.json",
-          "language": "json",
-          "sizeLines": 240,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-3.json",
-          "language": "json",
-          "sizeLines": 345,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-4.json",
-          "language": "json",
-          "sizeLines": 920,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-5.json",
-          "language": "json",
-          "sizeLines": 93,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-6.json",
-          "language": "json",
-          "sizeLines": 202,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-7.json",
-          "language": "json",
-          "sizeLines": 245,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-8-part-1.json",
-          "language": "json",
-          "sizeLines": 984,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-8-part-2.json",
-          "language": "json",
-          "sizeLines": 843,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batch-9.json",
-          "language": "json",
-          "sizeLines": 571,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/batches.json",
-          "language": "json",
-          "sizeLines": 2428,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/final-graph-clean.json",
-          "language": "json",
-          "sizeLines": 4548,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/final-graph-fixed.json",
-          "language": "json",
-          "sizeLines": 4569,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/final-graph.json",
-          "language": "json",
-          "sizeLines": 4602,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/layers.json",
-          "language": "json",
-          "sizeLines": 251,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/review.json",
-          "language": "json",
-          "sizeLines": 33,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/review2.json",
-          "language": "json",
-          "sizeLines": 23,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784580918.00751/assembled-graph.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-1.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-10.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-11.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-2.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-3.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-4.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-5.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-6.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-7.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-8-part-1.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-8-part-2.json": [],
-        ".understand-anything/.trash-1784580918.00751/batch-9.json": [],
-        ".understand-anything/.trash-1784580918.00751/batches.json": [],
-        ".understand-anything/.trash-1784580918.00751/final-graph-clean.json": [],
-        ".understand-anything/.trash-1784580918.00751/final-graph-fixed.json": [],
-        ".understand-anything/.trash-1784580918.00751/final-graph.json": [],
-        ".understand-anything/.trash-1784580918.00751/layers.json": [],
-        ".understand-anything/.trash-1784580918.00751/review.json": [],
-        ".understand-anything/.trash-1784580918.00751/review2.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 14,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/fingerprint-input.json",
-          "language": "json",
-          "sizeLines": 117,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-1.json",
-          "language": "json",
-          "sizeLines": 27,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-10.json",
-          "language": "json",
-          "sizeLines": 56,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-11.json",
-          "language": "json",
-          "sizeLines": 30,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-2.json",
-          "language": "json",
-          "sizeLines": 21,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-3.json",
-          "language": "json",
-          "sizeLines": 15,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-4.json",
-          "language": "json",
-          "sizeLines": 15,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-5.json",
-          "language": "json",
-          "sizeLines": 9,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-6.json",
-          "language": "json",
-          "sizeLines": 28,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-7.json",
-          "language": "json",
-          "sizeLines": 28,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-8.json",
-          "language": "json",
-          "sizeLines": 56,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-9.json",
-          "language": "json",
-          "sizeLines": 56,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-1.json",
-          "language": "json",
-          "sizeLines": 1132,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-10.json",
-          "language": "json",
-          "sizeLines": 780,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-11.json",
-          "language": "json",
-          "sizeLines": 129,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-2.json",
-          "language": "json",
-          "sizeLines": 2732,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-3.json",
-          "language": "json",
-          "sizeLines": 377,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-4.json",
-          "language": "json",
-          "sizeLines": 776,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-5.json",
-          "language": "json",
-          "sizeLines": 47,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-6.json",
-          "language": "json",
-          "sizeLines": 564,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784580918.00751/tmp/fingerprint-input.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-1.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-10.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-11.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-2.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-3.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-4.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-5.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-6.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-7.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-8.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-analyzer-input-9.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-1.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-10.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-11.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-2.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-3.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-4.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-5.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-6.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 15,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-7.json",
-          "language": "json",
-          "sizeLines": 160,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-8.json",
-          "language": "json",
-          "sizeLines": 1629,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-9.json",
-          "language": "json",
-          "sizeLines": 1954,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-import-map-input.json",
-          "language": "json",
-          "sizeLines": 1072,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-import-map-output.json",
-          "language": "json",
-          "sizeLines": 320,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-scan-files.json",
-          "language": "json",
-          "sizeLines": 1098,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-7.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-8.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-file-extract-results-9.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-import-map-input.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-import-map-output.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-scan-files.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 16,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/assemble-review.json",
-          "language": "json",
-          "sizeLines": 62,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/assembled-graph.json",
-          "language": "json",
-          "sizeLines": 3381,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batch-10.json",
-          "language": "json",
-          "sizeLines": 585,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batch-11.json",
-          "language": "json",
-          "sizeLines": 117,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batch-6.json",
-          "language": "json",
-          "sizeLines": 176,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batch-8.json",
-          "language": "json",
-          "sizeLines": 928,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batch-9.json",
-          "language": "json",
-          "sizeLines": 469,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/batches.json",
-          "language": "json",
-          "sizeLines": 1587,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/fingerprint-input.json",
-          "language": "json",
-          "sizeLines": 4,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/layers.json",
-          "language": "json",
-          "sizeLines": 155,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/review.json",
-          "language": "json",
-          "sizeLines": 133,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tour.json",
-          "language": "json",
-          "sizeLines": 49,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784637152.43808/assemble-review.json": [],
-        ".understand-anything/.trash-1784637152.43808/assembled-graph.json": [],
-        ".understand-anything/.trash-1784637152.43808/batch-10.json": [],
-        ".understand-anything/.trash-1784637152.43808/batch-11.json": [],
-        ".understand-anything/.trash-1784637152.43808/batch-6.json": [],
-        ".understand-anything/.trash-1784637152.43808/batch-8.json": [],
-        ".understand-anything/.trash-1784637152.43808/batch-9.json": [],
-        ".understand-anything/.trash-1784637152.43808/batches.json": [],
-        ".understand-anything/.trash-1784637152.43808/fingerprint-input.json": [],
-        ".understand-anything/.trash-1784637152.43808/layers.json": [],
-        ".understand-anything/.trash-1784637152.43808/review.json": [],
-        ".understand-anything/.trash-1784637152.43808/tour.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 17,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tmp/all-edges.json",
-          "language": "json",
-          "sizeLines": 730,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tmp/changed-files.txt",
-          "language": "txt",
-          "sizeLines": 32,
-          "fileCategory": "docs"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tmp/file-nodes.json",
-          "language": "json",
-          "sizeLines": 1335,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tmp/import-edges.json",
-          "language": "json",
-          "sizeLines": 373,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-1784637152.43808/tmp/all-edges.json": [],
-        ".understand-anything/.trash-1784637152.43808/tmp/changed-files.txt": [],
-        ".understand-anything/.trash-1784637152.43808/tmp/file-nodes.json": [],
-        ".understand-anything/.trash-1784637152.43808/tmp/import-edges.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 18,
-      "files": [
-        {
-          "path": ".understand-anything/.trash-20260722080503/assemble-review.json",
-          "language": "json",
-          "sizeLines": 316,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/assembled-graph.json",
-          "language": "json",
-          "sizeLines": 6847,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batch-1.json",
-          "language": "json",
-          "sizeLines": 772,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batch-2.json",
-          "language": "json",
-          "sizeLines": 701,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batch-8.json",
-          "language": "json",
-          "sizeLines": 1122,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batch-9.json",
-          "language": "json",
-          "sizeLines": 807,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batch-99.json",
-          "language": "json",
-          "sizeLines": 2655,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/batches.json",
-          "language": "json",
-          "sizeLines": 1604,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/fingerprint-input.json",
-          "language": "json",
-          "sizeLines": 140,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/review.json",
-          "language": "json",
-          "sizeLines": 230,
-          "fileCategory": "config"
-        }
-      ],
-      "batchImportData": {
-        ".understand-anything/.trash-20260722080503/assemble-review.json": [],
-        ".understand-anything/.trash-20260722080503/assembled-graph.json": [],
-        ".understand-anything/.trash-20260722080503/batch-1.json": [],
-        ".understand-anything/.trash-20260722080503/batch-2.json": [],
-        ".understand-anything/.trash-20260722080503/batch-8.json": [],
-        ".understand-anything/.trash-20260722080503/batch-9.json": [],
-        ".understand-anything/.trash-20260722080503/batch-99.json": [],
-        ".understand-anything/.trash-20260722080503/batches.json": [],
-        ".understand-anything/.trash-20260722080503/fingerprint-input.json": [],
-        ".understand-anything/.trash-20260722080503/review.json": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 19,
+      "batchIndex": 3,
       "files": [
         {
           "path": ".understand-anything/config.json",
@@ -3213,7 +979,402 @@
       "neighborMap": {}
     },
     {
-      "batchIndex": 20,
+      "batchIndex": 4,
+      "files": [
+        {
+          "path": ".understand-anything/intermediate/assemble-review.json",
+          "language": "json",
+          "sizeLines": 149,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/assembled-graph.json",
+          "language": "json",
+          "sizeLines": 7897,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-1.json",
+          "language": "json",
+          "sizeLines": 559,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-10.json",
+          "language": "json",
+          "sizeLines": 314,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-2.json",
+          "language": "json",
+          "sizeLines": 304,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-20.json",
+          "language": "json",
+          "sizeLines": 211,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-21.json",
+          "language": "json",
+          "sizeLines": 278,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-22.json",
+          "language": "json",
+          "sizeLines": 641,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-23.json",
+          "language": "json",
+          "sizeLines": 360,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-24.json",
+          "language": "json",
+          "sizeLines": 57,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-3.json",
+          "language": "json",
+          "sizeLines": 223,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-4.json",
+          "language": "json",
+          "sizeLines": 568,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-5.json",
+          "language": "json",
+          "sizeLines": 683,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-6.json",
+          "language": "json",
+          "sizeLines": 363,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-7.json",
+          "language": "json",
+          "sizeLines": 431,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-8.json",
+          "language": "json",
+          "sizeLines": 298,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batch-9.json",
+          "language": "json",
+          "sizeLines": 71,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/batches.json",
+          "language": "json",
+          "sizeLines": 4088,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/layers.json",
+          "language": "json",
+          "sizeLines": 438,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/review.json",
+          "language": "json",
+          "sizeLines": 382,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".understand-anything/intermediate/assemble-review.json": [],
+        ".understand-anything/intermediate/assembled-graph.json": [],
+        ".understand-anything/intermediate/batch-1.json": [],
+        ".understand-anything/intermediate/batch-10.json": [],
+        ".understand-anything/intermediate/batch-2.json": [],
+        ".understand-anything/intermediate/batch-20.json": [],
+        ".understand-anything/intermediate/batch-21.json": [],
+        ".understand-anything/intermediate/batch-22.json": [],
+        ".understand-anything/intermediate/batch-23.json": [],
+        ".understand-anything/intermediate/batch-24.json": [],
+        ".understand-anything/intermediate/batch-3.json": [],
+        ".understand-anything/intermediate/batch-4.json": [],
+        ".understand-anything/intermediate/batch-5.json": [],
+        ".understand-anything/intermediate/batch-6.json": [],
+        ".understand-anything/intermediate/batch-7.json": [],
+        ".understand-anything/intermediate/batch-8.json": [],
+        ".understand-anything/intermediate/batch-9.json": [],
+        ".understand-anything/intermediate/batches.json": [],
+        ".understand-anything/intermediate/layers.json": [],
+        ".understand-anything/intermediate/review.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 5,
+      "files": [
+        {
+          "path": ".understand-anything/tmp/batch-21-structure.json",
+          "language": "json",
+          "sizeLines": 601,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-output-10.json",
+          "language": "json",
+          "sizeLines": 607,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-output-20.json",
+          "language": "json",
+          "sizeLines": 160,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-result-22.json",
+          "language": "json",
+          "sizeLines": 1358,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-results-7.json",
+          "language": "json",
+          "sizeLines": 752,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-structure-4.json",
+          "language": "json",
+          "sizeLines": 1972,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extract-structure-result-1.json",
+          "language": "json",
+          "sizeLines": 831,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extraction-5.json",
+          "language": "json",
+          "sizeLines": 1629,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-extraction-result-3.json",
+          "language": "json",
+          "sizeLines": 731,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-1.json",
+          "language": "json",
+          "sizeLines": 27,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-10.json",
+          "language": "json",
+          "sizeLines": 30,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-2.json",
+          "language": "json",
+          "sizeLines": 0,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-20.json",
+          "language": "json",
+          "sizeLines": 29,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-21.json",
+          "language": "json",
+          "sizeLines": 83,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-22.json",
+          "language": "json",
+          "sizeLines": 57,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-23.json",
+          "language": "json",
+          "sizeLines": 57,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-24.json",
+          "language": "json",
+          "sizeLines": 21,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-3.json",
+          "language": "json",
+          "sizeLines": 25,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-4.json",
+          "language": "json",
+          "sizeLines": 70,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-5.json",
+          "language": "json",
+          "sizeLines": 17,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".understand-anything/tmp/batch-21-structure.json": [],
+        ".understand-anything/tmp/ua-extract-output-10.json": [],
+        ".understand-anything/tmp/ua-extract-output-20.json": [],
+        ".understand-anything/tmp/ua-extract-result-22.json": [],
+        ".understand-anything/tmp/ua-extract-results-7.json": [],
+        ".understand-anything/tmp/ua-extract-structure-4.json": [],
+        ".understand-anything/tmp/ua-extract-structure-result-1.json": [],
+        ".understand-anything/tmp/ua-extraction-5.json": [],
+        ".understand-anything/tmp/ua-extraction-result-3.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-1.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-10.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-2.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-20.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-21.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-22.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-23.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-24.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-3.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-4.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-5.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 6,
+      "files": [
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-6.json",
+          "language": "json",
+          "sizeLines": 17,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-7.json",
+          "language": "json",
+          "sizeLines": 34,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-8.json",
+          "language": "json",
+          "sizeLines": 28,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-input-9.json",
+          "language": "json",
+          "sizeLines": 14,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-output-2.json",
+          "language": "json",
+          "sizeLines": 1033,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-output-23.json",
+          "language": "json",
+          "sizeLines": 415,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-output-24.json",
+          "language": "json",
+          "sizeLines": 27,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-file-analyzer-output-9.json",
+          "language": "json",
+          "sizeLines": 47,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-import-map-input.json",
+          "language": "json",
+          "sizeLines": 1577,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-import-map.json",
+          "language": "json",
+          "sizeLines": 413,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-scan-files.json",
+          "language": "json",
+          "sizeLines": 1603,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-structure-extraction-6.json",
+          "language": "json",
+          "sizeLines": 478,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-structure-extraction-8.json",
+          "language": "json",
+          "sizeLines": 310,
+          "fileCategory": "config"
+        }
+      ],
+      "batchImportData": {
+        ".understand-anything/tmp/ua-file-analyzer-input-6.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-7.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-8.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-input-9.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-output-2.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-output-23.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-output-24.json": [],
+        ".understand-anything/tmp/ua-file-analyzer-output-9.json": [],
+        ".understand-anything/tmp/ua-import-map-input.json": [],
+        ".understand-anything/tmp/ua-import-map.json": [],
+        ".understand-anything/tmp/ua-scan-files.json": [],
+        ".understand-anything/tmp/ua-structure-extraction-6.json": [],
+        ".understand-anything/tmp/ua-structure-extraction-8.json": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 7,
       "files": [
         {
           "path": "src/data/armors.json",
@@ -3295,286 +1456,16 @@
         "src/data/rings.json": [],
         "src/data/runes.json": []
       },
-      "neighborMap": {
-        "src/data/armors.json": [
-          {
-            "path": "src/lib/engine/data/equipment.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "rings",
-              "runes",
-              "enchantments",
-              "enchantmentsRaw",
-              "armors",
-              "getEnchant",
-              "getRing",
-              "getRune",
-              "getArmorPart",
-              "getArmorSlotTypes",
-              "armorSupportsSlot"
-            ]
-          }
-        ],
-        "src/data/blades.json": [
-          {
-            "path": "src/lib/engine/data/weapons.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "blades",
-              "handles",
-              "gloves",
-              "essences",
-              "getBlade",
-              "getHandle",
-              "getGlove",
-              "getEssence"
-            ]
-          }
-        ],
-        "src/data/enchantments.json": [
-          {
-            "path": "src/lib/engine/data/equipment.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "rings",
-              "runes",
-              "enchantments",
-              "enchantmentsRaw",
-              "armors",
-              "getEnchant",
-              "getRing",
-              "getRune",
-              "getArmorPart",
-              "getArmorSlotTypes",
-              "armorSupportsSlot"
-            ]
-          }
-        ],
-        "src/data/essences.json": [
-          {
-            "path": "src/lib/engine/data/weapons.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "blades",
-              "handles",
-              "gloves",
-              "essences",
-              "getBlade",
-              "getHandle",
-              "getGlove",
-              "getEssence"
-            ]
-          }
-        ],
-        "src/data/gloves.json": [
-          {
-            "path": "src/lib/engine/data/weapons.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "blades",
-              "handles",
-              "gloves",
-              "essences",
-              "getBlade",
-              "getHandle",
-              "getGlove",
-              "getEssence"
-            ]
-          }
-        ],
-        "src/data/guilds.json": [
-          {
-            "path": "src/lib/engine/data/character.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "races",
-              "guilds",
-              "getRace",
-              "getGuild",
-              "getPerk",
-              "getGuildRank",
-              "isMonkGuild"
-            ]
-          }
-        ],
-        "src/data/handles.json": [
-          {
-            "path": "src/lib/engine/data/weapons.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "blades",
-              "handles",
-              "gloves",
-              "essences",
-              "getBlade",
-              "getHandle",
-              "getGlove",
-              "getEssence"
-            ]
-          }
-        ],
-        "src/data/perks.json": [
-          {
-            "path": "src/lib/engine/data/character.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "races",
-              "guilds",
-              "getRace",
-              "getGuild",
-              "getPerk",
-              "getGuildRank",
-              "isMonkGuild"
-            ]
-          }
-        ],
-        "src/data/races.json": [
-          {
-            "path": "src/lib/engine/data/character.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "races",
-              "guilds",
-              "getRace",
-              "getGuild",
-              "getPerk",
-              "getGuildRank",
-              "isMonkGuild"
-            ]
-          }
-        ],
-        "src/data/rings.json": [
-          {
-            "path": "src/lib/engine/data/equipment.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "rings",
-              "runes",
-              "enchantments",
-              "enchantmentsRaw",
-              "armors",
-              "getEnchant",
-              "getRing",
-              "getRune",
-              "getArmorPart",
-              "getArmorSlotTypes",
-              "armorSupportsSlot"
-            ]
-          }
-        ],
-        "src/data/runes.json": [
-          {
-            "path": "src/lib/engine/data/equipment.ts",
-            "batchIndex": 1,
-            "symbols": [
-              "rings",
-              "runes",
-              "enchantments",
-              "enchantmentsRaw",
-              "armors",
-              "getEnchant",
-              "getRing",
-              "getRune",
-              "getArmorPart",
-              "getArmorSlotTypes",
-              "armorSupportsSlot"
-            ]
-          }
-        ]
-      }
+      "neighborMap": {}
     },
     {
-      "batchIndex": 21,
+      "batchIndex": 8,
       "files": [
         {
           "path": ".slim/deepwork/ui-upgrade.md",
           "language": "markdown",
           "sizeLines": 99,
           "fileCategory": "docs"
-        },
-        {
-          "path": ".understand-anything/.trash-1784380458.94689",
-          "language": "94689",
-          "sizeLines": 78,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408361.27866/tmp/analyze-batches.mjs",
-          "language": "javascript",
-          "sizeLines": 154,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784408509.21339/fingerprint-input.json",
-          "language": "json",
-          "sizeLines": 141,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/review3.json",
-          "language": "json",
-          "sizeLines": 19,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/assemble-final.cjs",
-          "language": "javascript",
-          "sizeLines": 137,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/cleanup-graph.cjs",
-          "language": "javascript",
-          "sizeLines": 28,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/fix-edges.cjs",
-          "language": "javascript",
-          "sizeLines": 9,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tmp/ua-inline-validate.cjs",
-          "language": "javascript",
-          "sizeLines": 51,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-1784580918.00751/tour.json",
-          "language": "json",
-          "sizeLines": 50,
-          "fileCategory": "config"
-        },
-        {
-          "path": ".understand-anything/.trash-1784637152.43808/tmp/ua-inline-validate.cjs",
-          "language": "javascript",
-          "sizeLines": 61,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/tmp/assemble-final.py",
-          "language": "python",
-          "sizeLines": 222,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/tmp/changed-files.txt",
-          "language": "txt",
-          "sizeLines": 13,
-          "fileCategory": "docs"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/tmp/create-existing-batch.py",
-          "language": "python",
-          "sizeLines": 69,
-          "fileCategory": "code"
-        },
-        {
-          "path": ".understand-anything/.trash-20260722080503/tmp/ua-inline-validate.cjs",
-          "language": "javascript",
-          "sizeLines": 63,
-          "fileCategory": "code"
         },
         {
           "path": ".understand-anything/.understandignore",
@@ -3585,8 +1476,20 @@
         {
           "path": ".understand-anything/intermediate/scan-result.json",
           "language": "json",
-          "sizeLines": 863,
+          "sizeLines": 2449,
           "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/intermediate/tour.json",
+          "language": "json",
+          "sizeLines": 62,
+          "fileCategory": "config"
+        },
+        {
+          "path": ".understand-anything/tmp/ua-inline-validate.cjs",
+          "language": "javascript",
+          "sizeLines": 63,
+          "fileCategory": "code"
         },
         {
           "path": "decode_full.mjs",
@@ -3609,7 +1512,7 @@
         {
           "path": "src/App.svelte",
           "language": "svelte",
-          "sizeLines": 3977,
+          "sizeLines": 3978,
           "fileCategory": "code"
         },
         {
@@ -3635,55 +1538,7 @@
           "language": "svelte",
           "sizeLines": 92,
           "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        ".slim/deepwork/ui-upgrade.md": [],
-        ".understand-anything/.trash-1784380458.94689": [],
-        ".understand-anything/.trash-1784408361.27866/tmp/analyze-batches.mjs": [],
-        ".understand-anything/.trash-1784408509.21339/fingerprint-input.json": [],
-        ".understand-anything/.trash-1784580918.00751/review3.json": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/assemble-final.cjs": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/cleanup-graph.cjs": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/fix-edges.cjs": [],
-        ".understand-anything/.trash-1784580918.00751/tmp/ua-inline-validate.cjs": [],
-        ".understand-anything/.trash-1784580918.00751/tour.json": [],
-        ".understand-anything/.trash-1784637152.43808/tmp/ua-inline-validate.cjs": [],
-        ".understand-anything/.trash-20260722080503/tmp/assemble-final.py": [],
-        ".understand-anything/.trash-20260722080503/tmp/changed-files.txt": [],
-        ".understand-anything/.trash-20260722080503/tmp/create-existing-batch.py": [],
-        ".understand-anything/.trash-20260722080503/tmp/ua-inline-validate.cjs": [],
-        ".understand-anything/.understandignore": [],
-        ".understand-anything/intermediate/scan-result.json": [],
-        "decode_full.mjs": [],
-        "docs/ONBOARDING.md": [],
-        "src/app.css": [],
-        "src/App.svelte": [],
-        "src/BaseDamageCalc.svelte": [],
-        "src/BuffList.svelte": [],
-        "src/BuildSaves.svelte": [],
-        "src/CdrStepsCalc.svelte": []
-      },
-      "neighborMap": {
-        "src/app.css": [
-          {
-            "path": "src/main.ts",
-            "batchIndex": 23,
-            "symbols": []
-          }
-        ],
-        "src/App.svelte": [
-          {
-            "path": "src/main.ts",
-            "batchIndex": 23,
-            "symbols": []
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 22,
-      "files": [
+        },
         {
           "path": "src/CritIcon.svelte",
           "language": "svelte",
@@ -3693,13 +1548,142 @@
         {
           "path": "src/DamageAnalyzer.svelte",
           "language": "svelte",
-          "sizeLines": 6697,
+          "sizeLines": 6805,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/Boost.ts",
+          "language": "typescript",
+          "sizeLines": 374,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/BuffData.ts",
+          "language": "typescript",
+          "sizeLines": 1847,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/cdr.ts",
+          "language": "typescript",
+          "sizeLines": 63,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/debuffCombatEffects.ts",
+          "language": "typescript",
+          "sizeLines": 98,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/defensivePerks.ts",
+          "language": "typescript",
+          "sizeLines": 206,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/DoTDamage.ts",
+          "language": "typescript",
+          "sizeLines": 103,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/draconicBuffs.ts",
+          "language": "typescript",
+          "sizeLines": 111,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/draconicColorEffects.ts",
+          "language": "typescript",
+          "sizeLines": 49,
           "fileCategory": "code"
         },
         {
           "path": "src/data/draconicRunes.ts",
           "language": "typescript",
           "sizeLines": 104,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/enemyHpEffects.ts",
+          "language": "typescript",
+          "sizeLines": 90,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        ".slim/deepwork/ui-upgrade.md": [],
+        ".understand-anything/.understandignore": [],
+        ".understand-anything/intermediate/scan-result.json": [],
+        ".understand-anything/intermediate/tour.json": [],
+        ".understand-anything/tmp/ua-inline-validate.cjs": [],
+        "decode_full.mjs": [],
+        "docs/ONBOARDING.md": [],
+        "src/app.css": [],
+        "src/App.svelte": [],
+        "src/BaseDamageCalc.svelte": [],
+        "src/BuffList.svelte": [],
+        "src/BuildSaves.svelte": [],
+        "src/CdrStepsCalc.svelte": [],
+        "src/CritIcon.svelte": [],
+        "src/DamageAnalyzer.svelte": [],
+        "src/data/Boost.ts": [],
+        "src/data/BuffData.ts": [],
+        "src/data/cdr.ts": [],
+        "src/data/debuffCombatEffects.ts": [],
+        "src/data/defensivePerks.ts": [],
+        "src/data/DoTDamage.ts": [],
+        "src/data/draconicBuffs.ts": [],
+        "src/data/draconicColorEffects.ts": [],
+        "src/data/draconicRunes.ts": [],
+        "src/data/enemyHpEffects.ts": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 9,
+      "files": [
+        {
+          "path": "src/data/HealBoost.ts",
+          "language": "typescript",
+          "sizeLines": 216,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/mountRunes.ts",
+          "language": "typescript",
+          "sizeLines": 88,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/perkAutoDebuffs.ts",
+          "language": "typescript",
+          "sizeLines": 238,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/Perkbasedmg.ts",
+          "language": "typescript",
+          "sizeLines": 816,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/procCoefficients.ts",
+          "language": "typescript",
+          "sizeLines": 67,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/raceEffects.ts",
+          "language": "typescript",
+          "sizeLines": 44,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/Runebasedmg.ts",
+          "language": "typescript",
+          "sizeLines": 200,
           "fileCategory": "code"
         },
         {
@@ -3712,6 +1696,48 @@
           "path": "src/data/stanceOverlays.ts",
           "language": "typescript",
           "sizeLines": 59,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/statboost.ts",
+          "language": "typescript",
+          "sizeLines": 242,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/SummonData.ts",
+          "language": "typescript",
+          "sizeLines": 83,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/TypedDmgBoost.ts",
+          "language": "typescript",
+          "sizeLines": 137,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/weapon base dmg.ts",
+          "language": "typescript",
+          "sizeLines": 41,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/Weaponartcheck.ts",
+          "language": "typescript",
+          "sizeLines": 143,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/weaponArts.ts",
+          "language": "typescript",
+          "sizeLines": 510,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/data/weaponConditionalBoosts.ts",
+          "language": "typescript",
+          "sizeLines": 45,
           "fileCategory": "code"
         },
         {
@@ -3757,9 +1783,54 @@
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/constants.ts",
+          "language": "typescript",
+          "sizeLines": 1,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/lib/constants/boosts.ts",
           "language": "typescript",
           "sizeLines": 54,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/data/HealBoost.ts": [],
+        "src/data/mountRunes.ts": [],
+        "src/data/perkAutoDebuffs.ts": [],
+        "src/data/Perkbasedmg.ts": [],
+        "src/data/procCoefficients.ts": [],
+        "src/data/raceEffects.ts": [],
+        "src/data/Runebasedmg.ts": [],
+        "src/data/selfDamagePerks.ts": [],
+        "src/data/stanceOverlays.ts": [],
+        "src/data/statboost.ts": [],
+        "src/data/SummonData.ts": [],
+        "src/data/TypedDmgBoost.ts": [],
+        "src/data/weapon base dmg.ts": [],
+        "src/data/Weaponartcheck.ts": [],
+        "src/data/weaponArts.ts": [],
+        "src/data/weaponConditionalBoosts.ts": [],
+        "src/DidYouMean.svelte": [],
+        "src/DmgTotalTooltip.svelte": [],
+        "src/DraconicAbilityStats.svelte": [],
+        "src/EmotionalTracker.svelte": [],
+        "src/Highlight.svelte": [],
+        "src/LevelBar.svelte": [],
+        "src/lib/AppHeader.svelte": [],
+        "src/lib/constants.ts": [],
+        "src/lib/constants/boosts.ts": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 10,
+      "files": [
+        {
+          "path": "src/lib/constants/buffs.ts",
+          "language": "typescript",
+          "sizeLines": 147,
           "fileCategory": "code"
         },
         {
@@ -3769,9 +1840,27 @@
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/constants/damage-types.ts",
+          "language": "typescript",
+          "sizeLines": 41,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/debuff-effects.ts",
+          "language": "typescript",
+          "sizeLines": 14,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/lib/constants/defensive.ts",
           "language": "typescript",
           "sizeLines": 22,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/dot-damage.ts",
+          "language": "typescript",
+          "sizeLines": 20,
           "fileCategory": "code"
         },
         {
@@ -3784,6 +1873,12 @@
           "path": "src/lib/constants/draconic.ts",
           "language": "typescript",
           "sizeLines": 10,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/game.ts",
+          "language": "typescript",
+          "sizeLines": 26,
           "fileCategory": "code"
         },
         {
@@ -3801,7 +1896,31 @@
         {
           "path": "src/lib/constants/perk-base-damage.ts",
           "language": "typescript",
-          "sizeLines": 133,
+          "sizeLines": 139,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/perks.ts",
+          "language": "typescript",
+          "sizeLines": 84,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/rune-base-damage.ts",
+          "language": "typescript",
+          "sizeLines": 54,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/stat-conversions.ts",
+          "language": "typescript",
+          "sizeLines": 30,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/constants/storage.ts",
+          "language": "typescript",
+          "sizeLines": 39,
           "fileCategory": "code"
         },
         {
@@ -3811,15 +1930,150 @@
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/crit.ts",
+          "language": "typescript",
+          "sizeLines": 340,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/damageTypeResolve.ts",
+          "language": "typescript",
+          "sizeLines": 98,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/defense.ts",
+          "language": "typescript",
+          "sizeLines": 81,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/dmgTypes.ts",
+          "language": "typescript",
+          "sizeLines": 67,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/lib/EnchantSelect.svelte",
           "language": "svelte",
           "sizeLines": 464,
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/enchantTooltip.ts",
+          "language": "typescript",
+          "sizeLines": 26,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine.ts",
+          "language": "typescript",
+          "sizeLines": 5,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/_utils.ts",
+          "language": "typescript",
+          "sizeLines": 2,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/lib/constants/buffs.ts": [],
+        "src/lib/constants/cdr.ts": [],
+        "src/lib/constants/damage-types.ts": [],
+        "src/lib/constants/debuff-effects.ts": [],
+        "src/lib/constants/defensive.ts": [],
+        "src/lib/constants/dot-damage.ts": [],
+        "src/lib/constants/draconic-colors.ts": [],
+        "src/lib/constants/draconic.ts": [],
+        "src/lib/constants/game.ts": [],
+        "src/lib/constants/heals.ts": [],
+        "src/lib/constants/index.ts": [],
+        "src/lib/constants/perk-base-damage.ts": [],
+        "src/lib/constants/perks.ts": [],
+        "src/lib/constants/rune-base-damage.ts": [],
+        "src/lib/constants/stat-conversions.ts": [],
+        "src/lib/constants/storage.ts": [],
+        "src/lib/constants/thresholds.ts": [],
+        "src/lib/crit.ts": [],
+        "src/lib/damageTypeResolve.ts": [],
+        "src/lib/defense.ts": [],
+        "src/lib/dmgTypes.ts": [],
+        "src/lib/EnchantSelect.svelte": [],
+        "src/lib/enchantTooltip.ts": [],
+        "src/lib/engine.ts": [],
+        "src/lib/engine/_utils.ts": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 11,
+      "files": [
+        {
+          "path": "src/lib/engine/build.ts",
+          "language": "typescript",
+          "sizeLines": 553,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/data.ts",
+          "language": "typescript",
+          "sizeLines": 2,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/data/character.ts",
+          "language": "typescript",
+          "sizeLines": 28,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/data/equipment.ts",
+          "language": "typescript",
+          "sizeLines": 57,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/data/weapons.ts",
+          "language": "typescript",
+          "sizeLines": 20,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/dmgTypeBonuses.ts",
+          "language": "typescript",
+          "sizeLines": 56,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/enchant.ts",
+          "language": "typescript",
+          "sizeLines": 221,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/lib/engine/engine.ts",
           "language": "typescript",
           "sizeLines": 5,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/format.ts",
+          "language": "typescript",
+          "sizeLines": 14,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/shrine.ts",
+          "language": "typescript",
+          "sizeLines": 33,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/engine/weapon.ts",
+          "language": "typescript",
+          "sizeLines": 443,
           "fileCategory": "code"
         },
         {
@@ -3833,40 +2087,7 @@
           "language": "svelte",
           "sizeLines": 200,
           "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/CritIcon.svelte": [],
-        "src/DamageAnalyzer.svelte": [],
-        "src/data/draconicRunes.ts": [],
-        "src/data/selfDamagePerks.ts": [],
-        "src/data/stanceOverlays.ts": [],
-        "src/DidYouMean.svelte": [],
-        "src/DmgTotalTooltip.svelte": [],
-        "src/DraconicAbilityStats.svelte": [],
-        "src/EmotionalTracker.svelte": [],
-        "src/Highlight.svelte": [],
-        "src/LevelBar.svelte": [],
-        "src/lib/AppHeader.svelte": [],
-        "src/lib/constants/boosts.ts": [],
-        "src/lib/constants/cdr.ts": [],
-        "src/lib/constants/defensive.ts": [],
-        "src/lib/constants/draconic-colors.ts": [],
-        "src/lib/constants/draconic.ts": [],
-        "src/lib/constants/heals.ts": [],
-        "src/lib/constants/index.ts": [],
-        "src/lib/constants/perk-base-damage.ts": [],
-        "src/lib/constants/thresholds.ts": [],
-        "src/lib/EnchantSelect.svelte": [],
-        "src/lib/engine/engine.ts": [],
-        "src/lib/Modal.svelte": [],
-        "src/lib/modals/AccessorySelectModal.svelte": []
-      },
-      "neighborMap": {}
-    },
-    {
-      "batchIndex": 23,
-      "files": [
+        },
         {
           "path": "src/lib/modals/GuildModal.svelte",
           "language": "svelte",
@@ -3910,17 +2131,68 @@
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/store.ts",
+          "language": "typescript",
+          "sizeLines": 167,
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/lib/stores/toast.ts",
+          "language": "typescript",
+          "sizeLines": 28,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/lib/Toast.svelte",
           "language": "svelte",
           "sizeLines": 99,
           "fileCategory": "code"
         },
         {
-          "path": "src/lib/ui/Badge.svelte",
-          "language": "svelte",
-          "sizeLines": 136,
+          "path": "src/lib/types.ts",
+          "language": "typescript",
+          "sizeLines": 288,
           "fileCategory": "code"
         },
+        {
+          "path": "src/lib/ui/Badge.svelte",
+          "language": "svelte",
+          "sizeLines": 148,
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "src/lib/engine/build.ts": [],
+        "src/lib/engine/data.ts": [],
+        "src/lib/engine/data/character.ts": [],
+        "src/lib/engine/data/equipment.ts": [],
+        "src/lib/engine/data/weapons.ts": [],
+        "src/lib/engine/dmgTypeBonuses.ts": [],
+        "src/lib/engine/enchant.ts": [],
+        "src/lib/engine/engine.ts": [],
+        "src/lib/engine/format.ts": [],
+        "src/lib/engine/shrine.ts": [],
+        "src/lib/engine/weapon.ts": [],
+        "src/lib/Modal.svelte": [],
+        "src/lib/modals/AccessorySelectModal.svelte": [],
+        "src/lib/modals/GuildModal.svelte": [],
+        "src/lib/modals/index.ts": [],
+        "src/lib/modals/RaceModal.svelte": [],
+        "src/lib/modals/WeaponPartModal.svelte": [],
+        "src/lib/StatFilterShared.svelte": [],
+        "src/lib/stats/elementalBoosts.ts": [],
+        "src/lib/stats/filterActions.ts": [],
+        "src/lib/store.ts": [],
+        "src/lib/stores/toast.ts": [],
+        "src/lib/Toast.svelte": [],
+        "src/lib/types.ts": [],
+        "src/lib/ui/Badge.svelte": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 12,
+      "files": [
         {
           "path": "src/lib/ui/Button.svelte",
           "language": "svelte",
@@ -3970,6 +2242,12 @@
           "fileCategory": "code"
         },
         {
+          "path": "src/lib/utils.ts",
+          "language": "typescript",
+          "sizeLines": 112,
+          "fileCategory": "code"
+        },
+        {
           "path": "src/main.ts",
           "language": "typescript",
           "sizeLines": 7,
@@ -4016,56 +2294,7 @@
           "language": "svelte",
           "sizeLines": 240,
           "fileCategory": "code"
-        }
-      ],
-      "batchImportData": {
-        "src/lib/modals/GuildModal.svelte": [],
-        "src/lib/modals/index.ts": [],
-        "src/lib/modals/RaceModal.svelte": [],
-        "src/lib/modals/WeaponPartModal.svelte": [],
-        "src/lib/StatFilterShared.svelte": [],
-        "src/lib/stats/elementalBoosts.ts": [],
-        "src/lib/stats/filterActions.ts": [],
-        "src/lib/Toast.svelte": [],
-        "src/lib/ui/Badge.svelte": [],
-        "src/lib/ui/Button.svelte": [],
-        "src/lib/ui/Card.svelte": [],
-        "src/lib/ui/Divider.svelte": [],
-        "src/lib/ui/index.ts": [],
-        "src/lib/ui/Panel.svelte": [],
-        "src/lib/ui/Section.svelte": [],
-        "src/lib/ui/Stat.svelte": [],
-        "src/lib/uiConstants.ts": [],
-        "src/main.ts": [
-          "src/app.css",
-          "src/App.svelte"
-        ],
-        "src/ModalSearchHeader.svelte": [],
-        "src/MountIcon.svelte": [],
-        "src/ScalingBreakdownRow.svelte": [],
-        "src/StatFilter.svelte": [],
-        "src/SuggestDrop.svelte": [],
-        "src/TagFilter.svelte": [],
-        "src/WeaponStatFilter.svelte": []
-      },
-      "neighborMap": {
-        "src/main.ts": [
-          {
-            "path": "src/app.css",
-            "batchIndex": 21,
-            "symbols": []
-          },
-          {
-            "path": "src/App.svelte",
-            "batchIndex": 21,
-            "symbols": []
-          }
-        ]
-      }
-    },
-    {
-      "batchIndex": 24,
-      "files": [
+        },
         {
           "path": "src/WeaponStatsDisplay.svelte",
           "language": "svelte",
@@ -4080,6 +2309,23 @@
         }
       ],
       "batchImportData": {
+        "src/lib/ui/Button.svelte": [],
+        "src/lib/ui/Card.svelte": [],
+        "src/lib/ui/Divider.svelte": [],
+        "src/lib/ui/index.ts": [],
+        "src/lib/ui/Panel.svelte": [],
+        "src/lib/ui/Section.svelte": [],
+        "src/lib/ui/Stat.svelte": [],
+        "src/lib/uiConstants.ts": [],
+        "src/lib/utils.ts": [],
+        "src/main.ts": [],
+        "src/ModalSearchHeader.svelte": [],
+        "src/MountIcon.svelte": [],
+        "src/ScalingBreakdownRow.svelte": [],
+        "src/StatFilter.svelte": [],
+        "src/SuggestDrop.svelte": [],
+        "src/TagFilter.svelte": [],
+        "src/WeaponStatFilter.svelte": [],
         "src/WeaponStatsDisplay.svelte": [],
         "vite.config.ts": []
       },

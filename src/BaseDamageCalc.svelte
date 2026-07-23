@@ -385,7 +385,9 @@ export let cauterizeScalingMult: number = 1
   }
 
   $: critChance  = crit?.effectiveCritChance ?? 0
-  $: critDmgMult = crit?.critDamageMultiplier ?? BASE_CRIT_DMG_PCT
+  $: _splinterAmount = crit?.critDmgBreakdown?.find((s: any) => s.source === 'Splinter')?.amount ?? 0
+  $: _hasBleedOnTarget = resolvedDebuffs.some(d => d.name === 'Bleed' && !disabledDebuffs.has(d.name))
+  $: critDmgMult = (crit?.critDamageMultiplier ?? BASE_CRIT_DMG_PCT) - (_hasBleedOnTarget ? 0 : _splinterAmount)
   $: _venomEaterActive = venomEaterStacks > 0 && showCritValues && !disabledBoosts.has('Venom Eater') && resolvedDebuffs.some(d => d.name === 'Poison')
   $: _bloodThirstyActive = bloodThirstyStacks > 0 && !disabledBoosts.has('Blood Thirsty') && resolvedDebuffs.some(d => d.name === 'Bleed')
 

@@ -88,6 +88,8 @@ import {
   BOMBER_CHARGE_PCT_PER_STACK,
   BOMBER_CHARGE_MISSING_HP_MULT,
   BOMBER_CHARGE_MISSING_HP_CAP,
+  ROGUENT_SPIRIT_BASE_DMG,
+  ROGUENT_SPIRIT_HITS,
 } from '../lib/constants'
 
 export interface PerkDmgCtx {
@@ -175,6 +177,7 @@ export interface PerkDmgDef {
   isProcHit?: boolean
   finisherOnly?: boolean
   halfActivations?: boolean
+  forceCrit?: boolean
   guardbreak?: boolean
   procCoefficient?: ProcCoefficient
   note?: string
@@ -299,6 +302,21 @@ export const PERK_DMG_DEFS: PerkDmgDef[] = [
     isM2: true,
     guardbreak: true,
     note: 'Each hit counts as individual M1/M2 and procs related effects. Grants Bursting for 10s on activation (Bombardier proc rate 40% → 80% while active — proc-rate logic itself not modeled, see P2).',
+  },
+  // ── Roguent Spirit ───────────────────────────────────────────────────────
+  {
+    perkName: 'Roguent Spirit',
+    condition: 'On RMB (Monk)',
+    getBaseDamage: () => ROGUENT_SPIRIT_BASE_DMG,
+    hits: ROGUENT_SPIRIT_HITS,
+    dmgTypeMode: 'fixed',
+    dmgTypes: { physical: 1.0 },
+    scalingMode: 'fixed',
+    scalings: { dexterity: 1.0 },
+    isM2: true,
+    isFinisher: true,
+    forceCrit: true,
+    note: 'All hits are guaranteed crits. Throws 4 individual projectiles. Only requires 50% Spiritual Energy to activate.',
   },
   // ── Bounce Momentum ────────────────────────────────────────────────────────
   {

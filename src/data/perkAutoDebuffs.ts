@@ -128,6 +128,18 @@ export function getAutoDebuffs(input: AutoDebuffInput): GrantedBuff[] {
     })
   }
 
+  const splinterAmt = perks['Splinter'] ?? 0
+  if (splinterAmt > 0 && !existingBuffNames.includes('Bleed')) {
+    debuffs.push({
+      buffName: 'Bleed',
+      potency: 0,
+      duration: 5,
+      condition: 'Crits inflict brief Bleed',
+      sourceName: 'Splinter',
+      sourceType: 'perk',
+    })
+  }
+
   const bellowingAmt = perks['Bellowing Ember'] ?? 0
   if (bellowingAmt > 0) {
     const actualHpPct = calcActualHpFillPct(hpFill, level, protection)

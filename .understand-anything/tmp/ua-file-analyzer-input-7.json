@@ -1,35 +1,85 @@
 {
-  "projectRoot": "C:\\Users\\Administrator\\Downloads\\voxlblade-builder",
-  "batchFiles": [
+  "batchIndex": 7,
+  "files": [
     {
-      "path": "src/data/weaponConditionalBoosts.ts",
-      "language": "typescript",
-      "sizeLines": 45,
-      "fileCategory": "code"
+      "path": "src/data/armors.json",
+      "language": "json",
+      "sizeLines": 173,
+      "fileCategory": "config"
     },
     {
-      "path": "src/lib/crit.ts",
-      "language": "typescript",
-      "sizeLines": 340,
-      "fileCategory": "code"
+      "path": "src/data/blades.json",
+      "language": "json",
+      "sizeLines": 107,
+      "fileCategory": "config"
     },
     {
-      "path": "src/lib/defense.ts",
-      "language": "typescript",
-      "sizeLines": 81,
-      "fileCategory": "code"
+      "path": "src/data/enchantments.json",
+      "language": "json",
+      "sizeLines": 52,
+      "fileCategory": "config"
     },
     {
-      "path": "src/lib/utils.ts",
-      "language": "typescript",
-      "sizeLines": 112,
-      "fileCategory": "code"
+      "path": "src/data/essences.json",
+      "language": "json",
+      "sizeLines": 106,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/gloves.json",
+      "language": "json",
+      "sizeLines": 23,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/guilds.json",
+      "language": "json",
+      "sizeLines": 56,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/handles.json",
+      "language": "json",
+      "sizeLines": 104,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/perks.json",
+      "language": "json",
+      "sizeLines": 3688,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/races.json",
+      "language": "json",
+      "sizeLines": 12,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/rings.json",
+      "language": "json",
+      "sizeLines": 36,
+      "fileCategory": "config"
+    },
+    {
+      "path": "src/data/runes.json",
+      "language": "json",
+      "sizeLines": 42,
+      "fileCategory": "config"
     }
   ],
   "batchImportData": {
-    "src/data/weaponConditionalBoosts.ts": ["src/lib/types.ts"],
-    "src/lib/crit.ts": ["src/lib/types.ts"],
-    "src/lib/defense.ts": ["src/lib/types.ts"],
-    "src/lib/utils.ts": []
-  }
+    "src/data/armors.json": [],
+    "src/data/blades.json": [],
+    "src/data/enchantments.json": [],
+    "src/data/essences.json": [],
+    "src/data/gloves.json": [],
+    "src/data/guilds.json": [],
+    "src/data/handles.json": [],
+    "src/data/perks.json": [],
+    "src/data/races.json": [],
+    "src/data/rings.json": [],
+    "src/data/runes.json": []
+  },
+  "neighborMap": {}
 }

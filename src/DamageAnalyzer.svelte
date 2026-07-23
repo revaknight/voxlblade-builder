@@ -1205,7 +1205,7 @@ import {
     return gatingPerks.some(p => _critDisabledPerkNames.has(p))
   }
   $: allCritSources = crit.allCritBreakdown.filter(s => !_isCritSourceDisabled(s.gatingPerks))
-  $: critDmgSources = crit.critDmgBreakdown.filter(s => !_isCritSourceDisabled(s.gatingPerks))
+  $: critDmgSources = crit.critDmgBreakdown.filter(s => !_isCritSourceDisabled(s.gatingPerks) && !(s.source === 'Splinter' && !_dummyHasBleedActive))
 
   $: _filteredNaturalCrit = (() => {
     const sum = allCritSources.filter(s => !s.isExtra).reduce((a, b) => a + b.amount, 0)
@@ -2015,6 +2015,7 @@ import {
     rawFinisherNumerator?: number
     halfActivations?: boolean
     oncePerFinisher?: boolean
+    forceCrit?: boolean
     secondaryEffects: Array<{ label: string; display: string; condition?: string; color: string; isActive: boolean }>
     triggerChain?: TriggerChainEntry[]
   }
@@ -2155,6 +2156,7 @@ import {
         rawFinisherNumerator,
         halfActivations,
         oncePerFinisher,
+        forceCrit: def.forceCrit,
         secondaryEffects,
         triggerChain: def.triggerChain,
       })
@@ -2506,6 +2508,7 @@ import {
         procCoefficient: entry.procCoefficient,
         ...(entry.isM2 && entry.isFinisher && entry.procCoefficient?.type !== 'noProc' ? { procCount: 1 } : {}),
         canApplyBurn: _hasSingedBurn,
+        ...(entry.forceCrit ? { forceCrit: true } : {}),
         ...((() => {
           const perkSunburnMult = _sunburnActive && _sunburnEnemyBurning
             ? ((entry.resolvedDmgTypes.holy ?? 0) > 0 ? _sunburnHolyDmgMult : _sunburnUniversalDmgMult) : 1

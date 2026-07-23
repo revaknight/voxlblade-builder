@@ -48,6 +48,10 @@ export const DIRE_BUNI_SPIRIT_BASE_DMG = 25
 export const VOID_ROOT_SPIRIT_BASE_DMG = 1
 export const VOID_ROOT_SPIRIT_HITS = 23
 
+// Roguent Spirit
+export const ROGUENT_SPIRIT_BASE_DMG = 4
+export const ROGUENT_SPIRIT_HITS = 4
+
 // Bounce Momentum
 export const BOUNCE_MOMENTUM_BASE_DMG = 5
 export const BOUNCE_MOMENTUM_DMG_PER_STACK = 2.5
